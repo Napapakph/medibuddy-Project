@@ -15,3 +15,6 @@ child: → ใช้เมื่อมี ลูก 1 ตัว
 children: → ใช้เมื่อมี ลูกหลายตัวในลิสต์
 
 Padding - ไม่มีลูกชื่อ children มีแต่ child เท่านั้น *-- วิธีแก้ สลับตำแหน่ง Padding กับ Column
+
+ElevatedButton.styleFrom	ปุ่มทึบ	ปุ่มหลัก
+OutlinedButton.styleFrom	ปุ่มขอบ	ปุ่มรอง

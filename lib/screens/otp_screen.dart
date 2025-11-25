@@ -12,13 +12,20 @@ class _OTPScreenState extends State<OTPScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
         title: const Text('OTP Verification'),
       ),
       body: SafeArea(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 480),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 100),
+            padding: const EdgeInsets.only(
+                left: 24, right: 24, top: 60), // ระยะห่างด้านบน),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -31,22 +38,67 @@ class _OTPScreenState extends State<OTPScreen> {
                 ),
                 const SizedBox(height: 10),
                 Text('โปรดกรอกรหัส OTP ที่ส่งไปยังอีเมลของคุณ'),
-                const SizedBox(height: 20),
-                const Row(
-                  children: [
-                    TextField(
-                      decoration: InputDecoration(
-                        filled: true,
-                        fillColor: const Color(0xFFE9EEF3),
-                        border: OutlineInputBorder(
-                          // ขอบมน
-                          borderRadius: BorderRadius.all(Radius.circular(12)),
-                          borderSide: BorderSide.none,
+                const SizedBox(height: 50),
+                Row(
+                  // ใช้ Row เพราะต้องการให้ TextFormField เรียงกันในแนวนอน
+
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: List.generate(6, (index) {
+                    return SizedBox(
+                      width: 45,
+                      height: 70,
+                      child: TextFormField(
+                        textAlign: TextAlign.center,
+                        keyboardType: TextInputType.number,
+                        maxLength: 1,
+                        decoration: const InputDecoration(
+                          counterText: '',
+                          filled: true,
+                          fillColor: Color(0xFFE9EEF3),
+                          border: OutlineInputBorder(
+                            // ขอบมน
+                            borderRadius: BorderRadius.all(Radius.circular(12)),
+                            borderSide: BorderSide.none,
+                          ),
+                          contentPadding:
+                              const EdgeInsets.symmetric(vertical: 30),
                         ),
-                        hintText: '1',
+                      ),
+                    );
+                  }),
+                ),
+                TextButton(
+                  onPressed: () {
+                    // TODO: ไปหน้าลืมรหัสผ่าน
+                  },
+                  child: Align(
+                    alignment: Alignment.center,
+                    child: const Text('ไม่ได้รับ OTP ใช่ไหม? ส่งอีกครั้ง'),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    onPressed: () {},
+                    child: Text(
+                      'ยืนยัน',
+                      style: TextStyle(color: Colors.white, fontSize: 18),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      backgroundColor: const Color(0xFF1F497D),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(24),
                       ),
                     ),
-                  ],
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Spacer(),
+                SizedBox(
+                  height: 300,
+                  child: Image.asset('assets/OTP.png'),
                 ),
               ],
             ),
