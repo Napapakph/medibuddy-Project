@@ -65,19 +65,20 @@ class _LoginScreenState extends State<LoginScreen> {
                 Align(
                   alignment: Alignment.topRight,
                   child: SizedBox(
-                    height: 200,
+                    height: 250,
                     child: Image.asset(
                       'assets/cat_login.png',
                     ),
                   ),
                 ),
-                const SizedBox(height: 100),
+                const SizedBox(height: 70),
 
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: Form(
                     key: _formKey,
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
                           'เข้าสู่ระบบ',
@@ -192,20 +193,22 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 16),
-
-                        // ลืมรหัสผ่าน ?
-                        TextButton(
-                          onPressed: () {
-                            // TODO: ไปหน้าลืมรหัสผ่าน
-                          },
-                          child: const Text('ลืมรหัสผ่าน ?'),
-                        ),
+                        const SizedBox(height: 5),
                       ],
                     ),
                   ),
                 ),
-                const SizedBox(height: 24),
+                // ลืมรหัสผ่าน ?
+
+                TextButton(
+                  onPressed: () {
+                    // TODO: ไปหน้าลืมรหัสผ่าน
+                  },
+                  child: Align(
+                    alignment: Alignment.center,
+                    child: const Text('ลืมรหัสผ่าน ?'),
+                  ),
+                ),
               ],
             ),
           ),

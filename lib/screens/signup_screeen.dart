@@ -22,6 +22,7 @@ class SignupScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 100),
+
               const Text(
                 'สมัครสมาชิก',
                 style: TextStyle(
