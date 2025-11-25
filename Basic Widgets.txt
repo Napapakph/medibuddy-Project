@@ -1,12 +1,17 @@
 Basic Widgets
 เราขอยกมาแค่ widget ที่ได้ใช้กันบ่อยๆ ก่อน สามารถอ่านเพิ่มเติมได้ที่ Widget catalog
 
-MaterialApp เป็นเหมือนโครงสร้างที่ Flutter เตรียมมาให้ โดยมีส่วน title, home และ routes
-Scaffold โครงสร้างสำเร็จรูปที่มีส่วนประกอบของ app bar, body และ bottom navigation bar เป็นต้น
-Container เป็น layout widget ที่สามารถกำหนดขนาด และรูปร่าง ได้
-Stack เป็น layout widget ที่นำ Child widget มาซ้อนกันได้ และระบุตำแหน่งด้วยการกำหนด Widget Positioned จะคล้ายกับ position absolute ใน CSS
-Center เป็น widget ที่ใช้ในการกำหนดตำแหน่งของ Child widget ให้อยู่กลาง
-ListView คุณสมบัติก็ตามชื่อเลย เป็นการแสดงผลแบบรายการสามารถ scroll ได้
-Row ใช้ในการจัด layout ให้ widget เรียงกันในแนวนอน โดย Widget type ของ Row จะเป็น List<Widget>
-Column ใช้ในการจัด layout ให้ widget เรียงกันในแนวตั้ง โดย Widget type ของ Column จะเป็น List<Widget>
-Text ใช้ในการแสดงข้อความ และจัดการ text style
+MaterialApp - เป็นเหมือนโครงสร้างที่ Flutter เตรียมมาให้ โดยมีส่วน title, home และ routes
+Scaffold - โครงสร้างสำเร็จรูปที่มีส่วนประกอบของ app bar, body และ bottom navigation bar เป็นต้น
+Container - เป็น layout widget ที่สามารถกำหนดขนาด และรูปร่าง ได้
+Stack - เป็น layout widget ที่นำ Child widget มาซ้อนกันได้ และระบุตำแหน่งด้วยการกำหนด Widget Positioned จะคล้ายกับ position absolute ใน CSS
+Center - เป็น widget ที่ใช้ในการกำหนดตำแหน่งของ Child widget ให้อยู่กลาง
+ListView - คุณสมบัติก็ตามชื่อเลย เป็นการแสดงผลแบบรายการสามารถ scroll ได้
+Row - ใช้ในการจัด layout ให้ widget เรียงกันในแนวนอน โดย Widget type ของ Row จะเป็น List<Widget>
+Column - ใช้ในการจัด layout ให้ widget เรียงกันในแนวตั้ง โดย Widget type ของ Column จะเป็น List<Widget>
+Text - ใช้ในการแสดงข้อความ และจัดการ text style
+
+child: → ใช้เมื่อมี ลูก 1 ตัว
+children: → ใช้เมื่อมี ลูกหลายตัวในลิสต์
+
+Padding - ไม่มีลูกชื่อ children มีแต่ child เท่านั้น *-- วิธีแก้ สลับตำแหน่ง Padding กับ Column

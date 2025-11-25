@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../screens/otp_screen.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -22,12 +23,13 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   void _handleSignup() {
-    if (!_formKey.currentState!.validate()) return;
-
-    // TODO: ตรงนี้อนาคตค่อยต่อ API สมัครสมาชิกจริง
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('สมัครสมาชิกสำเร็จ (mock)')),
-    );
+    if (_formKey.currentState!.validate()) {
+      // ถ้าฟอร์มถูกต้อง ให้ไปที่หน้า OTP
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const OTPScreen()),
+      );
+    }
   }
 
   @override
