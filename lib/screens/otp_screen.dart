@@ -11,6 +11,7 @@ class _OTPScreenState extends State<OTPScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
@@ -46,7 +47,7 @@ class _OTPScreenState extends State<OTPScreen> {
                   children: List.generate(6, (index) {
                     return SizedBox(
                       width: 45,
-                      height: 70,
+                      height: 60,
                       child: TextFormField(
                         textAlign: TextAlign.center,
                         keyboardType: TextInputType.number,
@@ -60,8 +61,7 @@ class _OTPScreenState extends State<OTPScreen> {
                             borderRadius: BorderRadius.all(Radius.circular(12)),
                             borderSide: BorderSide.none,
                           ),
-                          contentPadding:
-                              const EdgeInsets.symmetric(vertical: 30),
+                          contentPadding: const EdgeInsets.only(top: 50),
                         ),
                       ),
                     );
@@ -95,7 +95,6 @@ class _OTPScreenState extends State<OTPScreen> {
                   ),
                 ),
                 const SizedBox(height: 10),
-                Spacer(),
                 SizedBox(
                   height: 300,
                   child: Image.asset('assets/OTP.png'),
