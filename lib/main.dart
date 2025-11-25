@@ -6,5 +6,5 @@ void main() {
     title: "My Flutter App",
     home: LoginScreen(),
   );
-  runApp(app); 
+  runApp(app);
 }
