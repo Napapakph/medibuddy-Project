@@ -44,16 +44,13 @@ class _SignupScreenState extends State<SignupScreen> {
               Align(
                 alignment: Alignment.topRight,
                 child: Padding(
-                  padding: const EdgeInsets.only(top: 30),
+                  padding: const EdgeInsets.only(top: 10),
                   child: SizedBox(
                     height: 220,
                     child: Image.asset('assets/Sign_up_cat.png'),
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
-              // หัวข้อสมัครสมาชิก
-
               // ฟอร์ม
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -122,6 +119,22 @@ class _SignupScreenState extends State<SignupScreen> {
                           return null;
                         },
                       ),
+                      const SizedBox(height: 5),
+
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          [
+                            '- ความยาวอย่างน้อย 6 ตัวอักษร',
+                            '- ตัวอักษรพิมพ์ใหญ่และพิมพ์เล็ก',
+                            '- ตัวเลขหรือสัญลักษณ์พิเศษ',
+                          ].join('\n'),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ),
                       const SizedBox(height: 12),
 
                       TextFormField(
@@ -176,7 +189,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       Center(
                         child: TextButton(
                           onPressed: () {
-                            Navigator.pop(context);
+                            Navigator.pop(context); // กลับไปหน้าเข้าสู่ระบบ
                           },
                           child: const Text('มีบัญชีแล้ว? เข้าสู่ระบบ'),
                         ),
