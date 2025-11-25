@@ -3,7 +3,7 @@ import 'screens/login_screen.dart';
 
 void main() {
   const app = MaterialApp(
-    title: "My Flutter App",
+    title: "MediBuddy",
     home: LoginScreen(),
   );
   runApp(app);

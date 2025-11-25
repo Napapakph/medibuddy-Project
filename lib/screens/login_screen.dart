@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/mock_auth_service.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'signup_screeen.dart';
+import 'signup_screen.dart';
 import '../widgets/login_button.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -12,12 +12,16 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final _emailCtrl = TextEditingController();
+  final _formKey = GlobalKey<
+      FormState>(); //ใช้อ้างถึง FormState เพื่อตรวจสอบ validation หรือเรียก validate()
+  final _emailCtrl =
+      TextEditingController(); //TextEditingController สำหรับคุมค่าช่องอีเมลและรหัสผ่าน, ใช้ดึงค่าและทำ dispose() เพื่อไม่ให้รั่วหน่วยความจำ
   final _passwordCtrl = TextEditingController();
-  final _auth = MockAuthService();
+  final _auth = MockAuthService(); //จำลองการ Login
+  String? _lastEmail; // เก็บอีเมลล่าสุดที่ใช้ล็อกอินสำเร็จ
+  String? _lastPassword; // เก็บรหัสผ่านล่าสุดที่ใช้ล็อกอินสำเร็จ
 
-  bool _isLoading = false;
+  bool _isLoading = false; // ติดตามสถานะกำลังล็อกอิน
 
   @override
   void dispose() {
@@ -52,26 +56,36 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  void _restorePreviousEmail() {
+    if (_lastEmail != null && _lastPassword != null) {
+      setState(() => {
+            _emailCtrl.text = _lastEmail!,
+            _passwordCtrl.text = _lastPassword!,
+          }); // สั่งให้ช่องโชว์ค่ากรอกครั้งแรก
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       body: SafeArea(
         child: Center(
-          child: SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 480),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 //รูปแมว
                 Align(
                   alignment: Alignment.topRight,
                   child: SizedBox(
-                    height: 250,
+                    height: 230,
                     child: Image.asset(
                       'assets/cat_login.png',
                     ),
                   ),
                 ),
-                const SizedBox(height: 70),
+                const SizedBox(height: 40),
 
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -144,7 +158,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           child: LoginButton(
                             isLoading: _isLoading,
                             text: '',
-                            onPressed: () {},
+                            onPressed: () {
+                              _restorePreviousEmail();
+                              _handleLogin();
+                            },
                             Text: null,
                           ),
                         ),
