@@ -18,3 +18,7 @@ Padding - ไม่มีลูกชื่อ children มีแต่ child �
 
 ElevatedButton.styleFrom	ปุ่มทึบ	ปุ่มหลัก
 OutlinedButton.styleFrom	ปุ่มขอบ	ปุ่มรอง
+
+decoration: TextDecoration.underline ขีดเส้นใต้
+
+titlePadding: EdgeInsets.zero -- ปิด padding ปกติของ dialog เพื่อให้สีพื้นหลังเต็มพื้นที่

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/mock_auth_service.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'signup_screen.dart';
+import 'signup.dart';
 import '../widgets/login_button.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -69,6 +69,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: false,
+      backgroundColor: Colors.white,
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
@@ -216,20 +217,87 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 // ลืมรหัสผ่าน ?
-
-                TextButton(
-                  onPressed: () {
-                    // TODO: ไปหน้าลืมรหัสผ่าน
-                  },
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: const Text('ลืมรหัสผ่าน ?'),
+                Align(
+                  alignment: Alignment.center,
+                  child: TextButton(
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('ลืมรหัสผ่าน ?')),
+                      );
+                      forgetPassword();
+                    },
+                    style: TextButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      splashFactory: NoSplash.splashFactory,
+                    ),
+                    child: const Text(
+                      'ลืมรหัสผ่าน ?',
+                      style: TextStyle(
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
                   ),
                 ),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Future forgetPassword() {
+    final TextEditingController _emailCtrl = TextEditingController();
+
+    return showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        titlePadding: EdgeInsets.zero,
+        title: Container(
+            decoration: BoxDecoration(
+              color: Color(0xFFB7DAFF),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            padding: const EdgeInsets.all(16),
+            child: Center(
+              child: Text('ลืมรหัสผ่าน'),
+            )),
+        content: Column(
+          mainAxisSize: MainAxisSize.min, // 👈 ทำให้ dialog ไม่ยืดเต็มจอ
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('โปรดใส่อีเมลบัญชีของคุณเพื่อรีเซ็ตรหัสผ่าน'),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _emailCtrl,
+              decoration: const InputDecoration(
+                labelText: 'อีเมล',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                ),
+              ),
+              keyboardType: TextInputType.emailAddress,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('ปิด'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              // TODO: ส่งอีเมลรีเซ็ตรหัสผ่านตามค่าที่กรอก
+              print('Email: ${_emailCtrl.text}');
+
+              Navigator.of(context).pop(); // ปิด dialog หลังทำงานเสร็จ
+            },
+            child: const Text('ส่ง'),
+          )
+        ],
       ),
     );
   }

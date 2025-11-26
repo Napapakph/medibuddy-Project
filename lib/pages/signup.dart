@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../screens/otp_screen.dart';
+import 'otp.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -35,6 +35,7 @@ class _SignupScreenState extends State<SignupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       resizeToAvoidBottomInset: false,
       body: SafeArea(
         child: ConstrainedBox(
