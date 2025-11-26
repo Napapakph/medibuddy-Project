@@ -22,3 +22,18 @@ OutlinedButton.styleFrom	ปุ่มขอบ	ปุ่มรอง
 decoration: TextDecoration.underline ขีดเส้นใต้
 
 titlePadding: EdgeInsets.zero -- ปิด padding ปกติของ dialog เพื่อให้สีพื้นหลังเต็มพื้นที่
+
+showDialog = คำสั่งให้ Flutter แสดง popup บนหน้าจอ ตัวมันจะสร้าง “ชั้นทับบน UI ปัจจุบัน” (Overlay)
+return showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(); 
+        }
+    );
+    AlertDialog เป็นมาตรญาน
+    Dialog ปรับได้หมด
+
+***  child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 300),) 
+    ถ้าอยากกดหนดขนาดและให้ responsive ให้ใช้ ConstrainedBox
+    

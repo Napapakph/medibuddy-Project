@@ -224,6 +224,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('ลืมรหัสผ่าน ?')),
                       );
+                      //ไว้เพิ่มฟังก์ชันลืมรหัสผ่านในอนาคต
                       forgetPassword();
                     },
                     style: TextButton.styleFrom(
@@ -248,57 +249,42 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Future forgetPassword() {
-    final TextEditingController _emailCtrl = TextEditingController();
-
+  forgetPassword() {
+    //ไว้เพิ่มฟังก์ชันลืมรหัสผ่านในอนาคต
     return showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        titlePadding: EdgeInsets.zero,
-        title: Container(
-            decoration: BoxDecoration(
-              color: Color(0xFFB7DAFF),
-              borderRadius:
-                  const BorderRadius.vertical(top: Radius.circular(20)),
-            ),
-            padding: const EdgeInsets.all(16),
-            child: Center(
-              child: Text('ลืมรหัสผ่าน'),
-            )),
-        content: Column(
-          mainAxisSize: MainAxisSize.min, // 👈 ทำให้ dialog ไม่ยืดเต็มจอ
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('โปรดใส่อีเมลบัญชีของคุณเพื่อรีเซ็ตรหัสผ่าน'),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _emailCtrl,
-              decoration: const InputDecoration(
-                labelText: 'อีเมล',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(12)),
-                ),
-              ),
-              keyboardType: TextInputType.emailAddress,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('ปิด'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              // TODO: ส่งอีเมลรีเซ็ตรหัสผ่านตามค่าที่กรอก
-              print('Email: ${_emailCtrl.text}');
-
-              Navigator.of(context).pop(); // ปิด dialog หลังทำงานเสร็จ
-            },
-            child: const Text('ส่ง'),
-          )
-        ],
-      ),
-    );
+        context: context,
+        builder: (context) {
+          return Dialog(
+            child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 400),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text(
+                        'ลืมรหัสผ่าน',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 30),
+                      const Text(
+                        'ฟังก์ชันลืมรหัสผ่านจะถูกเพิ่มในอนาคต',
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 24),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                        child: const Text('ปิด'),
+                      ),
+                    ],
+                  ),
+                )),
+          );
+        });
   }
 }
