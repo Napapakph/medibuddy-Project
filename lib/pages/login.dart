@@ -3,6 +3,7 @@ import '../services/mock_auth_service.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'signup.dart';
 import '../widgets/login_button.dart';
+import '../Home/pages/home.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -49,6 +50,11 @@ class _LoginScreenState extends State<LoginScreen> {
         const SnackBar(content: Text('เข้าสู่ระบบสำเร็จ')),
       );
       // ตรงนี้อนาคตค่อยเปลี่ยนเป็น Navigator.push ไปหน้า Home
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const homePage(),
+          ));
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('อีเมลหรือรหัสผ่านไม่ถูกต้อง')),

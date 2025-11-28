@@ -29,6 +29,7 @@ class MyApp extends StatelessWidget {
         '/signup': (_) => const SignupScreen(),
         '/otp': (_) => const OTPScreen(email: ''),
       },
+      title: 'MediBuddy',
     );
   }
 }
