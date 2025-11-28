@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_otp_text_field/flutter_otp_text_field.dart';
 import 'dart:convert'; //แปลง Object to JSON
@@ -26,56 +24,86 @@ class _OTPScreenState extends State<OTPScreen> {
   }
 
   Future<void> confirmOTP() async {
-    final otp = _otp.text.trim();
-    if (otp.isEmpty) {
+    final verificationCode = _otp.text.trim();
+
+    if (verificationCode.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('กรุณากรอก OTP')),
       );
       return;
     }
+
+    setState(() => _isLoading = true);
+
     try {
-      setState(() => _isLoading = true);
+      print("⏳ DEBUG: กำลังเรียก /auth/v1/verify (แบบเดียวกับ Postman)");
+      print("OTP: $verificationCode");
+      print("Email: ${widget.email}");
 
-      final supabase = Supabase.instance.client;
+      // TODO: ใส่ anon key เดียวกับที่ใช้ใน Supabase.initialize
+      const supabaseAnonKey =
+          '<eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFvaXVyZHdpYmd1ZHN4aG94Y25pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQxNjY3OTcsImV4cCI6MjA3OTc0Mjc5N30.3aPHErdnVMHVmjcOk55KCLhUw6rPCzu4Ke5DWqQNsyg>';
 
-      print("⏳ กำลัง verify OTP...");
-
-      final res = await supabase.auth.verifyOTP(
-        email: widget.email,
-        token: otp,
-        type: OtpType.signup,
+      final uri = Uri.parse(
+        'https://aoiurdwibgudsxhoxcni.supabase.co/auth/v1/verify',
       );
 
-      if (res.session == null) {
-        print("❌ verifyOTP session = NULL (OTP ผิดหรือ type ไม่ตรง)");
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('OTP ไม่ถูกต้อง หรือหมดอายุ')),
-        );
-        return; // ❗❗ หยุดก่อน crash
-      }
-
-      final token = res.session!.accessToken;
-      print("🔐 Token ได้แล้ว: $token");
-
-      final syncRes = await http.post(
-        Uri.parse(
-            'https://sharri-unpatted-cythia.ngrok-free.dev/api/auth/sync-user'),
-        headers: {'Authorization': 'Bearer $token'},
+      final response = await http.post(
+        uri,
+        headers: {
+          'apikey': supabaseAnonKey,
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({
+          'email': widget.email,
+          'token': verificationCode,
+          'type': 'email', // 👈 ให้ตรงกับที่เพื่อนใช้ใน Postman
+        }),
       );
 
-      print("📨 sync-user status: ${syncRes.statusCode}");
-      print(syncRes.body);
+      print('📨 DEBUG statusCode: ${response.statusCode}');
+      print('📨 DEBUG body: ${response.body}');
 
-      if (syncRes.statusCode != 200) {
+      if (response.statusCode != 200) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Sync user ล้มเหลว')),
+          SnackBar(content: Text('Verify ไม่สำเร็จ: ${response.statusCode}')),
         );
         return;
       }
 
-      Navigator.pushReplacementNamed(context, '/login');
+      final data = jsonDecode(response.body);
+      final accessToken = data['access_token'];
+      // ส่งไป backend ของเพื่อน
+      final syncRes = await http.post(
+        Uri.parse(
+            'https://sharri-unpatted-cythia.ngrok-free.dev/api/auth/sync-user'),
+        headers: {
+          'Authorization': 'Bearer $accessToken',
+          'Content-Type': 'application/json',
+        },
+      );
+
+      print("Backend status: ${syncRes.statusCode}");
+      print(syncRes.body);
+
+      // แสดง token บนหน้าจอให้เห็นเลย
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: const Text('Access Token ได้แล้ว'),
+          content: SingleChildScrollView(
+            child: Text(accessToken ?? 'ไม่พบ access_token ใน response'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('ปิด'),
+            ),
+          ],
+        ),
+      );
     } catch (e) {
-      print("💥 ERROR: $e");
+      print('💥 DEBUG ERROR: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('เกิดข้อผิดพลาด: $e')),
       );
@@ -123,21 +151,13 @@ class _OTPScreenState extends State<OTPScreen> {
                   fieldHeight: 80,
                   fieldWidth: 43,
                   showFieldAsBox: true,
-                  onCodeChanged: (String code) {
-                    _otp.text = code;
-                  },
-                  /*
+
                   onSubmit: (String verificationCode) {
-                    showDialog(
-                        context: context,
-                        builder: (context) {
-                          return AlertDialog(
-                            title: Text("Verification Code"),
-                            content: Text('Code entered is $verificationCode'),
-                          );
-                        });
+                    _otp.text = verificationCode;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("OTP : $verificationCode")),
+                    );
                   }, // end onSubmit
-                  */
                 ),
                 Center(
                   child: TextButton(
