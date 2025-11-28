@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'otp.dart';
+import '../aPI/authen_login.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -10,25 +11,51 @@ class SignupScreen extends StatefulWidget {
 
 class _SignupScreenState extends State<SignupScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailCtrl = TextEditingController();
-  final _passwordCtrl = TextEditingController();
+  final _email = TextEditingController();
+  final _password = TextEditingController();
   final _confirmPasswordCtrl = TextEditingController();
+  final _authAPI = AuthenLogin(); // ใช้ class จากไฟล์ API
+
+  bool _isLoading = false; // สถานะการโหลด
 
   @override
   void dispose() {
-    _emailCtrl.dispose();
-    _passwordCtrl.dispose();
+    _email.dispose();
+    _password.dispose();
     _confirmPasswordCtrl.dispose();
     super.dispose();
   }
 
-  void _handleSignup() {
-    if (_formKey.currentState!.validate()) {
-      // ถ้าฟอร์มถูกต้อง ให้ไปที่หน้า OTP
+  Future<void> _handleSignup() async {
+    // 👇 เรียกไปหา Supabase ผ่าน AuthAPI
+    final error = await _authAPI.signUpWithEmail(
+      email: _email.text.trim(),
+      password: _password.text.trim(),
+    );
+    setState(() => _isLoading = true); // 👈 เริ่มหมุนโหลด
+
+    if (!mounted) return;
+    if (error == null) {
+      // ✅ สมัครสำเร็จ
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('สมัครสมาชิกสำเร็จ'),
+        ),
+      );
+      setState(() => _isLoading = false); // 👈 เริ่มหมุนโหลด
+
+      // จะไปหน้า OTP ต่อก็ได้ ถ้าระบบต้องการยืนยัน
       Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => const OTPScreen()),
       );
+    } else {
+      // ❌ มี error จาก Supabase (เช่น email ซ้ำ)
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Email มีการลงทะเบียนแล้ว")),
+      );
+
+      setState(() => _isLoading = false);
     }
   }
 
@@ -71,7 +98,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       ),
                       const SizedBox(height: 24),
                       TextFormField(
-                        controller: _emailCtrl,
+                        controller: _email,
                         decoration: InputDecoration(
                           labelText: 'อีเมล',
                           filled: true, // เติมสีพื้นหลัง
@@ -97,7 +124,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       const SizedBox(height: 12),
 
                       TextFormField(
-                        controller: _passwordCtrl,
+                        controller: _password,
                         obscureText: true,
                         decoration: InputDecoration(
                           labelText: 'รหัสผ่าน',
@@ -158,7 +185,7 @@ class _SignupScreenState extends State<SignupScreen> {
                           if (value == null || value.isEmpty) {
                             return 'กรุณายืนยันรหัสผ่าน';
                           }
-                          if (value != _passwordCtrl.text) {
+                          if (value != _password.text) {
                             return 'รหัสผ่านไม่ตรงกัน';
                           }
                           return null;
@@ -169,7 +196,7 @@ class _SignupScreenState extends State<SignupScreen> {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: _handleSignup,
+                          onPressed: _isLoading ? null : _handleSignup,
                           style: ElevatedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
