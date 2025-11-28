@@ -47,14 +47,16 @@ class _SignupScreenState extends State<SignupScreen> {
       // ✅ สมัครสำเร็จ
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('สมัครสมาชิกสำเร็จ'),
+          content: Text('กรอกรหัสยืนยัน OTP'),
         ),
       );
 
       // จะไปหน้า OTP ต่อก็ได้ ถ้าระบบต้องการยืนยัน
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => const OTPScreen()),
+        MaterialPageRoute(
+            builder: (context) => OTPScreen(email: _email.text.trim())),
+        //หน้า OTP จะรู้แล้วว่า OTP นี้เป็นของอีเมลไหน
       );
     } else {
       // ❌ มี error จาก Supabase (เช่น email ซ้ำ)

@@ -1,15 +1,89 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_otp_text_field/flutter_otp_text_field.dart';
+import 'dart:convert'; //แปลง Object to JSON
+import 'package:http/http.dart' as http; //ยิง request ไปยัง backend API
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'login.dart';
 
 class OTPScreen extends StatefulWidget {
-  const OTPScreen({super.key});
+  const OTPScreen({super.key, required this.email});
+  final String email;
 
   @override
   State<OTPScreen> createState() => _OTPScreenState();
 }
 
 class _OTPScreenState extends State<OTPScreen> {
+  final _otp = TextEditingController();
+  bool _isLoading = false;
+
   @override
+  void dispose() {
+    _otp.dispose();
+    super.dispose();
+  }
+
+  Future<void> confirmOTP() async {
+    final otp = _otp.text.trim();
+    if (otp.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('กรุณากรอก OTP')),
+      );
+      return;
+    }
+    try {
+      setState(() => _isLoading = true);
+
+      final supabase = Supabase.instance.client;
+
+      print("⏳ กำลัง verify OTP...");
+
+      final res = await supabase.auth.verifyOTP(
+        email: widget.email,
+        token: otp,
+        type: OtpType.signup,
+      );
+
+      if (res.session == null) {
+        print("❌ verifyOTP session = NULL (OTP ผิดหรือ type ไม่ตรง)");
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('OTP ไม่ถูกต้อง หรือหมดอายุ')),
+        );
+        return; // ❗❗ หยุดก่อน crash
+      }
+
+      final token = res.session!.accessToken;
+      print("🔐 Token ได้แล้ว: $token");
+
+      final syncRes = await http.post(
+        Uri.parse(
+            'https://sharri-unpatted-cythia.ngrok-free.dev/api/auth/sync-user'),
+        headers: {'Authorization': 'Bearer $token'},
+      );
+
+      print("📨 sync-user status: ${syncRes.statusCode}");
+      print(syncRes.body);
+
+      if (syncRes.statusCode != 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Sync user ล้มเหลว')),
+        );
+        return;
+      }
+
+      Navigator.pushReplacementNamed(context, '/login');
+    } catch (e) {
+      print("💥 ERROR: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('เกิดข้อผิดพลาด: $e')),
+      );
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
@@ -43,16 +117,16 @@ class _OTPScreenState extends State<OTPScreen> {
                 Text('โปรดกรอกรหัส OTP ที่ส่งไปยังอีเมลของคุณ'),
                 const SizedBox(height: 40),
                 OtpTextField(
-                  numberOfFields: 5,
+                  numberOfFields: 6,
                   borderColor: Color(0xFF512DA8),
                   borderRadius: BorderRadius.circular(12),
                   fieldHeight: 80,
-                  fieldWidth: 50,
+                  fieldWidth: 43,
                   showFieldAsBox: true,
                   onCodeChanged: (String code) {
-                    //handle validation or checks here
+                    _otp.text = code;
                   },
-
+                  /*
                   onSubmit: (String verificationCode) {
                     showDialog(
                         context: context,
@@ -63,21 +137,29 @@ class _OTPScreenState extends State<OTPScreen> {
                           );
                         });
                   }, // end onSubmit
+                  */
                 ),
-                TextButton(
-                  onPressed: () {
-                    // TODO: ไปหน้าลืมรหัสผ่าน
-                  },
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: const Text('ไม่ได้รับ OTP ใช่ไหม? ส่งอีกครั้ง'),
+                Center(
+                  child: TextButton(
+                    onPressed: () async {
+                      await Supabase.instance.client.auth.resend(
+                        type: OtpType.signup,
+                        email: widget.email,
+                      );
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("ส่ง OTP ใหม่แล้ว")),
+                      );
+                    },
+                    child: const Text("ส่ง OTP อีกครั้ง"),
                   ),
                 ),
                 const SizedBox(height: 10),
                 SizedBox(
                   width: double.infinity,
                   child: OutlinedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      confirmOTP();
+                    },
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 20),
                       backgroundColor: const Color(0xFF1F497D),
