@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_otp_text_field/flutter_otp_text_field.dart';
 
 class OTPScreen extends StatefulWidget {
   const OTPScreen({super.key});
@@ -40,33 +41,28 @@ class _OTPScreenState extends State<OTPScreen> {
                 ),
                 const SizedBox(height: 10),
                 Text('โปรดกรอกรหัส OTP ที่ส่งไปยังอีเมลของคุณ'),
-                const SizedBox(height: 50),
-                Row(
-                  // ใช้ Row เพราะต้องการให้ TextFormField เรียงกันในแนวนอน
+                const SizedBox(height: 40),
+                OtpTextField(
+                  numberOfFields: 5,
+                  borderColor: Color(0xFF512DA8),
+                  borderRadius: BorderRadius.circular(12),
+                  fieldHeight: 80,
+                  fieldWidth: 50,
+                  showFieldAsBox: true,
+                  onCodeChanged: (String code) {
+                    //handle validation or checks here
+                  },
 
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: List.generate(6, (index) {
-                    return SizedBox(
-                      width: 45,
-                      height: 60,
-                      child: TextFormField(
-                        textAlign: TextAlign.center,
-                        keyboardType: TextInputType.number,
-                        maxLength: 1,
-                        decoration: const InputDecoration(
-                          counterText: '',
-                          filled: true,
-                          fillColor: Color(0xFFE9EEF3),
-                          border: OutlineInputBorder(
-                            // ขอบมน
-                            borderRadius: BorderRadius.all(Radius.circular(12)),
-                            borderSide: BorderSide.none,
-                          ),
-                          contentPadding: EdgeInsets.only(top: 50),
-                        ),
-                      ),
-                    );
-                  }),
+                  onSubmit: (String verificationCode) {
+                    showDialog(
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            title: Text("Verification Code"),
+                            content: Text('Code entered is $verificationCode'),
+                          );
+                        });
+                  }, // end onSubmit
                 ),
                 TextButton(
                   onPressed: () {
