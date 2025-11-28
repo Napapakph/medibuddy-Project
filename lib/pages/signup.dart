@@ -27,13 +27,21 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   Future<void> _handleSignup() async {
+    if (!_formKey.currentState!.validate()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('กรุณากรอกข้อมูลให้ครบถ้วนก่อนลงทะเบียน')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true); // 👈 เริ่มหมุนโหลด
     // 👇 เรียกไปหา Supabase ผ่าน AuthAPI
     final error = await _authAPI.signUpWithEmail(
       email: _email.text.trim(),
       password: _password.text.trim(),
     );
-    setState(() => _isLoading = true); // 👈 เริ่มหมุนโหลด
 
+    setState(() => _isLoading = false);
     if (!mounted) return;
     if (error == null) {
       // ✅ สมัครสำเร็จ
@@ -42,7 +50,6 @@ class _SignupScreenState extends State<SignupScreen> {
           content: Text('สมัครสมาชิกสำเร็จ'),
         ),
       );
-      setState(() => _isLoading = false); // 👈 เริ่มหมุนโหลด
 
       // จะไปหน้า OTP ต่อก็ได้ ถ้าระบบต้องการยืนยัน
       Navigator.push(
@@ -54,9 +61,43 @@ class _SignupScreenState extends State<SignupScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Email มีการลงทะเบียนแล้ว")),
       );
-
-      setState(() => _isLoading = false);
     }
+  }
+
+  String? validatePassword(String password) {
+    if (password.length < 6) {
+      return 'รหัสผ่านต้องยาวอย่างน้อย 6 ตัวอักษร';
+    }
+
+    bool hasUpper = false;
+    bool hasLower = false;
+    bool hasDigitOrSymbol = false;
+
+    for (int i = 0; i < password.length; i++) {
+      final char = password[i];
+
+      if (char.contains(RegExp(r'[A-Z]'))) {
+        hasUpper = true;
+      } else if (char.contains(RegExp(r'[a-z]'))) {
+        hasLower = true;
+      } else if (char.contains(RegExp(r'[0-9]')) ||
+          !char.contains(RegExp(r'[A-Za-z0-9]'))) {
+        // ตัวเลข หรืออย่างอื่นที่ไม่ใช่ตัวอักษร = สัญลักษณ์
+        hasDigitOrSymbol = true;
+      }
+    }
+
+    if (!hasUpper) {
+      return 'ต้องมีตัวอักษรพิมพ์ใหญ่ อย่างน้อย 1 ตัว';
+    }
+    if (!hasLower) {
+      return 'ต้องมีตัวอักษรพิมพ์เล็ก อย่างน้อย 1 ตัว';
+    }
+    if (!hasDigitOrSymbol) {
+      return 'ต้องมีตัวเลขหรือสัญลักษณ์พิเศษ อย่างน้อย 1 ตัว';
+    }
+
+    return null; // ผ่านทุกเงื่อนไข
   }
 
   @override
@@ -90,7 +131,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'สมัครสมาชิก',
+                        'ลงทะเบียน',
                         style: TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
@@ -143,10 +184,11 @@ class _SignupScreenState extends State<SignupScreen> {
                           if (value == null || value.isEmpty) {
                             return 'กรุณากรอกรหัสผ่าน';
                           }
-                          if (value.length < 6) {
-                            return 'รหัสผ่านต้องอย่างน้อย 6 ตัวอักษร';
-                          }
-                          return null;
+
+                          final error =
+                              validatePassword(value); // 👈 เรียกฟังก์ชันด้านบน
+
+                          return error; // ถ้า null = ผ่าน, ถ้าเป็น String = โชว์ข้อความนั้น
                         },
                       ),
                       const SizedBox(height: 5),
@@ -205,7 +247,7 @@ class _SignupScreenState extends State<SignupScreen> {
                             backgroundColor: const Color(0xFF1F497D),
                           ),
                           child: const Text(
-                            'สมัครสมาชิก',
+                            'ลงทะเบียน',
                             style: TextStyle(
                               color: Colors.white,
                               fontSize: 16,
