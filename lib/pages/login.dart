@@ -58,10 +58,10 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _restorePreviousEmail() {
     if (_lastEmail != null && _lastPassword != null) {
-      setState(() => {
-            _emailCtrl.text = _lastEmail!,
-            _passwordCtrl.text = _lastPassword!,
-          }); // สั่งให้ช่องโชว์ค่ากรอกครั้งแรก
+      setState(() {
+        _emailCtrl.text = _lastEmail!;
+        _passwordCtrl.text = _lastPassword!;
+      }); // สั่งให้ช่องโชว์ค่ากรอกครั้งแรก
     }
   }
 
@@ -262,25 +262,48 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text(
-                        'ลืมรหัสผ่าน',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      Stack(
+                        children: [
+                          // ปุ่มปิดด้านขวา
+                          Positioned(
+                            right: 0,
+                            child: IconButton(
+                              icon: const Icon(Icons.close),
+                              onPressed: () => Navigator.pop(context),
+                            ),
+                          ),
+
+                          // ข้อความอยู่กลางจริงๆ ตามพื้นที่ทั้งหมด
+                          const Center(
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(vertical: 8),
+                              child: Text(
+                                'ลืมรหัสผ่าน',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 30),
-                      const Text(
-                        'ฟังก์ชันลืมรหัสผ่านจะถูกเพิ่มในอนาคต',
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 24),
+                      ConstrainedBox(
+                          constraints: BoxConstraints(maxWidth: 400),
+                          child: Container(
+                            child: TextField(
+                              decoration: InputDecoration(
+                                labelText: 'Email',
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8.0),
+                                ),
+                              ),
+                            ),
+                          )),
+                      SizedBox(height: 24),
                       ElevatedButton(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                        child: const Text('ปิด'),
-                      ),
+                          onPressed: () {}, child: const Text('ตรวจสอบ Email')),
                     ],
                   ),
                 )),

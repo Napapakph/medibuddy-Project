@@ -36,4 +36,26 @@ return showDialog(
 ***  child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 300),) 
     ถ้าอยากกดหนดขนาดและให้ responsive ให้ใช้ ConstrainedBox
+
+-------------------------------------------------------------------------------
+Widget คือ “ตัวประกอบหน้าจอ” หรือ “วัตถุที่ใช้สร้าง UI” ใน Flutter
+ทุกอย่างที่คุณเห็นบนจอคือ Widget
+
+- Text
+- Containe
+- Row / Column
+- TextField
+- Scaffold
+- IconButton
+- AppBar
+
+
+Property คืออะไร
+
+Property คือ “คุณสมบัติ” หรือ “ค่าต่าง ๆ” ที่เราตั้งให้ Widget ใช้
+เช่น ขนาด สี มุมโค้ง ข้อความ การจัดวาง ฯลฯ
+Property = รายละเอียด / ตัวเลือกของ widget
+
+child คือ property ที่รับ widget
+--------------------------------------------------------------------------------
     

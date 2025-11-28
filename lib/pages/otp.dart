@@ -62,7 +62,7 @@ class _OTPScreenState extends State<OTPScreen> {
                             borderRadius: BorderRadius.all(Radius.circular(12)),
                             borderSide: BorderSide.none,
                           ),
-                          contentPadding: const EdgeInsets.only(top: 50),
+                          contentPadding: EdgeInsets.only(top: 50),
                         ),
                       ),
                     );
@@ -82,16 +82,16 @@ class _OTPScreenState extends State<OTPScreen> {
                   width: double.infinity,
                   child: OutlinedButton(
                     onPressed: () {},
-                    child: Text(
-                      'ยืนยัน',
-                      style: TextStyle(color: Colors.white, fontSize: 18),
-                    ),
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 20),
                       backgroundColor: const Color(0xFF1F497D),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(24),
                       ),
+                    ),
+                    child: Text(
+                      'ยืนยัน',
+                      style: TextStyle(color: Colors.white, fontSize: 18),
                     ),
                   ),
                 ),
