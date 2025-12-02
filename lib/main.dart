@@ -23,7 +23,7 @@ class MyApp extends StatelessWidget {
     // TODO: implement build
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      initialRoute: '/login', // 👈 หน้าแรกที่เปิด
+      initialRoute: '/signup', // 👈 หน้าแรกที่เปิด
       routes: {
         '/login': (_) => const LoginScreen(),
         '/signup': (_) => const SignupScreen(),
