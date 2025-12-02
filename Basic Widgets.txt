@@ -60,3 +60,26 @@ child คือ property ที่รับ widget
 --------------------------------------------------------------------------------
 
 OTP TextField -- https://pub.dev/packages/flutter_otp_text_field
+
+------ responsive --------------------------------------------------------------
+ body: SafeArea(
+        child: LayoutBuilder(builder: (context, constraints) {
+          final maxWidth = constraints.maxWidth;
+          final maxHeight = constraints.maxHeight;
+
+          //ถ้าจอกว้างแบบแท็บเล็ต
+          final bool isTablet = maxWidth > 600;
+
+          //จำกัดความกว้างสูงสุดของหน้าจอ
+          final double containerWidth = isTablet ? 500 : maxWidth;
+
+          return Center()
+        }
+        );)
+
+แนวการเขียน padding หรือ SizedBox (ใช้การ คูณขนาดจอที่ประมวณผลไว้แทน)
+
+padding: EdgeInsetsGeometry.fromLTRB(24, maxHeight * 0.06, 24,
+                    maxHeight * 0.04), // ระยะห่างด้านบน
+
+SizedBox(height: maxHeight * 0.02)

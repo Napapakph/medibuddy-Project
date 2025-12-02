@@ -126,82 +126,97 @@ class _OTPScreenState extends State<OTPScreen> {
         title: const Text('OTP Verification'),
       ),
       body: SafeArea(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 480),
-          child: Padding(
-            padding: const EdgeInsets.only(
-                left: 24, right: 24, top: 60), // ระยะห่างด้านบน),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'รหัส OTP',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Text('โปรดกรอกรหัส OTP ที่ส่งไปยังอีเมลของคุณ'),
-                const SizedBox(height: 40),
-                OtpTextField(
-                  numberOfFields: 6,
-                  borderColor: Color(0xFF512DA8),
-                  borderRadius: BorderRadius.circular(12),
-                  fieldHeight: 80,
-                  fieldWidth: 43,
-                  showFieldAsBox: true,
+        child: LayoutBuilder(builder: (context, constraints) {
+          final maxWidth = constraints.maxWidth;
+          final maxHeight = constraints.maxHeight;
 
-                  onSubmit: (String verificationCode) {
-                    _otp.text = verificationCode;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("OTP : $verificationCode")),
-                    );
-                  }, // end onSubmit
-                ),
-                Center(
-                  child: TextButton(
-                    onPressed: () async {
-                      await Supabase.instance.client.auth.resend(
-                        type: OtpType.signup,
-                        email: widget.email,
-                      );
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("ส่ง OTP ใหม่แล้ว")),
-                      );
-                    },
-                    child: const Text("ส่ง OTP อีกครั้ง"),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton(
-                    onPressed: () {
-                      confirmOTP();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 20),
-                      backgroundColor: const Color(0xFF1F497D),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24),
+          //ถ้าจอกว้างแบบแท็บเล็ต
+          final bool isTablet = maxWidth > 600;
+
+          //จำกัดความกว้างสูงสุดของหน้าจอ
+          final double containerWidth = isTablet ? 500 : maxWidth;
+
+          return Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: containerWidth),
+              child: Padding(
+                padding: EdgeInsetsGeometry.fromLTRB(24, maxHeight * 0.06, 24,
+                    maxHeight * 0.04), // ระยะห่างด้านบน),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'รหัส OTP',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                    child: Text(
-                      'ยืนยัน',
-                      style: TextStyle(color: Colors.white, fontSize: 18),
+                    SizedBox(height: maxHeight * 0.02),
+                    Text('โปรดกรอกรหัส OTP ที่ส่งไปยังอีเมลของคุณ'),
+                    SizedBox(height: maxHeight * 0.05),
+                    OtpTextField(
+                      numberOfFields: 6,
+                      borderColor: Color(0xFF512DA8),
+                      borderRadius: BorderRadius.circular(12),
+                      fieldHeight: maxHeight * 0.08,
+                      fieldWidth: maxWidth * 0.12,
+                      showFieldAsBox: true,
+
+                      onSubmit: (String verificationCode) {
+                        _otp.text = verificationCode;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text("OTP : $verificationCode")),
+                        );
+                      }, // end onSubmit
                     ),
-                  ),
+                    Center(
+                      child: TextButton(
+                        onPressed: () async {
+                          await Supabase.instance.client.auth.resend(
+                            type: OtpType.signup,
+                            email: widget.email,
+                          );
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text("ส่ง OTP ใหม่แล้ว")),
+                          );
+                        },
+                        child: const Text("ส่ง OTP อีกครั้ง"),
+                      ),
+                    ),
+                    SizedBox(height: maxHeight * 0.02),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton(
+                        onPressed: () {
+                          confirmOTP();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 20),
+                          backgroundColor: const Color(0xFF1F497D),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                        ),
+                        child: Text(
+                          'ยืนยัน',
+                          style: TextStyle(color: Colors.white, fontSize: 18),
+                        ),
+                      ),
+                    ),
+                    // ========ดันทุกอย่างขึ้นข้างบน========
+                    Expanded(child: SizedBox()),
+
+                    SizedBox(
+                      height: maxHeight * 0.4,
+                      child: Image.asset('assets/OTP.png'),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 10),
-                SizedBox(
-                  height: 300,
-                  child: Image.asset('assets/OTP.png'),
-                ),
-              ],
+              ),
             ),
-          ),
-        ),
+          );
+        }),
       ),
     );
   }
