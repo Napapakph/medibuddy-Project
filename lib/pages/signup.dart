@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'otp.dart';
 import '../aPI/authen_login.dart';
 
@@ -59,9 +60,9 @@ class _SignupScreenState extends State<SignupScreen> {
         //หน้า OTP จะรู้แล้วว่า OTP นี้เป็นของอีเมลไหน
       );
     } else {
-      // ❌ มี error จาก Supabase (เช่น email ซ้ำ)
+      // ❌ Debug มี error หรือ Supabase (เช่น email ซ้ำ)  ของ Supabase ยังไม่ได้ทำเช็ค
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Email มีการลงทะเบียนแล้ว")),
+        SnackBar(content: Text("Error อยู่น้าเลยรับ OTP ไม่ได้")),
       );
     }
   }
@@ -108,173 +109,189 @@ class _SignupScreenState extends State<SignupScreen> {
       backgroundColor: Colors.white,
       resizeToAvoidBottomInset: false,
       body: SafeArea(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 480),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // รูปแมวด้านบน
-              Align(
-                alignment: Alignment.topRight,
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 10),
-                  child: SizedBox(
-                    height: 220,
-                    child: Image.asset('assets/Sign_up_cat.png'),
+        child: LayoutBuilder(builder: (context, constraints) {
+          final maxWidth = constraints.maxWidth;
+          final maxHeight = constraints.maxHeight;
+
+          //ถ้าจอกว้างแบบแท็บเล็ต
+          final bool isTablet = maxWidth > 600;
+
+          //จำกัดความกว้างสูงสุดของหน้าจอ
+          final double containerWidth = isTablet ? 500 : maxWidth;
+          return Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(
+                  maxWidth: 480, maxHeight: double.infinity),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // รูปแมวด้านบน
+                  Align(
+                    alignment: Alignment.topRight,
+                    child: Padding(
+                      padding: EdgeInsets.only(top: maxHeight * 0.01),
+                      child: SizedBox(
+                        height: maxHeight * 0.3,
+                        child: Image.asset('assets/Sign_up_cat.png'),
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              // ฟอร์ม
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'ลงทะเบียน',
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      TextFormField(
-                        controller: _email,
-                        decoration: InputDecoration(
-                          labelText: 'อีเมล',
-                          filled: true, // เติมสีพื้นหลัง
-                          fillColor: const Color(0xFFE9EEF3),
-                          border: OutlineInputBorder(
-                            // ขอบมน
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            // เพิ่มพื้นที่ภายใน
-                            horizontal: 16,
-                            vertical: 14,
-                          ),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'กรุณากรอกอีเมล';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 12),
-
-                      TextFormField(
-                        controller: _password,
-                        obscureText: true,
-                        decoration: InputDecoration(
-                          labelText: 'รหัสผ่าน',
-                          filled: true,
-                          fillColor: const Color(0xFFE9EEF3),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 14,
-                          ),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'กรุณากรอกรหัสผ่าน';
-                          }
-
-                          final error =
-                              validatePassword(value); // 👈 เรียกฟังก์ชันด้านบน
-
-                          return error; // ถ้า null = ผ่าน, ถ้าเป็น String = โชว์ข้อความนั้น
-                        },
-                      ),
-                      const SizedBox(height: 5),
-
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          [
-                            '- ความยาวอย่างน้อย 6 ตัวอักษร',
-                            '- ตัวอักษรพิมพ์ใหญ่และพิมพ์เล็ก',
-                            '- ตัวเลขหรือสัญลักษณ์พิเศษ',
-                          ].join('\n'),
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-
-                      TextFormField(
-                        controller: _confirmPasswordCtrl,
-                        obscureText: true,
-                        decoration: InputDecoration(
-                          labelText: 'ยืนยันรหัสผ่าน',
-                          filled: true,
-                          fillColor: const Color(0xFFE9EEF3),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide.none,
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 14),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'กรุณายืนยันรหัสผ่าน';
-                          }
-                          if (value != _password.text) {
-                            return 'รหัสผ่านไม่ตรงกัน';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 24),
-
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: _isLoading ? null : _handleSignup,
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(24),
-                            ),
-                            backgroundColor: const Color(0xFF1F497D),
-                          ),
-                          child: const Text(
+                  // ฟอร์ม
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: maxWidth * 0.05),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
                             'ลงทะเบียน',
                             style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
+                          SizedBox(height: maxHeight * 0.03),
+                          TextFormField(
+                            controller: _email,
+                            decoration: InputDecoration(
+                              labelText: 'อีเมล',
+                              filled: true, // เติมสีพื้นหลัง
+                              fillColor: const Color(0xFFE9EEF3),
+                              border: OutlineInputBorder(
+                                // ขอบมน
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none,
+                              ),
+                              contentPadding: EdgeInsets.symmetric(
+                                // เพิ่มพื้นที่ภายใน
+                                horizontal: maxWidth * 0.04,
+                                vertical: maxHeight * 0.01,
+                              ),
+                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'กรุณากรอกอีเมล';
+                              }
+                              return null;
+                            },
+                          ),
+                          SizedBox(height: maxHeight * 0.01),
 
-                      // กลับไปหน้าเข้าสู่ระบบ
-                      Center(
-                        child: TextButton(
-                          onPressed: () {
-                            Navigator.pop(context); // กลับไปหน้าเข้าสู่ระบบ
-                          },
-                          child: const Text('มีบัญชีแล้ว? เข้าสู่ระบบ'),
-                        ),
-                      )
-                    ],
+                          TextFormField(
+                            controller: _password,
+                            obscureText: true,
+                            decoration: InputDecoration(
+                              labelText: 'รหัสผ่าน',
+                              filled: true,
+                              fillColor: const Color(0xFFE9EEF3),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none,
+                              ),
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: maxWidth * 0.04,
+                                vertical: maxHeight * 0.01,
+                              ),
+                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'กรุณากรอกรหัสผ่าน';
+                              }
+
+                              final error = validatePassword(
+                                  value); // 👈 เรียกฟังก์ชันด้านบน
+
+                              return error; // ถ้า null = ผ่าน, ถ้าเป็น String = โชว์ข้อความนั้น
+                            },
+                          ),
+                          SizedBox(height: maxHeight * 0.01),
+
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              [
+                                '- ความยาวอย่างน้อย 6 ตัวอักษร',
+                                '- ตัวอักษรพิมพ์ใหญ่และพิมพ์เล็ก',
+                                '- ตัวเลขหรือสัญลักษณ์พิเศษ',
+                              ].join('\n'),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: maxHeight * 0.01),
+
+                          TextFormField(
+                            controller: _confirmPasswordCtrl,
+                            obscureText: true,
+                            decoration: InputDecoration(
+                              labelText: 'ยืนยันรหัสผ่าน',
+                              filled: true,
+                              fillColor: const Color(0xFFE9EEF3),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none,
+                              ),
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: maxWidth * 0.04,
+                                vertical: maxHeight * 0.01,
+                              ),
+                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'กรุณายืนยันรหัสผ่าน';
+                              }
+                              if (value != _password.text) {
+                                return 'รหัสผ่านไม่ตรงกัน';
+                              }
+                              return null;
+                            },
+                          ),
+                          SizedBox(height: maxHeight * 0.02),
+
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: _isLoading ? null : _handleSignup,
+                              style: ElevatedButton.styleFrom(
+                                padding: EdgeInsets.symmetric(
+                                    vertical: maxHeight * 0.02),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(24),
+                                ),
+                                backgroundColor: const Color(0xFF1F497D),
+                              ),
+                              child: const Text(
+                                'ลงทะเบียน',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: maxHeight * 0.02),
+
+                          // กลับไปหน้าเข้าสู่ระบบ
+                          Center(
+                            child: TextButton(
+                              onPressed: () {
+                                Navigator.pop(context); // กลับไปหน้าเข้าสู่ระบบ
+                              },
+                              child: const Text('มีบัญชีแล้ว? เข้าสู่ระบบ'),
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
-            ],
-          ),
-        ),
+            ),
+          );
+        }),
       ),
     );
   }
