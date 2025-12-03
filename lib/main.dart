@@ -3,6 +3,7 @@ import 'pages/login.dart';
 import 'package:supabase_flutter/supabase_flutter.dart\ ';
 import 'pages/signup.dart';
 import 'pages/otp.dart';
+import 'pages/forget_password.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,6 +29,7 @@ class MyApp extends StatelessWidget {
         '/login': (_) => const LoginScreen(),
         '/signup': (_) => const SignupScreen(),
         '/otp': (_) => const OTPScreen(email: ''),
+        '/forget_password': (_) => const ForgetPassword(),
       },
     );
   }
