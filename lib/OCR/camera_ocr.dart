@@ -23,7 +23,7 @@ class _CameraOcrPageState extends State<CameraOcrPage> {
     if (photo == null) return;
     setState(() => _capturedPhoto = File(photo.path));
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('บันทึกภาพสำเร็จ')),
+      const SnackBar(content: Text('บันทึกภาพสำเร็จ แล้วจ้า!')),
     );
   }
 
