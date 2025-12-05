@@ -96,3 +96,12 @@ async	บอกว่าฟังก์ชันนี้มีงาน async
 await	รอให้ Future เสร็จก่อน แล้วทำงานต่อ
 
 -----------------------------------------------------------------------------------
+
+Widget (ลูก)	          ต้องอยู่ใน (พ่อ)
+Positioned	           Stack
+Expanded	             Row / Column / Flex
+Flexible	             Row / Column / Flex
+SliverToBoxAdapter	   CustomScrollView
+TableCell	             Table
+
+-----------------------------------------------------------------------------------

@@ -126,8 +126,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // รูปแมวด้านบน
-                  Positioned(
-                      child: Align(
+                  Align(
                     alignment: Alignment.topRight,
                     child: SizedBox(
                       height: maxHeight * 0.25,
@@ -135,7 +134,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         'assets/Sign_up_cat.png',
                       ),
                     ),
-                  )),
+                  ),
 
                   Center(
                     child: Padding(
