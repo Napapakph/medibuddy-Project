@@ -119,6 +119,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             ? profileImageUrl ?? ''
                                             : '');
 
+                                    // เพิ่มโปรไฟล์ใหม่ลงในรายการ
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                            'บันทึกข้อมูลเรียบร้อย: $profile'),
+                                      ),
+                                    );
+
                                     setState(() => _isLoading = false);
                                     Navigator.push(
                                       context,
@@ -154,7 +162,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Align(
                     alignment: Alignment.bottomCenter,
                     child: SizedBox(
-                      height: maxHeight * 0.35,
+                      height: maxHeight * 0.4,
                       child: Image.asset(
                         'assets/cat_profile.png',
                       ),

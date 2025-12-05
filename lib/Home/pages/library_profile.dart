@@ -89,7 +89,8 @@ class _LibraryProfileState extends State<LibraryProfile> {
                                 )
                               : ListView.builder(
                                   padding: EdgeInsets.symmetric(
-                                      vertical: maxHeight * 0.02),
+                                      vertical: maxHeight * 0.02,
+                                      horizontal: 0),
                                   itemCount: profiles.length,
                                   itemBuilder: (context, index) {
                                     final profile = profiles[index];
@@ -105,14 +106,14 @@ class _LibraryProfileState extends State<LibraryProfile> {
                                               child: Icon(Icons.person)),
                                       title: Container(
                                         padding: EdgeInsets.symmetric(
-                                          vertical: maxHeight * 0.01,
-                                          horizontal: maxWidth * 0.02,
+                                          vertical: maxHeight * 0.02,
+                                          horizontal: maxWidth * 0.03,
                                         ),
                                         decoration: BoxDecoration(
                                           color: const Color.fromARGB(
                                               137, 217, 217, 217),
                                           borderRadius:
-                                              BorderRadius.circular(12),
+                                              BorderRadius.circular(20),
                                         ),
                                         child: Text(
                                           profile.username,
@@ -129,15 +130,20 @@ class _LibraryProfileState extends State<LibraryProfile> {
                                             icon: const Icon(Icons.edit,
                                                 color: Colors.blueGrey),
                                             tooltip: 'แก้ไขผู้ใช้งาน',
+                                            constraints: const BoxConstraints(),
                                             onPressed: () =>
                                                 _editProfile(index),
+                                            padding: EdgeInsets.zero,
                                           ),
+                                          SizedBox(width: maxWidth * 0.01),
                                           IconButton(
                                             icon: const Icon(Icons.delete,
                                                 color: Colors.redAccent),
                                             tooltip: 'ลบผู้ใช้งาน',
+                                            constraints: const BoxConstraints(),
                                             onPressed: () =>
                                                 _confirmDeleteProfile(index),
+                                            padding: EdgeInsets.zero,
                                           ),
                                         ],
                                       ),
@@ -146,9 +152,8 @@ class _LibraryProfileState extends State<LibraryProfile> {
                                 ),
                         ),
                       ),
-                      SizedBox(
-                          height: maxHeight *
-                              0.03), // 🔹 ปุ่มเพิ่มผู้ใช้งานใหม่ — จะอยู่ชิดกรอบเสมอ
+                      SizedBox(height: maxHeight * 0.03),
+                      // 🔹 ปุ่มเพิ่มผู้ใช้งานใหม่ — จะอยู่ชิดกรอบเสมอ
                       Align(
                         alignment: Alignment.bottomCenter,
                         child: ElevatedButton(
