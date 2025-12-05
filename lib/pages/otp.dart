@@ -140,6 +140,7 @@ class _OTPScreenState extends State<OTPScreen> {
             child: ConstrainedBox(
               constraints: BoxConstraints(maxWidth: containerWidth),
               child: Padding(
+                padding: EdgeInsetsGeometry.fromLTRB(24, maxHeight * 0.06, 24,
                 padding: EdgeInsetsGeometry.fromLTRB(24, maxHeight * 0.02, 24,
                     maxHeight * 0.04), // ระยะห่างด้านบน),
                 child: Column(
@@ -152,6 +153,9 @@ class _OTPScreenState extends State<OTPScreen> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
+                    SizedBox(height: maxHeight * 0.02),
+                    Text('โปรดกรอกรหัส OTP ที่ส่งไปยังอีเมลของคุณ'),
+                    SizedBox(height: maxHeight * 0.05),
                     SizedBox(height: maxHeight * 0.01),
                     Text('โปรดกรอกรหัส OTP ที่ส่งไปยังอีเมลของคุณ'),
                     SizedBox(height: maxHeight * 0.04),
@@ -159,6 +163,7 @@ class _OTPScreenState extends State<OTPScreen> {
                       numberOfFields: 6,
                       borderColor: Color(0xFF512DA8),
                       borderRadius: BorderRadius.circular(12),
+                      fieldHeight: maxHeight * 0.08,
                       fieldHeight: maxHeight * 0.09,
                       fieldWidth: maxWidth * 0.12,
                       showFieldAsBox: true,

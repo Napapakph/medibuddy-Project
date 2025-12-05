@@ -1,1 +1,114 @@
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
+class CameraOcrPage extends StatefulWidget {
+  const CameraOcrPage({super.key});
+
+  @override
+  State<CameraOcrPage> createState() => _CameraOcrPageState();
+}
+
+class _CameraOcrPageState extends State<CameraOcrPage> {
+  final ImagePicker _imagePicker = ImagePicker();
+  File? _capturedPhoto;
+
+  Future<void> _capturePhoto() async {
+    // 1) รอเลือก / ถ่ายรูป
+    final XFile? photo = await _imagePicker.pickImage(
+      source: ImageSource.camera,
+      preferredCameraDevice: CameraDevice.rear,
+      imageQuality: 80,
+    );
+    // 2) หลัง await *ต้อง* เช็คว่าหน้านี้ยังอยู่มั้ย
+    if (!mounted) return;
+
+    // 3) ถ้า user กดออก หรือกด back จนไม่มีรูป ก็ไม่ต้องทำต่อ
+    if (photo == null) return;
+    // 4) ตอนนี้ปลอดภัย ใช้ setState ได้แล้ว
+    setState(() => _capturedPhoto = File(photo.path));
+
+    // 5) ใช้ context แสดง SnackBar ได้ ปลอดภัยแล้ว
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('บันทึกภาพสำเร็จ แล้วจ้า!')),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('กล้อง OCR'),
+        backgroundColor: const Color(0xFF1F497D),
+      ),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Text(
+                'กดปุ่มถ่ายภาพเพื่อเก็บข้อมูล แล้วภาพจะขึ้นแสดงด้านล่าง ',
+                style: TextStyle(fontSize: 16),
+              ),
+              const SizedBox(height: 20),
+              Expanded(
+                child: Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: Colors.grey.shade300),
+                    color: Colors.grey.shade50,
+                  ),
+                  child: _capturedPhoto == null
+                      ? Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: const [
+                              Icon(Icons.camera_alt,
+                                  size: 60, color: Colors.grey),
+                              SizedBox(height: 12),
+                              Text(
+                                'ยังไม่มีภาพถ่าย',
+                                style:
+                                    TextStyle(fontSize: 16, color: Colors.grey),
+                              ),
+                            ],
+                          ),
+                        )
+                      : ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: Image.file(
+                            _capturedPhoto!,
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                          ),
+                        ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              ElevatedButton.icon(
+                onPressed: _capturePhoto,
+                icon: const Icon(
+                  Icons.camera_alt,
+                  color: Color.fromRGBO(255, 255, 255, 1),
+                ),
+                label: const Text(
+                  'ถ่ายภาพและบันทึก',
+                  style: TextStyle(color: Color.fromARGB(255, 255, 255, 255)),
+                ),
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  backgroundColor: const Color(0xFF1F497D),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
