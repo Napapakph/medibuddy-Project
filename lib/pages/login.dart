@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import '../services/mock_auth_service.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'signup.dart';
 import '../widgets/login_button.dart';
-import '../Home/pages/home.dart';
+import '../Home/pages/ocr.dart';
 import '../pages/forget_password.dart';
+import '../Home/pages/profile_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -42,9 +42,8 @@ class _LoginScreenState extends State<LoginScreen> {
       password: _passwordCtrl.text.trim(),
     );
 
-    setState(() => _isLoading = false);
-
     if (!mounted) return;
+    setState(() => _isLoading = false);
 
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -54,7 +53,7 @@ class _LoginScreenState extends State<LoginScreen> {
       Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => const homePage(),
+            builder: (context) => const ProfileScreen(),
           ));
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -89,7 +88,7 @@ class _LoginScreenState extends State<LoginScreen> {
           final double containerWidth = isTablet ? 500 : maxWidth;
           return Center(
             child: SizedBox(
-              width: containerWidth, // 👈 ใช้จริงแล้ว
+              width: containerWidth,
               child: Stack(
                 children: [
                   //รูปแมว
@@ -168,7 +167,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                               ),
                               validator: (value) {
-                                if (value == null || value.isEmpty) {
+                                if (value == null || value.trim().isEmpty) {
                                   return 'กรุณากรอกรหัสผ่าน';
                                 }
                                 return null;
@@ -279,7 +278,7 @@ class _LoginScreenState extends State<LoginScreen> {
     //ไว้เพิ่มฟังก์ชันลืมรหัสผ่านในอนาคต
     return showDialog(
         context: context,
-        builder: (context) {
+        builder: (dialogContext) {
           return Dialog(
             child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 400),
@@ -330,6 +329,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       SizedBox(height: 24),
                       ElevatedButton(
                           onPressed: () {
+                            // 1) ปิด popup ก่อน
+                            Navigator.pop(dialogContext);
+
                             Navigator.push(
                               context,
                               MaterialPageRoute(

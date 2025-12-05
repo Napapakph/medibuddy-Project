@@ -76,3 +76,36 @@ class SignupButton extends StatelessWidget {
     );
   }
 }
+
+class resetPassword extends StatelessWidget {
+  final String text;
+  final VoidCallback onPressed;
+
+  const resetPassword({
+    super.key,
+    required this.text,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          backgroundColor: const Color(0xFFB7DAFF),
+          foregroundColor: Colors.black87,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+        ),
+        child: const Text(
+          'สร้างรหัสผ่านใหม่',
+          style: TextStyle(fontSize: 16, color: Color.fromARGB(255, 0, 0, 0)),
+        ),
+      ),
+    );
+  }
+}

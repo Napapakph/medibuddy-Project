@@ -92,6 +92,8 @@ SizedBox(height: maxHeight * 0.02)
 0.8 = สูงขึ้นมากขึ้น
 ยิ่งใกล้ 1 → ยิ่งชิดล่าง
 
+resizeToAvoidBottomInset: false, ปิดการเลื่อนขึ้นจากแป้นพิมพ์
+
 -----------------------------------------------------------------------------------
 
 🟢 ใช้อย่างไรให้จำง่าย
@@ -115,4 +117,29 @@ Flexible	             Row / Column / Flex
 SliverToBoxAdapter	   CustomScrollView
 TableCell	             Table
 
------------------------------------------------------------------------------------
+---------------------children--------------------------------------------------
+✔ ใช้ children: เมื่อ widget รองรับ “หลายตัวลูกพร้อมกัน”
+
+ตัวอย่าง widget ที่มี children:
+
+📌 Layout หลายชั้น (รองรับหลาย widget)
+
+Column(children: [...])
+Row(children: [...])
+Stack(children: [...])
+ListView(children: [...])
+GridView(children: [...])
+Wrap(children: [...])
+PageView(children: [...])
+IndexedStack(children: [...])
+
+📌 เมนู / List / Grid
+DropdownButton(items: [...])
+NavigationRail(destinations: [...])
+BottomNavigationBar(items: [...])
+
+----------------การใช้ navigator ---------------------------
+push()	    เพิ่มหน้าใหม่ทับหน้าเดิม	--> ไปหน้าใหม่ที่ต้องการให้ user กดย้อนกลับได้
+pop()	      ปิดหน้าปัจจุบัน	---> ปิด popup หรือย้อนกลับ
+pushReplacement()	    ลบหน้าเดิมแล้วแทนด้วยหน้าใหม่	---> ไม่ต้องการให้ user ย้อนกลับไปหน้าเดิมอีก
+
