@@ -91,7 +91,7 @@ class _LoginScreenState extends State<LoginScreen> {
               width: containerWidth,
               child: Stack(
                 children: [
-                  //รูปแมว
+                  //รูปแมว ---------------------------------------------------------------------
                   Align(
                     alignment: Alignment.topRight,
                     child: SizedBox(
@@ -102,6 +102,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   SizedBox(height: maxHeight * 0.02),
+                  //รูปแมว ---------------------------------------------------------------------
                   // ฟอร์มล็อกอิน
                   Align(
                     alignment: Alignment(0, 0.7),

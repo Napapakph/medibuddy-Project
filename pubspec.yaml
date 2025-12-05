@@ -69,6 +69,7 @@ flutter:
      - assets/cat_login.png
      - assets/Sign_up_cat.png
      - assets/OTP.png
+     - assets/cat_profile.png
 
 
   # An image asset can refer to one or more resolution-specific "variants", see
