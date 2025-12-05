@@ -60,101 +60,109 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  //SizedBox(height: maxHeight * 0.02),
-                  // รูปโปรไฟล์------------------------------------------------
-                  Align(
-                      alignment: Alignment.center,
-                      child: SizedBox(
-                        width: avatarSize, // เส้นผ่านศูนย์กลาง
-                        height: avatarSize,
-                        child: Stack(
-                          clipBehavior: Clip.none,
-                          children: [
-                            _buildProfileCircle(avatarSize),
-                            _buildCameraButton(avatarSize),
-                          ],
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        //SizedBox(height: maxHeight * 0.02),
+                        // รูปโปรไฟล์------------------------------------------------
+                        Align(
+                            alignment: Alignment.center,
+                            child: SizedBox(
+                              width: avatarSize, // เส้นผ่านศูนย์กลาง
+                              height: avatarSize,
+                              child: Stack(
+                                clipBehavior: Clip.none,
+                                children: [
+                                  _buildProfileCircle(avatarSize),
+                                  _buildCameraButton(avatarSize),
+                                ],
+                              ),
+                            )),
+                        // รูปโปรไฟล์------------------------------------------------
+                        SizedBox(height: maxHeight * 0.04),
+                        // ช่องกรอกชื่อผู้ใช้-----------------------------------------------
+                        Form(
+                          key: _formKey,
+                          child: TextFormField(
+                            controller: _usernameController,
+                            decoration: InputDecoration(
+                              labelText: 'ชื่อผู้ใช้',
+                              filled: true,
+                              fillColor:
+                                  const Color.fromARGB(255, 255, 255, 255),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(20),
+                                borderSide: BorderSide.none,
+                              ),
+                            ),
+                            validator: (value) => value == null || value.isEmpty
+                                ? 'กรุณากรอกชื่อผู้ใช้'
+                                : null,
+                          ),
                         ),
-                      )),
-                  // รูปโปรไฟล์------------------------------------------------
-                  SizedBox(height: maxHeight * 0.04),
-                  // ช่องกรอกชื่อผู้ใช้-----------------------------------------------
-                  Form(
-                    key: _formKey,
-                    child: TextFormField(
-                      controller: _usernameController,
-                      decoration: InputDecoration(
-                        labelText: 'ชื่อผู้ใช้',
-                        filled: true,
-                        fillColor: const Color.fromARGB(255, 255, 255, 255),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(20),
-                          borderSide: BorderSide.none,
+                        // ช่องกรอกชื่อผู้ใช้---------------------------------------------------------------------
+                        SizedBox(height: maxHeight * 0.05),
+                        // ปุ่มบันทึกข้อมูล----------------------------------------------------------------------
+                        Align(
+                          alignment: Alignment.center,
+                          child: ElevatedButton(
+                            onPressed: _isLoading
+                                ? null
+                                : () async {
+                                    if (!_formKey.currentState!.validate())
+                                      return;
+                                    setState(() => _isLoading = true);
+                                    final profile = ProfileModel(
+                                        _usernameController.text.trim(),
+                                        _profileImage != null
+                                            ? profileImageUrl ?? ''
+                                            : '');
+
+                                    // เพิ่มโปรไฟล์ใหม่ลงในรายการ
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                            'บันทึกข้อมูลเรียบร้อย: $profile'),
+                                      ),
+                                    );
+
+                                    setState(() => _isLoading = false);
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => LibraryProfile(
+                                            initialProfile: profile),
+                                      ),
+                                    );
+                                  },
+                            style: ElevatedButton.styleFrom(
+                              padding: EdgeInsets.symmetric(
+                                  vertical: maxHeight * 0.02,
+                                  horizontal: maxWidth * 0.03),
+                              backgroundColor: Color(0xFF1F497D),
+                              foregroundColor: Colors.black87,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                            ),
+                            child: const Text(
+                              'บันทึกข้อมูล',
+                              style: TextStyle(
+                                  fontSize: 16,
+                                  color: Color.fromARGB(255, 255, 255, 255)),
+                            ),
+                          ),
                         ),
-                      ),
-                      validator: (value) => value == null || value.isEmpty
-                          ? 'กรุณากรอกชื่อผู้ใช้'
-                          : null,
+                        // ปุ่มบันทึกข้อมูล---------------------------------------------------------------------
+                        //รูปแมว ---------------------------------------------------------------------------
+                      ],
                     ),
                   ),
-                  // ช่องกรอกชื่อผู้ใช้---------------------------------------------------------------------
-                  SizedBox(height: maxHeight * 0.02),
-                  // ปุ่มบันทึกข้อมูล----------------------------------------------------------------------
-                  Align(
-                    alignment: Alignment.center,
-                    child: ElevatedButton(
-                      onPressed: _isLoading
-                          ? null
-                          : () async {
-                              if (!_formKey.currentState!.validate()) return;
-                              setState(() => _isLoading = true);
-                              final profile = ProfileModel(
-                                  _usernameController.text.trim(),
-                                  _profileImage != null
-                                      ? profileImageUrl ?? ''
-                                      : '');
-
-                              // เพิ่มโปรไฟล์ใหม่ลงในรายการ
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content:
-                                      Text('บันทึกข้อมูลเรียบร้อย: $profile'),
-                                ),
-                              );
-
-                              setState(() => _isLoading = false);
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                      LibraryProfile(initialProfile: profile),
-                                ),
-                              );
-                            },
-                      style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.symmetric(
-                            vertical: maxHeight * 0.02,
-                            horizontal: maxWidth * 0.03),
-                        backgroundColor: Color(0xFF1F497D),
-                        foregroundColor: Colors.black87,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                      ),
-                      child: const Text(
-                        'บันทึกข้อมูล',
-                        style: TextStyle(
-                            fontSize: 16,
-                            color: Color.fromARGB(255, 255, 255, 255)),
-                      ),
-                    ),
-                  ),
-                  // ปุ่มบันทึกข้อมูล---------------------------------------------------------------------
-                  //รูปแมว ---------------------------------------------------------------------------
-
                   Align(
                     alignment: Alignment.bottomCenter,
                     child: SizedBox(
-                      height: maxHeight * 0.4,
+                      height: maxHeight * 0.35,
                       child: Image.asset(
                         'assets/cat_profile.png',
                       ),
