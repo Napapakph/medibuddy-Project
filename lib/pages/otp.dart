@@ -141,7 +141,6 @@ class _OTPScreenState extends State<OTPScreen> {
               constraints: BoxConstraints(maxWidth: containerWidth),
               child: Padding(
                 padding: EdgeInsetsGeometry.fromLTRB(24, maxHeight * 0.06, 24,
-                padding: EdgeInsetsGeometry.fromLTRB(24, maxHeight * 0.02, 24,
                     maxHeight * 0.04), // ระยะห่างด้านบน),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -164,7 +163,7 @@ class _OTPScreenState extends State<OTPScreen> {
                       borderColor: Color(0xFF512DA8),
                       borderRadius: BorderRadius.circular(12),
                       fieldHeight: maxHeight * 0.08,
-                      fieldHeight: maxHeight * 0.09,
+
                       fieldWidth: maxWidth * 0.12,
                       showFieldAsBox: true,
 
