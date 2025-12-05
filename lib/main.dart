@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'pages/login.dart';
-import 'package:supabase_flutter/supabase_flutter.dart\ ';
+import 'package:supabase_flutter/supabase_flutter.dart ';
 import 'pages/signup.dart';
 import 'pages/otp.dart';
 import 'pages/forget_password.dart';

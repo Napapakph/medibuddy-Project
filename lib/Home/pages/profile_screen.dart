@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -9,11 +10,16 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   final _formKey = GlobalKey<FormState>();
-
+  final TextEditingController _usernameController =
+      TextEditingController(); // ตัวควบคุมข้อความชื่อผู้ใช้
+  String?
+      username; // เก็บชื่อผู้ใช้ที่สร้างเสร็จแล้ว // ค่าตั้งต้นของชื่อผู้ใช้
+  String? profileImageUrl; // เก็บ URL รูปโปรไฟล์
   bool _isLoading = false; // สถานะการโหลด
 
   @override
   void dispose() {
+    _usernameController.dispose();
     super.dispose();
   }
 
@@ -47,8 +53,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   SizedBox(height: maxHeight * 0.02),
+                  // ช่องกรอกชื่อผู้ใช้-----------------------------------------------
                   Form(
                     child: TextFormField(
+                      key: _formKey,
+                      controller: _usernameController,
                       decoration: InputDecoration(
                         labelText: 'ชื่อผู้ใช้',
                         filled: true,
@@ -60,11 +69,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
                   ),
+                  // ช่องกรอกชื่อผู้ใช้-----------------------------------------------
                   SizedBox(height: maxHeight * 0.02),
                   Align(
                     alignment: Alignment.center,
                     child: ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        setState(() {
+                          username = _usernameController.text.trim();
+                        });
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('บันทึกข้อมูลเรียบร้อย: $username'),
+                          ),
+                        );
+                      },
                       style: ElevatedButton.styleFrom(
                         padding: EdgeInsets.symmetric(
                             vertical: maxHeight * 0.02,
