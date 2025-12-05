@@ -152,10 +152,8 @@ class _OTPScreenState extends State<OTPScreen> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
+
                     SizedBox(height: maxHeight * 0.02),
-                    Text('โปรดกรอกรหัส OTP ที่ส่งไปยังอีเมลของคุณ'),
-                    SizedBox(height: maxHeight * 0.05),
-                    SizedBox(height: maxHeight * 0.01),
                     Text('โปรดกรอกรหัส OTP ที่ส่งไปยังอีเมลของคุณ'),
                     SizedBox(height: maxHeight * 0.04),
                     OtpTextField(
