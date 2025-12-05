@@ -1,10 +1,10 @@
 class ProfileModel {
   String username = '';
-  String profileImageUrl = '';
+  String imagePath = '';
 
   // Constructor
-  ProfileModel(String username, String profileImageUrl) {
+  ProfileModel(String username, String imagePath) {
     this.username = username;
-    this.profileImageUrl = profileImageUrl;
+    this.imagePath = imagePath;
   }
 }

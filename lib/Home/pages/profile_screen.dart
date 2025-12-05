@@ -109,9 +109,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               setState(() => _isLoading = true);
                               final profile = ProfileModel(
                                   _usernameController.text.trim(),
-                                  profileImageUrl ?? '');
+                                  _profileImage != null
+                                      ? profileImageUrl ?? ''
+                                      : '');
 
-                              profiles.add(profile);
                               // เพิ่มโปรไฟล์ใหม่ลงในรายการ
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
@@ -239,6 +240,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     // ถ้าเลือกภาพได้ → อัปเดต state
     setState(() {
       _profileImage = FileImage(File(image.path));
+      profileImageUrl = image.path; // ⭐ เก็บ path เอาไว้ส่งไปหน้าอื่น
     });
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('เปลี่ยนรูปโปรไฟล์สำเร็จ')),

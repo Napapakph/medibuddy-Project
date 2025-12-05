@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:medibuddy/Model/profile_model.dart';
 import 'profile_screen.dart';
-
-List<ProfileModel> profiles = [];
+import 'dart:io';
 
 class LibraryProfile extends StatefulWidget {
   const LibraryProfile({Key? key, this.initialProfile}) : super(key: key);
@@ -53,14 +52,12 @@ class _LibraryProfileState extends State<LibraryProfile> {
               itemBuilder: (context, index) {
                 final profile = profiles[index];
                 return ListTile(
-                  leading: profile.profileImageUrl.isNotEmpty
+                  leading: (profile.imagePath != null &&
+                          profile.imagePath!.isNotEmpty)
                       ? CircleAvatar(
-                          backgroundImage:
-                              NetworkImage(profile.profileImageUrl),
+                          backgroundImage: FileImage(File(profile.imagePath!)),
                         )
-                      : const CircleAvatar(
-                          child: Icon(Icons.person),
-                        ),
+                      : const CircleAvatar(child: Icon(Icons.person)),
                   title: Text(profile.username),
                 );
               },
@@ -69,3 +66,17 @@ class _LibraryProfileState extends State<LibraryProfile> {
         ));
   }
 }
+
+/*
+สรุป Flow การส่งข้อมูลทำงานแบบนี้
+1. ProfileScreen
+ผู้ใช้กรอกชื่อ
+เลือกรูปจาก gallery → ได้ image.path
+กดบันทึก → สร้าง ProfileModel(username, imagePath)
+ส่งไปหน้า LibraryProfile
+
+2. LibraryProfile
+รับ model จากหน้าแรก
+แสดงรูปด้วย FileImage(File(path))
+แสดงชื่อด้วย Text(profile.username)
+*/
