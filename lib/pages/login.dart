@@ -4,6 +4,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'signup.dart';
 import '../widgets/login_button.dart';
 import '../Home/pages/home.dart';
+import '../pages/forget_password.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -313,14 +314,22 @@ class _LoginScreenState extends State<LoginScreen> {
                               decoration: InputDecoration(
                                 labelText: 'Email',
                                 border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(8.0),
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
                               ),
                             ),
                           )),
                       SizedBox(height: 24),
                       ElevatedButton(
-                          onPressed: () {}, child: const Text('ตรวจสอบ Email')),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const ForgetPassword(),
+                              ),
+                            );
+                          },
+                          child: const Text('ตรวจสอบ Email')),
                     ],
                   ),
                 )),
