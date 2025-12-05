@@ -119,14 +119,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             ? profileImageUrl ?? ''
                                             : '');
 
-                                    // เพิ่มโปรไฟล์ใหม่ลงในรายการ
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                            'บันทึกข้อมูลเรียบร้อย: $profile'),
-                                      ),
-                                    );
-
                                     setState(() => _isLoading = false);
                                     Navigator.push(
                                       context,
