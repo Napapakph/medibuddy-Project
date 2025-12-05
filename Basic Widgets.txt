@@ -75,7 +75,8 @@ OTP TextField -- https://pub.dev/packages/flutter_otp_text_field
 
           return Center()
         }
-        );)
+ ),);
+        
 
 แนวการเขียน padding หรือ SizedBox (ใช้การ คูณขนาดจอที่ประมวณผลไว้แทน)
 

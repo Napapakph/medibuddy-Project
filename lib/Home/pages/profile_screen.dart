@@ -45,6 +45,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
         //ถ้าจอกว้างแบบแท็บเล็ต
         final bool isTablet = maxWidth > 600;
+        // คำนวณขนาดรูปโปรไฟล์จากขนาดจอ
+        double avatarSize = maxWidth * 0.50;
+        avatarSize = avatarSize.clamp(100.0, 180.0); // อย่างน้อย 100 สูงสุด 180
 
         //จำกัดความกว้างสูงสุดของหน้าจอ
         final double containerWidth = isTablet ? 500 : maxWidth;
@@ -62,13 +65,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Align(
                       alignment: Alignment.center,
                       child: SizedBox(
-                        width: 140, // เส้นผ่านศูนย์กลาง
-                        height: 140,
+                        width: avatarSize, // เส้นผ่านศูนย์กลาง
+                        height: avatarSize,
                         child: Stack(
                           clipBehavior: Clip.none,
                           children: [
-                            _buildProfileCircle(),
-                            _buildCameraButton(),
+                            _buildProfileCircle(avatarSize),
+                            _buildCameraButton(avatarSize),
                           ],
                         ),
                       )),
@@ -165,52 +168,63 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildProfileCircle() {
+// วิดเจ็ตรูปโปรไฟล์วงกลม ----------------------------------------
+  Widget _buildProfileCircle(double size) {
+    final double radius = size / 2;
+
     return CircleAvatar(
-      radius: 70, // ครึ่งนึงของ SizedBox 140
-      backgroundColor: const Color(0xFFE9EEF3), // สีพื้นหลังเวลายังไม่มีรูป
-      backgroundImage: _profileImage, // ถ้ามีรูปจะแสดงแทน backgroundColor
+      radius: radius, // ครึ่งหนึ่งของ avatarSize
+      backgroundColor: const Color(0xFFE9EEF3),
+      backgroundImage: _profileImage,
       child: _profileImage == null
-          ? const Icon(
+          ? Icon(
               Icons.person,
-              size: 60,
+              size: radius * 0.7, // สัดส่วนตามขนาดวง
               color: Colors.white,
             )
           : null,
-      // ถ้ามีรูปแล้วจะไม่แสดงไอคอน
     );
   }
 
-  Widget _buildCameraButton() {
+  // วิดเจ็ตปุ่มกล้อง ------------------------------------------
+
+// ปุ่มกล้องเล็กๆ ที่มุมล่างขวาของรูปโปรไฟล์ ------------------------
+  Widget _buildCameraButton(double size) {
+    final double cameraSize = size * 0.28;
+
     return Positioned(
-      bottom: 4,
-      right: 4,
+      bottom: size * 0.02,
+      right: size * 0.02,
       child: GestureDetector(
-        onTap: _onCameraTap, // เรียกฟังก์ชันตอนกด
+        onTap: _onCameraTap,
         child: Container(
-          width: 40,
-          height: 40,
+          width: cameraSize,
+          height: cameraSize,
           decoration: BoxDecoration(
             color: const Color(0xFF1F497D),
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.15),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
+                color:
+                    const Color.fromARGB(255, 100, 100, 100).withOpacity(0.50),
+                blurRadius: size * 0.03, // ใช้สัดส่วนให้เงาไม่เพี้ยน
+                offset: Offset(0, size * 0.01),
               ),
             ],
           ),
-          child: const Icon(
+          child: Icon(
             Icons.camera_alt,
             color: Colors.white,
-            size: 20,
+            size: cameraSize * 0.5,
           ),
         ),
       ),
     );
   }
 
+  //-- ฟังก์ชันตอนกดปุ่มกล้อง ----------------------------------------
+
+// ฟังก์ชันตอนกดปุ่มกล้อง --------------------------------------------
   void _onCameraTap() async {
     final ImagePicker picker = ImagePicker(); // ตัวเลือกภาพ
 
@@ -229,8 +243,5 @@ class _ProfileScreenState extends State<ProfileScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('เปลี่ยนรูปโปรไฟล์สำเร็จ')),
     );
-
-    // 🔜 ภายหลัง: ตรงนี้เราสามารถใส่โค้ด image_picker เลือกรูปจากแกลเลอรี
-    // แล้วเรียก setState(() { _profileImage = FileImage(file); });
   }
 }
