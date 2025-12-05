@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:medibuddy/Model/profile_model.dart';
+import 'library_profile.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -10,6 +11,7 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  // final VoidCallback onCameraTap;    // ตอนกดปุ่มกล้อง
   final _formKey = GlobalKey<FormState>();
   var _usernameController =
       TextEditingController(); // ตัวควบคุมข้อความชื่อผู้ใช้
@@ -57,13 +59,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Align(
                     alignment: Alignment.center,
                     child: Icon(Icons.insert_photo,
-                        size: maxHeight * 0.25, color: Colors.grey),
+                        size: maxHeight * 0.25,
+                        color: const Color.fromARGB(255, 104, 132, 168)),
                   ),
                   SizedBox(height: maxHeight * 0.04),
                   // ช่องกรอกชื่อผู้ใช้-----------------------------------------------
                   Form(
+                    key: _formKey,
                     child: TextFormField(
-                      key: _formKey,
                       controller: _usernameController,
                       decoration: InputDecoration(
                         labelText: 'ชื่อผู้ใช้',
@@ -74,6 +77,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           borderSide: BorderSide.none,
                         ),
                       ),
+                      validator: (value) => value == null || value.isEmpty
+                          ? 'กรุณากรอกชื่อผู้ใช้'
+                          : null,
                     ),
                   ),
                   // ช่องกรอกชื่อผู้ใช้---------------------------------------------------------------------
@@ -82,17 +88,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Align(
                     alignment: Alignment.center,
                     child: ElevatedButton(
-                      onPressed: () {
-                        setState(() {
-                          //ProfileModel profile = new ProfileModel(username, profileImageUrl)
-                          username = _usernameController.text.trim();
-                        });
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('บันทึกข้อมูลเรียบร้อย: $username'),
-                          ),
-                        );
-                      },
+                      onPressed: _isLoading
+                          ? null
+                          : () async {
+                              if (!_formKey.currentState!.validate()) return;
+                              setState(() => _isLoading = true);
+                              final profile = ProfileModel(
+                                  _usernameController.text.trim(),
+                                  profileImageUrl ?? '');
+
+                              profiles.add(profile);
+                              // เพิ่มโปรไฟล์ใหม่ลงในรายการ
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content:
+                                      Text('บันทึกข้อมูลเรียบร้อย: $profile'),
+                                ),
+                              );
+
+                              setState(() => _isLoading = false);
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      LibraryProfile(initialProfile: profile),
+                                ),
+                              );
+                            },
                       style: ElevatedButton.styleFrom(
                         padding: EdgeInsets.symmetric(
                             vertical: maxHeight * 0.02,
