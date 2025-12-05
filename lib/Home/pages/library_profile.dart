@@ -15,6 +15,7 @@ class LibraryProfile extends StatefulWidget {
 
 class _LibraryProfileState extends State<LibraryProfile> {
   final List<ProfileModel> profiles = [];
+  // เก็บสถานะรูปโปรไฟล์ (ตอนนี้ยังไม่มีรูปจริง ใช้ null ไปก่อน)
 
   @override
   void initState() {
