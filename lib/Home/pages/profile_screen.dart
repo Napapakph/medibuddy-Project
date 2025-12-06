@@ -14,9 +14,10 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   // final VoidCallback onCameraTap;    // ตอนกดปุ่มกล้อง
   final _formKey = GlobalKey<FormState>();
-  var _usernameController =
-      TextEditingController(); // ตัวควบคุมข้อความชื่อผู้ใช้
-  String? username; // เก็บชื่อผู้ใช้ที่สร้างเสร็จแล้ว
+  var _usernameController = TextEditingController();
+  // ตัวควบคุมข้อความชื่อผู้ใช้
+  String? username;
+  // เก็บชื่อผู้ใช้ที่สร้างเสร็จแล้ว
   // ค่าตั้งต้นของชื่อผู้ใช้
   ImageProvider? _profileImage; // เก็บ URL รูปโปรไฟล์
   String? profileImageUrl;

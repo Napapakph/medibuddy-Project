@@ -227,7 +227,7 @@ class _LibraryProfileState extends State<LibraryProfile> {
   // ฟังก์ชันแก้ไขชื่อโปรไฟล์ตาม index ที่เลือก
   void _editProfile(int index) {
     final profile = profiles[index];
-    final TextEditingController editCtrl =
+    final TextEditingController editNameCtrl =
         TextEditingController(text: profile.username);
 
     // ⭐ เก็บ path รูปชั่วคราวไว้ใน dialog
@@ -261,7 +261,7 @@ class _LibraryProfileState extends State<LibraryProfile> {
                 children: [
                   // 🔹 ใช้ ProfileWidget ที่แยกไฟล์ไว้
                   ProfileWidget(
-                    size: 120, // ขนาดรูป
+                    size: avatarSize, // ขนาดรูป
                     image: currentImage, // รูปปัจจุบัน
                     onCameraTap: () async {
                       final picker = ImagePicker();
@@ -280,7 +280,7 @@ class _LibraryProfileState extends State<LibraryProfile> {
                   SizedBox(height: maxHeight * 0.02),
 
                   TextField(
-                    controller: editCtrl,
+                    controller: editNameCtrl,
                     decoration: InputDecoration(
                       labelText: 'ชื่อโปรไฟล์',
                       fillColor: const Color.fromARGB(255, 237, 237, 237),
@@ -300,7 +300,7 @@ class _LibraryProfileState extends State<LibraryProfile> {
                 ),
                 TextButton(
                   onPressed: () {
-                    final newName = editCtrl.text.trim();
+                    final newName = editNameCtrl.text.trim();
                     if (newName.isNotEmpty) {
                       setState(() {
                         profiles[index] = ProfileModel(
