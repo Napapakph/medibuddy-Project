@@ -28,6 +28,7 @@ class _LibraryProfileState extends State<LibraryProfile> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         iconTheme: const IconThemeData(color: Colors.white),
         title: const Text(
@@ -189,10 +190,7 @@ class _LibraryProfileState extends State<LibraryProfile> {
                                     borderRadius: BorderRadius.circular(20),
                                   ),
                                 ),
-                                onPressed: () {
-                                  print(
-                                      'เพิ่มผู้ใช้งานใหม่'); // TODO: Navigator.push ไปหน้าเพิ่มโปรไฟล์ แล้วรับค่า ProfileModel กลับมา
-                                },
+                                onPressed: _addProfile,
                                 child: const Text(
                                   'เพิ่มโปรไฟล์ใหม่',
                                   style: TextStyle(
@@ -366,6 +364,115 @@ class _LibraryProfileState extends State<LibraryProfile> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('ลบโปรไฟล์เรียบร้อย')),
+    );
+  }
+
+// เพิ่มโปรไฟล์ --------------------------------------------------------------------
+  void _addProfile() {
+    final TextEditingController nameCtrl = TextEditingController();
+
+    // path รูปที่เลือกใน popup (ยังไม่มี → null)
+    String? tempImagePath;
+
+    final size = MediaQuery.of(context).size;
+    final maxWidth = size.width;
+    final maxHeight = size.height;
+    final avatarSize = maxWidth * 0.35;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (dialogContext, setStateDialog) {
+            // แปลง path → ImageProvider เพื่อส่งเข้า ProfileWidget
+            ImageProvider? currentImage;
+            if (tempImagePath != null && tempImagePath!.isNotEmpty) {
+              currentImage = FileImage(File(tempImagePath!));
+            }
+
+            return AlertDialog(
+              insetPadding: EdgeInsets.symmetric(
+                horizontal: maxWidth * 0.05,
+                vertical: maxHeight * 0.05,
+              ),
+              backgroundColor: const Color(0xFFF5F5F5),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // 🔹 วงกลมโปรไฟล์ + ปุ่มกล้อง (ใช้ widget เดิมเลย)
+                  ProfileWidget(
+                    size: avatarSize,
+                    image: currentImage,
+                    onCameraTap: () async {
+                      final picker = ImagePicker();
+                      final img =
+                          await picker.pickImage(source: ImageSource.gallery);
+                      if (img == null) return;
+
+                      // ✅ อัปเดตรูปใน popup
+                      setStateDialog(() {
+                        tempImagePath = img.path;
+                      });
+                    },
+                  ),
+
+                  SizedBox(height: maxHeight * 0.02),
+
+                  // 🔹 ช่องกรอกชื่อโปรไฟล์
+                  TextField(
+                    controller: nameCtrl,
+                    decoration: InputDecoration(
+                      labelText: 'ชื่อโปรไฟล์',
+                      fillColor: const Color.fromARGB(255, 237, 237, 237),
+                      filled: true,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: const Text('ยกเลิก'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    final newName = nameCtrl.text.trim();
+                    if (newName.isEmpty) {
+                      // ถ้ายังไม่กรอกชื่อ ก็บอกผู้ใช้หน่อย
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('กรุณากรอกชื่อโปรไฟล์')),
+                      );
+                      return;
+                    }
+
+                    // ✅ เพิ่มโปรไฟล์ใหม่เข้า list หลัก
+                    setState(() {
+                      profiles.add(
+                        ProfileModel(
+                          newName,
+                          tempImagePath ?? '', // ไม่มีรูป → เก็บเป็น '' ไปก่อน
+                        ),
+                      );
+                    });
+
+                    Navigator.of(dialogContext).pop();
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          content: Text('เพิ่มโปรไฟล์ใหม่เรียบร้อย')),
+                    );
+                  },
+                  child: const Text('บันทึก'),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 }
