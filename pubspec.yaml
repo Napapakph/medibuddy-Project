@@ -70,6 +70,7 @@ flutter:
      - assets/Sign_up_cat.png
      - assets/OTP.png
      - assets/cat_profile.png
+     - assets/main_mascot.png
 
 
   # An image asset can refer to one or more resolution-specific "variants", see

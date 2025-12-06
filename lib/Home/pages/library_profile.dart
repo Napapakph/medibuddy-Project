@@ -4,6 +4,7 @@ import 'package:medibuddy/Model/profile_model.dart';
 import 'profile_screen.dart';
 import '../../widgets/profile_widget.dart';
 import 'package:image_picker/image_picker.dart';
+import 'buddy.dart';
 
 class LibraryProfile extends StatefulWidget {
   const LibraryProfile({Key? key, this.initialProfile}) : super(key: key);
@@ -100,6 +101,7 @@ class _LibraryProfileState extends State<LibraryProfile> {
                                         itemCount: profiles.length,
                                         itemBuilder: (context, index) {
                                           final profile = profiles[index];
+
                                           return ListTile(
                                             contentPadding: EdgeInsets.zero,
                                             // ปิด padding default ของ ListTile
@@ -208,7 +210,13 @@ class _LibraryProfileState extends State<LibraryProfile> {
                     child: Padding(
                       padding: EdgeInsets.fromLTRB(0, 0, maxWidth * 0.02, 0),
                       child: IconButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => MyBuddy()),
+                            //หน้า OTP จะรู้แล้วว่า OTP นี้เป็นของอีเมลไหน
+                          );
+                        },
                         icon: Icon(Icons.navigate_next_outlined),
                         iconSize: maxWidth * 0.13,
                         color: Color(0xFF1F497D),

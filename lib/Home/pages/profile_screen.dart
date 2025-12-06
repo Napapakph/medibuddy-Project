@@ -3,6 +3,7 @@ import 'package:medibuddy/Model/profile_model.dart';
 import 'library_profile.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
+import 'buddy.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
