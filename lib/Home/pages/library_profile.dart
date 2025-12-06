@@ -52,147 +52,172 @@ class _LibraryProfileState extends State<LibraryProfile> {
             avatarSize = avatarSize.clamp(30, 60);
 
             return Align(
-              alignment: Alignment.topCenter,
-              child: SizedBox(
-                width: containerWidth,
-                child: Padding(
-                  padding: EdgeInsets.fromLTRB(
-                    maxWidth * 0.02,
-                    maxHeight * 0.008,
-                    maxWidth * 0.02,
-                    maxHeight * 0.04,
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // 🔹 กรอบครอบรายการโปรไฟล์
-                      SizedBox(
-                        height: listMaxHeight,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.08),
-                                blurRadius: 6,
-                                offset: const Offset(0, 3),
-                              ),
-                            ],
-                          ),
-                          child: profiles.isEmpty
-                              ? const Center(
-                                  child: Text(
-                                    'ยังไม่มีผู้ใช้งาน',
-                                    style: TextStyle(color: Colors.grey),
-                                  ),
-                                )
-                              : ListView.builder(
-                                  padding: EdgeInsets.symmetric(
-                                      vertical: maxHeight * 0.01,
-                                      horizontal: maxWidth * 0.01),
-                                  itemCount: profiles.length,
-                                  itemBuilder: (context, index) {
-                                    final profile = profiles[index];
-                                    return ListTile(
-                                      contentPadding: EdgeInsets.zero,
-                                      // ปิด padding default ของ ListTile
-                                      horizontalTitleGap: maxWidth * 0.01,
-                                      // ระยะห่างระหว่างภาพ กับ title
-                                      minLeadingWidth: 0,
-                                      // ทำให้ leading ไม่กินพื้นที่เกินจริง
-
-                                      leading: (profile.imagePath.isNotEmpty)
-                                          ? CircleAvatar(
-                                              backgroundImage: FileImage(
-                                                  File(profile.imagePath)),
-                                              radius: avatarSize,
-                                            )
-                                          : const CircleAvatar(
-                                              child: Icon(Icons.person)),
-                                      title: Container(
-                                        padding: EdgeInsets.symmetric(
-                                          vertical: maxHeight * 0.02,
-                                          horizontal: maxWidth * 0.05,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: const Color.fromARGB(
-                                              137, 217, 217, 217),
-                                          borderRadius:
-                                              BorderRadius.circular(20),
-                                        ),
-                                        child: Align(
-                                          alignment: Alignment.centerLeft,
-
-                                          child: Text(
-                                            profile.username,
-                                            style: const TextStyle(
-                                              fontSize: 18,
-                                              color: Colors.black,
-                                            ),
-                                          ), // ⭐ บังคับให้ชิดซ้าย),
-                                        ),
-                                      ),
-                                      trailing: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          InkWell(
-                                            onTap: () => _editProfile(index),
-                                            child: Padding(
-                                              padding: EdgeInsets.all(1),
-                                              // เล็กมาก! ปรับได้
-                                              child: Icon(Icons.edit,
-                                                  size: 25,
-                                                  color: Colors.blueGrey),
-                                            ),
-                                          ),
-                                          SizedBox(width: 6),
-                                          InkWell(
-                                            onTap: () =>
-                                                _confirmDeleteProfile(index),
-                                            child: Padding(
-                                              padding: EdgeInsets.all(1),
-                                              child: Icon(Icons.delete,
-                                                  size: 25,
-                                                  color: Colors.redAccent),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  },
+              alignment: const Alignment(0, -0.8),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Align(
+                    child: SizedBox(
+                      width: containerWidth,
+                      child: Padding(
+                        padding: EdgeInsets.fromLTRB(
+                          maxWidth * 0.02,
+                          maxHeight * 0.00,
+                          maxWidth * 0.02,
+                          maxHeight * 0.04,
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            // 🔹 กรอบครอบรายการโปรไฟล์
+                            SizedBox(
+                              height: listMaxHeight,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(16),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.08),
+                                      blurRadius: 6,
+                                      offset: const Offset(0, 3),
+                                    ),
+                                  ],
                                 ),
+                                child: profiles.isEmpty
+                                    ? const Center(
+                                        child: Text(
+                                          'ยังไม่มีผู้ใช้งาน',
+                                          style: TextStyle(color: Colors.grey),
+                                        ),
+                                      )
+                                    : ListView.builder(
+                                        padding: EdgeInsets.symmetric(
+                                            vertical: maxHeight * 0.01,
+                                            horizontal: maxWidth * 0.01),
+                                        itemCount: profiles.length,
+                                        itemBuilder: (context, index) {
+                                          final profile = profiles[index];
+                                          return ListTile(
+                                            contentPadding: EdgeInsets.zero,
+                                            // ปิด padding default ของ ListTile
+                                            horizontalTitleGap: maxWidth * 0.01,
+                                            // ระยะห่างระหว่างภาพ กับ title
+                                            minLeadingWidth: 0,
+                                            // ทำให้ leading ไม่กินพื้นที่เกินจริง
+
+                                            leading: (profile
+                                                    .imagePath.isNotEmpty)
+                                                ? CircleAvatar(
+                                                    backgroundImage: FileImage(
+                                                        File(
+                                                            profile.imagePath)),
+                                                    radius: avatarSize,
+                                                  )
+                                                : const CircleAvatar(
+                                                    child: Icon(Icons.person)),
+                                            title: Container(
+                                              padding: EdgeInsets.symmetric(
+                                                vertical: maxHeight * 0.02,
+                                                horizontal: maxWidth * 0.05,
+                                              ),
+                                              decoration: BoxDecoration(
+                                                color: const Color.fromARGB(
+                                                    136, 203, 219, 240),
+                                                borderRadius:
+                                                    BorderRadius.circular(20),
+                                              ),
+                                              child: Align(
+                                                alignment: Alignment.centerLeft,
+
+                                                child: Text(
+                                                  profile.username,
+                                                  style: const TextStyle(
+                                                    fontSize: 18,
+                                                    color: Colors.black,
+                                                  ),
+                                                ), // ⭐ บังคับให้ชิดซ้าย),
+                                              ),
+                                            ),
+                                            trailing: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                InkWell(
+                                                  onTap: () =>
+                                                      _editProfile(index),
+                                                  child: Padding(
+                                                    padding: EdgeInsets.all(1),
+                                                    // เล็กมาก! ปรับได้
+                                                    child: Icon(Icons.edit,
+                                                        size: 25,
+                                                        color: Colors.blueGrey),
+                                                  ),
+                                                ),
+                                                SizedBox(width: 6),
+                                                InkWell(
+                                                  onTap: () =>
+                                                      _confirmDeleteProfile(
+                                                          index),
+                                                  child: Padding(
+                                                    padding: EdgeInsets.all(1),
+                                                    child: Icon(Icons.delete,
+                                                        size: 25,
+                                                        color:
+                                                            Colors.redAccent),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        },
+                                      ),
+                              ),
+                            ),
+                            SizedBox(height: maxHeight * 0.03),
+                            // 🔹 ปุ่มเพิ่มผู้ใช้งานใหม่ — จะอยู่ชิดกรอบเสมอ
+                            Align(
+                              alignment: Alignment.bottomCenter,
+                              child: ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF1F497D),
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: maxWidth * 0.1,
+                                    vertical: maxHeight * 0.02,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                ),
+                                onPressed: () {
+                                  print(
+                                      'เพิ่มผู้ใช้งานใหม่'); // TODO: Navigator.push ไปหน้าเพิ่มโปรไฟล์ แล้วรับค่า ProfileModel กลับมา
+                                },
+                                child: const Text(
+                                  'เพิ่มโปรไฟล์ใหม่',
+                                  style: TextStyle(
+                                      color: Colors.white, fontSize: 18),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      SizedBox(height: maxHeight * 0.03),
-                      // 🔹 ปุ่มเพิ่มผู้ใช้งานใหม่ — จะอยู่ชิดกรอบเสมอ
-                      Align(
-                        alignment: Alignment.bottomCenter,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF1F497D),
-                            padding: EdgeInsets.symmetric(
-                              horizontal: maxWidth * 0.1,
-                              vertical: maxHeight * 0.02,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                          ),
-                          onPressed: () {
-                            print(
-                                'เพิ่มผู้ใช้งานใหม่'); // TODO: Navigator.push ไปหน้าเพิ่มโปรไฟล์ แล้วรับค่า ProfileModel กลับมา
-                          },
-                          child: const Text(
-                            'เพิ่มโปรไฟล์ใหม่',
-                            style: TextStyle(color: Colors.white, fontSize: 18),
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
+                  Align(
+                    alignment: Alignment.bottomRight,
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(0, 0, maxWidth * 0.02, 0),
+                      child: IconButton(
+                        onPressed: () {},
+                        icon: Icon(Icons.navigate_next_outlined),
+                        iconSize: maxWidth * 0.13,
+                        color: Color(0xFF1F497D),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             );
           },
@@ -342,20 +367,5 @@ class _LibraryProfileState extends State<LibraryProfile> {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('ลบโปรไฟล์เรียบร้อย')),
     );
-  }
-}
-
-// widget สำหรับใช้ Navigator.push ถ้าต้องการหน้าฟอร์มเต็ม
-class AddProfile extends StatefulWidget {
-  const AddProfile({Key? key}) : super(key: key);
-
-  @override
-  State<AddProfile> createState() => _AddProfileState();
-}
-
-class _AddProfileState extends State<AddProfile> {
-  @override
-  Widget build(BuildContext context) {
-    return const ProfileScreen();
   }
 }
