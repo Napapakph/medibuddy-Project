@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:medibuddy/Model/profile_model.dart';
 import 'profile_screen.dart';
 import '../../widgets/profile_widget.dart';
+import 'package:image_picker/image_picker.dart';
 
 class LibraryProfile extends StatefulWidget {
   const LibraryProfile({Key? key, this.initialProfile}) : super(key: key);
@@ -206,46 +207,97 @@ class _LibraryProfileState extends State<LibraryProfile> {
     final TextEditingController editCtrl =
         TextEditingController(text: profile.username);
 
+    // ⭐ เก็บ path รูปชั่วคราวไว้ใน dialog
+    String? tempImagePath =
+        profile.imagePath.isNotEmpty ? profile.imagePath : null;
+
+    final size = MediaQuery.of(context).size;
+    final maxWidth = size.width;
+    final maxHeight = size.height;
+    final avatarSize = maxWidth * 0.35;
+
     showDialog(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: Color(0xFFF5F5F5),
-          content: TextField(
-            controller: editCtrl,
-            decoration: InputDecoration(
-              labelText: 'ชื่อโปรไฟล์',
-              fillColor: Color.fromARGB(255, 237, 237, 237),
-              filled: true,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(20),
-                borderSide: BorderSide.none,
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('ยกเลิก'),
-            ),
-            TextButton(
-              onPressed: () {
-                final newName = editCtrl.text.trim();
-                if (newName.isNotEmpty) {
-                  setState(() {
-                    profiles[index] =
-                        ProfileModel(newName, profiles[index].imagePath);
-                  }); // อัปเดตชื่อโปรไฟล์ในลิสต์
-                }
-                Navigator.of(context).pop();
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          // ⭐ ให้ dialog มี state ของตัวเอง
+          builder: (dialogContext, setStateDialog) {
+            ImageProvider? currentImage;
+            if (tempImagePath != null && tempImagePath!.isNotEmpty) {
+              currentImage = FileImage(File(tempImagePath!));
+            }
 
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('แก้ไขข้อมูลเรียบร้อย')),
-                );
-              },
-              child: const Text('บันทึก'),
-            ),
-          ],
+            return AlertDialog(
+              insetPadding: EdgeInsets.symmetric(
+                horizontal: maxWidth * 0.05,
+                vertical: maxHeight * 0.05,
+              ),
+              backgroundColor: const Color(0xFFF5F5F5),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // 🔹 ใช้ ProfileWidget ที่แยกไฟล์ไว้
+                  ProfileWidget(
+                    size: 120, // ขนาดรูป
+                    image: currentImage, // รูปปัจจุบัน
+                    onCameraTap: () async {
+                      final picker = ImagePicker();
+                      final img =
+                          await picker.pickImage(source: ImageSource.gallery);
+
+                      if (img != null) {
+                        // ✅ อัปเดต "tempImagePath" รูปใน popup เปลี่ยน
+                        setStateDialog(() {
+                          tempImagePath = img.path;
+                        });
+                      }
+                    },
+                  ),
+
+                  SizedBox(height: maxHeight * 0.02),
+
+                  TextField(
+                    controller: editCtrl,
+                    decoration: InputDecoration(
+                      labelText: 'ชื่อโปรไฟล์',
+                      fillColor: const Color.fromARGB(255, 237, 237, 237),
+                      filled: true,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: const Text('ยกเลิก'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    final newName = editCtrl.text.trim();
+                    if (newName.isNotEmpty) {
+                      setState(() {
+                        profiles[index] = ProfileModel(
+                          newName,
+                          tempImagePath ?? profiles[index].imagePath,
+                        );
+                      });
+                    }
+
+                    Navigator.of(dialogContext).pop();
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('แก้ไขข้อมูลเรียบร้อย')),
+                    );
+                  },
+                  child: const Text('บันทึก'),
+                ),
+              ],
+            );
+          },
         );
       },
     );

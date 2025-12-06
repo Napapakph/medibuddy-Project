@@ -86,7 +86,13 @@ class _OTPScreenState extends State<OTPScreen> {
       print("Backend status: ${syncRes.statusCode}");
       print(syncRes.body);
 
+      Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const LoginScreen(),
+          ));
       // แสดง token บนหน้าจอให้เห็นเลย
+      /*    
       showDialog(
         context: context,
         builder: (_) => AlertDialog(
@@ -102,6 +108,7 @@ class _OTPScreenState extends State<OTPScreen> {
           ],
         ),
       );
+   */
     } catch (e) {
       print('💥 DEBUG ERROR: $e');
       ScaffoldMessenger.of(context).showSnackBar(

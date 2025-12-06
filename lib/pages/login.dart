@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/mock_auth_service.dart';
 import 'signup.dart';
 import '../widgets/login_button.dart';
-import '../Home/pages/ocr.dart';
+//import '../Home/pages/ocr.dart';
 import '../pages/forget_password.dart';
 import '../Home/pages/profile_screen.dart';
 
