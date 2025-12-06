@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart ';
 import 'pages/signup.dart';
 import 'pages/otp.dart';
 import 'pages/forget_password.dart';
+import 'Home/pages/profile_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,12 +25,13 @@ class MyApp extends StatelessWidget {
     // TODO: implement build
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      initialRoute: '/login', // 👈 หน้าแรกที่เปิด
+      initialRoute: '/profile', // 👈 หน้าแรกที่เปิด
       routes: {
         '/login': (_) => const LoginScreen(),
         '/signup': (_) => const SignupScreen(),
         '/otp': (_) => const OTPScreen(email: ''),
         '/forget_password': (_) => const ForgetPassword(),
+        '/profile': (_) => const ProfileScreen(),
       },
       title: 'MediBuddy',
     );

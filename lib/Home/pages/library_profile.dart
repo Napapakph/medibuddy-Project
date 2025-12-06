@@ -1,8 +1,8 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:medibuddy/Model/profile_model.dart';
 import 'profile_screen.dart';
+import '../../widgets/profile_widget.dart';
 
 class LibraryProfile extends StatefulWidget {
   const LibraryProfile({Key? key, this.initialProfile}) : super(key: key);
@@ -47,7 +47,7 @@ class _LibraryProfileState extends State<LibraryProfile> {
 
             final double listMaxHeight = maxHeight * 0.7;
 
-            double avatarSize = constraints.maxWidth * 0.05;
+            double avatarSize = constraints.maxWidth * 0.01;
             avatarSize = avatarSize.clamp(30, 60);
 
             return Align(
@@ -55,7 +55,7 @@ class _LibraryProfileState extends State<LibraryProfile> {
               child: SizedBox(
                 width: containerWidth,
                 child: Padding(
-                  padding: EdgeInsetsGeometry.fromLTRB(
+                  padding: EdgeInsets.fromLTRB(
                     maxWidth * 0.02,
                     maxHeight * 0.008,
                     maxWidth * 0.02,
@@ -89,17 +89,23 @@ class _LibraryProfileState extends State<LibraryProfile> {
                                 )
                               : ListView.builder(
                                   padding: EdgeInsets.symmetric(
-                                      vertical: maxHeight * 0.02,
-                                      horizontal: 0),
+                                      vertical: maxHeight * 0.01,
+                                      horizontal: maxWidth * 0.01),
                                   itemCount: profiles.length,
                                   itemBuilder: (context, index) {
                                     final profile = profiles[index];
                                     return ListTile(
-                                      leading: (profile.imagePath != null &&
-                                              profile.imagePath!.isNotEmpty)
+                                      contentPadding: EdgeInsets.zero,
+                                      // ปิด padding default ของ ListTile
+                                      horizontalTitleGap: maxWidth * 0.01,
+                                      // ระยะห่างระหว่างภาพ กับ title
+                                      minLeadingWidth: 0,
+                                      // ทำให้ leading ไม่กินพื้นที่เกินจริง
+
+                                      leading: (profile.imagePath.isNotEmpty)
                                           ? CircleAvatar(
                                               backgroundImage: FileImage(
-                                                  File(profile.imagePath!)),
+                                                  File(profile.imagePath)),
                                               radius: avatarSize,
                                             )
                                           : const CircleAvatar(
@@ -107,7 +113,7 @@ class _LibraryProfileState extends State<LibraryProfile> {
                                       title: Container(
                                         padding: EdgeInsets.symmetric(
                                           vertical: maxHeight * 0.02,
-                                          horizontal: maxWidth * 0.03,
+                                          horizontal: maxWidth * 0.05,
                                         ),
                                         decoration: BoxDecoration(
                                           color: const Color.fromARGB(
@@ -115,35 +121,41 @@ class _LibraryProfileState extends State<LibraryProfile> {
                                           borderRadius:
                                               BorderRadius.circular(20),
                                         ),
-                                        child: Text(
-                                          profile.username,
-                                          style: const TextStyle(
-                                            fontSize: 18,
-                                            color: Colors.black,
-                                          ),
+                                        child: Align(
+                                          alignment: Alignment.centerLeft,
+
+                                          child: Text(
+                                            profile.username,
+                                            style: const TextStyle(
+                                              fontSize: 18,
+                                              color: Colors.black,
+                                            ),
+                                          ), // ⭐ บังคับให้ชิดซ้าย),
                                         ),
                                       ),
                                       trailing: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          IconButton(
-                                            icon: const Icon(Icons.edit,
-                                                color: Colors.blueGrey),
-                                            tooltip: 'แก้ไขผู้ใช้งาน',
-                                            constraints: const BoxConstraints(),
-                                            onPressed: () =>
-                                                _editProfile(index),
-                                            padding: EdgeInsets.zero,
+                                          InkWell(
+                                            onTap: () => _editProfile(index),
+                                            child: Padding(
+                                              padding: EdgeInsets.all(1),
+                                              // เล็กมาก! ปรับได้
+                                              child: Icon(Icons.edit,
+                                                  size: 25,
+                                                  color: Colors.blueGrey),
+                                            ),
                                           ),
-                                          SizedBox(width: maxWidth * 0.01),
-                                          IconButton(
-                                            icon: const Icon(Icons.delete,
-                                                color: Colors.redAccent),
-                                            tooltip: 'ลบผู้ใช้งาน',
-                                            constraints: const BoxConstraints(),
-                                            onPressed: () =>
+                                          SizedBox(width: 6),
+                                          InkWell(
+                                            onTap: () =>
                                                 _confirmDeleteProfile(index),
-                                            padding: EdgeInsets.zero,
+                                            child: Padding(
+                                              padding: EdgeInsets.all(1),
+                                              child: Icon(Icons.delete,
+                                                  size: 25,
+                                                  color: Colors.redAccent),
+                                            ),
                                           ),
                                         ],
                                       ),
@@ -198,12 +210,17 @@ class _LibraryProfileState extends State<LibraryProfile> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('แก้ไขชื่อโปรไฟล์'),
+          backgroundColor: Color(0xFFF5F5F5),
           content: TextField(
             controller: editCtrl,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               labelText: 'ชื่อโปรไฟล์',
-              border: OutlineInputBorder(),
+              fillColor: Color.fromARGB(255, 237, 237, 237),
+              filled: true,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(20),
+                borderSide: BorderSide.none,
+              ),
             ),
           ),
           actions: [
