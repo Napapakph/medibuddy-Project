@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../widgets/profile_widget.dart';
+import 'select_profile.dart';
 
 class MyBuddy extends StatefulWidget {
   const MyBuddy({super.key});
@@ -42,39 +42,69 @@ class _MyBuddyState extends State<MyBuddy> {
             //จำกัดความกว้างสูงสุดของหน้าจอ
             final double containerWidth = isTablet ? 500 : maxWidth;
 
-            return Center(
-              child: Align(
-                alignment: Alignment.topCenter,
-                child: Column(
-                  children: [
-                    Padding(
-                      padding: EdgeInsets.only(top: maxHeight * 0.15),
-                      child: Text(
-                        'ผู้ช่วยคุณคือ . . .',
-                        style: TextStyle(
-                            fontSize: 30,
-                            color: Color.fromARGB(255, 123, 187, 255),
-                            fontWeight: FontWeight.bold,
-                            fontStyle: FontStyle.normal), // รอฟ้อนใหม่
+            return Align(
+              child: Column(
+                children: [
+                  // ⭐ ส่วนบนทั้งหมด → อยู่ TopCenter เสมอ
+                  Expanded(
+                    child: Align(
+                      alignment: Alignment.topCenter,
+                      child: Column(
+                        children: [
+                          Padding(
+                            padding: EdgeInsets.only(top: maxHeight * 0.15),
+                            child: Text(
+                              'ผู้ช่วยคุณคือ . . .',
+                              style: TextStyle(
+                                fontSize: 30,
+                                color: Color.fromARGB(255, 123, 187, 255),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(top: maxHeight * 0.05),
+                            child: _buildBuddyAvatar(maxWidth),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(top: maxHeight * 0.05),
+                            child: Text(
+                              'Meow',
+                              style: TextStyle(
+                                fontSize: 30,
+                                color: Color(0xFF1F497D),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    Padding(
-                      padding: EdgeInsets.only(top: maxHeight * 0.05),
-                      child: _buildBuddyAvatar(maxWidth), // 👈 ก้อนแมว+วงฟ้า
-                    ),
-                    Padding(
-                      padding: EdgeInsets.only(top: maxHeight * 0.05),
-                      child: Text(
-                        'Meow',
-                        style: TextStyle(
-                            fontSize: 30,
-                            color: Color(0xFF1F497D),
-                            fontWeight: FontWeight.bold,
-                            fontStyle: FontStyle.normal), // รอฟ้อนใหม่
+                  ),
+
+                  // ⭐ ปุ่มด้านล่างสุด
+                  Align(
+                    alignment: Alignment.bottomRight,
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        right: maxWidth * 0.05,
+                        bottom: maxHeight * 0.05,
+                      ),
+                      child: IconButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => SelectProfile()),
+                          );
+                        },
+                        icon: Icon(Icons.navigate_next_outlined),
+                        iconSize: maxWidth * 0.13,
+                        color: Color(0xFF1F497D),
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             );
           },
