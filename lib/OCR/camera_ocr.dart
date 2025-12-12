@@ -14,21 +14,14 @@ class _CameraOcrPageState extends State<CameraOcrPage> {
   File? _capturedPhoto;
 
   Future<void> _capturePhoto() async {
-    // 1) รอเลือก / ถ่ายรูป
     final XFile? photo = await _imagePicker.pickImage(
       source: ImageSource.camera,
       preferredCameraDevice: CameraDevice.rear,
       imageQuality: 80,
     );
-    // 2) หลัง await *ต้อง* เช็คว่าหน้านี้ยังอยู่มั้ย
-    if (!mounted) return;
 
-    // 3) ถ้า user กดออก หรือกด back จนไม่มีรูป ก็ไม่ต้องทำต่อ
     if (photo == null) return;
-    // 4) ตอนนี้ปลอดภัย ใช้ setState ได้แล้ว
     setState(() => _capturedPhoto = File(photo.path));
-
-    // 5) ใช้ context แสดง SnackBar ได้ ปลอดภัยแล้ว
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('บันทึกภาพสำเร็จ แล้วจ้า!')),
     );

@@ -22,6 +22,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _auth = MockAuthService(); //จำลองการ Login
   String? _lastEmail; // เก็บอีเมลล่าสุดที่ใช้ล็อกอินสำเร็จ
   String? _lastPassword; // เก็บรหัสผ่านล่าสุดที่ใช้ล็อกอินสำเร็จ
+  bool _obscurePassword = true; //ดู password
 
   bool _isLoading = false; // ติดตามสถานะกำลังล็อกอิน
 
@@ -153,7 +154,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             // ช่องรหัสผ่าน
                             TextFormField(
                               controller: _passwordCtrl,
-                              obscureText: true,
+                              obscureText: _obscurePassword,
                               decoration: InputDecoration(
                                 labelText: 'รหัสผ่าน',
                                 filled: true,
@@ -165,6 +166,18 @@ class _LoginScreenState extends State<LoginScreen> {
                                 contentPadding: EdgeInsets.symmetric(
                                   horizontal: maxWidth * 0.04,
                                   vertical: maxHeight * 0.02,
+                                ),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _obscurePassword
+                                        ? Icons.visibility
+                                        : Icons.visibility_off,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _obscurePassword = !_obscurePassword;
+                                    });
+                                  },
                                 ),
                               ),
                               validator: (value) {
