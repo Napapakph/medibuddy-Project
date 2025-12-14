@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/mock_auth_service.dart';
 import 'signup.dart';
 import '../widgets/login_button.dart';
+import '../API/authen_login.dart';
 //import '../Home/pages/ocr.dart';
 import '../pages/forget_password.dart';
 import '../Home/pages/profile_screen.dart';
@@ -19,7 +20,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailCtrl =
       TextEditingController(); //TextEditingController สำหรับคุมค่าช่องอีเมลและรหัสผ่าน, ใช้ดึงค่าและทำ dispose() เพื่อไม่ให้รั่วหน่วยความจำ
   final _passwordCtrl = TextEditingController();
-  final _auth = MockAuthService(); //จำลองการ Login
+  //final _auth = MockAuthService(); //จำลองการ Login
+  final _authAPI = AuthenLogin();
   String? _lastEmail; // เก็บอีเมลล่าสุดที่ใช้ล็อกอินสำเร็จ
   String? _lastPassword; // เก็บรหัสผ่านล่าสุดที่ใช้ล็อกอินสำเร็จ
   bool _obscurePassword = true; //ดู password
@@ -38,7 +40,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => _isLoading = true);
 
-    final success = await _auth.login(
+    final success = await _authAPI.signUpWithEmail(
       email: _emailCtrl.text.trim(),
       password: _passwordCtrl.text.trim(),
     );
@@ -46,7 +48,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
     setState(() => _isLoading = false);
 
-    if (success) {
+    if (success == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('เข้าสู่ระบบสำเร็จ')),
       );
@@ -256,7 +258,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   // ลืมรหัสผ่าน ?
                   Align(
-                    alignment: Alignment.bottomCenter,
+                    alignment: const Alignment(0, 0.98),
+                    // 1 = ล่างสุด
+
                     child: TextButton(
                       onPressed: () {
                         ScaffoldMessenger.of(context).showSnackBar(

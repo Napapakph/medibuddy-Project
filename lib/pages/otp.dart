@@ -32,7 +32,7 @@ class _OTPScreenState extends State<OTPScreen> {
       );
       return;
     }
-
+    if (!mounted) return;
     setState(() => _isLoading = true);
 
     try {
@@ -60,7 +60,7 @@ class _OTPScreenState extends State<OTPScreen> {
           'type': 'email', // 👈 ให้ตรงกับที่เพื่อนใช้ใน Postman
         }),
       );
-
+      if (!mounted) return;
       print('📨 DEBUG statusCode: ${response.statusCode}');
       print('📨 DEBUG body: ${response.body}');
 
@@ -82,6 +82,7 @@ class _OTPScreenState extends State<OTPScreen> {
           'Content-Type': 'application/json',
         },
       );
+      if (!mounted) return;
 
       print("Backend status: ${syncRes.statusCode}");
       print(syncRes.body);
@@ -91,30 +92,13 @@ class _OTPScreenState extends State<OTPScreen> {
           MaterialPageRoute(
             builder: (context) => const LoginScreen(),
           ));
-      // แสดง token บนหน้าจอให้เห็นเลย
-      /*    
-      showDialog(
-        context: context,
-        builder: (_) => AlertDialog(
-          title: const Text('Access Token ได้แล้ว'),
-          content: SingleChildScrollView(
-            child: Text(accessToken ?? 'ไม่พบ access_token ใน response'),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('ปิด'),
-            ),
-          ],
-        ),
-      );
-   */
     } catch (e) {
       print('💥 DEBUG ERROR: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('เกิดข้อผิดพลาด: $e')),
       );
     } finally {
+      if (!mounted) return;
       setState(() => _isLoading = false);
     }
   }

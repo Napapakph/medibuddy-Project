@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
+//import 'package:flutter/rendering.dart';
 import 'otp.dart';
 import '../API/authen_login.dart';
 
@@ -43,6 +43,7 @@ class _SignupScreenState extends State<SignupScreen> {
       email: _email.text.trim(),
       password: _password.text.trim(),
     );
+    if (!mounted) return;
 
     setState(() => _isLoading = false);
     if (!mounted) return;
