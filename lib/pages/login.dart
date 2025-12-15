@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import '../services/mock_auth_service.dart';
+//import '../services/mock_auth_service.dart';
 import 'signup.dart';
 import '../widgets/login_button.dart';
 import '../API/authen_login.dart';
 //import '../Home/pages/ocr.dart';
 import '../pages/forget_password.dart';
 import '../Home/pages/profile_screen.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -22,11 +23,13 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordCtrl = TextEditingController();
   //final _auth = MockAuthService(); //จำลองการ Login
   final _authAPI = AuthenLogin();
+  final _googleAuth = LoginWithGoogle();
+  bool _isGoogleLoading = false;
   String? _lastEmail; // เก็บอีเมลล่าสุดที่ใช้ล็อกอินสำเร็จ
   String? _lastPassword; // เก็บรหัสผ่านล่าสุดที่ใช้ล็อกอินสำเร็จ
   bool _obscurePassword = true; //ดู password
-
   bool _isLoading = false; // ติดตามสถานะกำลังล็อกอิน
+  final supabase = Supabase.instance.client;
 
   @override
   void dispose() {
@@ -35,6 +38,7 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+//---------------- Login with Username/Password----------------------------------
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -62,6 +66,41 @@ class _LoginScreenState extends State<LoginScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('อีเมลหรือรหัสผ่านไม่ถูกต้อง')),
       );
+    }
+  }
+//---------------- Login with Username/Password----------------------------------
+
+//---------------- Login with Google Sign in-------------------------------------
+  Future<void> _handleGoogleLogin() async {
+    if (_isGoogleLoading) return;
+
+    setState(() => _isGoogleLoading = true);
+
+    try {
+      await _googleAuth.nativeGoogleSignIn();
+      final session = Supabase.instance.client.auth.currentSession;
+      print('SESSION => $session');
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('เข้าสู่ระบบด้วย Google สำเร็จ')),
+      );
+
+      // กันย้อนกลับมาหน้า login
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const ProfileScreen(),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Google Login ไม่สำเร็จ: $e')),
+      );
+    } finally {
+      if (!mounted) return;
+      setState(() => _isGoogleLoading = false);
     }
   }
 
@@ -228,7 +267,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               width: double.infinity,
                               child: OutlinedButton(
                                 onPressed: () {
-                                  // TODO: future Google Sign-In
+                                  _handleGoogleLogin();
                                 },
                                 style: OutlinedButton.styleFrom(
                                   padding: EdgeInsets.symmetric(
