@@ -7,6 +7,7 @@ import '../API/authen_login.dart';
 import '../pages/forget_password.dart';
 import '../Home/pages/profile_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'dart:async';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -22,7 +23,8 @@ class _LoginScreenState extends State<LoginScreen> {
       TextEditingController(); //TextEditingController สำหรับคุมค่าช่องอีเมลและรหัสผ่าน, ใช้ดึงค่าและทำ dispose() เพื่อไม่ให้รั่วหน่วยความจำ
   final _passwordCtrl = TextEditingController();
   //final _auth = MockAuthService(); //จำลองการ Login
-  final _authAPI = AuthenLogin();
+  final _authAPI = AuthenSignUpEmail();
+  final _authLoginAPI = AuthenLoginEmail();
   final _googleAuth = LoginWithGoogle();
   bool _isGoogleLoading = false;
   String? _lastEmail; // เก็บอีเมลล่าสุดที่ใช้ล็อกอินสำเร็จ
@@ -31,20 +33,13 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false; // ติดตามสถานะกำลังล็อกอิน
   final supabase = Supabase.instance.client;
 
-  @override
-  void dispose() {
-    _emailCtrl.dispose();
-    _passwordCtrl.dispose();
-    super.dispose();
-  }
-
 //---------------- Login with Username/Password----------------------------------
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _isLoading = true);
 
-    final success = await _authAPI.signUpWithEmail(
+    final success = await _authLoginAPI.signInWithEmail(
       email: _emailCtrl.text.trim(),
       password: _passwordCtrl.text.trim(),
     );
@@ -73,26 +68,10 @@ class _LoginScreenState extends State<LoginScreen> {
 //---------------- Login with Google Sign in-------------------------------------
   Future<void> _handleGoogleLogin() async {
     if (_isGoogleLoading) return;
-
     setState(() => _isGoogleLoading = true);
 
     try {
-      await _googleAuth.nativeGoogleSignIn();
-      final session = Supabase.instance.client.auth.currentSession;
-      print('SESSION => $session');
-
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('เข้าสู่ระบบด้วย Google สำเร็จ')),
-      );
-
-      // กันย้อนกลับมาหน้า login
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const ProfileScreen(),
-        ),
-      );
+      await _googleAuth.signInWithGoogle();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -111,6 +90,34 @@ class _LoginScreenState extends State<LoginScreen> {
         _passwordCtrl.text = _lastPassword!;
       }); // สั่งให้ช่องโชว์ค่ากรอกครั้งแรก
     }
+  }
+
+  late final StreamSubscription<AuthState> _authSub;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _authSub = Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+      final event = data.event;
+      final session = data.session;
+
+      if (event == AuthChangeEvent.signedIn && session != null) {
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const ProfileScreen()),
+        );
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _authSub.cancel();
+    _emailCtrl.dispose();
+    _passwordCtrl.dispose();
+    super.dispose();
   }
 
   @override

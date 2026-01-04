@@ -15,7 +15,7 @@ class _SignupScreenState extends State<SignupScreen> {
   final _email = TextEditingController();
   final _password = TextEditingController();
   final _confirmPasswordCtrl = TextEditingController();
-  final _authAPI = AuthenLogin(); // ใช้ class จากไฟล์ API
+  final _authAPI = AuthenSignUpEmail(); // ใช้ class จากไฟล์ API
   bool _obscurePassword = true; //ดู password
   bool _obscureConfirmPassword = true;
 
@@ -131,8 +131,8 @@ class _SignupScreenState extends State<SignupScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // รูปแมวด้านบน
-                      Positioned(
-                          child: Align(
+
+                      Align(
                         alignment: Alignment.topRight,
                         child: SizedBox(
                           height: maxHeight * 0.25,
@@ -140,7 +140,7 @@ class _SignupScreenState extends State<SignupScreen> {
                             'assets/Sign_up_cat.png',
                           ),
                         ),
-                      )),
+                      ),
 
                       Center(
                         child: Padding(

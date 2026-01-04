@@ -2,18 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../pages/login.dart';
-import 'home.dart';
 
 //import 'package:buddhist_datetime_dateformat/buddhist_datetime_dateformat.dart';
 
-class SelectProfile extends StatefulWidget {
-  const SelectProfile({super.key});
+class Home extends StatefulWidget {
+  const Home({super.key});
 
   @override
-  State<SelectProfile> createState() => _SelectProfile();
+  State<Home> createState() => _Home();
 }
 
-class _SelectProfile extends State<SelectProfile> {
+class _Home extends State<Home> {
   bool _isLoading = false; // สถานะการโหลด
 
   @override
@@ -45,6 +44,45 @@ class _SelectProfile extends State<SelectProfile> {
         ),
         backgroundColor: Color(0xFFB7DAFF),
         centerTitle: true,
+        leading: Builder(
+          builder: (context) {
+            return IconButton(
+              icon: const Icon(Icons.menu),
+              onPressed: () {
+                Scaffold.of(context).openDrawer();
+              },
+            );
+          },
+        ),
+      ),
+      drawer: Drawer(
+        child: ListView(
+          // Important: Remove any padding from the ListView.
+          padding: EdgeInsets.zero,
+          children: [
+            const DrawerHeader(
+              decoration: BoxDecoration(color: Colors.blue),
+              child: Text('Drawer Header'),
+            ),
+            ListTile(
+              title: const Text('item 1'),
+              onTap: () {
+                // Update the state of the app.
+                // ...
+              },
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: ElevatedButton(
+                onPressed: () async {
+                  Navigator.pop(context);
+                  await logout(context);
+                },
+                child: const Text('Logout'),
+              ),
+            ),
+          ],
+        ),
       ),
       body: SafeArea(
         child: LayoutBuilder(
@@ -85,10 +123,6 @@ class _SelectProfile extends State<SelectProfile> {
                   SizedBox(height: maxHeight * 0.05),
                   ElevatedButton(
                     onPressed: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => const Home()),
-                      );
                       // ปุ่มยืนยัน
                     },
                     style: ElevatedButton.styleFrom(

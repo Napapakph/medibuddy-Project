@@ -8,6 +8,7 @@ import 'Home/pages/profile_screen.dart';
 import 'Home/pages/select_profile.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'API/auth_gate.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,16 +35,32 @@ class MyApp extends StatelessWidget {
     // TODO: implement build
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      initialRoute: '/login', // 👈 หน้าแรกที่เปิด
-      routes: {
-        '/login': (_) => const LoginScreen(),
-        '/signup': (_) => const SignupScreen(),
-        '/otp': (_) => const OTPScreen(email: ''),
-        '/forget_password': (_) => const ForgetPassword(),
-        '/profile': (_) => const ProfileScreen(),
-        '/select_profile': (_) => const SelectProfile(),
-      },
       title: 'MediBuddy',
+
+      // ✅ รับ deep link ที่มาเป็น "/?code=..."
+      onGenerateRoute: (settings) {
+        final uri = Uri.tryParse(settings.name ?? '/');
+
+        // ถ้า parse ไม่ได้ ก็กลับไปหน้าแรก
+        if (uri == null) {
+          return MaterialPageRoute(builder: (_) => const AuthGate());
+        }
+
+        // ✅ สำคัญ: "/?code=..." จะมี uri.path = "/"
+        if (uri.path == '/') {
+          return MaterialPageRoute(builder: (_) => const AuthGate());
+        }
+
+        // (ถ้าจะมีหน้าอื่นค่อยเพิ่ม)
+        switch (uri.path) {
+          case '/login':
+            return MaterialPageRoute(builder: (_) => const LoginScreen());
+          case '/profile':
+            return MaterialPageRoute(builder: (_) => const ProfileScreen());
+          default:
+            return MaterialPageRoute(builder: (_) => const AuthGate());
+        }
+      },
     );
   }
 }
