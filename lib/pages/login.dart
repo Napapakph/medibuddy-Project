@@ -32,7 +32,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _obscurePassword = true; //ดู password
   bool _isLoading = false; // ติดตามสถานะกำลังล็อกอิน
   final supabase = Supabase.instance.client;
-
+  bool _navigated = false;
 //---------------- Login with Username/Password----------------------------------
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
@@ -99,15 +99,26 @@ class _LoginScreenState extends State<LoginScreen> {
     super.initState();
 
     _authSub = Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+      if (_navigated) return;
       final event = data.event;
       final session = data.session;
 
+      if (event == AuthChangeEvent.passwordRecovery) {
+        if (!mounted) return;
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const ForgetPassword()),
+        );
+        return;
+      }
       if (event == AuthChangeEvent.signedIn && session != null) {
+        _navigated = true;
         if (!mounted) return;
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (_) => const ProfileScreen()),
         );
+        return;
       }
     });
   }
@@ -161,10 +172,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: Form(
                         key: _formKey,
                         child: Column(
-                          mainAxisSize:
-                              MainAxisSize.min, // 👈 อันนี้แหละตัวช่วย
+                          mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.start,
-
                           children: [
                             const Text(
                               'เข้าสู่ระบบ',
@@ -338,76 +347,99 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  final _resetEmailCtrl = TextEditingController();
+
   forgetPassword() {
-    //ไว้เพิ่มฟังก์ชันลืมรหัสผ่านในอนาคต
     return showDialog(
-        context: context,
-        builder: (dialogContext) {
-          return Dialog(
-            child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 400),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
+      context: context,
+      
+      builder: (dialogContext) {
+        return Dialog(
+          child: ConstrainedBox(
+            
+            constraints: const BoxConstraints(maxWidth: 400),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Stack(
                     children: [
-                      Stack(
-                        children: [
-                          // ปุ่มปิดด้านขวา
-                          Positioned(
-                            right: 0,
-                            child: IconButton(
-                              icon: const Icon(Icons.close),
-                              onPressed: () => Navigator.pop(context),
-                            ),
-                          ),
-
-                          // ข้อความอยู่กลางจริงๆ ตามพื้นที่ทั้งหมด
-                          const Center(
-                            child: Padding(
-                              padding: EdgeInsets.symmetric(vertical: 8),
-                              child: Text(
-                                'ลืมรหัสผ่าน',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
+                      Positioned(
+                        right: 0,
+                        child: IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () => Navigator.pop(dialogContext),
+                        ),
                       ),
-                      const SizedBox(height: 30),
-                      ConstrainedBox(
-                          constraints: BoxConstraints(maxWidth: 400),
-                          child: Container(
-                            child: TextField(
-                              decoration: InputDecoration(
-                                labelText: 'Email',
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                              ),
-                            ),
-                          )),
-                      SizedBox(height: 24),
-                      ElevatedButton(
-                          onPressed: () {
-                            // 1) ปิด popup ก่อน
-                            Navigator.pop(dialogContext);
-
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const ForgetPassword(),
-                              ),
-                            );
-                          },
-                          child: const Text('ตรวจสอบ Email')),
+                      const Center(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(vertical: 8),
+                          child: Text(
+                            'ลืมรหัสผ่าน',
+                            style: TextStyle(
+                                fontSize: 20, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
-                )),
-          );
-        });
+                  const SizedBox(height: 30),
+                  TextField(
+                    controller: _resetEmailCtrl,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: InputDecoration(
+                      labelText: 'Email',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    
+                    onPressed: () async {
+                      final email = _resetEmailCtrl.text.trim();
+                      if (email.isEmpty) return;
+
+                      try {
+                        await Supabase.instance.client.auth
+                            .resetPasswordForEmail(
+                          email,
+                          // ✅ ต้องเป็น deep link ของแอป (อันเดียวกับที่ใส่ใน Supabase Redirect URLs)
+                          redirectTo: 'com.example.medibuddy://login-callback',
+                        );
+
+                        if (!context.mounted) return;
+                        Navigator.pop(dialogContext);
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text(
+                                  'ส่งอีเมลสำหรับรีเซ็ตรหัสผ่านแล้ว กรุณาตรวจสอบอีเมล')),
+                        );
+                      } on AuthException catch (e) {
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(e.message)),
+                        );
+                      } catch (e) {
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content:
+                                  Text('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง')),
+                        );
+                      }
+                    },
+                    child: const Text('ส่งอีเมลรีเซ็ต'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 }

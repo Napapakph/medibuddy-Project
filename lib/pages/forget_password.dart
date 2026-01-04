@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../widgets/login_button.dart';
 import '../pages/login.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ForgetPassword extends StatefulWidget {
   const ForgetPassword({super.key});
@@ -14,6 +15,7 @@ class _ForgetPassword extends State<ForgetPassword> {
   bool _isLoading = false; // สถานะการโหลด
   final _password = TextEditingController();
   final _confirmPasswordCtrl = TextEditingController();
+  bool _obscurePassword = true; //ดู password
 
   @override
   void dispose() {
@@ -32,22 +34,50 @@ class _ForgetPassword extends State<ForgetPassword> {
 
     setState(() => _isLoading = true);
 
-    // 👇 สมมติว่าเรียก API หรือทำงาน async จริง
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      final supabase = Supabase.instance.client;
 
-    if (!mounted) return; // 👈 ต้องอยู่หลัง await
+      // ✅ กันเคสเข้าหน้านี้แบบไม่ได้มาจากลิงก์รีเซ็ต
+      final session = supabase.auth.currentSession;
+      if (session == null) {
+        throw const AuthException(
+            'ลิงก์รีเซ็ตรหัสผ่านไม่ถูกต้องหรือหมดอายุ กรุณากด "ลืมรหัสผ่าน" ใหม่');
+      }
 
-    setState(() => _isLoading = false);
+      // ✅ ตั้งรหัสผ่านใหม่
+      await supabase.auth.updateUser(
+        UserAttributes(password: _password.text.trim()),
+      );
 
-    // ไปหน้าถัดไป
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('รีเซ็ตรหัสผ่านสำเร็จ')),
-    );
-    Navigator.pushReplacement(
+      // ✅ เพื่อความชัวร์: sign out แล้วให้ล็อกอินใหม่ด้วยรหัสใหม่
+      await supabase.auth.signOut();
+
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('รีเซ็ตรหัสผ่านสำเร็จ กรุณาเข้าสู่ระบบใหม่')),
+      );
+
+      Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(
-          builder: (context) => const LoginScreen(),
-        ));
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        (pushAndRemoveUntil) => false,
+      );
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message)),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง')),
+      );
+    }
   }
 
   String? validatePassword(String password) {
@@ -127,7 +157,7 @@ class _ForgetPassword extends State<ForgetPassword> {
                         // รหัสผ่าน
                         TextFormField(
                           controller: _password,
-                          obscureText: true,
+                          obscureText: _obscurePassword,
                           decoration: InputDecoration(
                             labelText: 'รหัสผ่าน',
                             filled: true,
@@ -139,6 +169,18 @@ class _ForgetPassword extends State<ForgetPassword> {
                             contentPadding: EdgeInsets.symmetric(
                               horizontal: maxWidth * 0.04,
                               vertical: maxHeight * 0.01,
+                            ),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscurePassword
+                                    ? Icons.visibility
+                                    : Icons.visibility_off,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _obscurePassword = !_obscurePassword;
+                                });
+                              },
                             ),
                           ),
                           validator: (value) {
@@ -170,7 +212,7 @@ class _ForgetPassword extends State<ForgetPassword> {
                         // ยืนยันรหัสผ่าน
                         TextFormField(
                           controller: _confirmPasswordCtrl,
-                          obscureText: true,
+                          obscureText: _obscurePassword,
                           decoration: InputDecoration(
                             labelText: 'ยืนยันรหัสผ่าน',
                             filled: true,
@@ -182,6 +224,18 @@ class _ForgetPassword extends State<ForgetPassword> {
                             contentPadding: EdgeInsets.symmetric(
                               horizontal: maxWidth * 0.04,
                               vertical: maxHeight * 0.01,
+                            ),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscurePassword
+                                    ? Icons.visibility
+                                    : Icons.visibility_off,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _obscurePassword = !_obscurePassword;
+                                });
+                              },
                             ),
                           ),
                           validator: (value) {
@@ -199,10 +253,9 @@ class _ForgetPassword extends State<ForgetPassword> {
                         SizedBox(
                           width: double.infinity,
                           child: resetPassword(
-                              text: 'สร้างรหัสผ่านใหม่',
-                              onPressed: () {
-                                _isLoading ? null : _handleResetPassword();
-                              }),
+                            text: 'สร้างรหัสผ่านใหม่',
+                            onPressed: _handleResetPassword,
+                          ),
                         ),
                       ],
                     ),

@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
-import 'pages/login.dart';
 import 'package:supabase_flutter/supabase_flutter.dart ';
+import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'pages/login.dart';
 import 'pages/signup.dart';
 import 'pages/otp.dart';
 import 'pages/forget_password.dart';
 import 'Home/pages/profile_screen.dart';
 import 'Home/pages/select_profile.dart';
-import 'package:intl/intl.dart';
-import 'package:intl/date_symbol_data_local.dart';
 import 'API/auth_gate.dart';
+import 'Home/pages/home.dart';
+import 'pages/forget_password.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,7 +39,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'MediBuddy',
 
-      // ✅ รับ deep link ที่มาเป็น "/?code=..."
+      //  รับ deep link ที่มาเป็น "/?code=..."
       onGenerateRoute: (settings) {
         final uri = Uri.tryParse(settings.name ?? '/');
 
@@ -46,7 +48,7 @@ class MyApp extends StatelessWidget {
           return MaterialPageRoute(builder: (_) => const AuthGate());
         }
 
-        // ✅ สำคัญ: "/?code=..." จะมี uri.path = "/"
+        //  สำคัญ: "/?code=..." จะมี uri.path = "/"
         if (uri.path == '/') {
           return MaterialPageRoute(builder: (_) => const AuthGate());
         }
@@ -55,8 +57,17 @@ class MyApp extends StatelessWidget {
         switch (uri.path) {
           case '/login':
             return MaterialPageRoute(builder: (_) => const LoginScreen());
+          case '/signup':
+            return MaterialPageRoute(builder: (_) => const SignupScreen());
           case '/profile':
             return MaterialPageRoute(builder: (_) => const ProfileScreen());
+          case '/select_profile':
+            return MaterialPageRoute(builder: (_) => const SelectProfile());
+          case '/home':
+            return MaterialPageRoute(builder: (_) => const Home());
+          case '/forget_password':
+            return MaterialPageRoute(builder: (_) => const ForgetPassword());
+
           default:
             return MaterialPageRoute(builder: (_) => const AuthGate());
         }
