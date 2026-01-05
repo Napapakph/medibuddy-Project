@@ -14,7 +14,9 @@ class AuthGate extends StatelessWidget {
     // ถ้ามี session => เข้า Profile เลย
     final session = supabase.auth.currentSession;
     if (session != null) {
-      return const ProfileScreen();
+      return const ProfileScreen(
+        accessToken: '',
+      );
     }
 
     // ไม่มี session => ไป Login

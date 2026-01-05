@@ -3,10 +3,11 @@ import 'package:medibuddy/Model/profile_model.dart';
 import 'library_profile.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
-import 'buddy.dart';
+import '../../services/profile_api.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  final String accessToken;
+  const ProfileScreen({super.key, required this.accessToken});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -23,11 +24,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
   ImageProvider? _profileImage; // เก็บ URL รูปโปรไฟล์
   String? profileImageUrl;
   bool _isLoading = false; // สถานะการโหลด
+  File? _selectedImageFile;
 
   @override
   void dispose() {
     _usernameController.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    debugPrint('=== PROFILE SCREEN ===');
+    debugPrint('accessToken from widget: ${widget.accessToken}');
+  }
+
+  void _goNext(ProfileModel profile) {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => LibraryProfile(initialProfile: profile),
+      ),
+    );
   }
 
   @override
@@ -114,29 +132,112 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 : () async {
                                     if (!_formKey.currentState!.validate())
                                       return;
+
                                     setState(() => _isLoading = true);
-                                    final profile = ProfileModel(
+
+                                    // ✅ สร้าง profile แบบ fallback ก่อน (ใช้ข้อมูล local)
+                                    final fallbackProfile = ProfileModel(
+                                      _usernameController.text.trim(),
+                                      profileImageUrl ??
+                                          '', // path รูปในเครื่อง (ถ้ามี)
+                                    );
+
+                                    try {
+                                      debugPrint(
+                                          'TOKEN: ${widget.accessToken}');
+
+                                      // ถ้าไม่ได้เลือกรูป -> ข้ามการส่ง API ไปเลย แล้วไปหน้าถัดไป
+                                      if (_selectedImageFile == null) {
+                                        if (!mounted) return;
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                              content: Text(
+                                                  'ไม่ได้อัปโหลดรูปไป DB (ยังไม่ได้เลือกรูป)')),
+                                        );
+                                        Navigator.pushReplacement(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (_) => LibraryProfile(
+                                                initialProfile:
+                                                    fallbackProfile),
+                                          ),
+                                        );
+                                        return;
+                                      }
+
+                                      debugPrint(
+                                          'IMAGE PATH: ${_selectedImageFile?.path}');
+                                      debugPrint(
+                                          'IMAGE EXISTS: ${_selectedImageFile?.existsSync()}');
+
+                                      // ✅ 1) สร้าง API client
+                                      final api = ProfileApi(
+                                          'http://82.26.104.199:3000');
+
+                                      // ✅ 2) พยายามบันทึกลง database
+                                      final result = await api.createProfile(
+                                        accessToken: widget.accessToken,
+                                        profileName:
+                                            _usernameController.text.trim(),
+                                        imageFile:
+                                            _selectedImageFile!, // ตอนนี้ไม่ null แล้ว
+                                      );
+
+                                      if (!mounted) return;
+                                      debugPrint(
+                                          'CREATE PROFILE RESULT: $result');
+
+                                      // ✅ 3) ถ้าสำเร็จ ใช้ข้อมูลจาก backend (กัน null ด้วย)
+                                      final profilePicture =
+                                          result['profilePicture']
+                                                  ?.toString() ??
+                                              '';
+
+                                      final successProfile = ProfileModel(
                                         _usernameController.text.trim(),
-                                        _profileImage != null
-                                            ? profileImageUrl ?? ''
-                                            : '');
+                                        profilePicture.isNotEmpty
+                                            ? profilePicture
+                                            : (profileImageUrl ?? ''),
+                                      );
 
-                                    // เพิ่มโปรไฟล์ใหม่ลงในรายการ
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                            'บันทึกข้อมูลเรียบร้อย: $profile'),
-                                      ),
-                                    );
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        const SnackBar(
+                                            content:
+                                                Text('บันทึกลง DB สำเร็จ')),
+                                      );
 
-                                    setState(() => _isLoading = false);
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => LibraryProfile(
-                                            initialProfile: profile),
-                                      ),
-                                    );
+                                      // ✅ 4) ไปหน้าถัดไป
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => LibraryProfile(
+                                              initialProfile: successProfile),
+                                        ),
+                                      );
+                                    } catch (e) {
+                                      // ✅ ถึงจะ error ก็ไปต่อด้วย fallback
+                                      if (!mounted) return;
+
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                            content: Text(
+                                                'บันทึกลง DB ไม่สำเร็จ แต่จะไปต่อ: $e')),
+                                      );
+
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => LibraryProfile(
+                                              initialProfile: fallbackProfile),
+                                        ),
+                                      );
+                                    } finally {
+                                      if (!mounted) return;
+                                      setState(() => _isLoading = false);
+                                    }
                                   },
                             style: ElevatedButton.styleFrom(
                               padding: EdgeInsets.symmetric(
@@ -249,9 +350,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     // ถ้าเลือกภาพได้ → อัปเดต state
     setState(() {
-      _profileImage = FileImage(File(image.path));
-      profileImageUrl = image.path; // ⭐ เก็บ path เอาไว้ส่งไปหน้าอื่น
+      _selectedImageFile = File(image.path); // ✅ เก็บไฟล์ไว้ส่ง API
+      _profileImage = FileImage(_selectedImageFile!); // ใช้แสดง UI
+      profileImageUrl = image.path; // (optional) เก็บ path
     });
+
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('เปลี่ยนรูปโปรไฟล์สำเร็จ')),
     );

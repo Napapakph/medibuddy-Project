@@ -13,6 +13,28 @@ class OTPScreen extends StatefulWidget {
   State<OTPScreen> createState() => _OTPScreenState();
 }
 
+Map<String, dynamic> _parseJwt(String token) {
+  final parts = token.split('.');
+  if (parts.length != 3) throw Exception('invalid token');
+
+  String normalize(String str) {
+    str = str.replaceAll('-', '+').replaceAll('_', '/');
+    switch (str.length % 4) {
+      case 0:
+        return str;
+      case 2:
+        return '$str==';
+      case 3:
+        return '$str=';
+      default:
+        throw Exception('invalid base64');
+    }
+  }
+
+  final payload = utf8.decode(base64Url.decode(normalize(parts[1])));
+  return jsonDecode(payload) as Map<String, dynamic>;
+}
+
 class _OTPScreenState extends State<OTPScreen> {
   final _otp = TextEditingController();
   bool _isLoading = false;
@@ -42,7 +64,7 @@ class _OTPScreenState extends State<OTPScreen> {
 
       // TODO: ใส่ anon key เดียวกับที่ใช้ใน Supabase.initialize
       const supabaseAnonKey =
-          '<eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFvaXVyZHdpYmd1ZHN4aG94Y25pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQxNjY3OTcsImV4cCI6MjA3OTc0Mjc5N30.3aPHErdnVMHVmjcOk55KCLhUw6rPCzu4Ke5DWqQNsyg>';
+          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFvaXVyZHdpYmd1ZHN4aG94Y25pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQxNjY3OTcsImV4cCI6MjA3OTc0Mjc5N30.3aPHErdnVMHVmjcOk55KCLhUw6rPCzu4Ke5DWqQNsy';
 
       final uri = Uri.parse(
         'https://aoiurdwibgudsxhoxcni.supabase.co/auth/v1/verify',
@@ -57,7 +79,7 @@ class _OTPScreenState extends State<OTPScreen> {
         body: jsonEncode({
           'email': widget.email,
           'token': verificationCode,
-          'type': 'email', // 👈 ให้ตรงกับที่เพื่อนใช้ใน Postman
+          'type': 'email', // ให้ตรงกับที่เพื่อนใช้ใน Postman
         }),
       );
       if (!mounted) return;
@@ -73,14 +95,31 @@ class _OTPScreenState extends State<OTPScreen> {
 
       final data = jsonDecode(response.body);
       final accessToken = data['access_token'];
+
+      if (accessToken == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Verify สำเร็จแต่ไม่พบ access_token')),
+        );
+        return;
+      }
+
+      final supabaseUserIdFromUser = data['user']?['id'] as String?;
+      final supabaseUserId =
+          supabaseUserIdFromUser ?? (_parseJwt(accessToken)['sub'] as String);
+
       // ส่งไป backend ของเพื่อน
       final syncRes = await http.post(
-        Uri.parse(
-            'https://sharri-unpatted-cythia.ngrok-free.dev/api/auth/sync-user'),
+        Uri.parse('http://82.26.104.199:3000/api/mobile/v1/auth/sync-user'),
         headers: {
           'Authorization': 'Bearer $accessToken',
           'Content-Type': 'application/json',
         },
+        body: jsonEncode({
+          "supabaseUserId": supabaseUserId,
+          "email": widget.email,
+          "provider": "email",
+          "allowMerge": true,
+        }),
       );
       if (!mounted) return;
 

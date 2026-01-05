@@ -8,20 +8,15 @@ class AuthenSignUpEmail {
     required String password,
   }) async {
     try {
-      final res = await supabase.auth.signUp(email: email, password: password);
+      await supabase.auth.signUp(
+        email: email,
+        password: password,
+      );
 
-      if (res.session == null) {
-        return 'สมัครสำเร็จแล้ว โปรดตรวจสอบอีเมลเพื่อยืนยันบัญชี';
-      }
+      // ✅ ถ้าไม่ throw ถือว่าสำเร็จ
       return null;
     } on AuthException catch (e) {
-      final msg = e.message.toLowerCase();
-      if (msg.contains('already') ||
-          msg.contains('registered') ||
-          msg.contains('exists')) {
-        return 'อีเมลนี้ถูกใช้งานแล้ว กรุณาเข้าสู่ระบบ';
-      }
-      return e.message;
+      return e.message; // เช่น email ซ้ำ ฯลฯ
     } catch (_) {
       return 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง';
     }

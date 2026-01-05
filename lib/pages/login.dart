@@ -47,6 +47,19 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
     setState(() => _isLoading = false);
 
+    final session = Supabase.instance.client.auth.currentSession;
+    final accessToken = session?.accessToken;
+    debugPrint('SESSION: $session');
+    debugPrint('ACCESS TOKEN: $accessToken');
+
+    if (accessToken == null) {
+      // session ยังไม่มา / login ไม่สำเร็จ
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('ไม่พบ token กรุณาลองใหม่')),
+      );
+      return;
+    }
+
     if (success == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('เข้าสู่ระบบสำเร็จ')),
@@ -55,7 +68,7 @@ class _LoginScreenState extends State<LoginScreen> {
       Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => const ProfileScreen(),
+            builder: (context) => ProfileScreen(accessToken: accessToken),
           ));
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -116,7 +129,10 @@ class _LoginScreenState extends State<LoginScreen> {
         if (!mounted) return;
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => const ProfileScreen()),
+          MaterialPageRoute(
+              builder: (_) => const ProfileScreen(
+                    accessToken: '',
+                  )),
         );
         return;
       }
@@ -352,11 +368,9 @@ class _LoginScreenState extends State<LoginScreen> {
   forgetPassword() {
     return showDialog(
       context: context,
-      
       builder: (dialogContext) {
         return Dialog(
           child: ConstrainedBox(
-            
             constraints: const BoxConstraints(maxWidth: 400),
             child: Padding(
               padding: const EdgeInsets.all(16.0),
@@ -397,7 +411,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 24),
                   ElevatedButton(
-                    
                     onPressed: () async {
                       final email = _resetEmailCtrl.text.trim();
                       if (email.isEmpty) return;

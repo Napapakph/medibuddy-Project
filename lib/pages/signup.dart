@@ -32,16 +32,18 @@ class _SignupScreenState extends State<SignupScreen> {
   Future<void> _handleSignup() async {
     if (!_formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('กรุณากรอกข้อมูลให้ครบถ้วนก่อนลงทะเบียน')),
+        const SnackBar(content: Text('กรุณากรอกข้อมูลให้ถูกต้อง')),
       );
       return;
     }
+    final email = _email.text.trim();
+    final password = _password.text.trim();
 
-    setState(() => _isLoading = true); // 👈 เริ่มหมุนโหลด
-    // 👇 เรียกไปหา Supabase ผ่าน AuthAPI
+    setState(() => _isLoading = true); // เริ่มหมุนโหลด
+    // เรียกไปหา Supabase ผ่าน AuthAPI
     final error = await _authAPI.signUpWithEmail(
-      email: _email.text.trim(),
-      password: _password.text.trim(),
+      email: email,
+      password: password,
     );
     if (!mounted) return;
 
@@ -58,16 +60,32 @@ class _SignupScreenState extends State<SignupScreen> {
       // จะไปหน้า OTP ต่อก็ได้ ถ้าระบบต้องการยืนยัน
       Navigator.push(
         context,
-        MaterialPageRoute(
-            builder: (context) => OTPScreen(email: _email.text.trim())),
+        MaterialPageRoute(builder: (context) => OTPScreen(email: email)),
         //หน้า OTP จะรู้แล้วว่า OTP นี้เป็นของอีเมลไหน
       );
-    } else {
-      // ❌ Debug มี error หรือ Supabase (เช่น email ซ้ำ)  ของ Supabase ยังไม่ได้ทำเช็ค
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error อยู่น้าเลยรับ OTP ไม่ได้")),
-      );
+      return;
     }
+    bool _isAlreadyRegisteredError(String error) {
+      final msg = error.toLowerCase();
+      const keywords = ['already', 'exists', 'registered'];
+      return keywords.any(msg.contains);
+    }
+
+    if (_isAlreadyRegisteredError(error)) {
+      // optional: ส่ง OTP ใหม่
+      // await Supabase.instance.client.auth.resend(type: OtpType.signup, email: email);
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => OTPScreen(email: email)),
+      );
+      return;
+    }
+
+// error อื่น ๆ
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(error)),
+    );
   }
 
   String? validatePassword(String password) {
@@ -131,8 +149,8 @@ class _SignupScreenState extends State<SignupScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // รูปแมวด้านบน
-
-                      Align(
+                      Positioned(
+                          child: Align(
                         alignment: Alignment.topRight,
                         child: SizedBox(
                           height: maxHeight * 0.25,
@@ -140,7 +158,7 @@ class _SignupScreenState extends State<SignupScreen> {
                             'assets/Sign_up_cat.png',
                           ),
                         ),
-                      ),
+                      )),
 
                       Center(
                         child: Padding(

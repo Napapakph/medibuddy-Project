@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:medibuddy/widgets/app_drawer.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../pages/login.dart';
 import 'home.dart';
@@ -46,6 +47,7 @@ class _SelectProfile extends State<SelectProfile> {
         backgroundColor: Color(0xFFB7DAFF),
         centerTitle: true,
       ),
+      drawer: const AppDrawer(),
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -83,13 +85,27 @@ class _SelectProfile extends State<SelectProfile> {
                     ),
                   ),
                   SizedBox(height: maxHeight * 0.05),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Padding(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: maxWidth * 0.05),
+                      child: Text(
+                        'Select Profile',
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
                   ElevatedButton(
                     onPressed: () {
                       Navigator.pushReplacement(
                         context,
                         MaterialPageRoute(builder: (context) => const Home()),
                       );
-                      // ปุ่มยืนยัน
+                      // ปุ่มยืนยัน -----------------------------------------------
                     },
                     style: ElevatedButton.styleFrom(
                       padding: EdgeInsets.symmetric(
@@ -108,6 +124,7 @@ class _SelectProfile extends State<SelectProfile> {
                       ),
                     ),
                   ),
+                  // ปุ่มยืนยัน -----------------------------------------------
                 ],
               ),
             );

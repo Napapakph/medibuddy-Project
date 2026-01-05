@@ -11,6 +11,7 @@ import 'Home/pages/select_profile.dart';
 import 'API/auth_gate.dart';
 import 'Home/pages/home.dart';
 import 'pages/forget_password.dart';
+import 'Home/pages/library_profile.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -60,13 +61,18 @@ class MyApp extends StatelessWidget {
           case '/signup':
             return MaterialPageRoute(builder: (_) => const SignupScreen());
           case '/profile':
-            return MaterialPageRoute(builder: (_) => const ProfileScreen());
+            return MaterialPageRoute(
+                builder: (_) => const ProfileScreen(
+                      accessToken: '',
+                    ));
           case '/select_profile':
             return MaterialPageRoute(builder: (_) => const SelectProfile());
           case '/home':
             return MaterialPageRoute(builder: (_) => const Home());
           case '/forget_password':
             return MaterialPageRoute(builder: (_) => const ForgetPassword());
+          case '/library_profile':
+            return MaterialPageRoute(builder: (_) => const LibraryProfile());
 
           default:
             return MaterialPageRoute(builder: (_) => const AuthGate());
