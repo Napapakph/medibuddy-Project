@@ -39,9 +39,6 @@ class _MyBuddyState extends State<MyBuddy> {
             //ถ้าจอกว้างแบบแท็บเล็ต
             final bool isTablet = maxWidth > 600;
 
-            //จำกัดความกว้างสูงสุดของหน้าจอ
-            final double containerWidth = isTablet ? 500 : maxWidth;
-
             return Align(
               child: Column(
                 children: [

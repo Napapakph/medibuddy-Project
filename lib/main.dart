@@ -72,7 +72,10 @@ class MyApp extends StatelessWidget {
           case '/forget_password':
             return MaterialPageRoute(builder: (_) => const ForgetPassword());
           case '/library_profile':
-            return MaterialPageRoute(builder: (_) => const LibraryProfile());
+            return MaterialPageRoute(
+                builder: (_) => const LibraryProfile(
+                      accessToken: '',
+                    ));
 
           default:
             return MaterialPageRoute(builder: (_) => const AuthGate());

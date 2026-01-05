@@ -51,7 +51,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
-        builder: (_) => LibraryProfile(initialProfile: profile),
+        builder: (_) => LibraryProfile(
+            accessToken: widget.accessToken, initialProfile: profile),
       ),
     );
   }
@@ -163,15 +164,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                               content: Text(
                                                   'ไม่ได้อัปโหลดรูปไป DB (ยังไม่ได้เลือกรูป)')),
                                         );
-                                        Navigator.pushReplacement(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (_) => LibraryProfile(
-                                                initialProfile:
-                                                    fallbackProfile),
-                                          ),
-                                        );
-                                        return;
                                       }
 
                                       debugPrint(
@@ -221,6 +213,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         context,
                                         MaterialPageRoute(
                                           builder: (_) => LibraryProfile(
+                                              accessToken: widget.accessToken,
                                               initialProfile: successProfile),
                                         ),
                                       );
@@ -345,6 +338,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final XFile? image = await picker.pickImage(
       source: ImageSource.gallery,
       imageQuality: 85,
+      maxWidth: 1024, // ทำให้เสถียรขึ้น / ลด timeout
     );
     if (image == null) {
       // ผู้ใช้กดปิด ไม่เลือกภาพ
@@ -352,6 +346,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
 
     final file = File(image.path);
+
+    // เช็คชนิดรูปด้วย extension ก่อน (กัน heic)
 
     if (!_isSupportedImage(file)) {
       if (!mounted) return;

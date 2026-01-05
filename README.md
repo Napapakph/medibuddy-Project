@@ -249,3 +249,6 @@
 - ไฟล์ `camera_ocr.dart` ยังไม่มีการใช้งาน สามารถนำมาใช้สำหรับ OCR ในอนาคต
 - `MockAuthService` ใช้สำหรับทดสอบ UI เท่านั้น ไม่ควรใช้ในโปรดักชัน
 
+
+## สำคัญมาก ถ้าเปลี่ยน sever อย่าลืมไปแก้ใน \android\app\src\main\res\xml\network_security_config.xml ด้วย
+

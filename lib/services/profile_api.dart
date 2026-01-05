@@ -5,7 +5,28 @@ import 'package:mime/mime.dart';
 import 'package:flutter/foundation.dart';
 
 class ProfileApi {
-  ProfileApi(this.baseUrl);
+  //ตั้ง timeout ใน constructor
+  ProfileApi(this.baseUrl) {
+    _dio.options = BaseOptions(
+      baseUrl: baseUrl,
+      connectTimeout: const Duration(seconds: 10),
+      sendTimeout: const Duration(seconds: 30),
+      receiveTimeout: const Duration(seconds: 30),
+      headers: {'Accept': 'application/json'},
+      validateStatus: (_) => true,
+    );
+
+    _dio.interceptors.add(
+      LogInterceptor(
+        request: true,
+        requestHeader: true,
+        requestBody: false, // multipart ยาว ปิดไว้
+        responseHeader: true,
+        responseBody: true,
+        error: true,
+      ),
+    );
+  }
 
   final String baseUrl;
   final Dio _dio = Dio();
@@ -72,5 +93,43 @@ class ProfileApi {
       debugPrint('response = ${e.response?.data}');
       rethrow;
     }
+  }
+
+  //API สำหรับดึง list Profile
+
+  Future<List<Map<String, dynamic>>> fetchProfiles({
+    required String accessToken,
+  }) async {
+    debugPrint('FETCH -> $baseUrl/api/mobile/v1/profile/list');
+    debugPrint('TOKEN -> ${accessToken.substring(0, 20)}...');
+
+    final res = await _dio.get(
+      '/api/mobile/v1/profile/list',
+      options: Options(
+        headers: {'Authorization': 'Bearer $accessToken'},
+      ),
+    );
+
+    debugPrint('STATUS=${res.statusCode}');
+    debugPrint('DATA=${res.data}');
+
+    if (res.statusCode != 200) {
+      throw Exception('Fetch profiles failed: ${res.statusCode} ${res.data}');
+    }
+
+    final data = res.data;
+
+    // รองรับทั้งกรณี backend คืน {profiles:[...]} หรือคืน [...] ตรงๆ
+    if (data is Map && data['profiles'] is List) {
+      return (data['profiles'] as List)
+          .map((e) => Map<String, dynamic>.from(e as Map))
+          .toList();
+    }
+
+    if (data is List) {
+      return data.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+    }
+
+    throw Exception('Unexpected response shape: $data');
   }
 }

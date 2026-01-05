@@ -1,13 +1,18 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:medibuddy/Model/profile_model.dart';
-import 'profile_screen.dart';
 import '../../widgets/profile_widget.dart';
 import 'package:image_picker/image_picker.dart';
 import 'buddy.dart';
+import '../../services/profile_api.dart';
 
 class LibraryProfile extends StatefulWidget {
-  const LibraryProfile({Key? key, this.initialProfile}) : super(key: key);
+  final String accessToken;
+  const LibraryProfile({
+    Key? key,
+    required this.accessToken,
+    this.initialProfile,
+  }) : super(key: key);
 
   final ProfileModel? initialProfile;
 
@@ -17,13 +22,81 @@ class LibraryProfile extends StatefulWidget {
 
 class _LibraryProfileState extends State<LibraryProfile> {
   final List<ProfileModel> profiles = [];
+  static const String _imageBaseUrl =
+      'http://82.26.104.199:3000'; //สร้าง base URL ของรูป
+
+  ImageProvider? buildProfileImage(String imagePath) {
+    if (imagePath.isEmpty) return null;
+
+    // รูปจาก server (public)
+    if (imagePath.startsWith('/uploads')) {
+      return NetworkImage('$_imageBaseUrl$imagePath');
+    }
+
+    // เผื่อ backend ส่ง URL เต็มมา
+    if (imagePath.startsWith('http')) {
+      return NetworkImage(imagePath);
+    }
+
+    // รูปจากเครื่อง (local)
+    return FileImage(File(imagePath));
+  }
+
+  bool _loading = false;
+
+  Future<void> _loadProfiles() async {
+    setState(() => _loading = true);
+    debugPrint('set loading=true');
+
+    try {
+      final api = ProfileApi('http://82.26.104.199:3000');
+      final rows = await api.fetchProfiles(accessToken: widget.accessToken);
+
+      debugPrint('=== FETCH PROFILES FROM API ===');
+      debugPrint('RAW RESPONSE: $rows');
+
+      final loaded = rows.map((m) {
+        debugPrint('--- PROFILE ROW ---');
+        debugPrint('profileId: ${m['profileId']}');
+        debugPrint('profileName: ${m['profileName']}');
+        debugPrint('profilePicture: ${m['profilePicture']}');
+
+        return ProfileModel(
+          (m['profileName'] ?? '').toString(),
+          (m['profilePicture'] ?? '').toString(),
+        );
+      }).toList();
+
+      if (!mounted) return;
+
+      setState(() {
+        profiles
+          ..clear()
+          ..addAll(loaded);
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('โหลดโปรไฟล์ไม่สำเร็จ: $e')),
+      );
+    } finally {
+      if (!mounted) return;
+      setState(() => _loading = false);
+    }
+  }
 
   @override
   void initState() {
     super.initState();
+
+    // ถ้าอยากโชว์ initialProfile ทันที (ก่อนโหลด DB)
     if (widget.initialProfile != null) {
       profiles.add(widget.initialProfile!);
     }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadProfiles();
+    });
   }
 
   @override
@@ -87,94 +160,120 @@ class _LibraryProfileState extends State<LibraryProfile> {
                                     ),
                                   ],
                                 ),
-                                child: profiles.isEmpty
+                                child: _loading
                                     ? const Center(
-                                        child: Text(
-                                          'ยังไม่มีผู้ใช้งาน',
-                                          style: TextStyle(color: Colors.grey),
-                                        ),
-                                      )
-                                    : ListView.builder(
-                                        padding: EdgeInsets.symmetric(
-                                            vertical: maxHeight * 0.01,
-                                            horizontal: maxWidth * 0.01),
-                                        itemCount: profiles.length,
-                                        itemBuilder: (context, index) {
-                                          final profile = profiles[index];
-
-                                          return ListTile(
-                                            contentPadding: EdgeInsets.zero,
-                                            // ปิด padding default ของ ListTile
-                                            horizontalTitleGap: maxWidth * 0.01,
-                                            // ระยะห่างระหว่างภาพ กับ title
-                                            minLeadingWidth: 0,
-                                            // ทำให้ leading ไม่กินพื้นที่เกินจริง
-
-                                            leading: (profile
-                                                    .imagePath.isNotEmpty)
-                                                ? CircleAvatar(
-                                                    backgroundImage: FileImage(
-                                                        File(
-                                                            profile.imagePath)),
-                                                    radius: avatarSize,
-                                                  )
-                                                : const CircleAvatar(
-                                                    child: Icon(Icons.person)),
-                                            title: Container(
-                                              padding: EdgeInsets.symmetric(
-                                                vertical: maxHeight * 0.02,
-                                                horizontal: maxWidth * 0.05,
-                                              ),
-                                              decoration: BoxDecoration(
-                                                color: const Color.fromARGB(
-                                                    136, 203, 219, 240),
-                                                borderRadius:
-                                                    BorderRadius.circular(20),
-                                              ),
-                                              child: Align(
-                                                alignment: Alignment.centerLeft,
-
-                                                child: Text(
-                                                  profile.username,
-                                                  style: const TextStyle(
-                                                    fontSize: 18,
-                                                    color: Colors.black,
-                                                  ),
-                                                ), // ⭐ บังคับให้ชิดซ้าย),
-                                              ),
+                                        child: CircularProgressIndicator())
+                                    : profiles.isEmpty
+                                        ? const Center(
+                                            child: Text(
+                                              'ยังไม่มีผู้ใช้งาน',
+                                              style:
+                                                  TextStyle(color: Colors.grey),
                                             ),
-                                            trailing: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                InkWell(
-                                                  onTap: () =>
-                                                      _editProfile(index),
-                                                  child: Padding(
-                                                    padding: EdgeInsets.all(1),
-                                                    // เล็กมาก! ปรับได้
-                                                    child: Icon(Icons.edit,
-                                                        size: 25,
-                                                        color: Colors.blueGrey),
+                                          )
+                                        : ListView.builder(
+                                            padding: EdgeInsets.symmetric(
+                                                vertical: maxHeight * 0.01,
+                                                horizontal: maxWidth * 0.01),
+                                            itemCount: profiles.length,
+                                            itemBuilder: (context, index) {
+                                              final profile = profiles[index];
+
+                                              return ListTile(
+                                                contentPadding: EdgeInsets.zero,
+                                                // ปิด padding default ของ ListTile
+                                                horizontalTitleGap:
+                                                    maxWidth * 0.01,
+                                                // ระยะห่างระหว่างภาพ กับ title
+                                                minLeadingWidth: 0,
+                                                // ทำให้ leading ไม่กินพื้นที่เกินจริง
+
+                                                leading: profile
+                                                        .imagePath.isNotEmpty
+                                                    ? CircleAvatar(
+                                                        radius: avatarSize,
+                                                        backgroundImage:
+                                                            buildProfileImage(
+                                                                profile
+                                                                    .imagePath),
+                                                        child: profile.imagePath
+                                                                .isEmpty
+                                                            ? const Icon(
+                                                                Icons.person)
+                                                            : null,
+                                                      )
+                                                    : CircleAvatar(
+                                                        radius: avatarSize,
+                                                        backgroundColor:
+                                                            const Color
+                                                                .fromARGB(255,
+                                                                224, 212, 233),
+                                                        child: const Icon(
+                                                            Icons.person),
+                                                      ),
+
+                                                title: Container(
+                                                  padding: EdgeInsets.symmetric(
+                                                    vertical: maxHeight * 0.02,
+                                                    horizontal: maxWidth * 0.05,
+                                                  ),
+                                                  decoration: BoxDecoration(
+                                                    color: const Color.fromARGB(
+                                                        136, 203, 219, 240),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            20),
+                                                  ),
+                                                  child: Align(
+                                                    alignment:
+                                                        Alignment.centerLeft,
+
+                                                    child: Text(
+                                                      profile.username,
+                                                      style: const TextStyle(
+                                                        fontSize: 18,
+                                                        color: Colors.black,
+                                                      ),
+                                                    ), // ⭐ บังคับให้ชิดซ้าย),
                                                   ),
                                                 ),
-                                                SizedBox(width: 6),
-                                                InkWell(
-                                                  onTap: () =>
-                                                      _confirmDeleteProfile(
-                                                          index),
-                                                  child: Padding(
-                                                    padding: EdgeInsets.all(1),
-                                                    child: Icon(Icons.delete,
-                                                        size: 25,
-                                                        color:
-                                                            Colors.redAccent),
-                                                  ),
+                                                trailing: Row(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    InkWell(
+                                                      onTap: () =>
+                                                          _editProfile(index),
+                                                      child: Padding(
+                                                        padding:
+                                                            EdgeInsets.all(1),
+                                                        // เล็กมาก! ปรับได้
+                                                        child: Icon(Icons.edit,
+                                                            size: 25,
+                                                            color: Colors
+                                                                .blueGrey),
+                                                      ),
+                                                    ),
+                                                    SizedBox(width: 6),
+                                                    InkWell(
+                                                      onTap: () =>
+                                                          _confirmDeleteProfile(
+                                                              index),
+                                                      child: Padding(
+                                                        padding:
+                                                            EdgeInsets.all(1),
+                                                        child: Icon(
+                                                            Icons.delete,
+                                                            size: 25,
+                                                            color: Colors
+                                                                .redAccent),
+                                                      ),
+                                                    ),
+                                                  ],
                                                 ),
-                                              ],
-                                            ),
-                                          );
-                                        },
-                                      ),
+                                              );
+                                            },
+                                          ),
                               ),
                             ),
                             SizedBox(height: maxHeight * 0.03),
