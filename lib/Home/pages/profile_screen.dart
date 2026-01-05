@@ -39,6 +39,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     debugPrint('accessToken from widget: ${widget.accessToken}');
   }
 
+  bool _isSupportedImage(File file) {
+    final p = file.path.toLowerCase();
+    return p.endsWith('.jpg') ||
+        p.endsWith('.jpeg') ||
+        p.endsWith('.png') ||
+        p.endsWith('.webp');
+  }
+
   void _goNext(ProfileModel profile) {
     Navigator.pushReplacement(
       context,
@@ -226,18 +234,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             content: Text(
                                                 'บันทึกลง DB ไม่สำเร็จ แต่จะไปต่อ: $e')),
                                       );
-
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) => LibraryProfile(
-                                              initialProfile: fallbackProfile),
-                                        ),
-                                      );
                                     } finally {
                                       if (!mounted) return;
                                       setState(() => _isLoading = false);
                                     }
+                                    _goNext(fallbackProfile);
                                   },
                             style: ElevatedButton.styleFrom(
                               padding: EdgeInsets.symmetric(
@@ -340,14 +341,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _onCameraTap() async {
     final ImagePicker picker = ImagePicker(); // ตัวเลือกภาพ
 
-    // เปิดแกลเลอรี
-    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
-
+//  ใส่ imageQuality เพื่อลดขนาดไฟล์ (ช่วย server)
+    final XFile? image = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 85,
+    );
     if (image == null) {
       // ผู้ใช้กดปิด ไม่เลือกภาพ
       return;
     }
 
+    final file = File(image.path);
+
+    if (!_isSupportedImage(file)) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content:
+              Text('ไฟล์รูปนี้ยังไม่รองรับ กรุณาเลือกรูปเป็น JPG/PNG/WebP'),
+        ),
+      );
+      return;
+    }
     // ถ้าเลือกภาพได้ → อัปเดต state
     setState(() {
       _selectedImageFile = File(image.path); // ✅ เก็บไฟล์ไว้ส่ง API

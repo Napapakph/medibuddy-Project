@@ -94,16 +94,19 @@ class AppDrawer extends StatelessWidget {
                       padding: EdgeInsets.fromLTRB(pad, 0, pad, bottomPad),
                       child: Align(
                         alignment: Alignment.bottomRight,
-                        child: ListTile(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                        child: ElevatedButton(
+                          onPressed: () => logout(context),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor:
+                                const Color.fromARGB(255, 171, 56, 56),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
-                          title: const Text(
+                          child: const Text(
                             'Sign Out',
-                            textAlign: TextAlign.right,
-                            style: TextStyle(color: Colors.red),
+                            style: TextStyle(color: Colors.white),
                           ),
-                          onTap: () => logout(context),
                         ),
                       ),
                     ),
