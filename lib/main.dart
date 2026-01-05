@@ -66,7 +66,8 @@ class MyApp extends StatelessWidget {
                       accessToken: '',
                     ));
           case '/select_profile':
-            return MaterialPageRoute(builder: (_) => const SelectProfile());
+            return MaterialPageRoute(
+                builder: (_) => const SelectProfile(accessToken: ''));
           case '/home':
             return MaterialPageRoute(builder: (_) => const Home());
           case '/forget_password':

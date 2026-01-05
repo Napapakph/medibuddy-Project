@@ -5,6 +5,7 @@ import 'package:mime/mime.dart';
 import 'package:flutter/foundation.dart';
 
 class ProfileApi {
+  final String baseUrl;
   //ตั้ง timeout ใน constructor
   ProfileApi(this.baseUrl) {
     _dio.options = BaseOptions(
@@ -28,7 +29,6 @@ class ProfileApi {
     );
   }
 
-  final String baseUrl;
   final Dio _dio = Dio();
 
   Future<Map<String, dynamic>> createProfile({
@@ -95,6 +95,41 @@ class ProfileApi {
     }
   }
 
+  // API สำหรับอัพเดทรูปโปรไฟล์
+  Future<void> updateProfile({
+    required String accessToken,
+    required String profileId, // PROFILE_ID
+    required String profileName, // PROFILE_NAME
+    File? imageFile, // ถ้ามีค่อยส่ง
+  }) async {
+    final formData = FormData.fromMap({
+      'profileId': profileId,
+      'profileName': profileName,
+      if (imageFile != null)
+        'file': await MultipartFile.fromFile(
+          imageFile.path,
+          filename: imageFile.uri.pathSegments.last,
+          contentType:
+              MediaType.parse(lookupMimeType(imageFile.path) ?? 'image/jpeg'),
+        ),
+    });
+
+    final res = await _dio.put(
+      '/api/mobile/v1/profile/update',
+      data: formData,
+      options: Options(
+        headers: {'Authorization': 'Bearer $accessToken'},
+        contentType: 'multipart/form-data',
+        validateStatus: (_) => true,
+      ),
+    );
+
+    final status = res.statusCode ?? 0;
+    if (status < 200 || status >= 300) {
+      throw Exception('Update failed: $status ${res.data}');
+    }
+  }
+
   //API สำหรับดึง list Profile
 
   Future<List<Map<String, dynamic>>> fetchProfiles({
@@ -131,5 +166,33 @@ class ProfileApi {
     }
 
     throw Exception('Unexpected response shape: $data');
+  }
+  //API สำหรับลบ Profile
+
+  Future<void> deleteProfile({
+    required String accessToken,
+    required String profileId,
+  }) async {
+    final url = Uri.parse('$baseUrl/api/mobile/v1/profile/delete');
+    debugPrint(
+        'DELETE -> $baseUrl/api/mobile/v1/profile/delete?profileId=$profileId');
+
+    final res = await _dio.delete(
+      '/api/mobile/v1/profile/delete',
+      queryParameters: {'profileId': profileId},
+      options: Options(
+        headers: {'Authorization': 'Bearer $accessToken'},
+        validateStatus: (_) => true,
+      ),
+    );
+    debugPrint('STATUS=${res.statusCode}');
+    debugPrint('DATA=${res.data}');
+    debugPrint('HEADERS=${res.headers.map}');
+
+    final status = res.statusCode ?? 0;
+
+    if (status < 200 || status >= 300) {
+      throw Exception('Delete failed: $status ${res.data}');
+    }
   }
 }

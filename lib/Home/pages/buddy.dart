@@ -92,7 +92,9 @@ class _MyBuddyState extends State<MyBuddy> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => SelectProfile()),
+                                builder: (context) => SelectProfile(
+                                      accessToken: '',
+                                    )),
                           );
                         },
                         icon: Icon(Icons.navigate_next_outlined),

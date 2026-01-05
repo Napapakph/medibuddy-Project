@@ -62,8 +62,9 @@ class _LibraryProfileState extends State<LibraryProfile> {
         debugPrint('profilePicture: ${m['profilePicture']}');
 
         return ProfileModel(
-          (m['profileName'] ?? '').toString(),
-          (m['profilePicture'] ?? '').toString(),
+          username: (m['profileName'] ?? '').toString(),
+          imagePath: (m['profilePicture'] ?? '').toString(),
+          profileId: (m['profileId'] ?? '').toString(),
         );
       }).toList();
 
@@ -406,15 +407,54 @@ class _LibraryProfileState extends State<LibraryProfile> {
                   child: const Text('ยกเลิก'),
                 ),
                 TextButton(
-                  onPressed: () {
+                  onPressed: () async {
                     final newName = editNameCtrl.text.trim();
                     if (newName.isNotEmpty) {
                       setState(() {
                         profiles[index] = ProfileModel(
-                          newName,
-                          tempImagePath ?? profiles[index].imagePath,
+                          username: newName,
+                          imagePath: tempImagePath ?? '',
+                          profileId: profile.profileId,
                         );
                       });
+                      final api = ProfileApi('http://82.26.104.199:3000');
+
+                      File? newImageFile;
+                      if (tempImagePath != null && tempImagePath!.isNotEmpty) {
+                        final p = tempImagePath!;
+                        final isLocalFile =
+                            !p.startsWith('/uploads') && !p.startsWith('http');
+                        if (isLocalFile) newImageFile = File(p);
+                      }
+
+                      setState(() => _loading = true);
+                      try {
+                        await api.updateProfile(
+                          accessToken: widget.accessToken,
+                          profileId: profile.profileId,
+                          profileName: newName,
+                          imageFile: newImageFile,
+                        );
+
+                        // ✅ รีโหลดจาก DB เพื่อให้ได้ profilePicture ล่าสุดจาก server แน่นอน
+                        if (!mounted) return;
+                        await _loadProfiles();
+
+                        if (!mounted) return;
+                        Navigator.of(dialogContext).pop();
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('แก้ไขข้อมูลเรียบร้อย')),
+                        );
+                      } catch (e) {
+                        if (!mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('แก้ไขไม่สำเร็จ: $e')),
+                        );
+                      } finally {
+                        if (!mounted) return;
+                        setState(() => _loading = false);
+                      }
                     }
 
                     Navigator.of(dialogContext).pop();
@@ -464,14 +504,35 @@ class _LibraryProfileState extends State<LibraryProfile> {
   }
 
   // ฟังก์ชันลบโปรไฟล์ออกจากลิสต์แล้วแจ้งเตือน
-  void _deleteProfile(int index) {
-    setState(() {
-      profiles.removeAt(index);
-    });
+  Future<void> _deleteProfile(int index) async {
+    final profile = profiles[index];
+    final api = ProfileApi('http://82.26.104.199:3000');
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('ลบโปรไฟล์เรียบร้อย')),
-    );
+    setState(() => _loading = true);
+
+    try {
+      await api.deleteProfile(
+        accessToken: widget.accessToken,
+        profileId: profile.profileId,
+      );
+
+      if (!mounted) return;
+      setState(() {
+        profiles.removeAt(index);
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('ลบโปรไฟล์เรียบร้อย')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('ลบไม่สำเร็จ: $e')),
+      );
+    } finally {
+      if (!mounted) return;
+      setState(() => _loading = false);
+    }
   }
 
 // เพิ่มโปรไฟล์ --------------------------------------------------------------------
@@ -494,7 +555,8 @@ class _LibraryProfileState extends State<LibraryProfile> {
             // แปลง path → ImageProvider เพื่อส่งเข้า ProfileWidget
             ImageProvider? currentImage;
             if (tempImagePath != null && tempImagePath!.isNotEmpty) {
-              currentImage = FileImage(File(tempImagePath!));
+              currentImage = buildProfileImage(tempImagePath!) ??
+                  const AssetImage(''); // ถ้าไม่มี asset ก็ใช้ null ได้
             }
 
             return AlertDialog(
@@ -560,9 +622,9 @@ class _LibraryProfileState extends State<LibraryProfile> {
                     setState(() {
                       profiles.add(
                         ProfileModel(
-                          newName,
-                          tempImagePath ?? '', // ไม่มีรูป → เก็บเป็น '' ไปก่อน
-                        ),
+                            username: newName,
+                            imagePath: tempImagePath ?? '',
+                            profileId: ''),
                       );
                     });
 

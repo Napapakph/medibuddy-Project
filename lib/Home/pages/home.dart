@@ -3,11 +3,17 @@ import 'package:intl/intl.dart';
 import 'package:medibuddy/widgets/app_drawer.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../pages/login.dart';
-
+import 'select_profile.dart';
+import '../../Model/profile_model.dart';
 //import 'package:buddhist_datetime_dateformat/buddhist_datetime_dateformat.dart';
 
 class Home extends StatefulWidget {
-  const Home({super.key});
+  final ProfileModel selectedProfile;
+
+  const Home({
+    super.key,
+    required this.selectedProfile,
+  });
 
   @override
   State<Home> createState() => _Home();

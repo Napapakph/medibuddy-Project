@@ -146,9 +146,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                                     // ✅ สร้าง profile แบบ fallback ก่อน (ใช้ข้อมูล local)
                                     final fallbackProfile = ProfileModel(
-                                      _usernameController.text.trim(),
-                                      profileImageUrl ??
-                                          '', // path รูปในเครื่อง (ถ้ามี)
+                                      username: _usernameController.text.trim(),
+                                      imagePath: profileImageUrl ?? '',
+                                      profileId: '',
                                     );
 
                                     try {
@@ -195,10 +195,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                               '';
 
                                       final successProfile = ProfileModel(
-                                        _usernameController.text.trim(),
-                                        profilePicture.isNotEmpty
+                                        username:
+                                            _usernameController.text.trim(),
+                                        imagePath: profilePicture.isNotEmpty
                                             ? profilePicture
                                             : (profileImageUrl ?? ''),
+                                        profileId: '',
                                       );
 
                                       ScaffoldMessenger.of(context)
