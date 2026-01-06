@@ -248,11 +248,13 @@ class _SelectProfileState extends State<SelectProfile> {
                   padding: EdgeInsets.only(bottom: maxHeight * 0.02),
                   child: ElevatedButton(
                     // ถ้ายังไม่เลือกโปรไฟล์ ให้ปุ่มกดไม่ได้
-                    onPressed: (selectedIndex == null || _loading)
+                    onPressed: _loading
                         ? null
                         : () {
                             // ดึงโปรไฟล์ที่เลือก
-                            final selectedProfile = profiles[selectedIndex!];
+                            final selectedProfile = selectedIndex == null
+                                ? null
+                                : profiles[selectedIndex!];
 
                             // ไปหน้า Home พร้อมส่งข้อมูลโปรไฟล์ที่เลือกไปด้วย
                             // หมายเหตุ: Home ต้องมี constructor รับ selectedProfile

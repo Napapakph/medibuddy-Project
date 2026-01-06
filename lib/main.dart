@@ -12,6 +12,7 @@ import 'API/auth_gate.dart';
 import 'Home/pages/home.dart';
 import 'pages/forget_password.dart';
 import 'Home/pages/library_profile.dart';
+import 'Home/pages/add_medicine/list_medicine.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -77,6 +78,8 @@ class MyApp extends StatelessWidget {
                 builder: (_) => const LibraryProfile(
                       accessToken: '',
                     ));
+          case '/list_medicine':
+            return MaterialPageRoute(builder: (_) => const ListMedicinePage());
 
           default:
             return MaterialPageRoute(builder: (_) => const AuthGate());

@@ -1,0 +1,141 @@
+﻿import 'package:flutter/material.dart';
+import 'package:medibuddy/Model/medicine_model.dart';
+import 'package:medibuddy/widgets/medicine_step_timeline.dart';
+
+import 'add_medicine.dart';
+
+class FindMedicinePage extends StatefulWidget {
+  final MedicineDraft draft;
+
+  const FindMedicinePage({
+    super.key,
+    required this.draft,
+  });
+
+  @override
+  State<FindMedicinePage> createState() => _FindMedicinePageState();
+}
+
+class _FindMedicinePageState extends State<FindMedicinePage> {
+  final TextEditingController _searchController = TextEditingController();
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _goNext() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AddMedicinePage(draft: widget.draft),
+      ),
+    );
+
+    if (!mounted) return;
+    if (result is MedicineItem) {
+      Navigator.pop(context, result);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF1F497D),
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: const Text(
+          'เพิ่มยา',
+          style: TextStyle(color: Colors.white),
+        ),
+      ),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const MedicineStepTimeline(currentStep: 2),
+              const SizedBox(height: 24),
+              const Text(
+                'ค้นหารายการยาที่เกี่ยวข้อง',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF1F497D),
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _searchController,
+                decoration: InputDecoration(
+                  hintText: 'ชื่อสามัญ/ชื่อการค้า หรือชื่อการค้า',
+                  filled: true,
+                  fillColor: const Color(0xFFF2F4F8),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide.none,
+                  ),
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.search, color: Color(0xFF1F497D)),
+                    onPressed: _goNext,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: _goNext,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF1F497D),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    icon: const Icon(Icons.search, color: Colors.white),
+                    label: const Text(
+                      'ค้นหา',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  OutlinedButton.icon(
+                    onPressed: () {},
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF1F497D),
+                      side: const BorderSide(color: Color(0xFF1F497D)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    icon: const Icon(Icons.camera_alt),
+                    label: const Text('สแกนฉลาก'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              Expanded(
+                child: Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF7FAFF),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Center(
+                    child: Text(
+                      'พิมพ์คำค้นหาแล้วกดค้นหาเพื่อไปขั้นตอนถัดไป',
+                      style: TextStyle(color: Color(0xFF7A869A)),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

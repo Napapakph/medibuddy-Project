@@ -73,6 +73,11 @@ class AppDrawer extends StatelessWidget {
                             onTap: () => _go(context, '/home'),
                           ),
                           ListTile(
+                            leading: const Icon(Icons.medication),
+                            title: const Text('รายการยาของฉัน'),
+                            onTap: () => _go(context, '/list_medicine'),
+                          ),
+                          ListTile(
                             leading: const Icon(Icons.find_in_page_rounded),
                             title: const Text('ค้นหายา'),
                             onTap: () {},
@@ -104,7 +109,7 @@ class AppDrawer extends StatelessWidget {
                           ),
                           ListTile(
                             leading: const Icon(Icons.switch_account),
-                            title: const Text('ข้อเสองแนะ'),
+                            title: const Text('ข้อเสนอแนะ'),
                             onTap: () {},
                           ),
                         ],
