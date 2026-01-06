@@ -8,11 +8,11 @@ import '../../Model/profile_model.dart';
 //import 'package:buddhist_datetime_dateformat/buddhist_datetime_dateformat.dart';
 
 class Home extends StatefulWidget {
-  final ProfileModel selectedProfile;
+  final ProfileModel? selectedProfile;
 
   const Home({
     super.key,
-    required this.selectedProfile,
+    this.selectedProfile,
   });
 
   @override
