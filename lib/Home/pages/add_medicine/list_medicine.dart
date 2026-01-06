@@ -1,11 +1,13 @@
 ﻿import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:medibuddy/Model/medicine_model.dart';
 import 'package:medibuddy/widgets/app_drawer.dart';
 
 import 'createName_medicine.dart';
 import '../home.dart';
+import '../set_remind/remind_list_screen.dart';
 
 class ListMedicinePage extends StatefulWidget {
   const ListMedicinePage({super.key});
@@ -40,50 +42,91 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
   void _editMedicine(int index) {
     final current = _items[index];
     final controller = TextEditingController(text: current.displayName);
+    String tempImagePath = current.imagePath;
 
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: const Text('แก้ไขชื่อยา'),
-          content: TextField(
-            controller: controller,
-            decoration: InputDecoration(
-              hintText: 'ตั้งชื่อยา',
-              filled: true,
-              fillColor: const Color(0xFFF2F4F8),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('ยกเลิก'),
-            ),
-            TextButton(
-              onPressed: () {
-                final newName = controller.text.trim();
-                if (newName.isEmpty) return;
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            final image = _buildMedicineImage(tempImagePath);
 
-                setState(() {
-                  _items[index] = MedicineItem(
-                    displayName: newName,
-                    selectedName: current.selectedName,
-                    imagePath: current.imagePath,
-                  );
-                });
-                Navigator.pop(context);
-              },
-              child: const Text('บันทึก'),
-            ),
-          ],
+            return AlertDialog(
+              title: const Text('???????'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  GestureDetector(
+                    onTap: () async {
+                      final picker = ImagePicker();
+                      final img =
+                          await picker.pickImage(source: ImageSource.gallery);
+                      if (img == null) return;
+                      setDialogState(() {
+                        tempImagePath = img.path;
+                      });
+                    },
+                    child: Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF2F4F8),
+                        borderRadius: BorderRadius.circular(16),
+                        image: image != null
+                            ? DecorationImage(image: image, fit: BoxFit.cover)
+                            : null,
+                      ),
+                      child: image == null
+                          ? const Icon(Icons.photo, color: Color(0xFF9AA7B8))
+                          : null,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: controller,
+                    decoration: InputDecoration(
+                      hintText: '??????',
+                      filled: true,
+                      fillColor: const Color(0xFFF2F4F8),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('??????'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    final newName = controller.text.trim();
+                    if (newName.isEmpty) return;
+
+                    setState(() {
+                      _items[index] = MedicineItem(
+                        displayName: newName,
+                        selectedName: current.selectedName,
+                        imagePath: tempImagePath,
+                      );
+                    });
+                    Navigator.pop(context);
+                  },
+                  child: const Text('??????'),
+                ),
+              ],
+            );
+          },
         );
       },
     );
   }
+
+
+
 
   void _showDetails(MedicineItem item) {
     final image = _buildMedicineImage(item.imagePath);
@@ -160,69 +203,83 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
     final item = _items[index];
     final image = _buildMedicineImage(item.imagePath);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF4F7FB),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 56,
-            height: 56,
-            decoration: BoxDecoration(
-              color: const Color(0xFFDDE7F5),
-              borderRadius: BorderRadius.circular(12),
-              image: image != null
-                  ? DecorationImage(image: image, fit: BoxFit.cover)
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => RemindListScreen(
+              medicines: _items,
+              initialMedicine: item,
+            ),
+          ),
+        );
+      },
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF4F7FB),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: const Color(0xFFDDE7F5),
+                borderRadius: BorderRadius.circular(12),
+                image: image != null
+                    ? DecorationImage(image: image, fit: BoxFit.cover)
+                    : null,
+              ),
+              child: image == null
+                  ? const Icon(Icons.medication, color: Color(0xFF1F497D))
                   : null,
             ),
-            child: image == null
-                ? const Icon(Icons.medication, color: Color(0xFF1F497D))
-                : null,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  item.displayName,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                if (item.selectedName.isNotEmpty)
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Text(
-                    item.selectedName,
+                    item.displayName,
                     style: const TextStyle(
-                      fontSize: 12,
-                      color: Color(0xFF5E6C84),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
+                  if (item.selectedName.isNotEmpty)
+                    Text(
+                      item.selectedName,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF5E6C84),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            Column(
+              children: [
+                IconButton(
+                  onPressed: () => _editMedicine(index),
+                  icon: const Icon(Icons.edit, color: Color(0xFF1F497D)),
+                ),
+                IconButton(
+                  onPressed: () => _showDetails(item),
+                  icon: const Icon(Icons.info, color: Color(0xFF1F497D)),
+                ),
+                IconButton(
+                  onPressed: () => _confirmDelete(index),
+                  icon: const Icon(Icons.delete, color: Colors.redAccent),
+                ),
               ],
             ),
-          ),
-          Column(
-            children: [
-              IconButton(
-                onPressed: () => _editMedicine(index),
-                icon: const Icon(Icons.edit, color: Color(0xFF1F497D)),
-              ),
-              IconButton(
-                onPressed: () => _showDetails(item),
-                icon: const Icon(Icons.info, color: Color(0xFF1F497D)),
-              ),
-              IconButton(
-                onPressed: () => _confirmDelete(index),
-                icon: const Icon(Icons.delete, color: Colors.redAccent),
-              ),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
