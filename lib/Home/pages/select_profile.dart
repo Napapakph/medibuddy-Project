@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:medibuddy/widgets/app_drawer.dart';
-
 import '../../services/profile_api.dart';
 import '../../Model/profile_model.dart';
 import 'home.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class SelectProfile extends StatefulWidget {
   final String accessToken;
@@ -29,20 +29,21 @@ class _SelectProfileState extends State<SelectProfile> {
   bool _loading = true;
 
   // base url สำหรับต่อรูปจาก server (เพราะ profilePicture เป็น /uploads/...)
-  final String _imageBaseUrl = 'http://82.26.104.199:3000';
+  String _imageBaseUrl = '';
 
   @override
   void initState() {
     super.initState();
+    _imageBaseUrl = dotenv.env['API_BASE_URL'] ?? '';
     _loadProfiles();
   }
 
-  /// ดึงข้อมูล profile จาก API list
+  // ดึงข้อมูล profile จาก API list
   Future<void> _loadProfiles() async {
     setState(() => _loading = true);
 
     try {
-      final api = ProfileApi('http://82.26.104.199:3000');
+      final api = ProfileApi();
 
       final result = await api.fetchProfiles(
         accessToken: widget.accessToken,

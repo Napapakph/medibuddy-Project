@@ -38,6 +38,7 @@ dependencies:
   mime: ^1.0.5
   flutter_image_compress: ^2.3.0
   http: ^1.6.0
+  flutter_dotenv: ^5.1.0
  
   
  
@@ -77,6 +78,7 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
+     - .env
      - assets/cat_login.png
      - assets/Sign_up_cat.png
      - assets/OTP.png

@@ -5,6 +5,7 @@ import '../../widgets/profile_widget.dart';
 import 'package:image_picker/image_picker.dart';
 import 'buddy.dart';
 import '../../services/profile_api.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class LibraryProfile extends StatefulWidget {
   final String accessToken;
@@ -22,8 +23,8 @@ class LibraryProfile extends StatefulWidget {
 
 class _LibraryProfileState extends State<LibraryProfile> {
   final List<ProfileModel> profiles = [];
-  static const String _imageBaseUrl =
-      'http://82.26.104.199:3000'; //สร้าง base URL ของรูป
+  String _imageBaseUrl = '';
+  final ProfileApi _api = ProfileApi();
 
   ImageProvider? buildProfileImage(String imagePath) {
     if (imagePath.isEmpty) return null;
@@ -49,7 +50,7 @@ class _LibraryProfileState extends State<LibraryProfile> {
     debugPrint('set loading=true');
 
     try {
-      final api = ProfileApi('http://82.26.104.199:3000');
+      final api = ProfileApi();
       final rows = await api.fetchProfiles(accessToken: widget.accessToken);
 
       debugPrint('=== FETCH PROFILES FROM API ===');
@@ -96,7 +97,7 @@ class _LibraryProfileState extends State<LibraryProfile> {
     if (widget.initialProfile != null) {
       final initial = widget.initialProfile!;
     }
-
+    _imageBaseUrl = dotenv.env['API_BASE_URL'] ?? '';
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadProfiles();
     });
@@ -420,7 +421,7 @@ class _LibraryProfileState extends State<LibraryProfile> {
                         );
                       });
 
-                      final api = ProfileApi('http://82.26.104.199:3000');
+                      final api = ProfileApi();
 
                       File? newImageFile;
                       if (tempImagePath != null && tempImagePath!.isNotEmpty) {
@@ -509,7 +510,7 @@ class _LibraryProfileState extends State<LibraryProfile> {
   // ฟังก์ชันลบโปรไฟล์ออกจากลิสต์แล้วแจ้งเตือน
   Future<void> _deleteProfile(int index) async {
     final profile = profiles[index];
-    final api = ProfileApi('http://82.26.104.199:3000');
+    final api = ProfileApi();
 
     setState(() => _loading = true);
 

@@ -172,8 +172,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           'IMAGE EXISTS: ${_selectedImageFile?.existsSync()}');
 
                                       // ✅ 1) สร้าง API client
-                                      final api = ProfileApi(
-                                          'http://82.26.104.199:3000');
+                                      final api = ProfileApi();
 
                                       // ✅ 2) พยายามบันทึกลง database
                                       final result = await api.createProfile(

@@ -3,13 +3,20 @@ import 'package:dio/dio.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:mime/mime.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ProfileApi {
-  final String baseUrl;
-  //ตั้ง timeout ใน constructor
-  ProfileApi(this.baseUrl) {
+  final Dio _dio = Dio();
+
+  ProfileApi() {
+    final baseUrl = dotenv.env['API_BASE_URL'];
+    if (baseUrl == null || baseUrl.isEmpty) {
+      throw Exception(
+          'API_BASE_URL not found. Did you load .env in main.dart?');
+    }
+
     _dio.options = BaseOptions(
-      baseUrl: baseUrl,
+      baseUrl: baseUrl, // ✅ เก็บไว้ที่นี่ที่เดียว
       connectTimeout: const Duration(seconds: 10),
       sendTimeout: const Duration(seconds: 30),
       receiveTimeout: const Duration(seconds: 30),
@@ -21,7 +28,7 @@ class ProfileApi {
       LogInterceptor(
         request: true,
         requestHeader: true,
-        requestBody: false, // multipart ยาว ปิดไว้
+        requestBody: false,
         responseHeader: true,
         responseBody: true,
         error: true,
@@ -29,8 +36,14 @@ class ProfileApi {
     );
   }
 
-  final Dio _dio = Dio();
+// API Endpoints -------------------------------------------------------
+  static const _createPath = '/api/mobile/v1/profile/create';
+  static const _updatePath = '/api/mobile/v1/profile/update';
+  static const _listPath = '/api/mobile/v1/profile/list';
+  static const _deletePath = '/api/mobile/v1/profile/delete';
+// ----------------------------------------------------------------------
 
+// Methods Create Profile -----------------------------------------------
   Future<Map<String, dynamic>> createProfile({
     required String accessToken,
     required String profileName,
@@ -48,7 +61,8 @@ class ProfileApi {
     }
 
     final formData = FormData.fromMap({
-      if (profileId != null) 'profileId': profileId.toString(),
+      // ✅ ส่ง int ได้เลย ไม่จำเป็นต้อง toString (ยกเว้น backend บังคับเป็น string)
+      if (profileId != null) 'profileId': profileId,
       'profileName': profileName,
       'file': await MultipartFile.fromFile(
         imageFile.path,
@@ -58,30 +72,27 @@ class ProfileApi {
     });
 
     try {
-      debugPrint('UPLOAD -> $baseUrl/api/mobile/v1/profile/create');
+      debugPrint('UPLOAD -> ${_dio.options.baseUrl}$_createPath');
       debugPrint('TOKEN -> ${accessToken.substring(0, 20)}...');
       debugPrint('IMAGE -> ${imageFile.path}');
       debugPrint('SIZE  -> ${await imageFile.length()} bytes');
 
+      // ✅ สำคัญ: ใช้ "path" ไม่ต้องใส่ baseUrl ซ้ำ
       final res = await _dio.post(
-        '$baseUrl/api/mobile/v1/profile/create',
+        _createPath,
         data: formData,
         options: Options(
           contentType: 'multipart/form-data',
-          headers: {
-            'Authorization': 'Bearer $accessToken',
-          },
-          validateStatus: (_) => true,
+          headers: {'Authorization': 'Bearer $accessToken'},
         ),
       );
 
       debugPrint('STATUS=${res.statusCode}');
       debugPrint('DATA=${res.data}');
 
-      if (res.statusCode != 200 && res.statusCode != 201) {
-        throw Exception(
-          'Create profile failed: ${res.statusCode} ${res.data}',
-        );
+      final status = res.statusCode ?? 0;
+      if (status != 200 && status != 201) {
+        throw Exception('Create profile failed: $status ${res.data}');
       }
 
       return Map<String, dynamic>.from(res.data as Map);
@@ -94,33 +105,28 @@ class ProfileApi {
       rethrow;
     }
   }
+// ----------------------------------------------------------------------
 
-  // API สำหรับอัพเดทรูปโปรไฟล์
+// Methods Update Profile -----------------------------------------------
   Future<void> updateProfile({
     required String accessToken,
-    required int profileId, // int32 ตาม swagger
-    String? profileName, // optional
-    File? imageFile, // optional (binary)
-    String? profilePictureUrl, // optional (uri) alternative to file
+    required int profileId,
+    String? profileName,
+    File? imageFile,
+    String? profilePictureUrl,
   }) async {
-    // ✅ rule: เลือกส่งอย่างใดอย่างหนึ่ง
-    if (imageFile != null &&
-        (profilePictureUrl != null && profilePictureUrl.isNotEmpty)) {
+    if (imageFile != null && (profilePictureUrl?.trim().isNotEmpty ?? false)) {
       throw Exception('Send either imageFile OR profilePictureUrl, not both.');
     }
 
-    final Map<String, dynamic> body = {
+    final body = <String, dynamic>{
       'profileId': profileId,
-      // ✅ swagger มี profileName แต่ไม่ required -> ส่งเมื่อมีค่าเท่านั้น
-      if (profileName != null && profileName.trim().isNotEmpty)
-        'profileName': profileName.trim(),
-
-      // ✅ ส่งเป็น url แทนไฟล์ได้
-      if (profilePictureUrl != null && profilePictureUrl.trim().isNotEmpty)
-        'profilePicture': profilePictureUrl.trim(),
+      if (profileName?.trim().isNotEmpty ?? false)
+        'profileName': profileName!.trim(),
+      if (profilePictureUrl?.trim().isNotEmpty ?? false)
+        'profilePicture': profilePictureUrl!.trim(),
     };
 
-    // ✅ ส่งไฟล์เมื่อมีจริง
     if (imageFile != null) {
       final mime = lookupMimeType(imageFile.path) ?? 'image/jpeg';
       body['file'] = await MultipartFile.fromFile(
@@ -130,15 +136,12 @@ class ProfileApi {
       );
     }
 
-    final formData = FormData.fromMap(body);
-
     final res = await _dio.put(
-      '/api/mobile/v1/profile/update',
-      data: formData,
+      _updatePath,
+      data: FormData.fromMap(body),
       options: Options(
         headers: {'Authorization': 'Bearer $accessToken'},
         contentType: 'multipart/form-data',
-        validateStatus: (_) => true,
       ),
     );
 
@@ -147,17 +150,17 @@ class ProfileApi {
       throw Exception('Update failed: $status ${res.data}');
     }
   }
+// ---------------------------------------------------------------------
 
-  //API สำหรับดึง list Profile
-
+// Methods List Profiles -----------------------------------------------
   Future<List<Map<String, dynamic>>> fetchProfiles({
     required String accessToken,
   }) async {
-    debugPrint('FETCH -> $baseUrl/api/mobile/v1/profile/list');
+    debugPrint('FETCH -> ${_dio.options.baseUrl}$_listPath');
     debugPrint('TOKEN -> ${accessToken.substring(0, 20)}...');
 
     final res = await _dio.get(
-      '/api/mobile/v1/profile/list',
+      _listPath,
       options: Options(
         headers: {'Authorization': 'Bearer $accessToken'},
       ),
@@ -172,7 +175,6 @@ class ProfileApi {
 
     final data = res.data;
 
-    // รองรับทั้งกรณี backend คืน {profiles:[...]} หรือคืน [...] ตรงๆ
     if (data is Map && data['profiles'] is List) {
       return (data['profiles'] as List)
           .map((e) => Map<String, dynamic>.from(e as Map))
@@ -185,31 +187,25 @@ class ProfileApi {
 
     throw Exception('Unexpected response shape: $data');
   }
+// ---------------------------------------------------------------------
 
-  //API สำหรับลบ Profile
-
+// Methods Delete Profile -----------------------------------------------
   Future<void> deleteProfile({
     required String accessToken,
     required int profileId,
   }) async {
-    final url = Uri.parse('$baseUrl/api/mobile/v1/profile/delete');
     debugPrint(
-        'DELETE -> $baseUrl/api/mobile/v1/profile/delete?profileId=$profileId');
+        'DELETE -> ${_dio.options.baseUrl}$_deletePath?profileId=$profileId');
 
     final res = await _dio.delete(
-      '/api/mobile/v1/profile/delete',
+      _deletePath,
       queryParameters: {'profileId': profileId},
       options: Options(
         headers: {'Authorization': 'Bearer $accessToken'},
-        validateStatus: (_) => true,
       ),
     );
-    debugPrint('STATUS=${res.statusCode}');
-    debugPrint('DATA=${res.data}');
-    debugPrint('HEADERS=${res.headers.map}');
 
     final status = res.statusCode ?? 0;
-
     if (status < 200 || status >= 300) {
       throw Exception('Delete failed: $status ${res.data}');
     }

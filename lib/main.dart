@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart ';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'pages/login.dart';
 import 'pages/signup.dart';
 import 'pages/forget_password.dart';
@@ -16,6 +17,9 @@ const bool kDisableAuthGate =
     true; // เปลี่ยนเป็น false เมื่อต้องการเปิดใช้งาน AuthGate
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
+  print('ENV = ${dotenv.env}');
+  print('BASE = ${dotenv.env['API_BASE_URL']}');
 
   await Supabase.initialize(
     url: 'https://aoiurdwibgudsxhoxcni.supabase.co',
