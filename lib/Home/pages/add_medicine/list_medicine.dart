@@ -35,7 +35,8 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
   Future<void> _addMedicine() async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const CreateNameMedicinePage()),
+      MaterialPageRoute(
+          builder: (_) => const CreateNameMedicinePage(profileId: 1)),
     );
 
     if (!mounted) return;

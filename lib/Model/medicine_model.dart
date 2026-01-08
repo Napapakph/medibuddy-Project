@@ -47,4 +47,7 @@ class MedicineItem {
       imagePath: imagePath ?? this.imagePath,
     );
   }
+
+  // ✅ แก้ตรงนี้
+  int get mediId => int.tryParse(id) ?? 0;
 }

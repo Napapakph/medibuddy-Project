@@ -2,13 +2,20 @@
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+
 import 'package:medibuddy/Model/medicine_model.dart';
 import 'package:medibuddy/widgets/medicine_step_timeline.dart';
+import 'package:medibuddy/services/medicine_api.dart';
 
 import 'find_medicine.dart';
 
 class CreateNameMedicinePage extends StatefulWidget {
-  const CreateNameMedicinePage({super.key});
+  final int profileId;
+
+  const CreateNameMedicinePage({
+    super.key,
+    required this.profileId,
+  });
 
   @override
   State<CreateNameMedicinePage> createState() => _CreateNameMedicinePageState();
@@ -16,7 +23,9 @@ class CreateNameMedicinePage extends StatefulWidget {
 
 class _CreateNameMedicinePageState extends State<CreateNameMedicinePage> {
   final TextEditingController _nameController = TextEditingController();
+
   String _imagePath = '';
+  bool _saving = false;
 
   @override
   void dispose() {
@@ -43,15 +52,64 @@ class _CreateNameMedicinePageState extends State<CreateNameMedicinePage> {
       return;
     }
 
-    final draft = MedicineDraft(displayName: name, imagePath: _imagePath);
+    // step 1: draft
+    final draft = MedicineDraft(
+      displayName: name,
+      imagePath: _imagePath,
+    );
+
+    // step 2: เลือกยาจาก database
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => FindMedicinePage(draft: draft)),
+      MaterialPageRoute(
+        builder: (_) => FindMedicinePage(draft: draft),
+      ),
     );
 
     if (!mounted) return;
-    if (result is MedicineItem) {
-      Navigator.pop(context, result);
+    if (result is! MedicineItem) return;
+
+    setState(() => _saving = true);
+
+    // step 3: เตรียม local item (สำเร็จในแอพเสมอ)
+    final MedicineItem localItem = result.copyWith(
+      displayName: name,
+      imagePath: _imagePath,
+    );
+
+    try {
+      // step 4: พยายามบันทึกลง backend
+      final api = MedicineApi();
+
+      await api.addMedicineToProfile(
+        profileId: widget.profileId,
+        medId: result.mediId, // ใช้ getter ที่ parse int แล้ว
+        mediNickname: name,
+        pictureFile: _imagePath.isEmpty ? null : File(_imagePath),
+      );
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('บันทึกลงระบบสำเร็จ')),
+      );
+
+      Navigator.pop(context, localItem);
+    } catch (e) {
+      // ❗ backend ล้มเหลว → ยังถือว่าสำเร็จในแอพ
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('บันทึกแบบชั่วคราว (ยังไม่ sync): $e'),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+
+      Navigator.pop(context, localItem);
+    } finally {
+      if (!mounted) return;
+      setState(() => _saving = false);
     }
   }
 
@@ -164,14 +222,25 @@ class _CreateNameMedicinePageState extends State<CreateNameMedicinePage> {
                   Align(
                     alignment: Alignment.bottomRight,
                     child: ElevatedButton(
-                      onPressed: _goNext,
+                      onPressed: _saving ? null : _goNext,
                       style: ElevatedButton.styleFrom(
                         shape: const CircleBorder(),
                         padding: const EdgeInsets.all(16),
                         backgroundColor: const Color(0xFF1F497D),
                       ),
-                      child:
-                          const Icon(Icons.arrow_forward, color: Colors.white),
+                      child: _saving
+                          ? const SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Icon(
+                              Icons.arrow_forward,
+                              color: Colors.white,
+                            ),
                     ),
                   ),
                 ],
