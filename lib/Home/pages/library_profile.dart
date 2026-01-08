@@ -110,7 +110,7 @@ class _LibraryProfileState extends State<LibraryProfile> {
       appBar: AppBar(
         iconTheme: const IconThemeData(color: Colors.white),
         title: const Text(
-          'เพิ่มโปรไฟล์ผู้ใช้',
+          'โปรไฟล์ผู้ใช้',
           style: TextStyle(color: Colors.white),
         ),
         backgroundColor: const Color(0xFF1F497D),
@@ -575,7 +575,7 @@ class _LibraryProfileState extends State<LibraryProfile> {
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // 🔹 วงกลมโปรไฟล์ + ปุ่มกล้อง (ใช้ widget เดิมเลย)
+                  // วงกลมโปรไฟล์ + ปุ่มกล้อง (ใช้ widget เดิมเลย)
                   ProfileWidget(
                     size: avatarSize,
                     image: currentImage,
@@ -585,7 +585,7 @@ class _LibraryProfileState extends State<LibraryProfile> {
                           await picker.pickImage(source: ImageSource.gallery);
                       if (img == null) return;
 
-                      // ✅ อัปเดตรูปใน popup
+                      // อัปเดตรูปใน popup
                       setStateDialog(() {
                         tempImagePath = img.path;
                       });
@@ -615,32 +615,33 @@ class _LibraryProfileState extends State<LibraryProfile> {
                   child: const Text('ยกเลิก'),
                 ),
                 TextButton(
-                  onPressed: () {
+                  onPressed: () async {
                     final newName = nameCtrl.text.trim();
                     if (newName.isEmpty) {
-                      // ถ้ายังไม่กรอกชื่อ ก็บอกผู้ใช้หน่อย
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('กรุณากรอกชื่อโปรไฟล์')),
                       );
                       return;
                     }
 
-                    // ✅ เพิ่มโปรไฟล์ใหม่เข้า list หลัก
-                    setState(() {
-                      profiles.add(
-                        ProfileModel(
-                            username: newName,
-                            imagePath: tempImagePath ?? '',
-                            profileId: 0),
+                    Navigator.of(dialogContext).pop(); // ปิด dialog ก่อน
+
+                    try {
+                      await create_profile(
+                        profileName: newName,
+                        tempImagePath: tempImagePath, // อาจเป็น null ได้
                       );
-                    });
 
-                    Navigator.of(dialogContext).pop();
-
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                          content: Text('เพิ่มโปรไฟล์ใหม่เรียบร้อย')),
-                    );
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('เพิ่มโปรไฟล์สำเร็จ')),
+                      );
+                    } catch (e) {
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('เพิ่มโปรไฟล์ไม่สำเร็จ: $e')),
+                      );
+                    }
                   },
                   child: const Text('บันทึก'),
                 ),
@@ -655,25 +656,27 @@ class _LibraryProfileState extends State<LibraryProfile> {
 // ฟังก์ชันสร้างโปรไฟล์ใหม่ในฐานข้อมูล
   Future<void> create_profile({
     required String profileName,
-    required String? tempImagePath,
+    String? tempImagePath,
   }) async {
-    if (profileName.trim().isEmpty) {
-      throw Exception('กรุณากรอกชื่อโปรไฟล์');
-    }
-    if (tempImagePath == null || tempImagePath.isEmpty) {
-      throw Exception('กรุณาเลือกรูปโปรไฟล์');
+    File? imageFile;
+
+    if (tempImagePath != null && tempImagePath.isNotEmpty) {
+      final isLocal = !tempImagePath.startsWith('/uploads') &&
+          !tempImagePath.startsWith('http');
+      if (isLocal) imageFile = File(tempImagePath);
     }
 
     setState(() => _loading = true);
     try {
+      final api = ProfileApi();
       await api.createProfile(
         accessToken: widget.accessToken,
         profileName: profileName.trim(),
-        imageFile: File(tempImagePath),
+        imageFile: imageFile,
       );
 
       if (!mounted) return;
-      await _loadProfiles(); // ✅ sync กับ DB
+      await _loadProfiles();
     } finally {
       if (!mounted) return;
       setState(() => _loading = false);
@@ -692,7 +695,7 @@ class _LibraryProfileState extends State<LibraryProfile> {
       throw Exception('กรุณากรอกชื่อโปรไฟล์');
     }
 
-    // ✅ ส่งไฟล์เฉพาะตอนเป็นไฟล์ local จริง ๆ
+    // ส่งไฟล์เฉพาะตอนเป็นไฟล์ local จริง ๆ
     File? imageFile;
     if (tempImagePath != null && tempImagePath.isNotEmpty) {
       final isLocal = !tempImagePath.startsWith('/uploads') &&
@@ -706,11 +709,11 @@ class _LibraryProfileState extends State<LibraryProfile> {
         accessToken: widget.accessToken,
         profileId: profileId,
         profileName: profileName.trim(),
-        imageFile: imageFile, // ✅ ถ้าเป็น /uploads หรือ http จะไม่ส่งไฟล์ซ้ำ
+        imageFile: imageFile, // ถ้าเป็น /uploads หรือ http จะไม่ส่งไฟล์ซ้ำ
       );
 
       if (!mounted) return;
-      await _loadProfiles(); // ✅ sync กับ DB
+      await _loadProfiles(); // sync กับ DB
     } finally {
       if (!mounted) return;
       setState(() => _loading = false);

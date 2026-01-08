@@ -4,7 +4,7 @@ import 'signup.dart';
 import '../widgets/login_button.dart';
 import '../API/authen_login.dart';
 //import '../Home/pages/ocr.dart';
-import '../pages/forget_password.dart';
+import 'forget_password.dart';
 import '../Home/pages/profile_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:async';

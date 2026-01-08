@@ -47,43 +47,48 @@ class ProfileApi {
   Future<Map<String, dynamic>> createProfile({
     required String accessToken,
     required String profileName,
-    required File imageFile,
+    File? imageFile,
     int? profileId,
   }) async {
-    final mimeType = lookupMimeType(imageFile.path) ?? '';
-    if (!mimeType.startsWith('image/')) {
-      throw Exception('ไฟล์ต้องเป็นรูปภาพเท่านั้น');
-    }
-
-    const allowed = {'image/jpeg', 'image/png', 'image/webp'};
-    if (!allowed.contains(mimeType)) {
-      throw Exception('รองรับเฉพาะ jpg, jpeg, png, webp');
-    }
-
-    final formData = FormData.fromMap({
-      // ✅ ส่ง int ได้เลย ไม่จำเป็นต้อง toString (ยกเว้น backend บังคับเป็น string)
+    final formMap = <String, dynamic>{
       if (profileId != null) 'profileId': profileId,
       'profileName': profileName,
-      'file': await MultipartFile.fromFile(
+    };
+
+    if (imageFile != null) {
+      final mimeType = lookupMimeType(imageFile.path) ?? 'image/jpeg';
+
+      const allowed = {'image/jpeg', 'image/png', 'image/webp'};
+      if (!allowed.contains(mimeType)) {
+        throw Exception('รองรับเฉพาะ jpg, jpeg, png, webp');
+      }
+
+      formMap['file'] = await MultipartFile.fromFile(
         imageFile.path,
         filename: imageFile.uri.pathSegments.last,
         contentType: MediaType.parse(mimeType),
-      ),
-    });
+      );
+    }
+
+    final formData = FormData.fromMap(formMap);
 
     try {
       debugPrint('UPLOAD -> ${_dio.options.baseUrl}$_createPath');
       debugPrint('TOKEN -> ${accessToken.substring(0, 20)}...');
-      debugPrint('IMAGE -> ${imageFile.path}');
-      debugPrint('SIZE  -> ${await imageFile.length()} bytes');
+      if (imageFile != null) {
+        debugPrint('IMAGE -> ${imageFile.path}');
+        debugPrint('SIZE  -> ${await imageFile.length()} bytes');
+      } else {
+        debugPrint('IMAGE -> (no image)');
+      }
 
-      // ✅ สำคัญ: ใช้ "path" ไม่ต้องใส่ baseUrl ซ้ำ
       final res = await _dio.post(
         _createPath,
         data: formData,
         options: Options(
           contentType: 'multipart/form-data',
           headers: {'Authorization': 'Bearer $accessToken'},
+          validateStatus: (_) => true,
         ),
       );
 
@@ -91,7 +96,7 @@ class ProfileApi {
       debugPrint('DATA=${res.data}');
 
       final status = res.statusCode ?? 0;
-      if (status != 200 && status != 201) {
+      if (status < 200 || status >= 300) {
         throw Exception('Create profile failed: $status ${res.data}');
       }
 
@@ -105,6 +110,7 @@ class ProfileApi {
       rethrow;
     }
   }
+
 // ----------------------------------------------------------------------
 
 // Methods Update Profile -----------------------------------------------

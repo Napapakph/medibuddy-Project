@@ -144,56 +144,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                                     setState(() => _isLoading = true);
 
-                                    // ✅ สร้าง profile แบบ fallback ก่อน (ใช้ข้อมูล local)
                                     final fallbackProfile = ProfileModel(
                                       username: _usernameController.text.trim(),
                                       imagePath: profileImageUrl ?? '',
                                       profileId: 0,
                                     );
 
+                                    ProfileModel nextProfile = fallbackProfile;
+
                                     try {
-                                      debugPrint(
-                                          'TOKEN: ${widget.accessToken}');
-
-                                      // ถ้าไม่ได้เลือกรูป -> ข้ามการส่ง API ไปเลย แล้วไปหน้าถัดไป
-                                      if (_selectedImageFile == null) {
-                                        if (!mounted) return;
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          const SnackBar(
-                                              content: Text(
-                                                  'ไม่ได้อัปโหลดรูปไป DB (ยังไม่ได้เลือกรูป)')),
-                                        );
-                                      }
-
-                                      debugPrint(
-                                          'IMAGE PATH: ${_selectedImageFile?.path}');
-                                      debugPrint(
-                                          'IMAGE EXISTS: ${_selectedImageFile?.existsSync()}');
-
-                                      // ✅ 1) สร้าง API client
                                       final api = ProfileApi();
 
-                                      // ✅ 2) พยายามบันทึกลง database
                                       final result = await api.createProfile(
                                         accessToken: widget.accessToken,
                                         profileName:
                                             _usernameController.text.trim(),
-                                        imageFile:
-                                            _selectedImageFile!, // ตอนนี้ไม่ null แล้ว
+                                        imageFile: _selectedImageFile,
                                       );
 
-                                      if (!mounted) return;
-                                      debugPrint(
-                                          'CREATE PROFILE RESULT: $result');
-
-                                      // ✅ 3) ถ้าสำเร็จ ใช้ข้อมูลจาก backend (กัน null ด้วย)
                                       final profilePicture =
-                                          result['profilePicture']
-                                                  ?.toString() ??
-                                              '';
+                                          (result['profilePicture'] ?? '')
+                                              .toString();
 
-                                      final successProfile = ProfileModel(
+                                      nextProfile = ProfileModel(
                                         username:
                                             _usernameController.text.trim(),
                                         imagePath: profilePicture.isNotEmpty
@@ -206,26 +179,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                 0,
                                       );
 
+                                      if (!mounted) return;
                                       ScaffoldMessenger.of(context)
                                           .showSnackBar(
                                         const SnackBar(
                                             content:
                                                 Text('บันทึกลง DB สำเร็จ')),
                                       );
-
-                                      // ✅ 4) ไปหน้าถัดไป
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) => LibraryProfile(
-                                              accessToken: widget.accessToken,
-                                              initialProfile: successProfile),
-                                        ),
-                                      );
                                     } catch (e) {
-                                      // ✅ ถึงจะ error ก็ไปต่อด้วย fallback
                                       if (!mounted) return;
-
                                       ScaffoldMessenger.of(context)
                                           .showSnackBar(
                                         SnackBar(
@@ -236,7 +198,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       if (!mounted) return;
                                       setState(() => _isLoading = false);
                                     }
-                                    _goNext(fallbackProfile);
+
+                                    _goNext(nextProfile);
                                   },
                             style: ElevatedButton.styleFrom(
                               padding: EdgeInsets.symmetric(

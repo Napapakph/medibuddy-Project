@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/login_button.dart';
-import '../pages/login.dart';
+import 'login.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ForgetPassword extends StatefulWidget {

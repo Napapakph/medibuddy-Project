@@ -153,7 +153,7 @@ class _OTPScreenState extends State<OTPScreen> {
             Navigator.pop(context);
           },
         ),
-        title: const Text('OTP Verification'),
+        title: const Text('ลงทะเบียน'),
       ),
       body: SafeArea(
         child: LayoutBuilder(builder: (context, constraints) {
