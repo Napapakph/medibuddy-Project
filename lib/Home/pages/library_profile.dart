@@ -24,7 +24,7 @@ class LibraryProfile extends StatefulWidget {
 class _LibraryProfileState extends State<LibraryProfile> {
   final List<ProfileModel> profiles = [];
   String _imageBaseUrl = '';
-  final ProfileApi _api = ProfileApi();
+  final ProfileApi api = ProfileApi();
 
   ImageProvider? buildProfileImage(String imagePath) {
     if (imagePath.isEmpty) return null;
@@ -50,7 +50,6 @@ class _LibraryProfileState extends State<LibraryProfile> {
     debugPrint('set loading=true');
 
     try {
-      final api = ProfileApi();
       final rows = await api.fetchProfiles(accessToken: widget.accessToken);
 
       debugPrint('=== FETCH PROFILES FROM API ===');
@@ -95,9 +94,10 @@ class _LibraryProfileState extends State<LibraryProfile> {
 
     // ถ้าอยากโชว์ initialProfile ทันที (ก่อนโหลด DB)
     if (widget.initialProfile != null) {
-      final initial = widget.initialProfile!;
+      profiles.add(widget.initialProfile!);
     }
     _imageBaseUrl = dotenv.env['API_BASE_URL'] ?? '';
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadProfiles();
     });
@@ -335,13 +335,12 @@ class _LibraryProfileState extends State<LibraryProfile> {
     );
   }
 
-  // ฟังก์ชันแก้ไขชื่อโปรไฟล์ตาม index ที่เลือก
+  // ฟังก์ชันแก้ไขชื่อโปรไฟล์ตาม index ที่เลือก -------------------------------------
   void _editProfile(int index) {
     final profile = profiles[index];
     final TextEditingController editNameCtrl =
         TextEditingController(text: profile.username);
 
-    // ⭐ เก็บ path รูปชั่วคราวไว้ใน dialog
     String? tempImagePath =
         profile.imagePath.isNotEmpty ? profile.imagePath : null;
 
@@ -353,12 +352,14 @@ class _LibraryProfileState extends State<LibraryProfile> {
     showDialog(
       context: context,
       builder: (dialogContext) {
+        bool saving = false;
+
         return StatefulBuilder(
-          // ⭐ ให้ dialog มี state ของตัวเอง
           builder: (dialogContext, setStateDialog) {
             ImageProvider? currentImage;
+
             if (tempImagePath != null && tempImagePath!.isNotEmpty) {
-              currentImage = FileImage(File(tempImagePath!));
+              currentImage = buildProfileImage(tempImagePath!);
             }
 
             return AlertDialog(
@@ -370,26 +371,22 @@ class _LibraryProfileState extends State<LibraryProfile> {
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // 🔹 ใช้ ProfileWidget ที่แยกไฟล์ไว้
                   ProfileWidget(
-                    size: avatarSize, // ขนาดรูป
-                    image: currentImage, // รูปปัจจุบัน
+                    size: avatarSize,
+                    image: currentImage,
                     onCameraTap: () async {
                       final picker = ImagePicker();
                       final img =
                           await picker.pickImage(source: ImageSource.gallery);
 
                       if (img != null) {
-                        // ✅ อัปเดต "tempImagePath" รูปใน popup เปลี่ยน
                         setStateDialog(() {
                           tempImagePath = img.path;
                         });
                       }
                     },
                   ),
-
                   SizedBox(height: maxHeight * 0.02),
-
                   TextField(
                     controller: editNameCtrl,
                     decoration: InputDecoration(
@@ -406,68 +403,72 @@ class _LibraryProfileState extends State<LibraryProfile> {
               ),
               actions: [
                 TextButton(
-                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  onPressed:
+                      saving ? null : () => Navigator.of(dialogContext).pop(),
                   child: const Text('ยกเลิก'),
                 ),
                 TextButton(
-                  onPressed: () async {
-                    final newName = editNameCtrl.text.trim();
-                    if (newName.isNotEmpty) {
-                      setState(() {
-                        profiles[index] = ProfileModel(
-                          username: newName,
-                          imagePath: tempImagePath ?? '',
-                          profileId: profile.profileId,
-                        );
-                      });
+                  onPressed: saving
+                      ? null
+                      : () async {
+                          final newName = editNameCtrl.text.trim();
+                          if (newName.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text('กรุณากรอกชื่อโปรไฟล์')),
+                            );
+                            return;
+                          }
 
-                      final api = ProfileApi();
+                          File? newImageFile;
+                          final p = tempImagePath;
+                          if (p != null && p.isNotEmpty) {
+                            final isLocalFile = !p.startsWith('/uploads') &&
+                                !p.startsWith('http');
+                            if (isLocalFile) newImageFile = File(p);
+                          }
 
-                      File? newImageFile;
-                      if (tempImagePath != null && tempImagePath!.isNotEmpty) {
-                        final p = tempImagePath!;
-                        final isLocalFile =
-                            !p.startsWith('/uploads') && !p.startsWith('http');
-                        if (isLocalFile) newImageFile = File(p);
-                      }
+                          setStateDialog(() => saving = true);
 
-                      setState(() => _loading = true);
-                      try {
-                        await api.updateProfile(
-                          accessToken: widget.accessToken,
-                          profileId: profile.profileId,
-                          profileName: newName,
-                          imageFile: newImageFile,
-                        );
+                          try {
+                            final api = ProfileApi();
 
-                        // ✅ รีโหลดจาก DB เพื่อให้ได้ profilePicture ล่าสุดจาก server แน่นอน
-                        if (!mounted) return;
-                        await _loadProfiles();
+                            await api.updateProfile(
+                              accessToken: widget.accessToken,
+                              profileId: profile.profileId,
+                              profileName: newName,
+                              imageFile: newImageFile,
+                            );
 
-                        if (!mounted) return;
-                        Navigator.of(dialogContext).pop();
+                            if (!mounted) return;
 
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('แก้ไขข้อมูลเรียบร้อย')),
-                        );
-                      } catch (e) {
-                        if (!mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('แก้ไขไม่สำเร็จ: $e')),
-                        );
-                      } finally {
-                        if (!mounted) return;
-                        setState(() => _loading = false);
-                      }
-                    }
+                            await _loadProfiles();
+                            if (!mounted) return;
 
-                    Navigator.of(dialogContext).pop();
+                            Navigator.of(dialogContext).pop();
 
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('แก้ไขข้อมูลเรียบร้อย')),
-                    );
-                  },
-                  child: const Text('บันทึก'),
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text('แก้ไขข้อมูลเรียบร้อย')),
+                            );
+                          } catch (e) {
+                            if (!mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('แก้ไขไม่สำเร็จ: $e')),
+                            );
+                          } finally {
+                            if (Navigator.of(dialogContext).canPop()) {
+                              setStateDialog(() => saving = false);
+                            }
+                          }
+                        },
+                  child: saving
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('บันทึก'),
                 ),
               ],
             );
@@ -476,7 +477,9 @@ class _LibraryProfileState extends State<LibraryProfile> {
       },
     );
   }
+  //--------------------------------------------------------------------
 
+// Menu Item: Delete Profile -------------------------------------------
   // ฟังก์ชันแจ้งเตือนถามยืนยันก่อนลบโปรไฟล์
   void _confirmDeleteProfile(int index) {
     final profile = profiles[index];
@@ -538,8 +541,9 @@ class _LibraryProfileState extends State<LibraryProfile> {
       setState(() => _loading = false);
     }
   }
+//--------------------------------------------------------------------
 
-// เพิ่มโปรไฟล์ --------------------------------------------------------------------
+// เพิ่มโปรไฟล์ ---------------------------------------------------------
   void _addProfile() {
     final TextEditingController nameCtrl = TextEditingController();
 
@@ -559,8 +563,7 @@ class _LibraryProfileState extends State<LibraryProfile> {
             // แปลง path → ImageProvider เพื่อส่งเข้า ProfileWidget
             ImageProvider? currentImage;
             if (tempImagePath != null && tempImagePath!.isNotEmpty) {
-              currentImage = buildProfileImage(tempImagePath!) ??
-                  const AssetImage(''); // ถ้าไม่มี asset ก็ใช้ null ได้
+              currentImage = buildProfileImage(tempImagePath!);
             }
 
             return AlertDialog(
@@ -647,5 +650,70 @@ class _LibraryProfileState extends State<LibraryProfile> {
         );
       },
     );
+  }
+
+// ฟังก์ชันสร้างโปรไฟล์ใหม่ในฐานข้อมูล
+  Future<void> create_profile({
+    required String profileName,
+    required String? tempImagePath,
+  }) async {
+    if (profileName.trim().isEmpty) {
+      throw Exception('กรุณากรอกชื่อโปรไฟล์');
+    }
+    if (tempImagePath == null || tempImagePath.isEmpty) {
+      throw Exception('กรุณาเลือกรูปโปรไฟล์');
+    }
+
+    setState(() => _loading = true);
+    try {
+      await api.createProfile(
+        accessToken: widget.accessToken,
+        profileName: profileName.trim(),
+        imageFile: File(tempImagePath),
+      );
+
+      if (!mounted) return;
+      await _loadProfiles(); // ✅ sync กับ DB
+    } finally {
+      if (!mounted) return;
+      setState(() => _loading = false);
+    }
+  }
+
+  //--------------------------------------------------------------------
+
+// ฟังก์ชันอัปเดตโปรไฟล์ในฐานข้อมูล
+  Future<void> update_profile({
+    required int profileId,
+    required String profileName,
+    required String? tempImagePath,
+  }) async {
+    if (profileName.trim().isEmpty) {
+      throw Exception('กรุณากรอกชื่อโปรไฟล์');
+    }
+
+    // ✅ ส่งไฟล์เฉพาะตอนเป็นไฟล์ local จริง ๆ
+    File? imageFile;
+    if (tempImagePath != null && tempImagePath.isNotEmpty) {
+      final isLocal = !tempImagePath.startsWith('/uploads') &&
+          !tempImagePath.startsWith('http');
+      if (isLocal) imageFile = File(tempImagePath);
+    }
+
+    setState(() => _loading = true);
+    try {
+      await api.updateProfile(
+        accessToken: widget.accessToken,
+        profileId: profileId,
+        profileName: profileName.trim(),
+        imageFile: imageFile, // ✅ ถ้าเป็น /uploads หรือ http จะไม่ส่งไฟล์ซ้ำ
+      );
+
+      if (!mounted) return;
+      await _loadProfiles(); // ✅ sync กับ DB
+    } finally {
+      if (!mounted) return;
+      setState(() => _loading = false);
+    }
   }
 }

@@ -128,7 +128,7 @@ class ProfileApi {
     };
 
     if (imageFile != null) {
-      final mime = lookupMimeType(imageFile.path) ?? 'image/jpeg';
+      final mime = lookupMimeType(imageFile.path) ?? 'image/';
       body['file'] = await MultipartFile.fromFile(
         imageFile.path,
         filename: imageFile.uri.pathSegments.last,
@@ -136,7 +136,7 @@ class ProfileApi {
       );
     }
 
-    final res = await _dio.put(
+    final res = await _dio.patch(
       _updatePath,
       data: FormData.fromMap(body),
       options: Options(
@@ -144,7 +144,9 @@ class ProfileApi {
         contentType: 'multipart/form-data',
       ),
     );
-
+    debugPrint('UPDATE Method Debug -----------------------------');
+    debugPrint('UPDATE STATUS=${res.statusCode}');
+    debugPrint('UPDATE DATA=${res.data}');
     final status = res.statusCode ?? 0;
     if (status < 200 || status >= 300) {
       throw Exception('Update failed: $status ${res.data}');
