@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:medibuddy/widgets/app_drawer.dart';
 import '../../Model/profile_model.dart';
 import 'add_medicine/list_medicine.dart';
+import 'select_profile.dart';
 //import 'package:buddhist_datetime_dateformat/buddhist_datetime_dateformat.dart';
 
 class Home extends StatefulWidget {
@@ -312,22 +313,33 @@ class _Home extends State<Home> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Row(
-                                children: [
-                                  CircleAvatar(
-                                    radius: 22,
-                                    backgroundImage: profileImage,
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Text(
-                                    profileName,
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                      color: Color(0xFF1F497D),
+                              InkWell(
+                                borderRadius: BorderRadius.circular(40),
+                                onTap: () {
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => const SelectProfile(),
                                     ),
-                                  ),
-                                ],
+                                  );
+                                },
+                                child: Row(
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 22,
+                                      backgroundImage: profileImage,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      profileName,
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        color: Color(0xFF1F497D),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                               SizedBox(height: maxHeight * 0.02),
                               Expanded(
