@@ -3,7 +3,6 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:medibuddy/Model/medicine_model.dart';
-import 'package:medibuddy/services/in_memory_store.dart';
 import 'package:medibuddy/widgets/app_drawer.dart';
 
 import 'createName_medicine.dart';
@@ -23,12 +22,9 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
   @override
   void initState() {
     super.initState();
-    _items.addAll(MedicineStore.items);
   }
 
-  void _syncStore() {
-    MedicineStore.replaceAll(_items);
-  }
+  void _syncStore() {}
 
   ImageProvider? _buildMedicineImage(String path) {
     if (path.isEmpty) return null;
@@ -136,9 +132,6 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
       },
     );
   }
-
-
-
 
   void _showDetails(MedicineItem item) {
     final image = _buildMedicineImage(item.imagePath);

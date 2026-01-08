@@ -173,7 +173,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   //รูปแมว ---------------------------------------------------------------------
                   // ฟอร์มล็อกอิน
                   Align(
-                    alignment: Alignment(0, 0.45),
+                    alignment:
+                        Alignment(0, 0.3), // 0.45 = ทศนิยมมากขึ้น = ลงล่าง
                     child: Padding(
                       padding:
                           EdgeInsets.symmetric(horizontal: maxWidth * 0.08),

@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:medibuddy/Model/profile_model.dart';
-import 'package:medibuddy/services/in_memory_store.dart';
 import '../../widgets/profile_widget.dart';
 import 'package:image_picker/image_picker.dart';
 import 'buddy.dart';
@@ -25,17 +24,6 @@ class _LibraryProfileState extends State<LibraryProfile> {
   final List<ProfileModel> profiles = [];
   static const String _imageBaseUrl =
       'http://82.26.104.199:3000'; //สร้าง base URL ของรูป
-
-  bool _containsProfile(ProfileModel candidate) {
-    return profiles.any((profile) {
-      if (candidate.profileId.isNotEmpty) {
-        return profile.profileId == candidate.profileId;
-      }
-      return profile.profileId.isEmpty &&
-          profile.username == candidate.username &&
-          profile.imagePath == candidate.imagePath;
-    });
-  }
 
   ImageProvider? buildProfileImage(String imagePath) {
     if (imagePath.isEmpty) return null;
@@ -82,16 +70,13 @@ class _LibraryProfileState extends State<LibraryProfile> {
         );
       }).toList();
 
-      final merged = ProfileStore.mergeApi(loaded);
-
       if (!mounted) return;
 
       setState(() {
         profiles
           ..clear()
-          ..addAll(merged);
+          ..addAll(loaded);
       });
-      ProfileStore.replaceAll(merged);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -106,15 +91,10 @@ class _LibraryProfileState extends State<LibraryProfile> {
   @override
   void initState() {
     super.initState();
-    profiles.addAll(ProfileStore.items);
 
     // ถ้าอยากโชว์ initialProfile ทันที (ก่อนโหลด DB)
     if (widget.initialProfile != null) {
       final initial = widget.initialProfile!;
-      if (!_containsProfile(initial)) {
-        profiles.add(initial);
-        ProfileStore.replaceAll(profiles);
-      }
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -439,7 +419,7 @@ class _LibraryProfileState extends State<LibraryProfile> {
                           profileId: profile.profileId,
                         );
                       });
-                      ProfileStore.replaceAll(profiles);
+
                       final api = ProfileApi('http://82.26.104.199:3000');
 
                       File? newImageFile;
@@ -543,7 +523,6 @@ class _LibraryProfileState extends State<LibraryProfile> {
       setState(() {
         profiles.removeAt(index);
       });
-      ProfileStore.replaceAll(profiles);
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('ลบโปรไฟล์เรียบร้อย')),
@@ -651,7 +630,6 @@ class _LibraryProfileState extends State<LibraryProfile> {
                             profileId: 0),
                       );
                     });
-                    ProfileStore.replaceAll(profiles);
 
                     Navigator.of(dialogContext).pop();
 
