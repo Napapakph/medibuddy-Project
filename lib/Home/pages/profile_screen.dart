@@ -148,7 +148,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     final fallbackProfile = ProfileModel(
                                       username: _usernameController.text.trim(),
                                       imagePath: profileImageUrl ?? '',
-                                      profileId: '',
+                                      profileId: 0,
                                     );
 
                                     try {
@@ -200,7 +200,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         imagePath: profilePicture.isNotEmpty
                                             ? profilePicture
                                             : (profileImageUrl ?? ''),
-                                        profileId: '',
+                                        profileId: result['profileId'] is int
+                                            ? result['profileId'] as int
+                                            : int.tryParse(result['profileId']
+                                                    .toString()) ??
+                                                0,
                                       );
 
                                       ScaffoldMessenger.of(context)

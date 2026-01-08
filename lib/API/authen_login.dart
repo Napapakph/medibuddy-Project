@@ -38,20 +38,25 @@ class LoginWithGoogle {
 }
 
 class AuthenLoginEmail {
-  Future<String?> signInWithEmail({
+  Future<String> signInWithEmail({
     required String email,
     required String password,
   }) async {
-    try {
-      await supabase.auth.signInWithPassword(
-        email: email,
-        password: password,
-      );
-      return null; // login success
-    } on AuthException catch (e) {
-      return e.message;
-    } catch (_) {
-      return 'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง';
+    final res = await supabase.auth.signInWithPassword(
+      email: email,
+      password: password,
+    );
+
+    final token = res.session?.accessToken;
+    if (token == null) {
+      throw Exception('Login success but no session token');
     }
+    return token;
+  }
+}
+
+class AuthenLogout {
+  Future<void> signOut() async {
+    await supabase.auth.signOut();
   }
 }

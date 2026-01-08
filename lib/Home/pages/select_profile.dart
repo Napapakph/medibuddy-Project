@@ -51,7 +51,9 @@ class _SelectProfileState extends State<SelectProfile> {
       // แปลงข้อมูลจาก API ให้เป็นโมเดลที่ UI ใช้ได้
       final mapped = result.map((e) {
         return ProfileModel(
-          profileId: e['profileId'].toString(),
+          profileId: e['profileId'] is int
+              ? e['profileId'] as int
+              : int.tryParse((e['profileId'] ?? '').toString()) ?? 0,
           username: (e['profileName'] ?? '').toString(),
           imagePath: (e['profilePicture'] ?? '').toString(),
         );

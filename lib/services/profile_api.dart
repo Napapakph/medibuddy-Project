@@ -98,21 +98,39 @@ class ProfileApi {
   // API สำหรับอัพเดทรูปโปรไฟล์
   Future<void> updateProfile({
     required String accessToken,
-    required String profileId, // PROFILE_ID
-    required String profileName, // PROFILE_NAME
-    File? imageFile, // ถ้ามีค่อยส่ง
+    required int profileId, // int32 ตาม swagger
+    String? profileName, // optional
+    File? imageFile, // optional (binary)
+    String? profilePictureUrl, // optional (uri) alternative to file
   }) async {
-    final formData = FormData.fromMap({
+    // ✅ rule: เลือกส่งอย่างใดอย่างหนึ่ง
+    if (imageFile != null &&
+        (profilePictureUrl != null && profilePictureUrl.isNotEmpty)) {
+      throw Exception('Send either imageFile OR profilePictureUrl, not both.');
+    }
+
+    final Map<String, dynamic> body = {
       'profileId': profileId,
-      'profileName': profileName,
-      if (imageFile != null)
-        'file': await MultipartFile.fromFile(
-          imageFile.path,
-          filename: imageFile.uri.pathSegments.last,
-          contentType:
-              MediaType.parse(lookupMimeType(imageFile.path) ?? 'image/jpeg'),
-        ),
-    });
+      // ✅ swagger มี profileName แต่ไม่ required -> ส่งเมื่อมีค่าเท่านั้น
+      if (profileName != null && profileName.trim().isNotEmpty)
+        'profileName': profileName.trim(),
+
+      // ✅ ส่งเป็น url แทนไฟล์ได้
+      if (profilePictureUrl != null && profilePictureUrl.trim().isNotEmpty)
+        'profilePicture': profilePictureUrl.trim(),
+    };
+
+    // ✅ ส่งไฟล์เมื่อมีจริง
+    if (imageFile != null) {
+      final mime = lookupMimeType(imageFile.path) ?? 'image/jpeg';
+      body['file'] = await MultipartFile.fromFile(
+        imageFile.path,
+        filename: imageFile.uri.pathSegments.last,
+        contentType: MediaType.parse(mime),
+      );
+    }
+
+    final formData = FormData.fromMap(body);
 
     final res = await _dio.put(
       '/api/mobile/v1/profile/update',
@@ -171,7 +189,7 @@ class ProfileApi {
 
   Future<void> deleteProfile({
     required String accessToken,
-    required String profileId,
+    required int profileId,
   }) async {
     final url = Uri.parse('$baseUrl/api/mobile/v1/profile/delete');
     debugPrint(

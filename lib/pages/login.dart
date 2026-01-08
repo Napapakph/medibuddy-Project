@@ -39,43 +39,35 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => _isLoading = true);
 
-    final success = await _authLoginAPI.signInWithEmail(
-      email: _emailCtrl.text.trim(),
-      password: _passwordCtrl.text.trim(),
-    );
-
-    if (!mounted) return;
-    setState(() => _isLoading = false);
-
-    final session = Supabase.instance.client.auth.currentSession;
-    final accessToken = session?.accessToken;
-    debugPrint('SESSION: $session');
-    debugPrint('ACCESS TOKEN: $accessToken');
-
-    if (accessToken == null) {
-      // session ยังไม่มา / login ไม่สำเร็จ
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('ไม่พบ token กรุณาลองใหม่')),
+    try {
+      final accessToken = await _authLoginAPI.signInWithEmail(
+        email: _emailCtrl.text.trim(),
+        password: _passwordCtrl.text.trim(),
       );
-      return;
-    }
 
-    if (success == null) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('เข้าสู่ระบบสำเร็จ')),
       );
-      // ตรงนี้อนาคตค่อยเปลี่ยนเป็น Navigator.push ไปหน้า Home
+
       Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ProfileScreen(accessToken: accessToken),
-          ));
-    } else {
+        context,
+        MaterialPageRoute(
+          builder: (_) => ProfileScreen(accessToken: accessToken),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('อีเมลหรือรหัสผ่านไม่ถูกต้อง')),
+        SnackBar(content: Text('อีเมลหรือรหัสผ่านไม่ถูกต้อง')),
       );
     }
   }
+
 //---------------- Login with Username/Password----------------------------------
 
 //---------------- Login with Google Sign in-------------------------------------
@@ -130,8 +122,8 @@ class _LoginScreenState extends State<LoginScreen> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-              builder: (_) => const ProfileScreen(
-                    accessToken: '',
+              builder: (_) => ProfileScreen(
+                    accessToken: session.accessToken,
                   )),
         );
         return;

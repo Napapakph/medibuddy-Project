@@ -64,7 +64,9 @@ class _LibraryProfileState extends State<LibraryProfile> {
         return ProfileModel(
           username: (m['profileName'] ?? '').toString(),
           imagePath: (m['profilePicture'] ?? '').toString(),
-          profileId: (m['profileId'] ?? '').toString(),
+          profileId: (m['profileId'] ?? '') is int
+              ? m['profileId'] as int
+              : int.tryParse((m['profileId'] ?? '').toString()) ?? 0,
         );
       }).toList();
 
@@ -624,7 +626,7 @@ class _LibraryProfileState extends State<LibraryProfile> {
                         ProfileModel(
                             username: newName,
                             imagePath: tempImagePath ?? '',
-                            profileId: ''),
+                            profileId: 0),
                       );
                     });
 

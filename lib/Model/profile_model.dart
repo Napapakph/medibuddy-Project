@@ -1,5 +1,5 @@
 class ProfileModel {
-  final String profileId;
+  final int profileId;
   final String username;
   final String imagePath;
 
