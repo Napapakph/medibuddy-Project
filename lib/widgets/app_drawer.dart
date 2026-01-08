@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../pages/login.dart';
+import '../API/authen_login.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -11,8 +12,10 @@ class AppDrawer extends StatelessWidget {
   }
 
   Future<void> logout(BuildContext context) async {
-    Navigator.pop(context); // ปิด drawer ก่อน
-    await Supabase.instance.client.auth.signOut();
+    final _authLogoutAPI = AuthenLogout();
+
+    // await Supabase.instance.client.auth.signOut();
+    await _authLogoutAPI.signOut();
 
     if (!context.mounted) return;
     Navigator.pushAndRemoveUntil(

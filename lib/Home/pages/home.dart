@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:medibuddy/widgets/app_drawer.dart';
@@ -56,20 +55,6 @@ class _Home extends State<Home> {
   void dispose() {
     super.dispose();
   }
-
-  // Hamburger menu function --------------------------------------------------
-
-  Future<void> logout(BuildContext context) async {
-    await Supabase.instance.client.auth.signOut();
-
-    if (!context.mounted) return;
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => const LoginScreen()),
-      (_) => false,
-    );
-  }
-  // Hamburger menu function --------------------------------------------------
 
   ImageProvider _buildProfileImage(String path) {
     if (path.isEmpty) {
