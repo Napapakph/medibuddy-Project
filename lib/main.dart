@@ -4,16 +4,16 @@ import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'pages/login.dart';
 import 'pages/signup.dart';
-import 'pages/otp.dart';
 import 'pages/forget_password.dart';
 import 'Home/pages/profile_screen.dart';
 import 'Home/pages/select_profile.dart';
 import 'API/auth_gate.dart';
 import 'Home/pages/home.dart';
-import 'pages/forget_password.dart';
 import 'Home/pages/library_profile.dart';
 import 'Home/pages/add_medicine/list_medicine.dart';
 
+const bool kDisableAuthGate =
+    true; // เปลี่ยนเป็น false เมื่อต้องการเปิดใช้งาน AuthGate
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -45,14 +45,14 @@ class MyApp extends StatelessWidget {
       onGenerateRoute: (settings) {
         final uri = Uri.tryParse(settings.name ?? '/');
 
-        // ถ้า parse ไม่ได้ ก็กลับไปหน้าแรก
+        // ถ้า parse ไม่ได้ ก็กลับไปหน้าแรก : parse = การแปลงข้อความ (String) ให้เป็น Uri object
         if (uri == null) {
           return MaterialPageRoute(builder: (_) => const AuthGate());
         }
 
         //  สำคัญ: "/?code=..." จะมี uri.path = "/"
         if (uri.path == '/') {
-          return MaterialPageRoute(builder: (_) => const AuthGate());
+          return MaterialPageRoute(builder: (_) => defaultPage());
         }
 
         // (ถ้าจะมีหน้าอื่นค่อยเพิ่ม)
@@ -82,9 +82,13 @@ class MyApp extends StatelessWidget {
             return MaterialPageRoute(builder: (_) => const ListMedicinePage());
 
           default:
-            return MaterialPageRoute(builder: (_) => const AuthGate());
+            return MaterialPageRoute(builder: (_) => defaultPage());
         }
       },
     );
   }
+}
+
+Widget defaultPage() {
+  return kDisableAuthGate ? const LoginScreen() : const AuthGate();
 }

@@ -4,6 +4,43 @@ import 'package:medibuddy/Model/medicine_model.dart';
 import 'setFuctionRemind.dart';
 import 'setRemind_screen.dart';
 
+class _ReminderPlanStore {
+  static final Map<String, List<ReminderPlan>> _plansByMedicine = {};
+
+  static List<ReminderPlan> allPlans() {
+    return _plansByMedicine.values.expand((plans) => plans).toList();
+  }
+
+  static void upsertPlan(ReminderPlan plan, {String? previousMedicineId}) {
+    final targetId = plan.medicine.id;
+
+    if (previousMedicineId != null && previousMedicineId != targetId) {
+      _removePlanById(previousMedicineId, plan.id);
+    }
+
+    final list = _plansByMedicine.putIfAbsent(targetId, () => []);
+    final index = list.indexWhere((item) => item.id == plan.id);
+    if (index == -1) {
+      list.add(plan);
+    } else {
+      list[index] = plan;
+    }
+  }
+
+  static void removePlan(ReminderPlan plan) {
+    _removePlanById(plan.medicine.id, plan.id);
+  }
+
+  static void _removePlanById(String medicineId, String planId) {
+    final list = _plansByMedicine[medicineId];
+    if (list == null) return;
+    list.removeWhere((item) => item.id == planId);
+    if (list.isEmpty) {
+      _plansByMedicine.remove(medicineId);
+    }
+  }
+}
+
 class RemindListScreen extends StatefulWidget {
   final List<MedicineItem> medicines;
   final MedicineItem? initialMedicine;
@@ -21,22 +58,63 @@ class RemindListScreen extends StatefulWidget {
 }
 
 class _RemindListScreenState extends State<RemindListScreen> {
-  late List<ReminderPlan> _plans;
+  List<ReminderPlan> _plans = [];
   MedicineItem? _selectedMedicine;
 
   @override
   void initState() {
     super.initState();
-    _plans = List<ReminderPlan>.from(widget.initialPlans ?? []);
-    _selectedMedicine = widget.initialMedicine ??
+    if (widget.initialPlans != null) {
+      for (final plan in widget.initialPlans!) {
+        _ReminderPlanStore.upsertPlan(plan);
+      }
+    }
+
+    _selectedMedicine = _resolveMedicine(widget.initialMedicine) ??
         (widget.medicines.isNotEmpty ? widget.medicines.first : null);
+    _loadPlans();
+  }
+
+  MedicineItem? _resolveMedicine(MedicineItem? medicine) {
+    if (medicine == null) return null;
+    return _resolveMedicineById(medicine.id) ?? medicine;
+  }
+
+  MedicineItem? _resolveMedicineById(String id) {
+    for (final item in widget.medicines) {
+      if (item.id == id) return item;
+    }
+    return null;
+  }
+
+  bool _sameMedicine(MedicineItem a, MedicineItem b) {
+    return a.id == b.id &&
+        a.displayName == b.displayName &&
+        a.selectedName == b.selectedName &&
+        a.imagePath == b.imagePath;
+  }
+
+  ReminderPlan _syncPlanMedicine(ReminderPlan plan) {
+    final updated = _resolveMedicineById(plan.medicine.id);
+    if (updated == null) return plan;
+    if (_sameMedicine(updated, plan.medicine)) return plan;
+    return plan.copyWith(medicine: updated);
+  }
+
+  void _loadPlans() {
+    final stored = _ReminderPlanStore.allPlans();
+    _plans = stored.map(_syncPlanMedicine).toList();
+
+    for (final plan in _plans) {
+      _ReminderPlanStore.upsertPlan(plan);
+    }
   }
 
   List<ReminderPlan> get _filteredPlans {
     final selected = _selectedMedicine;
     if (selected == null) return _plans;
 
-    return _plans.where((plan) => plan.medicine == selected).toList();
+    return _plans.where((plan) => plan.medicine.id == selected.id).toList();
   }
 
   Future<void> _addPlan() async {
@@ -59,9 +137,11 @@ class _RemindListScreenState extends State<RemindListScreen> {
 
     if (!mounted) return;
     if (result is ReminderPlan) {
+      _ReminderPlanStore.upsertPlan(result);
       setState(() {
-        _plans.add(result);
-        _selectedMedicine ??= result.medicine;
+        _selectedMedicine =
+            _resolveMedicine(result.medicine) ?? _selectedMedicine;
+        _loadPlans();
       });
     }
   }
@@ -81,11 +161,14 @@ class _RemindListScreenState extends State<RemindListScreen> {
 
     if (!mounted) return;
     if (result is ReminderPlan) {
+      _ReminderPlanStore.upsertPlan(
+        result,
+        previousMedicineId: plan.medicine.id,
+      );
       setState(() {
-        final index = _plans.indexWhere((item) => item.id == plan.id);
-        if (index != -1) {
-          _plans[index] = result;
-        }
+        _selectedMedicine =
+            _resolveMedicine(result.medicine) ?? _selectedMedicine;
+        _loadPlans();
       });
     }
   }
@@ -105,8 +188,9 @@ class _RemindListScreenState extends State<RemindListScreen> {
             TextButton(
               onPressed: () {
                 Navigator.pop(dialogContext);
+                _ReminderPlanStore.removePlan(plan);
                 setState(() {
-                  _plans.removeWhere((item) => item.id == plan.id);
+                  _loadPlans();
                 });
               },
               child:

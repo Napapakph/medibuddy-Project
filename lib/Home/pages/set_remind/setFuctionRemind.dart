@@ -72,6 +72,39 @@ class ReminderPlan {
     required this.doses,
   });
 
+  ReminderPlan copyWith({
+    MedicineItem? medicine,
+    FrequencyMode? frequencyMode,
+    int? timesPerDay,
+    int? everyHours,
+    FrequencyPattern? frequencyPattern,
+    Set<int>? weekdays,
+    int? everyCount,
+    String? everyUnit,
+    DurationMode? durationMode,
+    int? durationValue,
+    String? durationUnit,
+    TimeOfDay? startTime,
+    List<ReminderDose>? doses,
+  }) {
+    return ReminderPlan(
+      id: id,
+      medicine: medicine ?? this.medicine,
+      frequencyMode: frequencyMode ?? this.frequencyMode,
+      timesPerDay: timesPerDay ?? this.timesPerDay,
+      everyHours: everyHours ?? this.everyHours,
+      frequencyPattern: frequencyPattern ?? this.frequencyPattern,
+      weekdays: weekdays ?? this.weekdays,
+      everyCount: everyCount ?? this.everyCount,
+      everyUnit: everyUnit ?? this.everyUnit,
+      durationMode: durationMode ?? this.durationMode,
+      durationValue: durationValue ?? this.durationValue,
+      durationUnit: durationUnit ?? this.durationUnit,
+      startTime: startTime ?? this.startTime,
+      doses: doses ?? this.doses,
+    );
+  }
+
   String get frequencyLabel {
     if (frequencyMode == FrequencyMode.timesPerDay) {
       return '$timesPerDay ครั้งต่อวัน';
@@ -88,7 +121,6 @@ class ReminderPlan {
 ImageProvider? buildMedicineImage(String path) {
   if (path.isEmpty) return null;
   if (path.startsWith('http')) return NetworkImage(path);
-  if (path.startsWith('/')) return NetworkImage(path);
   return FileImage(File(path));
 }
 

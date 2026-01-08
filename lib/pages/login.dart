@@ -163,7 +163,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   Align(
                     alignment: Alignment.topRight,
                     child: SizedBox(
-                      height: maxHeight * 0.35,
+                      height: maxHeight * 0.33,
                       child: Image.asset(
                         'assets/cat_login.png',
                       ),
@@ -173,7 +173,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   //รูปแมว ---------------------------------------------------------------------
                   // ฟอร์มล็อกอิน
                   Align(
-                    alignment: Alignment(0, 0.7),
+                    alignment: Alignment(0, 0.45),
                     child: Padding(
                       padding:
                           EdgeInsets.symmetric(horizontal: maxWidth * 0.08),
@@ -321,7 +321,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   // ลืมรหัสผ่าน ?
                   Align(
-                    alignment: const Alignment(0, 0.98),
+                    alignment: const Alignment(0, 0.95),
                     // 1 = ล่างสุด
 
                     child: TextButton(
