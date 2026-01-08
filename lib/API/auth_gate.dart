@@ -10,15 +10,15 @@ class AuthGate extends StatelessWidget {
   Widget build(BuildContext context) {
     final supabase = Supabase.instance.client;
 
-    // ถ้ามี session => เข้า Profile เลย
+    // ✅ ถ้ามี session แปลว่ายัง login ค้างอยู่
     final session = supabase.auth.currentSession;
+
     if (session != null) {
-      return const ProfileScreen(
-        accessToken: '',
-      );
+      // เข้าแอปต่อได้เลย
+      return const ProfileScreen();
     }
 
-    // ไม่มี session => ไป Login
+    //ไม่มี session = ต้อง login ใหม่
     return const LoginScreen();
   }
 }

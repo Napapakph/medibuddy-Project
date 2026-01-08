@@ -101,7 +101,7 @@ class AppDrawer extends StatelessWidget {
                           ),
                           ListTile(
                             leading: const Icon(Icons.person_add),
-                            title: const Text('เพิ่มผู้ใช้โปรไฟล์'),
+                            title: const Text('ผู้ใช้โปรไฟล์'),
                             onTap: () => _go(context, '/library_profile'),
                           ),
                           ListTile(

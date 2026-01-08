@@ -4,10 +4,10 @@ import 'library_profile.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import '../../services/profile_api.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ProfileScreen extends StatefulWidget {
-  final String accessToken;
-  const ProfileScreen({super.key, required this.accessToken});
+  const ProfileScreen({super.key});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -36,7 +36,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void initState() {
     super.initState();
     debugPrint('=== PROFILE SCREEN ===');
-    debugPrint('accessToken from widget: ${widget.accessToken}');
   }
 
   bool _isSupportedImage(File file) {
@@ -52,7 +51,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       context,
       MaterialPageRoute(
         builder: (_) => LibraryProfile(
-            accessToken: widget.accessToken, initialProfile: profile),
+          initialProfile: profile,
+        ),
       ),
     );
   }
@@ -144,6 +144,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                                     setState(() => _isLoading = true);
 
+                                    // fallback เผื่อ API ล้ม
                                     final fallbackProfile = ProfileModel(
                                       username: _usernameController.text.trim(),
                                       imagePath: profileImageUrl ?? '',
@@ -153,15 +154,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     ProfileModel nextProfile = fallbackProfile;
 
                                     try {
-                                      final api = ProfileApi();
+                                      // 1) ดึง token จาก session
+                                      final token = Supabase.instance.client
+                                          .auth.currentSession?.accessToken;
+                                      if (token == null) {
+                                        if (!mounted) return;
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                                'Session หมดอายุ กรุณาเข้าสู่ระบบใหม่'),
+                                          ),
+                                        );
+                                        return;
+                                      }
 
+                                      // 2) เรียก API create profile
+                                      final api = ProfileApi();
                                       final result = await api.createProfile(
-                                        accessToken: widget.accessToken,
+                                        accessToken: token,
                                         profileName:
                                             _usernameController.text.trim(),
-                                        imageFile: _selectedImageFile,
+                                        imageFile:
+                                            _selectedImageFile, // null ได้
                                       );
 
+                                      // 3) ดึงข้อมูลจาก backend response
                                       final profilePicture =
                                           (result['profilePicture'] ?? '')
                                               .toString();
@@ -191,14 +209,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       ScaffoldMessenger.of(context)
                                           .showSnackBar(
                                         SnackBar(
-                                            content: Text(
-                                                'บันทึกลง DB ไม่สำเร็จ แต่จะไปต่อ: $e')),
+                                          content: Text(
+                                              'บันทึกลง DB ไม่สำเร็จ แต่จะไปต่อ: $e'),
+                                        ),
                                       );
                                     } finally {
                                       if (!mounted) return;
                                       setState(() => _isLoading = false);
                                     }
 
+                                    // 4) ไปหน้าถัดไปครั้งเดียว
                                     _goNext(nextProfile);
                                   },
                             style: ElevatedButton.styleFrom(

@@ -55,7 +55,7 @@ class _LoginScreenState extends State<LoginScreen> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => ProfileScreen(accessToken: accessToken),
+          builder: (_) => ProfileScreen(),
         ),
       );
     } catch (e) {
@@ -121,10 +121,7 @@ class _LoginScreenState extends State<LoginScreen> {
         if (!mounted) return;
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(
-              builder: (_) => ProfileScreen(
-                    accessToken: session.accessToken,
-                  )),
+          MaterialPageRoute(builder: (_) => ProfileScreen()),
         );
         return;
       }

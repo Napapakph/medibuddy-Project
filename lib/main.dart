@@ -66,10 +66,7 @@ class MyApp extends StatelessWidget {
           case '/signup':
             return MaterialPageRoute(builder: (_) => const SignupScreen());
           case '/profile':
-            return MaterialPageRoute(
-                builder: (_) => const ProfileScreen(
-                      accessToken: '',
-                    ));
+            return MaterialPageRoute(builder: (_) => const ProfileScreen());
           case '/select_profile':
             return MaterialPageRoute(
                 builder: (_) => const SelectProfile(accessToken: ''));
@@ -78,10 +75,7 @@ class MyApp extends StatelessWidget {
           case '/forget_password':
             return MaterialPageRoute(builder: (_) => const ForgetPassword());
           case '/library_profile':
-            return MaterialPageRoute(
-                builder: (_) => const LibraryProfile(
-                      accessToken: '',
-                    ));
+            return MaterialPageRoute(builder: (_) => const LibraryProfile());
           case '/list_medicine':
             return MaterialPageRoute(builder: (_) => const ListMedicinePage());
 
