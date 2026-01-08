@@ -92,9 +92,8 @@ class _MyBuddyState extends State<MyBuddy> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => SelectProfile(
-                                      accessToken: '',
-                                    )),
+                              builder: (context) => const SelectProfile(),
+                            ),
                           );
                         },
                         icon: Icon(Icons.navigate_next_outlined),
@@ -120,7 +119,7 @@ class _MyBuddyState extends State<MyBuddy> {
     return Stack(
       alignment: Alignment.center,
       children: [
-        // 🔵 วงกลมพื้นหลังสีฟ้า
+        //  วงกลมพื้นหลังสีฟ้า
         Container(
           width: size,
           height: size, // ใช้ size เดียวกัน จะได้เป็นวงกลมจริง ๆ
@@ -130,7 +129,7 @@ class _MyBuddyState extends State<MyBuddy> {
           ),
         ),
 
-        // 🐱 รูปแมวทับด้านบน (ไม่ตัดรูป)
+        //  รูปแมวทับด้านบน (ไม่ตัดรูป)
         Image.asset(
           'assets/main_mascot.png',
           width: catSize,

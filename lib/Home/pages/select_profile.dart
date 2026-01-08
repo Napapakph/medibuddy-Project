@@ -5,31 +5,25 @@ import '../../services/profile_api.dart';
 import '../../Model/profile_model.dart';
 import 'home.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+// ถ้าคุณมีหน้า login จริง ๆ ให้ import แล้วเปลี่ยน route ได้
+// import 'login.dart';
 
 class SelectProfile extends StatefulWidget {
-  final String accessToken;
-
-  const SelectProfile({
-    super.key,
-    required this.accessToken,
-  });
+  const SelectProfile({super.key});
 
   @override
   State<SelectProfile> createState() => _SelectProfileState();
 }
 
 class _SelectProfileState extends State<SelectProfile> {
-  // เก็บ list profile ที่ดึงมาจาก API
   List<ProfileModel> profiles = [];
-
-  // เก็บ index ของ profile ที่ผู้ใช้เลือก
   int? selectedIndex;
-
-  // ใช้ควบคุมสถานะ loading ของหน้า
   bool _loading = true;
-
-  // base url สำหรับต่อรูปจาก server (เพราะ profilePicture เป็น /uploads/...)
   String _imageBaseUrl = '';
+
+  final supabase = Supabase.instance.client;
 
   @override
   void initState() {
@@ -38,18 +32,47 @@ class _SelectProfileState extends State<SelectProfile> {
     _loadProfiles();
   }
 
-  // ดึงข้อมูล profile จาก API list
+  Future<String?> _getAccessToken() async {
+    // ปกติจะมีอยู่แล้วหลัง login
+    final token = supabase.auth.currentSession?.accessToken;
+    if (token != null && token.isNotEmpty) return token;
+
+    // fallback เผื่อบางเคส session ยังไม่ sync (ส่วนมากไม่จำเป็น แต่กันไว้)
+    final session = supabase.auth.currentSession;
+    final token2 = session?.accessToken;
+    if (token2 != null && token2.isNotEmpty) return token2;
+
+    return null;
+  }
+
   Future<void> _loadProfiles() async {
+    if (!mounted) return;
     setState(() => _loading = true);
 
     try {
+      final token = await _getAccessToken();
+
+      if (token == null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('ไม่พบการเข้าสู่ระบบ กรุณา Login ใหม่')),
+        );
+
+        // ทางเลือก 1: เด้งกลับหน้าก่อนหน้า
+        Navigator.of(context).pop();
+
+        // ทางเลือก 2 (แนะนำถ้ามีหน้า Login): ไปหน้า Login แบบแทนที่
+        // Navigator.pushReplacement(
+        //   context,
+        //   MaterialPageRoute(builder: (_) => const LoginScreen()),
+        // );
+
+        return;
+      }
+
       final api = ProfileApi();
+      final result = await api.fetchProfiles(accessToken: token);
 
-      final result = await api.fetchProfiles(
-        accessToken: widget.accessToken,
-      );
-
-      // แปลงข้อมูลจาก API ให้เป็นโมเดลที่ UI ใช้ได้
       final mapped = result.map((e) {
         return ProfileModel(
           profileId: e['profileId'] is int
@@ -60,13 +83,15 @@ class _SelectProfileState extends State<SelectProfile> {
         );
       }).toList();
 
-      // อัปเดต state
       if (!mounted) return;
       setState(() {
         profiles = mapped;
+        // ถ้า list เปลี่ยนแล้ว index เดิมเกินขอบเขต ให้ reset
+        if (selectedIndex != null && selectedIndex! >= profiles.length) {
+          selectedIndex = null;
+        }
       });
     } catch (e) {
-      // ถ้าโหลดไม่สำเร็จ ให้แจ้งผู้ใช้
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('โหลดโปรไฟล์ไม่สำเร็จ: $e')),
@@ -77,32 +102,29 @@ class _SelectProfileState extends State<SelectProfile> {
     }
   }
 
-  /// สร้าง ImageProvider ให้รองรับทั้งรูปจาก server และกรณีไม่มีรูป
-  /// - ถ้า path ว่าง: ใช้รูป default ใน assets
-  /// - ถ้า path เริ่มด้วย "/uploads/..." : ต่อเป็น URL แล้วใช้ NetworkImage
   ImageProvider _buildProfileImage(String path) {
     if (path.isEmpty) {
       return const AssetImage('assets/images/default_profile.png');
     }
 
-    // กรณี backend ส่งเป็น path เช่น /uploads/profile-pictures/xxx.jpg
     if (path.startsWith('/')) {
       return NetworkImage('$_imageBaseUrl$path');
     }
 
-    // กรณีอื่น ๆ (กันพัง) ให้ fallback เป็น default
     return const AssetImage('assets/images/default_profile.png');
   }
 
   @override
   Widget build(BuildContext context) {
-    // สร้างวันที่ไทยแบบ พ.ศ.
     final now = DateTime.now();
-
     final buddhistYear = now.year + 543;
-    //แก้เป็น พ.ศ.
     final dayMonth = DateFormat('d MMMM').format(now);
     final thaiBuddhistDate = '$dayMonth $buddhistYear';
+
+    final selectedProfile =
+        (selectedIndex == null) ? null : profiles[selectedIndex!];
+
+    final canConfirm = !_loading && selectedProfile != null;
 
     return Scaffold(
       appBar: AppBar(
@@ -126,7 +148,6 @@ class _SelectProfileState extends State<SelectProfile> {
 
             return Column(
               children: [
-                // แถบสีฟ้าด้านบน + วันที่
                 Container(
                   width: double.infinity,
                   padding: EdgeInsets.only(bottom: maxHeight * 0.03),
@@ -143,10 +164,7 @@ class _SelectProfileState extends State<SelectProfile> {
                     ],
                   ),
                 ),
-
                 SizedBox(height: maxHeight * 0.05),
-
-                // หัวข้อ
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: maxWidth * 0.05),
                   child: const Text(
@@ -157,10 +175,7 @@ class _SelectProfileState extends State<SelectProfile> {
                     ),
                   ),
                 ),
-
                 SizedBox(height: maxHeight * 0.03),
-
-                // ส่วนแสดงข้อมูล (Loading / Empty / List)
                 Expanded(
                   child: Container(
                     margin: const EdgeInsets.symmetric(horizontal: 20),
@@ -170,10 +185,8 @@ class _SelectProfileState extends State<SelectProfile> {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: _loading
-                        // ถ้ากำลังโหลด แสดงวงกลม loading
                         ? const Center(child: CircularProgressIndicator())
                         : profiles.isEmpty
-                            // ถ้าโหลดแล้วแต่ไม่มีข้อมูล
                             ? Center(
                                 child: Column(
                                   mainAxisSize: MainAxisSize.min,
@@ -187,7 +200,6 @@ class _SelectProfileState extends State<SelectProfile> {
                                   ],
                                 ),
                               )
-                            // ถ้ามีข้อมูล แสดง list โปรไฟล์
                             : ListView.builder(
                                 itemCount: profiles.length,
                                 itemBuilder: (context, index) {
@@ -196,7 +208,6 @@ class _SelectProfileState extends State<SelectProfile> {
 
                                   return GestureDetector(
                                     onTap: () {
-                                      // เมื่อกดเลือกโปรไฟล์ ให้เก็บ index ไว้
                                       setState(() {
                                         selectedIndex = index;
                                       });
@@ -218,7 +229,6 @@ class _SelectProfileState extends State<SelectProfile> {
                                       ),
                                       child: Row(
                                         children: [
-                                          // รูปโปรไฟล์ (วงกลม)
                                           CircleAvatar(
                                             radius: 30,
                                             backgroundImage: _buildProfileImage(
@@ -226,8 +236,6 @@ class _SelectProfileState extends State<SelectProfile> {
                                             ),
                                           ),
                                           const SizedBox(width: 16),
-
-                                          // ชื่อโปรไฟล์
                                           Expanded(
                                             child: Text(
                                               profile.username,
@@ -245,24 +253,12 @@ class _SelectProfileState extends State<SelectProfile> {
                               ),
                   ),
                 ),
-
                 SizedBox(height: maxHeight * 0.03),
-
-                // ปุ่มยืนยัน
                 Padding(
                   padding: EdgeInsets.only(bottom: maxHeight * 0.02),
                   child: ElevatedButton(
-                    // ถ้ายังไม่เลือกโปรไฟล์ ให้ปุ่มกดไม่ได้
-                    onPressed: _loading
-                        ? null
-                        : () {
-                            // ดึงโปรไฟล์ที่เลือก
-                            final selectedProfile = selectedIndex == null
-                                ? null
-                                : profiles[selectedIndex!];
-
-                            // ไปหน้า Home พร้อมส่งข้อมูลโปรไฟล์ที่เลือกไปด้วย
-                            // หมายเหตุ: Home ต้องมี constructor รับ selectedProfile
+                    onPressed: canConfirm
+                        ? () {
                             Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(
@@ -271,7 +267,8 @@ class _SelectProfileState extends State<SelectProfile> {
                                 ),
                               ),
                             );
-                          },
+                          }
+                        : null,
                     style: ElevatedButton.styleFrom(
                       padding: EdgeInsets.symmetric(
                         vertical: maxHeight * 0.02,
