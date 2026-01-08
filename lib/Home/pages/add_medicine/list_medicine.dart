@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:medibuddy/Model/medicine_model.dart';
+import 'package:medibuddy/services/in_memory_store.dart';
 import 'package:medibuddy/widgets/app_drawer.dart';
 
 import 'createName_medicine.dart';
@@ -18,6 +19,16 @@ class ListMedicinePage extends StatefulWidget {
 
 class _ListMedicinePageState extends State<ListMedicinePage> {
   final List<MedicineItem> _items = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _items.addAll(MedicineStore.items);
+  }
+
+  void _syncStore() {
+    MedicineStore.replaceAll(_items);
+  }
 
   ImageProvider? _buildMedicineImage(String path) {
     if (path.isEmpty) return null;
@@ -36,6 +47,7 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
       setState(() {
         _items.add(result);
       });
+      _syncStore();
     }
   }
 
@@ -107,12 +119,12 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
                     if (newName.isEmpty) return;
 
                     setState(() {
-                      _items[index] = MedicineItem(
+                      _items[index] = current.copyWith(
                         displayName: newName,
-                        selectedName: current.selectedName,
                         imagePath: tempImagePath,
                       );
                     });
+                    _syncStore();
                     Navigator.pop(context);
                   },
                   child: const Text('??????'),
@@ -187,6 +199,7 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
                 setState(() {
                   _items.removeAt(index);
                 });
+                _syncStore();
               },
               child: const Text(
                 'ลบ',

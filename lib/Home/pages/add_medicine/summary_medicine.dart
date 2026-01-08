@@ -116,7 +116,10 @@ class SummaryMedicinePage extends StatelessWidget {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
+                    final id =
+                        DateTime.now().microsecondsSinceEpoch.toString();
                     final item = MedicineItem(
+                      id: id,
                       displayName: draft.displayName,
                       selectedName: selectedName,
                       imagePath: draft.imagePath,

@@ -52,7 +52,7 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
   void initState() {
     super.initState();
 
-    _selectedMedicine = widget.initialMedicine ??
+    _selectedMedicine = _resolveMedicine(widget.initialMedicine) ??
         (widget.medicines.isNotEmpty ? widget.medicines.first : null);
 
     _timesPerDayController = TextEditingController(text: '3');
@@ -80,8 +80,16 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
     });
   }
 
+  MedicineItem? _resolveMedicine(MedicineItem? medicine) {
+    if (medicine == null) return null;
+    for (final item in widget.medicines) {
+      if (item.id == medicine.id) return item;
+    }
+    return medicine;
+  }
+
   void _applyInitialPlan(ReminderPlan plan) {
-    _selectedMedicine = plan.medicine;
+    _selectedMedicine = _resolveMedicine(plan.medicine);
     _frequencyMode = plan.frequencyMode;
     _frequencyPattern = plan.frequencyPattern;
     _durationMode = plan.durationMode;

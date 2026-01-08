@@ -95,7 +95,9 @@ class _SelectProfileState extends State<SelectProfile> {
   Widget build(BuildContext context) {
     // สร้างวันที่ไทยแบบ พ.ศ.
     final now = DateTime.now();
+    final ce = now.year;
     final buddhistYear = now.year + 543;
+    //แก้เป็น พ.ศ.
     final dayMonth = DateFormat('d MMMM').format(now);
     final thaiBuddhistDate = '$dayMonth $buddhistYear';
 
