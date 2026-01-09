@@ -87,7 +87,7 @@ class AppDrawer extends StatelessWidget {
                           ListTile(
                             leading: const Icon(Icons.history),
                             title: const Text('ประวัติการทานยา'),
-                            onTap: () {},
+                            onTap: () => _go(context, '/history'),
                           ),
                           ListTile(
                             leading: const Icon(Icons.favorite),
