@@ -13,6 +13,7 @@ import 'Home/pages/home.dart';
 import 'Home/pages/library_profile.dart';
 import 'Home/pages/add_medicine/list_medicine.dart';
 import 'Home/pages/history.dart';
+import 'OCR/camera_ocr.dart';
 
 const bool kDisableAuthGate =
     true; // เปลี่ยนเป็น false เมื่อต้องการเปิดใช้งาน AuthGate
@@ -83,6 +84,8 @@ class MyApp extends StatelessWidget {
             return MaterialPageRoute(builder: (_) => const ListMedicinePage());
           case '/history':
             return MaterialPageRoute(builder: (_) => const HistoryPage());
+          case '/camera_ocr':
+            return MaterialPageRoute(builder: (_) => const CameraOcrPage());
 
           default:
             return MaterialPageRoute(builder: (_) => defaultPage());

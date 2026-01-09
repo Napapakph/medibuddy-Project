@@ -3,6 +3,7 @@ import 'package:medibuddy/Model/medicine_model.dart';
 import 'package:medibuddy/widgets/medicine_step_timeline.dart';
 
 import 'add_medicine.dart';
+import '../../../OCR/camera_ocr.dart'; // ✅ เพิ่ม
 
 class FindMedicinePage extends StatefulWidget {
   final MedicineDraft draft;
@@ -25,17 +26,46 @@ class _FindMedicinePageState extends State<FindMedicinePage> {
     super.dispose();
   }
 
+  /// 🔹 ค้นหาด้วยการพิมพ์
   Future<void> _goNext() async {
+    final keyword = _searchController.text.trim();
+
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => AddMedicinePage(draft: widget.draft),
+        builder: (_) => AddMedicinePage(
+          draft: widget.draft.copyWith(
+            selectedName: keyword,
+          ),
+        ),
       ),
     );
 
     if (!mounted) return;
     if (result is MedicineItem) {
       Navigator.pop(context, result);
+    }
+  }
+
+  /// 🔹 ค้นหาด้วย OCR (กล้อง)
+  Future<void> _scanByCamera() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const CameraOcrPage(),
+      ),
+    );
+
+    if (!mounted) return;
+
+    // CameraOcrPage ควร pop กลับมาด้วย String (ข้อความ OCR)
+    if (result is String && result.trim().isNotEmpty) {
+      setState(() {
+        _searchController.text = result.trim();
+      });
+
+      // optional: auto ไปหน้าถัดไป
+      // await _goNext();
     }
   }
 
@@ -67,10 +97,12 @@ class _FindMedicinePageState extends State<FindMedicinePage> {
                 ),
               ),
               const SizedBox(height: 8),
+
+              /// 🔍 ช่องค้นหา
               TextField(
                 controller: _searchController,
                 decoration: InputDecoration(
-                  hintText: 'ชื่อสามัญ/ชื่อการค้า หรือชื่อการค้า',
+                  hintText: 'ชื่อสามัญ / ชื่อการค้า',
                   filled: true,
                   fillColor: const Color(0xFFF2F4F8),
                   border: OutlineInputBorder(
@@ -83,7 +115,10 @@ class _FindMedicinePageState extends State<FindMedicinePage> {
                   ),
                 ),
               ),
+
               const SizedBox(height: 16),
+
+              /// 🔘 ปุ่มเลือกวิธีค้นหา
               Row(
                 children: [
                   ElevatedButton.icon(
@@ -102,7 +137,7 @@ class _FindMedicinePageState extends State<FindMedicinePage> {
                   ),
                   const SizedBox(width: 12),
                   OutlinedButton.icon(
-                    onPressed: () {},
+                    onPressed: _scanByCamera, // ✅ เชื่อม OCR
                     style: OutlinedButton.styleFrom(
                       foregroundColor: const Color(0xFF1F497D),
                       side: const BorderSide(color: Color(0xFF1F497D)),
@@ -115,7 +150,9 @@ class _FindMedicinePageState extends State<FindMedicinePage> {
                   ),
                 ],
               ),
+
               const SizedBox(height: 24),
+
               Expanded(
                 child: Container(
                   width: double.infinity,
@@ -125,7 +162,7 @@ class _FindMedicinePageState extends State<FindMedicinePage> {
                   ),
                   child: const Center(
                     child: Text(
-                      'พิมพ์คำค้นหาแล้วกดค้นหาเพื่อไปขั้นตอนถัดไป',
+                      'พิมพ์คำค้นหา หรือใช้กล้องสแกนฉลากยา',
                       style: TextStyle(color: Color(0xFF7A869A)),
                       textAlign: TextAlign.center,
                     ),
