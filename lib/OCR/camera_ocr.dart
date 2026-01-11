@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:camera/camera.dart';
+import 'package:flutter/foundation.dart'; // สำหรับ debugPrint
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'ocr_camera_frame.dart';
@@ -16,38 +17,55 @@ class CameraOcrPage extends StatefulWidget {
 }
 
 class _CameraOcrPageState extends State<CameraOcrPage> {
-  // ---------- state fields (ที่คุณเรียกแต่ยังไม่มี) ----------
   final ImagePicker _imagePicker = ImagePicker();
+  final OcrImageCropper _imageCropper = const OcrImageCropper();
+  final OcrTextService _ocrTextService = OcrTextService();
 
   CameraController? _cameraController;
   Future<void>? _initializeControllerFuture;
 
   bool _isProcessing = false;
-
   File? _capturedPhoto;
 
   CameraLensDirection _lensDirection = CameraLensDirection.back;
+
+  // ---------- debug helpers ----------
+  int _tapSeq = 0;
+
+  void _log(String msg) {
+    // ให้ log อ่านง่ายและค้นหาได้จาก console
+    debugPrint('[CameraOcrPage] $msg');
+  }
+
+  void _snack(String msg) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  }
 
   // ---------- lifecycle ----------
   @override
   void initState() {
     super.initState();
+    _log('initState()');
     _initCamera(_lensDirection);
   }
 
   @override
   void dispose() {
+    _log('dispose()');
+    _ocrTextService.dispose();
     _cameraController?.dispose();
     super.dispose();
   }
 
   // ---------- camera init ----------
   Future<void> _initCamera(CameraLensDirection direction) async {
+    _log('initCamera(direction=$direction) start');
+
     setState(() {
       _isProcessing = false;
     });
 
-    // ปิด controller เก่าก่อน (กัน memory leak)
     final old = _cameraController;
     _cameraController = null;
     _initializeControllerFuture = null;
@@ -66,14 +84,11 @@ class _CameraOcrPageState extends State<CameraOcrPage> {
         }
       }
 
-      // ถ้าไม่เจอ direction ที่ต้องการ ให้ใช้ตัวแรก
       selected ??= cameras.isNotEmpty ? cameras.first : null;
 
       if (selected == null) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('ไม่พบกล้องในอุปกรณ์')),
-        );
+        _log('No camera found');
+        _snack('ไม่พบกล้องในอุปกรณ์');
         return;
       }
 
@@ -85,14 +100,25 @@ class _CameraOcrPageState extends State<CameraOcrPage> {
       );
 
       _cameraController = controller;
-      _initializeControllerFuture = controller.initialize();
+
+      // ✅📸 ใส่ debug ว่า init สำเร็จ/ล้มเหลว
+      _initializeControllerFuture = controller.initialize().then((_) {
+        _log(
+            'camera initialize DONE (isInitialized=${controller.value.isInitialized})');
+        if (mounted) {
+          setState(() {});
+        }
+      }).catchError((e, st) {
+        _log('camera initialize ERROR: $e');
+        throw e;
+      });
 
       setState(() {});
+      _log('initCamera() end -> controller set');
     } catch (e) {
+      _log('initCamera() exception: $e');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('เปิดกล้องไม่สำเร็จ: $e')),
-      );
+      _snack('เปิดกล้องไม่สำเร็จ: $e');
     }
   }
 
@@ -108,6 +134,12 @@ class _CameraOcrPageState extends State<CameraOcrPage> {
     return FutureBuilder<void>(
       future: initFuture,
       builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Center(
+            child: Text('Init กล้องล้มเหลว: ${snapshot.error}'),
+          );
+        }
+
         if (snapshot.connectionState == ConnectionState.done) {
           return LayoutBuilder(
             builder: (context, constraints) {
@@ -138,113 +170,162 @@ class _CameraOcrPageState extends State<CameraOcrPage> {
             },
           );
         }
+
         return const Center(child: CircularProgressIndicator());
       },
     );
   }
 
-  // ---------- actions (ที่คุณเรียกแต่ยังไม่มี) ----------
+  // ---------- actions ----------
   Future<void> _pickFromGallery() async {
-    if (_isProcessing) return;
+    if (_isProcessing) {
+      _log('pickFromGallery blocked: isProcessing=true');
+      return;
+    }
 
+    _log('pickFromGallery start');
     final XFile? picked = await _imagePicker.pickImage(
       source: ImageSource.gallery,
       imageQuality: 90,
     );
 
     if (!mounted) return;
-    if (picked == null) return;
+    if (picked == null) {
+      _log('pickFromGallery cancelled');
+      return;
+    }
 
-    await _processImage(File(picked.path));
+    _log('pickFromGallery picked=${picked.path}');
+    await _processImage(File(picked.path), source: 'gallery');
   }
 
   Future<void> _captureFromCamera() async {
-    if (_isProcessing) return;
+    final int seq = ++_tapSeq;
+    _log('✅📸 capture tap seq=$seq (processing=$_isProcessing)');
+
+    if (_isProcessing) {
+      _log('✅📸 capture blocked seq=$seq: isProcessing=true');
+      return;
+    }
 
     final controller = _cameraController;
     final initFuture = _initializeControllerFuture;
 
-    if (controller == null || initFuture == null) return;
+    if (controller == null || initFuture == null) {
+      _log('✅📸 capture blocked seq=$seq: controller/initFuture null');
+      _snack('กล้องยังไม่พร้อม');
+      return;
+    }
 
     try {
-      setState(() => _isProcessing = true);
-
+      // ✅📸 สำคัญ: อย่าตั้ง _isProcessing=true ที่นี่
+      // เพราะ _processImage() จะเป็นคนตั้งเอง
+      // (ถ้าตั้งที่นี่ _processImage จะโดน if (_isProcessing) return ตัดทิ้ง)
+      _log('✅📸 await initFuture seq=$seq...');
       await initFuture;
+
       if (!mounted) return;
 
-      if (controller.value.isTakingPicture) return;
+      _log(
+          '✅📸 initFuture done seq=$seq, isInitialized=${controller.value.isInitialized}');
 
+      if (!controller.value.isInitialized) {
+        _log('✅📸 capture blocked seq=$seq: controller not initialized');
+        _snack('กล้องยังไม่พร้อม กรุณาลองใหม่');
+        return;
+      }
+
+      if (controller.value.isTakingPicture) {
+        _log('✅📸 capture blocked seq=$seq: isTakingPicture=true');
+        return;
+      }
+
+      _log('✅📸 takePicture start seq=$seq...');
       final XFile file = await controller.takePicture();
       if (!mounted) return;
 
+      _log('✅📸 takePicture done seq=$seq -> path=${file.path}');
       final photo = File(file.path);
+
       setState(() => _capturedPhoto = photo);
 
-      await _processImage(photo);
+      // ✅📸 ส่งต่อไป pipeline
+      await _processImage(photo, source: 'camera(seq=$seq)');
     } catch (e) {
+      _log('✅📸 capture exception seq=$seq: $e');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('ถ่ายรูปไม่สำเร็จ: $e')),
-      );
-    } finally {
-      if (!mounted) return;
-      setState(() => _isProcessing = false);
+      _snack('ถ่ายรูปไม่สำเร็จ: $e');
     }
   }
 
   Future<void> _toggleCamera() async {
-    if (_isProcessing) return;
+    if (_isProcessing) {
+      _log('toggleCamera blocked: isProcessing=true');
+      return;
+    }
 
     _lensDirection = _lensDirection == CameraLensDirection.back
         ? CameraLensDirection.front
         : CameraLensDirection.back;
 
+    _log('toggleCamera -> $_lensDirection');
     await _initCamera(_lensDirection);
   }
 
-  // ---------- OCR pipeline (โครง) ----------
-  Future<void> _processImage(File imageFile) async {
-    if (_isProcessing) return;
+  // ---------- OCR pipeline ----------
+  Future<void> _processImage(File imageFile, {required String source}) async {
+    // ✅📸 Debug สำคัญ: ถ้าเข้าเงื่อนไขนี้ แปลว่า “ถูกกันไว้” และจะไม่ไปหน้า result
+    if (_isProcessing) {
+      _log('✅📸 processImage ABORTED (source=$source): isProcessing=true');
+      _snack('ถูกกันไว้เพราะกำลังประมวลผลอยู่');
+      return;
+    }
 
+    _log('processImage start (source=$source, path=${imageFile.path})');
     setState(() => _isProcessing = true);
 
     try {
-      // ✅ 1) ตอนนี้ข้าม cropper ไปก่อน (กัน error class ไม่เจอ)
-      final File finalImage = imageFile;
+      // 1) ตอนนี้ข้าม cropper ไปก่อน
+      final File? croppedImage = await _imageCropper.crop(imageFile);
+      if (croppedImage == null) {
+        _log('processImage crop cancelled (source=$source)');
+        return;
+      }
 
-      // ✅ 2) OCR (fallback-safe)
+      _log('processImage step1 croppedImage=${croppedImage.path}');
+
+      // 2) OCR (ตอนนี้ยัง placeholder)
       String extractedText = '';
-
       try {
-        // ปรับชื่อเมทอดตรงนี้ให้ตรงกับของจริงภายหลัง
-        // ตอนนี้ใส่ placeholder ไว้ก่อนให้ผ่าน compile
-        // extractedText = await OcrTextService().extractText(finalImage);
-
-        extractedText = ''; // placeholder: ยังไม่ทำ OCR จริง
-      } catch (_) {
+        extractedText = await _ocrTextService.recognize(croppedImage);
+        _log('processImage step2 OCR done (len=${extractedText.length})');
+      } catch (e) {
+        _log('processImage OCR error: $e');
         extractedText = '';
       }
 
       if (!mounted) return;
 
-      // ✅ 3) ไปหน้า result โดยส่ง param ตามที่หน้า result ต้องการจริง
-      Navigator.push(
+      // 3) ไปหน้า result
+      _log('✅📸 Navigator.push -> OcrResultPage');
+      await Navigator.push(
         context,
         MaterialPageRoute(
           builder: (_) => OcrResultPage(
-            imageFile: finalImage,
+            imageFile: croppedImage,
             recognizedText: extractedText,
           ),
         ),
       );
+      _log('✅📸 Navigator.push returned (back from result page)');
     } catch (e) {
+      _log('processImage exception: $e');
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('ประมวลผลรูปไม่สำเร็จ: $e')),
-      );
+      _snack('ประมวลผลรูปไม่สำเร็จ: $e');
     } finally {
       if (!mounted) return;
       setState(() => _isProcessing = false);
+      _log('processImage end -> isProcessing=false');
     }
   }
 
@@ -257,6 +338,12 @@ class _CameraOcrPageState extends State<CameraOcrPage> {
         controller.value.isInitialized &&
         !_isProcessing &&
         !controller.value.isTakingPicture;
+
+    // debug ค่าที่ทำให้ปุ่ม disabled (ดูได้จาก console)
+    _log('build: enabled=$isCaptureEnabled '
+        'init=${controller?.value.isInitialized} '
+        'processing=$_isProcessing '
+        'taking=${controller?.value.isTakingPicture}');
 
     final size = MediaQuery.of(context).size;
     final frameWidth = size.width * 0.86;
@@ -290,40 +377,10 @@ class _CameraOcrPageState extends State<CameraOcrPage> {
             SizedBox(height: 2),
             Text(
               '> สแกนชื่อของยา',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.white,
-              ),
+              style: TextStyle(fontSize: 12, color: Colors.white),
             ),
           ],
         ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: IconButton(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('วิธีการสแกนชื่อยา')),
-                );
-              },
-              icon: Container(
-                width: 30,
-                height: 30,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 1.7),
-                ),
-                child: const Center(
-                  child: Icon(
-                    Icons.question_mark,
-                    size: 18,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
       ),
       body: SafeArea(
         child: Column(
@@ -334,10 +391,7 @@ class _CameraOcrPageState extends State<CameraOcrPage> {
               child: Text(
                 'ถ่ายรูปเพื่อสแกนชื่อยา\nที่ต้องรับประทาน',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
               ),
             ),
             const SizedBox(height: 12),

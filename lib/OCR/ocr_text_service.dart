@@ -4,6 +4,8 @@ import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart
 
 /// ตัวช่วยทำ OCR ด้วย ML Kit
 class OcrTextService {
+  static String latestText = '';
+
   final TextRecognizer _recognizer =
       TextRecognizer(script: TextRecognitionScript.latin);
 
@@ -11,7 +13,8 @@ class OcrTextService {
   Future<String> recognize(File imageFile) async {
     final inputImage = InputImage.fromFile(imageFile);
     final recognized = await _recognizer.processImage(inputImage);
-    return recognized.text.trim();
+    latestText = recognized.text.trim();
+    return latestText;
   }
 
   /// ปิดทรัพยากรของ TextRecognizer
