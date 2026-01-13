@@ -50,7 +50,7 @@ class MedicineApi {
 
     final token = await _getAccessToken();
 
-    final uri = Uri.parse('$_baseUrl/api/admin/v1/medicine-list/create');
+    final uri = Uri.parse('$_baseUrl/api/mobile/v1/medicine-list/create');
     final req = http.MultipartRequest('POST', uri);
 
     // headers
@@ -164,7 +164,7 @@ class MedicineApi {
     }
 
     final token = await _getAccessToken();
-    final uri = Uri.parse('$_baseUrl/api/admin/v1/medicine-list/list').replace(
+    final uri = Uri.parse('$_baseUrl/api/mobile/v1/medicine-list/list').replace(
       queryParameters: {
         'profileId': profileId.toString(),
       },

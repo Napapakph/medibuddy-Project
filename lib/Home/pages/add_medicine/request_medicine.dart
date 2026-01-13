@@ -35,7 +35,7 @@ class _RequestMedicinePageState extends State<RequestMedicinePage> {
 
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('?????????????????? (???????????????)')),
+      const SnackBar(content: Text('การส่งคำร้องขอเพิ่มยาสำเร็จ')),
     );
     Navigator.pop(context);
   }
@@ -47,7 +47,7 @@ class _RequestMedicinePageState extends State<RequestMedicinePage> {
         backgroundColor: const Color(0xFF1F497D),
         iconTheme: const IconThemeData(color: Colors.white),
         title: const Text(
-          '?????????',
+          'ส่งคำร้องขอเพิ่มยา',
           style: TextStyle(color: Colors.white),
         ),
       ),
@@ -58,7 +58,7 @@ class _RequestMedicinePageState extends State<RequestMedicinePage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                '??????',
+                'ชื่อยา',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -77,7 +77,7 @@ class _RequestMedicinePageState extends State<RequestMedicinePage> {
               ),
               const SizedBox(height: 20),
               const Text(
-                '??????',
+                'รูปยา',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -155,7 +155,7 @@ class _RequestMedicinePageState extends State<RequestMedicinePage> {
                           ),
                         )
                       : const Text(
-                          '??????',
+                          'ยืนยัน',
                           style: TextStyle(color: Colors.white, fontSize: 16),
                         ),
                 ),

@@ -2,13 +2,14 @@
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:medibuddy/Home/pages/set_remind/remind_list_screen.dart';
 import 'package:medibuddy/Model/medicine_model.dart';
 import 'package:medibuddy/widgets/app_drawer.dart';
 import 'package:medibuddy/services/medicine_api.dart';
 
 import 'createName_medicine.dart';
 import '../home.dart';
-import '../set_remind/remind_list_screen.dart';
+import '../set_remind/setRemind_screen.dart';
 
 class ListMedicinePage extends StatefulWidget {
   const ListMedicinePage({super.key});
@@ -49,7 +50,7 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _errorMessage = e.toString();
+        _errorMessage = _sanitizeErrorMessage(e.toString());
       });
     } finally {
       if (!mounted) return;
@@ -65,6 +66,26 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
     return FileImage(File(path));
   }
 
+  String _friendlyErrorMessage() {
+    final message = _errorMessage.trim();
+    if (message.isEmpty) return '';
+    final lower = message.toLowerCase();
+    if (lower.contains('<html') || lower.contains('<!doctype')) {
+      return 'ไม่สามารถโหลดรายการยาได้ในขณะนี้';
+    }
+    return message;
+  }
+
+  String _sanitizeErrorMessage(String message) {
+    final trimmed = message.trim();
+    if (trimmed.isEmpty) return '';
+    final lower = trimmed.toLowerCase();
+    if (lower.contains('<html') || lower.contains('<!doctype')) {
+      return 'ไม่สามารถโหลดรายการยาได้ในขณะนี้';
+    }
+    return trimmed;
+  }
+
   Future<void> _addMedicine() async {
     final result = await Navigator.push(
       context,
@@ -74,6 +95,10 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
 
     if (!mounted) return;
     if (result is MedicineItem) {
+      setState(() {
+        _items.add(result);
+        _errorMessage = '';
+      });
       await _loadMedicines();
     }
   }
@@ -415,44 +440,45 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
                           children: [
                             Expanded(
                               child: Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(16),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.08),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 4),
-                                    ),
-                                  ],
-                                ),
-                                child: _loading
-                                    ? const Center(
-                                        child: CircularProgressIndicator(),
-                                      )
-                                    : _errorMessage.isNotEmpty
-                                        ? Center(
-                                            child: Text(
-                                              _errorMessage,
-                                              textAlign: TextAlign.center,
-                                              style: const TextStyle(
-                                                  color: Color(0xFF8893A0)),
-                                            ),
-                                          )
-                                        : _items.isEmpty
-                                            ? const Center(
-                                                child: Text(
-                                                  'ยังไม่มีรายการยา',
-                                                  style: TextStyle(
-                                                      color: Color(0xFF8893A0)),
-                                                ),
-                                              )
-                                            : ListView.builder(
-                                                itemCount: _items.length,
-                                                itemBuilder: _buildMedicineCard,
-                                              ),
-                              ),
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(16),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.08),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: _loading
+                                      ? const Center(
+                                          child: CircularProgressIndicator(),
+                                        )
+                                      : _items.isNotEmpty
+                                          ? ListView.builder(
+                                              itemCount: _items.length,
+                                              itemBuilder: _buildMedicineCard,
+                                            )
+                                          : _errorMessage.isNotEmpty
+                                              ? Center(
+                                                  child: Text(
+                                                    _friendlyErrorMessage(),
+                                                    textAlign: TextAlign.center,
+                                                    style: const TextStyle(
+                                                        color:
+                                                            Color(0xFF8893A0)),
+                                                  ),
+                                                )
+                                              : const Center(
+                                                  child: Text(
+                                                    'ไม่พบรายการยา',
+                                                    style: TextStyle(
+                                                        color:
+                                                            Color(0xFF8893A0)),
+                                                  ),
+                                                )),
                             ),
                             SizedBox(height: maxWidth * 0.05),
                             SizedBox(

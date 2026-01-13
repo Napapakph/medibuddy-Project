@@ -96,20 +96,18 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text('??????????????????????????'),
+          title: const Text('ไม่พบรายการยา'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: const [
-              Text('????????????????!?'),
-              SizedBox(height: 4),
-              Text('?????????'),
+              Text('ต้องการส่งคำขอเพิ่มรายการยานี้ไปยังระบบหรือไม่ ?'),
             ],
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('???'),
+              child: const Text('ยกเลิก'),
             ),
             ElevatedButton(
               onPressed: () {
@@ -123,7 +121,7 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
                   ),
                 );
               },
-              child: const Text('????????????????????????'),
+              child: const Text('ยืนยัน'),
             ),
           ],
         );
@@ -199,11 +197,14 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
 
                     if (filtered.isEmpty) {
                       return const Center(
-                        child: Text(
-                          '??????????????????????????',
-                          style: TextStyle(color: Color(0xFF7A869A)),
-                        ),
-                      );
+                          child: Column(
+                        children: [
+                          Text(
+                            'ไม่พบรายการยา',
+                            style: TextStyle(color: Color(0xFF7A869A)),
+                          ),
+                        ],
+                      ));
                     }
 
                     return ListView.builder(

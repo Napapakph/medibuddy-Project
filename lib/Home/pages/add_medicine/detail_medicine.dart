@@ -6,6 +6,8 @@ Future<void> showMedicineDetailDialog({
   required MedicineCatalogItem? catalog,
   required String nickname,
 }) async {
+  // Temporarily disabled until detail data is ready.
+  return;
   await showDialog<void>(
     context: context,
     builder: (dialogContext) {
