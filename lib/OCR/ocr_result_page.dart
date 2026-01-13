@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import '../widgets/medicine_step_timeline.dart';
 
 // หน้าจอแสดงข้อความ "สแกนสำเร็จ!" สั้น ๆ ก่อนเด้งไปหน้าแก้ไขผลลัพธ์
 class OcrSuccessPage extends StatefulWidget {
@@ -153,15 +154,10 @@ class _OcrResultPageState extends State<OcrResultPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Row(
+              Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: const [
-                  _CircleIconButton(icon: Icons.search),
-                  SizedBox(width: 12),
-                  _CircleIconButton(icon: Icons.edit, disabled: true),
-                  SizedBox(width: 12),
-                  _CircleIconButton(
-                      icon: Icons.bookmark_border, disabled: true),
+                  MedicineStepTimeline(currentStep: 2),
                 ],
               ),
               const SizedBox(height: 24),
