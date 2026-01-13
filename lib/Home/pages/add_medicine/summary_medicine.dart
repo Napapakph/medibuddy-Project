@@ -57,8 +57,7 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
     final officialName = _resolveOfficialName(catalog);
     final nickname = _resolveNickname(officialName);
     final localImagePath = widget.draft.imagePath;
-    final localImage =
-        localImagePath.isEmpty ? null : File(localImagePath);
+    final localImage = localImagePath.isEmpty ? null : File(localImagePath);
     final displayImage =
         localImagePath.isNotEmpty ? localImagePath : catalog.imageUrl;
 
@@ -111,7 +110,7 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
         backgroundColor: const Color(0xFF1F497D),
         iconTheme: const IconThemeData(color: Colors.white),
         title: const Text(
-          '????????????',
+          'เพิ่มยา',
           style: TextStyle(color: Colors.white),
         ),
         actions: [
@@ -136,16 +135,7 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
               const MedicineStepTimeline(currentStep: 4),
               const SizedBox(height: 24),
               const Text(
-                '????????????',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF1F497D),
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                '??????????????',
+                'ชื่อการค้า',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -162,26 +152,9 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
                 child: Text(officialName),
               ),
               const SizedBox(height: 12),
-              const Text(
-                '??????????',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
               const SizedBox(height: 6),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF2F4F8),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(nickname),
-              ),
-              const SizedBox(height: 16),
               const Text(
-                '?????',
+                'รูปยา',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -250,7 +223,7 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
                           ),
                         )
                       : const Text(
-                          '??????',
+                          'ยืนยัน',
                           style: TextStyle(color: Colors.white, fontSize: 16),
                         ),
                 ),

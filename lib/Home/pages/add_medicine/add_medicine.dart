@@ -163,7 +163,7 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
         backgroundColor: const Color(0xFF1F497D),
         iconTheme: const IconThemeData(color: Colors.white),
         title: const Text(
-          '???????',
+          'เพิ่มยา',
           style: TextStyle(color: Colors.white),
         ),
       ),
@@ -175,15 +175,6 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
             children: [
               const MedicineStepTimeline(currentStep: 3),
               const SizedBox(height: 24),
-              const Text(
-                '??????????????????????',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF1F497D),
-                ),
-              ),
-              const SizedBox(height: 12),
               Expanded(
                 child: Builder(
                   builder: (context) {
@@ -286,7 +277,7 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        '????????? : ${item.mediEnName.isNotEmpty ? item.mediEnName : '-'}',
+                                        'ชื่อสามัญ : ${item.mediEnName.isNotEmpty ? item.mediEnName : '-'}',
                                         style: const TextStyle(
                                           fontSize: 13,
                                           fontWeight: FontWeight.w600,
@@ -294,7 +285,7 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
-                                        '?????????? : ${item.mediTradeName.isNotEmpty ? item.mediTradeName : '-'}',
+                                        'ชื่อการค้า : ${item.mediTradeName.isNotEmpty ? item.mediTradeName : '-'}',
                                         style: const TextStyle(
                                           fontSize: 12,
                                           color: Color(0xFF5E6C84),
@@ -330,7 +321,7 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
                     ),
                   ),
                   child: const Text(
-                    '?????',
+                    'ยืนยัน',
                     style: TextStyle(color: Colors.white, fontSize: 16),
                   ),
                 ),
