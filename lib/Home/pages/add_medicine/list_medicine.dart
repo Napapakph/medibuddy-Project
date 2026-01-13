@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:medibuddy/Model/medicine_model.dart';
 import 'package:medibuddy/widgets/app_drawer.dart';
+import 'package:medibuddy/services/medicine_api.dart';
 
 import 'createName_medicine.dart';
 import '../home.dart';
@@ -17,14 +18,46 @@ class ListMedicinePage extends StatefulWidget {
 }
 
 class _ListMedicinePageState extends State<ListMedicinePage> {
+  static const int _profileId = 1;
+  final MedicineApi _api = MedicineApi();
   final List<MedicineItem> _items = [];
+  bool _loading = true;
+  String _errorMessage = '';
 
   @override
   void initState() {
     super.initState();
+    _loadMedicines();
   }
 
-  void _syncStore() {}
+  Future<void> _loadMedicines() async {
+    setState(() {
+      _loading = true;
+      _errorMessage = '';
+    });
+
+    try {
+      final items = await _api.fetchProfileMedicineList(
+        profileId: _profileId,
+      );
+      if (!mounted) return;
+      setState(() {
+        _items
+          ..clear()
+          ..addAll(items);
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = e.toString();
+      });
+    } finally {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+      });
+    }
+  }
 
   ImageProvider? _buildMedicineImage(String path) {
     if (path.isEmpty) return null;
@@ -36,21 +69,18 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
-          builder: (_) => const CreateNameMedicinePage(profileId: 1)),
+          builder: (_) => const CreateNameMedicinePage(profileId: _profileId)),
     );
 
     if (!mounted) return;
     if (result is MedicineItem) {
-      setState(() {
-        _items.add(result);
-      });
-      _syncStore();
+      await _loadMedicines();
     }
   }
 
   void _editMedicine(int index) {
     final current = _items[index];
-    final controller = TextEditingController(text: current.displayName);
+    final controller = TextEditingController(text: current.nickname_medi);
     String tempImagePath = current.imagePath;
 
     showDialog(
@@ -117,11 +147,10 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
 
                     setState(() {
                       _items[index] = current.copyWith(
-                        displayName: newName,
+                        nickname_medi: newName,
                         imagePath: tempImagePath,
                       );
                     });
-                    _syncStore();
                     Navigator.pop(context);
                   },
                   child: const Text('??????'),
@@ -159,9 +188,9 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
                   ),
                 ),
               const SizedBox(height: 12),
-              Text('ชื่อยาที่ตั้ง: ${item.displayName}'),
-              if (item.selectedName.isNotEmpty)
-                Text('ชื่อรายการยาที่เลือก: ${item.selectedName}'),
+              Text('ชื่อยาที่ตั้ง: ${item.nickname_medi}'),
+              if (item.officialName_medi.isNotEmpty)
+                Text('ชื่อรายการยาที่เลือก: ${item.officialName_medi}'),
             ],
           ),
           actions: [
@@ -193,7 +222,6 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
                 setState(() {
                   _items.removeAt(index);
                 });
-                _syncStore();
               },
               child: const Text(
                 'ลบ',
@@ -252,15 +280,15 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    item.displayName,
+                    item.nickname_medi,
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  if (item.selectedName.isNotEmpty)
+                  if (item.officialName_medi.isNotEmpty)
                     Text(
-                      item.selectedName,
+                      item.officialName_medi,
                       style: const TextStyle(
                         fontSize: 12,
                         color: Color(0xFF5E6C84),
@@ -399,18 +427,31 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
                                     ),
                                   ],
                                 ),
-                                child: _items.isEmpty
+                                child: _loading
                                     ? const Center(
-                                        child: Text(
-                                          'ยังไม่มีรายการยา',
-                                          style: TextStyle(
-                                              color: Color(0xFF8893A0)),
-                                        ),
+                                        child: CircularProgressIndicator(),
                                       )
-                                    : ListView.builder(
-                                        itemCount: _items.length,
-                                        itemBuilder: _buildMedicineCard,
-                                      ),
+                                    : _errorMessage.isNotEmpty
+                                        ? Center(
+                                            child: Text(
+                                              _errorMessage,
+                                              textAlign: TextAlign.center,
+                                              style: const TextStyle(
+                                                  color: Color(0xFF8893A0)),
+                                            ),
+                                          )
+                                        : _items.isEmpty
+                                            ? const Center(
+                                                child: Text(
+                                                  'ยังไม่มีรายการยา',
+                                                  style: TextStyle(
+                                                      color: Color(0xFF8893A0)),
+                                                ),
+                                              )
+                                            : ListView.builder(
+                                                itemCount: _items.length,
+                                                itemBuilder: _buildMedicineCard,
+                                              ),
                               ),
                             ),
                             SizedBox(height: maxWidth * 0.05),

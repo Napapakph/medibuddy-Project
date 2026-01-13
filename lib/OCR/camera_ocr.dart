@@ -308,7 +308,7 @@ class _CameraOcrPageState extends State<CameraOcrPage> {
 
       // 3) ไปหน้า result
       _log('✅📸 Navigator.push -> OcrResultPage');
-      await Navigator.push(
+      final result = await Navigator.push(
         context,
         MaterialPageRoute(
           builder: (_) => OcrResultPage(
@@ -317,6 +317,11 @@ class _CameraOcrPageState extends State<CameraOcrPage> {
           ),
         ),
       );
+      if (result is String && result.trim().isNotEmpty) {
+        if (!mounted) return;
+        Navigator.pop(context, result.trim());
+        return;
+      }
       _log('✅📸 Navigator.push returned (back from result page)');
     } catch (e) {
       _log('processImage exception: $e');

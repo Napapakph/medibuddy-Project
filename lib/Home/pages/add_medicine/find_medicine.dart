@@ -7,10 +7,12 @@ import '../../../OCR/camera_ocr.dart'; // ✅ เพิ่ม
 
 class FindMedicinePage extends StatefulWidget {
   final MedicineDraft draft;
+  final int profileId;
 
   const FindMedicinePage({
     super.key,
     required this.draft,
+    required this.profileId,
   });
 
   @override
@@ -34,8 +36,9 @@ class _FindMedicinePageState extends State<FindMedicinePage> {
       context,
       MaterialPageRoute(
         builder: (_) => AddMedicinePage(
+          profileId: widget.profileId,
           draft: widget.draft.copyWith(
-            selectedName: keyword,
+            searchQuery_medi: keyword,
           ),
         ),
       ),

@@ -5,7 +5,6 @@ import 'package:image_picker/image_picker.dart';
 
 import 'package:medibuddy/Model/medicine_model.dart';
 import 'package:medibuddy/widgets/medicine_step_timeline.dart';
-import 'package:medibuddy/services/medicine_api.dart';
 
 import 'find_medicine.dart';
 
@@ -54,7 +53,7 @@ class _CreateNameMedicinePageState extends State<CreateNameMedicinePage> {
 
     // step 1: draft
     final draft = MedicineDraft(
-      displayName: name,
+      nickname_medi: name,
       imagePath: _imagePath,
     );
 
@@ -62,55 +61,23 @@ class _CreateNameMedicinePageState extends State<CreateNameMedicinePage> {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => FindMedicinePage(draft: draft),
+        builder: (_) => FindMedicinePage(
+          draft: draft,
+          profileId: widget.profileId,
+        ),
       ),
     );
 
     if (!mounted) return;
     if (result is! MedicineItem) return;
 
-    setState(() => _saving = true);
-
     // step 3: เตรียม local item (สำเร็จในแอพเสมอ)
     final MedicineItem localItem = result.copyWith(
-      displayName: name,
+      nickname_medi: name,
       imagePath: _imagePath,
     );
 
-    try {
-      // step 4: พยายามบันทึกลง backend
-      final api = MedicineApi();
-
-      await api.addMedicineToProfile(
-        profileId: widget.profileId,
-        medId: result.mediId, // ใช้ getter ที่ parse int แล้ว
-        mediNickname: name,
-        pictureFile: _imagePath.isEmpty ? null : File(_imagePath),
-      );
-
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('บันทึกลงระบบสำเร็จ')),
-      );
-
-      Navigator.pop(context, localItem);
-    } catch (e) {
-      // ❗ backend ล้มเหลว → ยังถือว่าสำเร็จในแอพ
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('บันทึกแบบชั่วคราว (ยังไม่ sync): $e'),
-          duration: const Duration(seconds: 3),
-        ),
-      );
-
-      Navigator.pop(context, localItem);
-    } finally {
-      if (!mounted) return;
-      setState(() => _saving = false);
-    }
+    Navigator.pop(context, localItem);
   }
 
   @override

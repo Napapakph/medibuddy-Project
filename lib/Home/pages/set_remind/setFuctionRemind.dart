@@ -236,7 +236,7 @@ Widget type_frequency({
                     .map(
                       (item) => DropdownMenuItem(
                         value: item,
-                        child: Text(item.displayName),
+                        child: Text(item.nickname_medi),
                       ),
                     )
                     .toList(),
@@ -515,7 +515,7 @@ Widget detail_time({
   required void Function(int, ReminderDose) onDoseChanged,
 }) {
   final avatarImage = buildMedicineImage(selectedMedicine?.imagePath ?? '');
-  final medicineName = selectedMedicine?.displayName ?? 'ยังไม่เลือกยา';
+  final medicineName = selectedMedicine?.nickname_medi ?? 'ยังไม่เลือกยา';
   final enabledTimes = frequencyMode == FrequencyMode.timesPerDay;
   final timeLabel = frequencyMode == FrequencyMode.timesPerDay
       ? '$timesPerDay ครั้งต่อวัน'
@@ -747,7 +747,7 @@ Widget summary_rejimen({
   required List<ReminderDose> doses,
 }) {
   final avatarImage = buildMedicineImage(selectedMedicine?.imagePath ?? '');
-  final medicineName = selectedMedicine?.displayName ?? 'ยังไม่เลือกยา';
+  final medicineName = selectedMedicine?.nickname_medi ?? 'ยังไม่เลือกยา';
   final frequencyLabel = frequencyMode == FrequencyMode.timesPerDay
       ? '$timesPerDay ครั้งต่อวัน'
       : 'ทุก $everyHours ชั่วโมง';

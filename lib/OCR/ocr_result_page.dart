@@ -2,13 +2,17 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import '../widgets/medicine_step_timeline.dart';
+import '../Model/medicine_model.dart';
 
 // หน้าจอแสดงข้อความ "สแกนสำเร็จ!" สั้น ๆ ก่อนเด้งไปหน้าแก้ไขผลลัพธ์
 class OcrSuccessPage extends StatefulWidget {
+  final MedicineDraft draft;
+
   const OcrSuccessPage({
     super.key,
     required this.imageFile,
     required this.recognizedText,
+    required this.draft,
   });
 
   final File imageFile;
@@ -213,7 +217,9 @@ class _OcrResultPageState extends State<OcrResultPage> {
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
                   onPressed: () {
-                    // hook search here later
+                    final text = _controller.text.trim();
+                    if (text.isEmpty) return;
+                    Navigator.of(context).pop(text);
                   },
                   icon: const Icon(Icons.search, color: Colors.white),
                   label: const Text(

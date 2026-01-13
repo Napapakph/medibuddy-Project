@@ -89,8 +89,8 @@ class _RemindListScreenState extends State<RemindListScreen> {
 
   bool _sameMedicine(MedicineItem a, MedicineItem b) {
     return a.id == b.id &&
-        a.displayName == b.displayName &&
-        a.selectedName == b.selectedName &&
+        a.nickname_medi == b.nickname_medi &&
+        a.officialName_medi == b.officialName_medi &&
         a.imagePath == b.imagePath;
   }
 
@@ -239,7 +239,7 @@ class _RemindListScreenState extends State<RemindListScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      plan.medicine.displayName,
+                      plan.medicine.nickname_medi,
                       style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
@@ -358,7 +358,7 @@ class _RemindListScreenState extends State<RemindListScreen> {
                           .map(
                             (item) => DropdownMenuItem(
                               value: item,
-                              child: Text(item.displayName),
+                              child: Text(item.nickname_medi),
                             ),
                           )
                           .toList(),
