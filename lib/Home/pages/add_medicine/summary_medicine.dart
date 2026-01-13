@@ -47,12 +47,19 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
     final catalog = widget.draft.catalogItem;
     if (catalog == null || catalog.mediId == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('?????????????????????')),
+        const SnackBar(content: Text('ยาไม่ถูกต้อง ไม่สามารถบันทึกได้')),
       );
+
       return;
     }
 
     setState(() => _saving = true);
+// Debugging output ----------------------------------------------------------
+    debugPrint(
+        '================= check ProfileID & MedicineID  ==================');
+    debugPrint('Profile ID: ${widget.profileId}');
+    debugPrint('Medicine ID: ${catalog?.mediId}');
+// ---------------------------------------------------------------------------
 
     final officialName = _resolveOfficialName(catalog);
     final nickname = _resolveNickname(officialName);
@@ -79,14 +86,15 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('???????????????????????')),
+        const SnackBar(content: Text('บันทึกยาสำเร็จ')),
       );
+
       Navigator.pop(context, localItem);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('???????????????: $e'),
+          content: Text('บันทึกยาลง Database ไม่สำเร็จ: $e'),
           duration: const Duration(seconds: 3),
         ),
       );

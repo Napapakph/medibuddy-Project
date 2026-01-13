@@ -48,6 +48,7 @@ class AuthenLoginEmail {
     );
 
     final token = res.session?.accessToken;
+
     if (token == null) {
       throw Exception('Login success but no session token');
     }

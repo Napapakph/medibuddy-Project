@@ -37,11 +37,6 @@ class _SelectProfileState extends State<SelectProfile> {
     final token = supabase.auth.currentSession?.accessToken;
     if (token != null && token.isNotEmpty) return token;
 
-    // fallback เผื่อบางเคส session ยังไม่ sync (ส่วนมากไม่จำเป็น แต่กันไว้)
-    final session = supabase.auth.currentSession;
-    final token2 = session?.accessToken;
-    if (token2 != null && token2.isNotEmpty) return token2;
-
     return null;
   }
 
@@ -58,14 +53,7 @@ class _SelectProfileState extends State<SelectProfile> {
           const SnackBar(content: Text('ไม่พบการเข้าสู่ระบบ กรุณา Login ใหม่')),
         );
 
-        // ทางเลือก 1: เด้งกลับหน้าก่อนหน้า
         Navigator.of(context).pop();
-
-        // ทางเลือก 2 (แนะนำถ้ามีหน้า Login): ไปหน้า Login แบบแทนที่
-        // Navigator.pushReplacement(
-        //   context,
-        //   MaterialPageRoute(builder: (_) => const LoginScreen()),
-        // );
 
         return;
       }
@@ -259,14 +247,17 @@ class _SelectProfileState extends State<SelectProfile> {
                   child: ElevatedButton(
                     onPressed: canConfirm
                         ? () {
-                            Navigator.pushReplacement(
+                            Navigator.pushNamed(
                               context,
-                              MaterialPageRoute(
-                                builder: (context) => Home(
-                                  selectedProfile: selectedProfile,
-                                ),
-                              ),
+                              '/home',
+                              arguments: {
+                                'profileId': selectedProfile!.profileId
+                              },
                             );
+                            debugPrint(
+                                '================= check select ProfileID ==================');
+                            debugPrint(
+                                'Selected Profile ID: ${selectedProfile!.profileId}');
                           }
                         : null,
                     style: ElevatedButton.styleFrom(

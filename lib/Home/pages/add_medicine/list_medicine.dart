@@ -12,7 +12,12 @@ import '../home.dart';
 import '../set_remind/setRemind_screen.dart';
 
 class ListMedicinePage extends StatefulWidget {
-  const ListMedicinePage({super.key});
+  final int profileId;
+
+  const ListMedicinePage({
+    super.key,
+    required this.profileId,
+  });
 
   @override
   State<ListMedicinePage> createState() => _ListMedicinePageState();
@@ -108,84 +113,9 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
     final controller = TextEditingController(text: current.nickname_medi);
     String tempImagePath = current.imagePath;
 
-    showDialog(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            final image = _buildMedicineImage(tempImagePath);
-
-            return AlertDialog(
-              title: const Text('???????'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  GestureDetector(
-                    onTap: () async {
-                      final picker = ImagePicker();
-                      final img =
-                          await picker.pickImage(source: ImageSource.gallery);
-                      if (img == null) return;
-                      setDialogState(() {
-                        tempImagePath = img.path;
-                      });
-                    },
-                    child: Container(
-                      width: 120,
-                      height: 120,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF2F4F8),
-                        borderRadius: BorderRadius.circular(16),
-                        image: image != null
-                            ? DecorationImage(image: image, fit: BoxFit.cover)
-                            : null,
-                      ),
-                      child: image == null
-                          ? const Icon(Icons.photo, color: Color(0xFF9AA7B8))
-                          : null,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: controller,
-                    decoration: InputDecoration(
-                      hintText: '??????',
-                      filled: true,
-                      fillColor: const Color(0xFFF2F4F8),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('??????'),
-                ),
-                TextButton(
-                  onPressed: () {
-                    final newName = controller.text.trim();
-                    if (newName.isEmpty) return;
-
-                    setState(() {
-                      _items[index] = current.copyWith(
-                        nickname_medi: newName,
-                        imagePath: tempImagePath,
-                      );
-                    });
-                    Navigator.pop(context);
-                  },
-                  child: const Text('??????'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
+    /* 
+    
+    */
   }
 
   void _showDetails(MedicineItem item) {

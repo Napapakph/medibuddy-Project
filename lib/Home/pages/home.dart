@@ -56,7 +56,7 @@ class _Home extends State<Home> {
 
   ImageProvider _buildProfileImage(String path) {
     if (path.isEmpty) {
-      return const AssetImage('assets/images/default_profile.png');
+      return const AssetImage('assets/images/cat_profile.png');
     }
 
     if (path.startsWith('/')) {
@@ -224,10 +224,18 @@ class _Home extends State<Home> {
           ),
           IconButton(
             onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const ListMedicinePage()),
-              );
+              final selectedProfile = widget.selectedProfile;
+              if (selectedProfile != null) {
+                Navigator.pushNamed(
+                  context,
+                  '/list_medicine',
+                  arguments: {'profileId': selectedProfile!.profileId},
+                );
+                debugPrint(
+                    '================= check select ProfileID ==================');
+                debugPrint(
+                    'Selected Profile ID: ${selectedProfile!.profileId}');
+              }
             },
             icon: const Icon(Icons.medication, color: Color(0xFFB7DAFF)),
           ),

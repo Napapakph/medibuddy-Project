@@ -212,12 +212,17 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
                       itemBuilder: (context, index) {
                         final item = filtered[index];
                         final isSelected = _selectedItem?.mediId == item.mediId;
+
                         final imageUrl = item.imageUrl.trim();
 
                         return GestureDetector(
                           onTap: () {
                             setState(() {
                               _selectedItem = item;
+                              debugPrint(
+                                  '================= check Medi ID  ==================');
+                              debugPrint(
+                                  'Medi ID: ${item.mediId}, Name: ${item.displayOfficialName}');
                             });
                           },
                           child: Container(

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart ';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -81,7 +81,11 @@ class MyApp extends StatelessWidget {
           case '/library_profile':
             return MaterialPageRoute(builder: (_) => const LibraryProfile());
           case '/list_medicine':
-            return MaterialPageRoute(builder: (_) => const ListMedicinePage());
+            final profileId = settings.arguments as int;
+            return MaterialPageRoute(
+              builder: (_) => ListMedicinePage(profileId: profileId),
+            );
+
           case '/history':
             return MaterialPageRoute(builder: (_) => const HistoryPage());
           case '/camera_ocr':
