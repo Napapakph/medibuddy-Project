@@ -47,7 +47,63 @@ class _Home extends State<Home> {
       pills: '1 เม็ด',
     ),
   ];
+  String? _profileName; // ✅ PROFILE_BIND: resolved name
+  String? _profileImagePath; // ✅ PROFILE_BIND: resolved image path
+  bool _profileBound = false; // ⚠️ GUARD: bind once
+  int? _profileId; // ✅ PROFILE_ID: resolved from route args/selectedProfile
   bool _isLoading = false; // สถานะการโหลด
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_profileBound) return; // ⚠️ GUARD: bind once
+
+    final routeArgs =
+        ModalRoute.of(context)?.settings.arguments; // ✅ PROFILE_BIND
+
+    int? resolvedProfileId;
+    String? resolvedProfileName;
+    String? resolvedProfileImagePath;
+
+    if (routeArgs is Map) {
+      final rawId = routeArgs['profileId'];
+      if (rawId is int) {
+        resolvedProfileId = rawId;
+      } else if (rawId != null) {
+        resolvedProfileId = int.tryParse(rawId.toString());
+      }
+
+      final rawName = routeArgs['profileName'] ?? routeArgs['username'];
+      resolvedProfileName = rawName?.toString();
+
+      final rawImage = routeArgs['profileImage'] ?? routeArgs['imagePath'];
+      resolvedProfileImagePath = rawImage?.toString();
+    } else if (routeArgs is int) {
+      resolvedProfileId = routeArgs;
+    }
+
+    resolvedProfileId ??= widget.selectedProfile?.profileId;
+    resolvedProfileName ??= widget.selectedProfile?.username;
+    resolvedProfileImagePath ??= widget.selectedProfile?.imagePath;
+
+    setState(() {
+      // 🔥 FIX: trigger UI rebuild after binding
+      _profileId = resolvedProfileId; // ✅ PROFILE_ID
+      _profileName =
+          (resolvedProfileName != null && resolvedProfileName.trim().isNotEmpty)
+              ? resolvedProfileName.trim()
+              : 'Profile'; // ✅ PROFILE_BIND
+      _profileImagePath =
+          (resolvedProfileImagePath ?? '').trim(); // ✅ PROFILE_BIND
+      _profileBound = true; // ⚠️ GUARD
+    });
+
+    debugPrint(
+        '🏠 HOME bound profileId=$_profileId name="$_profileName" image="$_profileImagePath"');
+    debugPrint(
+        '🧪 HOME routeArgs = ${ModalRoute.of(context)?.settings.arguments} '
+        '(type=${ModalRoute.of(context)?.settings.arguments.runtimeType})');
+  }
 
   @override
   void dispose() {
@@ -55,19 +111,27 @@ class _Home extends State<Home> {
   }
 
   ImageProvider _buildProfileImage(String path) {
-    if (path.isEmpty) {
-      return const AssetImage('assets/images/cat_profile.png');
+    final p = path.trim(); // 🔥 FIX: trim
+
+    if (p.isEmpty || p.toLowerCase() == 'null') {
+      return const AssetImage('assets/cat_profile.png');
     }
 
-    if (path.startsWith('/')) {
-      return NetworkImage('$_imageBaseUrl$path');
+    if (p.startsWith('http://') || p.startsWith('https://')) {
+      return NetworkImage(p);
     }
 
-    if (path.startsWith('http')) {
-      return NetworkImage(path);
+    // ✅ FIX: server-relative "/uploads/..."
+    if (p.startsWith('/')) {
+      return NetworkImage('$_imageBaseUrl$p');
     }
 
-    return FileImage(File(path));
+    // ✅ FIX: relative "uploads/..." -> treat as network
+    if (p.contains('/')) {
+      return NetworkImage('$_imageBaseUrl/$p');
+    }
+
+    return FileImage(File(p));
   }
 
   void _toggleReminder(int index) {
@@ -224,17 +288,17 @@ class _Home extends State<Home> {
           ),
           IconButton(
             onPressed: () {
-              final selectedProfile = widget.selectedProfile;
-              if (selectedProfile != null) {
+              final profileId = _profileId ?? // ✅ PROFILE_ID: use resolved id
+                  widget.selectedProfile?.profileId;
+              if (profileId != null) {
                 Navigator.pushNamed(
                   context,
                   '/list_medicine',
-                  arguments: {'profileId': selectedProfile!.profileId},
+                  arguments: {'profileId': profileId}, // ✅ PROFILE_ID: pass
                 );
                 debugPrint(
                     '================= check select ProfileID ==================');
-                debugPrint(
-                    'Selected Profile ID: ${selectedProfile!.profileId}');
+                debugPrint('Selected Profile ID: $profileId');
               }
             },
             icon: const Icon(Icons.medication, color: Color(0xFFB7DAFF)),
@@ -285,9 +349,10 @@ class _Home extends State<Home> {
             final buddhistYear = now.year + 543;
             final dayMonth = DateFormat('d MMMM').format(now);
             final thaiBuddhistDate = '$dayMonth $buddhistYear';
-            final profile = widget.selectedProfile;
-            final profileImage = _buildProfileImage(profile?.imagePath ?? '');
-            final profileName = profile?.username ?? 'Profile';
+            final profileImage = _buildProfileImage(
+                _profileImagePath ?? ''); // ✅ PROFILE_BIND: image
+            final profileName =
+                _profileName ?? 'Profile'; // ✅ PROFILE_BIND: name
 
             return Align(
               child: Column(

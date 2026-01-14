@@ -24,7 +24,6 @@ class ListMedicinePage extends StatefulWidget {
 }
 
 class _ListMedicinePageState extends State<ListMedicinePage> {
-  static const int _profileId = 1;
   final MedicineApi _api = MedicineApi();
   final List<MedicineItem> _items = [];
   bool _loading = true;
@@ -44,7 +43,7 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
 
     try {
       final items = await _api.fetchProfileMedicineList(
-        profileId: _profileId,
+        profileId: widget.profileId, // ✅ PROFILE_ID: use passed profileId
       );
       if (!mounted) return;
       setState(() {
@@ -95,7 +94,9 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
-          builder: (_) => const CreateNameMedicinePage(profileId: _profileId)),
+          builder: (_) => CreateNameMedicinePage(
+                profileId: widget.profileId, // ✅ PROFILE_ID: pass through
+              )),
     );
 
     if (!mounted) return;
@@ -231,27 +232,36 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    item.nickname_medi,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
+                child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'ชื่อยา',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.w500,
                   ),
-                  if (item.officialName_medi.isNotEmpty)
-                    Text(
-                      item.officialName_medi,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF5E6C84),
-                      ),
-                    ),
-                ],
-              ),
-            ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  item.nickname_medi,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF1F497D), // สีหลัก
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'กดเพื่อดูรายการแจ้งเตือนการรับประทานยา',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[500],
+                  ),
+                ),
+              ],
+            )),
             Column(
               children: [
                 IconButton(

@@ -240,11 +240,6 @@ lib/
 - ถูกใช้งานโดย: `lib/Home/pages/library_profile.dart`, `lib/Home/pages/profile_screen.dart`, `lib/Home/pages/select_profile.dart`
 - เรียก/ใช้งานต่อ: อ่าน `API_BASE_URL` จาก `.env`, ใช้ `Dio` ส่ง multipart/form-data ไป backend
 
-#### lib/services/mock_auth_service.dart
-- Imports (ภายในโปรเจกต์): ไม่มี
-- คลาส/ฟังก์ชันหลัก: `MockAuthService`
-- ถูกใช้งานโดย: ไม่มี (ถูกคอมเมนต์ใน `lib/pages/login.dart`)
-
 #### lib/OCR/camera_ocr.dart
 - Imports (ภายในโปรเจกต์): `lib/OCR/ocr_camera_frame.dart`, `lib/OCR/ocr_image_cropper.dart`, `lib/OCR/ocr_result_page.dart`, `lib/OCR/ocr_text_service.dart`
 - คลาส/ฟังก์ชันหลัก: `CameraOcrPage`, `_CameraOcrPageState`

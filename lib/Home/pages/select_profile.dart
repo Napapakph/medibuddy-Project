@@ -251,7 +251,11 @@ class _SelectProfileState extends State<SelectProfile> {
                               context,
                               '/home',
                               arguments: {
-                                'profileId': selectedProfile!.profileId
+                                'profileId':
+                                    selectedProfile!.profileId, // ✅ PROFILE_ID: pass
+                                'profileName': selectedProfile!.username, // ✅ PROFILE_BIND: name
+                                'profileImage':
+                                    selectedProfile!.imagePath, // ✅ PROFILE_BIND: image
                               },
                             );
                             debugPrint(

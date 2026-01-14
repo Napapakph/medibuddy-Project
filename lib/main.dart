@@ -75,15 +75,31 @@ class MyApp extends StatelessWidget {
           case '/select_profile':
             return MaterialPageRoute(builder: (_) => const SelectProfile());
           case '/home':
-            return MaterialPageRoute(builder: (_) => const Home());
+            return MaterialPageRoute(
+              settings: settings, // 🔥 FIX: keep arguments
+              builder: (_) => const Home(),
+            );
+
           case '/forget_password':
             return MaterialPageRoute(builder: (_) => const ForgetPassword());
           case '/library_profile':
             return MaterialPageRoute(builder: (_) => const LibraryProfile());
           case '/list_medicine':
-            final profileId = settings.arguments as int;
+            final args = settings.arguments; // ✅ PROFILE_ID: accept Map or int
+            int profileId = 0; // ⚠️ NOTE: default when args missing
+            if (args is Map) {
+              final raw = args['profileId'];
+              if (raw is int) {
+                profileId = raw;
+              } else if (raw != null) {
+                profileId = int.tryParse(raw.toString()) ?? 0;
+              }
+            } else if (args is int) {
+              profileId = args;
+            }
             return MaterialPageRoute(
-              builder: (_) => ListMedicinePage(profileId: profileId),
+              builder: (_) =>
+                  ListMedicinePage(profileId: profileId), // ✅ PROFILE_ID: pass
             );
 
           case '/history':
