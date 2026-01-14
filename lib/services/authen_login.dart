@@ -29,7 +29,6 @@ class LoginWithGoogle {
       OAuthProvider.google,
       redirectTo: 'com.example.medibuddy://login-callback',
       queryParams: {'prompt': 'select_account'},
-      
     );
   }
 

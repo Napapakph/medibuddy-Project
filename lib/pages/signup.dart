@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'otp.dart';
-import '../API/authen_login.dart';
+import '../services/authen_login.dart';
 import '../services/sync_user.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 

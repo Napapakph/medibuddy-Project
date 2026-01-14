@@ -11,7 +11,7 @@ import 'pages/signup.dart';
 import 'pages/forget_password.dart';
 import 'Home/pages/profile_screen.dart';
 import 'Home/pages/select_profile.dart';
-import 'API/auth_gate.dart';
+import 'services/auth_gate.dart';
 import 'Home/pages/home.dart';
 import 'Home/pages/library_profile.dart';
 import 'Home/pages/add_medicine/list_medicine.dart';
