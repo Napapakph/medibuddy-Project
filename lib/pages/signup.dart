@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
-//import 'package:flutter/rendering.dart';
 import 'otp.dart';
 import '../API/authen_login.dart';
+import '../services/sync_user.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+final supabase = Supabase.instance.client;
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -18,6 +21,7 @@ class _SignupScreenState extends State<SignupScreen> {
   final _authAPI = AuthenSignUpEmail(); // ใช้ class จากไฟล์ API
   bool _obscurePassword = true; //ดู password
   bool _obscureConfirmPassword = true;
+  bool _isGoogleLoading = false;
 
   bool _isLoading = false; // สถานะการโหลด
 
@@ -28,6 +32,9 @@ class _SignupScreenState extends State<SignupScreen> {
     _confirmPasswordCtrl.dispose();
     super.dispose();
   }
+
+  final LoginWithGoogle _googleAuth = LoginWithGoogle();
+//---------------- Login with Google Sign in-------------------------------------
 
   Future<void> _handleSignup() async {
     if (!_formKey.currentState!.validate()) {
@@ -86,6 +93,29 @@ class _SignupScreenState extends State<SignupScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(error)),
     );
+  }
+
+  //---------------- Login with Google Sign in-------------------------------------
+  Future<void> _handleGoogleLogin() async {
+    if (_isGoogleLoading) return;
+    setState(() => _isGoogleLoading = true);
+
+    try {
+      await _googleAuth.signInWithGoogle();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Google Login ไม่สำเร็จ: $e')),
+      );
+    } finally {
+      if (!mounted) return;
+      setState(() => _isGoogleLoading = false);
+    }
+    final _sub = supabase.auth.onAuthStateChange.listen((data) async {
+      if (data.event == AuthChangeEvent.signedIn) {
+        await SyncUserService().syncUser(allowMerge: true);
+      }
+    });
   }
 
   String? validatePassword(String password) {
@@ -301,6 +331,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                 ),
                                 SizedBox(height: maxHeight * 0.02),
 
+                                // ปุ่มลงทะเบียน
                                 SizedBox(
                                   width: double.infinity,
                                   child: ElevatedButton(
@@ -320,6 +351,36 @@ class _SignupScreenState extends State<SignupScreen> {
                                         color: Colors.white,
                                         fontSize: 16,
                                       ),
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(height: maxHeight * 0.02),
+
+                                // ปุ่ม "เข้าสู่ระบบด้วย Google"
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: OutlinedButton(
+                                    onPressed: () {
+                                      _handleGoogleLogin();
+                                    },
+                                    style: OutlinedButton.styleFrom(
+                                      padding: EdgeInsets.symmetric(
+                                          vertical: maxHeight * 0.02),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(24),
+                                      ),
+                                    ),
+                                    child: const Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Icon(Icons.g_mobiledata, size: 32),
+                                        SizedBox(width: 8),
+                                        Text(
+                                          'เข้าสู่ระบบด้วย Google',
+                                          style: TextStyle(fontSize: 16),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ),

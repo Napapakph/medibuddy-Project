@@ -6,6 +6,7 @@ import 'forget_password.dart';
 import '../Home/pages/profile_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:async';
+import '../services/sync_user.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -59,6 +60,10 @@ class _LoginScreenState extends State<LoginScreen> {
         SnackBar(content: Text('อีเมลหรือรหัสผ่านไม่ถูกต้อง')),
       );
     }
+    debugPrint(
+        '-----Supabase Authenticated ------: ${supabase.auth.currentUser}');
+    debugPrint(
+        '-----Supabase Token ------: ${supabase.auth.currentSession?.accessToken}');
   }
 
 //---------------- Login with Username/Password----------------------------------
@@ -79,6 +84,11 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
       setState(() => _isGoogleLoading = false);
     }
+    final _sub = supabase.auth.onAuthStateChange.listen((data) async {
+      if (data.event == AuthChangeEvent.signedIn) {
+        await SyncUserService().syncUser(allowMerge: true);
+      }
+    });
   }
 
   void _restorePreviousEmail() {
