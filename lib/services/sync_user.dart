@@ -37,11 +37,6 @@ class SyncUserService {
         user.identities?.any((i) => i.provider == 'google') ?? false;
     final provider = isGoogle ? 'google' : 'email';
 
-    debugPrint('🧩 appMetadata=${user.appMetadata}');
-    debugPrint(
-        '🧩 identities=${user.identities?.map((e) => e.provider).toList()}');
-    debugPrint('✅ resolved provider=$provider');
-
     final uri = Uri.parse('$baseUrl/api/mobile/v1/auth/sync-user');
     final body = jsonEncode({
       'supabaseUserId': supabaseUserId,
