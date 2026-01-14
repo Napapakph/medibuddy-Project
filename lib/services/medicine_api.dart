@@ -266,6 +266,7 @@ class MedicineApi {
     return items.whereType<Map<String, dynamic>>().map((item) {
       final mediId =
           _readInt(item['mediId'] ?? item['medId'] ?? item['medicineId']);
+      final mediListId = _readInt(item['mediListId'] ?? item['id']);
 
       final id = _readString(item['id']);
       final nickname = _readString(
@@ -295,11 +296,142 @@ class MedicineApi {
       );
 
       return MedicineItem(
+        mediListId: mediListId,
         id: id.isNotEmpty ? id : mediId.toString(),
         nickname_medi: nickname.isNotEmpty ? nickname : official,
         officialName_medi: official,
         imagePath: imagePath,
       );
     }).toList();
+  }
+
+  /// PATCH /api/mobile/v1/medicine-list/update
+  /// required: mediListId
+  /// optional: mediId, mediNickname, pictureFile
+  ///
+  /// ✅ ใช้ multipart/form-data เผื่อกรณีอัปเดตรูป
+  /// (ถ้า backend ของคุณรับเป็น json-only ให้บอกฉัน เดี๋ยวปรับเป็น JSON)
+  Future<Map<String, dynamic>> updateMedicineListItem({
+    required int mediListId,
+    int? mediId,
+    String? mediNickname,
+    File? pictureFile,
+  }) async {
+    if (_baseUrl.isEmpty) {
+      throw Exception('API_BASE_URL is empty. Check your .env');
+    }
+
+    final accessToken = await _getAccessToken();
+
+    final formMap = <String, dynamic>{
+      'mediListId': mediListId,
+      if (mediId != null) 'mediId': mediId,
+      if (mediNickname != null && mediNickname.trim().isNotEmpty)
+        'mediNickname': mediNickname.trim(),
+    };
+
+    if (pictureFile != null) {
+      final mimeType = lookupMimeType(pictureFile.path) ?? 'image/jpeg';
+      const allowed = {'image/jpeg', 'image/png', 'image/webp'};
+      if (!allowed.contains(mimeType)) {
+        throw Exception('รองรับเฉพาะ jpg, jpeg, png, webp');
+      }
+
+      // ✅ ใช้ field "picture" ให้เหมือน create
+      formMap['picture'] = await dio.MultipartFile.fromFile(
+        pictureFile.path,
+        filename: p.basename(pictureFile.path),
+        contentType: MediaType.parse(mimeType),
+      );
+    }
+
+    final formData = dio.FormData.fromMap(formMap);
+
+    try {
+      final url = '$_baseUrl/api/mobile/v1/medicine-list/update';
+
+      debugPrint('✏️ UPDATE(MED) -> $url');
+      debugPrint('🔑 TOKEN -> ${accessToken.substring(0, 20)}...');
+      debugPrint('🧾 FIELDS -> mediListId=$mediListId '
+          'mediId=${mediId ?? "(no change)"} '
+          'mediNickname=${(mediNickname ?? "").trim().isEmpty ? "(no change)" : mediNickname!.trim()}');
+      debugPrint('🖼️ PICTURE -> ${pictureFile?.path ?? "(no change)"}');
+
+      final res = await _dio.patch(
+        url,
+        data: formData,
+        options: dio.Options(
+          contentType: 'multipart/form-data',
+          headers: {'Authorization': 'Bearer $accessToken'},
+          validateStatus: (_) => true,
+        ),
+      );
+
+      debugPrint('✅ STATUS=${res.statusCode}');
+      debugPrint('✅ DATA=${res.data}');
+
+      final status = res.statusCode ?? 0;
+      if (status < 200 || status >= 300) {
+        throw Exception('Update medicine failed: $status ${res.data}');
+      }
+
+      if (res.data is Map) {
+        return Map<String, dynamic>.from(res.data as Map);
+      }
+      return {'data': res.data};
+    } on dio.DioException catch (e) {
+      debugPrint('❌ DIO ERROR (UPDATE MEDICINE)');
+      debugPrint('type     = ${e.type}');
+      debugPrint('message  = ${e.message}');
+      debugPrint('status   = ${e.response?.statusCode}');
+      debugPrint('response = ${e.response?.data}');
+      rethrow;
+    }
+  }
+
+  /// DELETE /api/mobile/v1/medicine-list/delete
+  /// required: mediListId
+  ///
+  /// ⚠️ หลาย backend รับ mediListId ผ่าน query หรือ body
+  /// โค้ดนี้ส่งผ่าน queryParameters (ปลอดภัยสุดกับ DELETE)
+  Future<void> deleteMedicineListItem({
+    required int mediListId,
+  }) async {
+    if (_baseUrl.isEmpty) {
+      throw Exception('API_BASE_URL is empty. Check your .env');
+    }
+
+    final accessToken = await _getAccessToken();
+
+    try {
+      final url = '$_baseUrl/api/mobile/v1/medicine-list/delete';
+
+      debugPrint('🗑️ DELETE(MED) -> $url?mediListId=$mediListId');
+      debugPrint('🔑 TOKEN -> ${accessToken.substring(0, 20)}...');
+
+      final res = await _dio.delete(
+        url,
+        queryParameters: {'mediListId': mediListId},
+        options: dio.Options(
+          headers: {'Authorization': 'Bearer $accessToken'},
+          validateStatus: (_) => true,
+        ),
+      );
+
+      debugPrint('✅ STATUS=${res.statusCode}');
+      debugPrint('✅ DATA=${res.data}');
+
+      final status = res.statusCode ?? 0;
+      if (status < 200 || status >= 300) {
+        throw Exception('Delete medicine failed: $status ${res.data}');
+      }
+    } on dio.DioException catch (e) {
+      debugPrint('❌ DIO ERROR (DELETE MEDICINE)');
+      debugPrint('type     = ${e.type}');
+      debugPrint('message  = ${e.message}');
+      debugPrint('status   = ${e.response?.statusCode}');
+      debugPrint('response = ${e.response?.data}');
+      rethrow;
+    }
   }
 }

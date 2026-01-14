@@ -10,16 +10,14 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 class DeviceTokenService {
   DeviceTokenService({
+    required SupabaseClient supabase,
     FirebaseMessaging? messaging,
     DeviceInfoPlugin? deviceInfo,
-    SupabaseClient? supabase,
     http.Client? httpClient,
-  })  : _messaging = messaging ?? FirebaseMessaging.instance,
+  })  : _supabase = supabase,
+        _messaging = messaging ?? FirebaseMessaging.instance,
         _deviceInfo = deviceInfo ?? DeviceInfoPlugin(),
-        _supabase = supabase ?? Supabase.instance.client,
         _http = httpClient ?? http.Client();
-
-  static final DeviceTokenService instance = DeviceTokenService();
 
   final FirebaseMessaging _messaging;
   final DeviceInfoPlugin _deviceInfo;

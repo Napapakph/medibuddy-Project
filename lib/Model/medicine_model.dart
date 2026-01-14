@@ -99,9 +99,7 @@ class MedicineCatalogItem {
       ),
       precautions: _withFallback(
         _readString(
-          json['precautions'] ??
-              json['mediPrecaution'] ??
-              json['warning'],
+          json['precautions'] ?? json['mediPrecaution'] ?? json['warning'],
         ),
         '-',
       ),
@@ -115,9 +113,7 @@ class MedicineCatalogItem {
       ),
       storage: _withFallback(
         _readString(
-          json['storage'] ??
-              json['mediStorage'] ??
-              json['storageAdvice'],
+          json['storage'] ?? json['mediStorage'] ?? json['storageAdvice'],
         ),
         '-',
       ),
@@ -158,12 +154,14 @@ class MedicineDraft {
 }
 
 class MedicineItem {
+  final int mediListId;
   final String id;
   final String nickname_medi;
   final String officialName_medi;
   final String imagePath;
 
   const MedicineItem({
+    required this.mediListId,
     required this.id,
     required this.nickname_medi,
     required this.officialName_medi,
@@ -176,6 +174,7 @@ class MedicineItem {
     String? imagePath,
   }) {
     return MedicineItem(
+      mediListId: mediListId,
       id: id,
       nickname_medi: nickname_medi ?? this.nickname_medi,
       officialName_medi: officialName_medi ?? this.officialName_medi,

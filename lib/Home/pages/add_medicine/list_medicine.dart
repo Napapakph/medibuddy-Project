@@ -141,10 +141,27 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
     }
   }
 
-  void _editMedicine(int index) {
+  Future<void> _editMedicine(int index) async {
     final current = _items[index];
-    final controller = TextEditingController(text: current.nickname_medi);
-    String tempImagePath = current.imagePath;
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CreateNameMedicinePage(
+          profileId: widget.profileId,
+          isEditing: true,
+          initialItem: current,
+        ),
+      ),
+    );
+
+    if (!mounted) return;
+    if (result is MedicineItem) {
+      setState(() {
+        _items[index] = result;
+        _errorMessage = '';
+      });
+      await _loadMedicines();
+    }
   }
 
   void _showDetails(MedicineItem item) {
@@ -191,6 +208,31 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
     );
   }
 
+  Future<void> _deleteMedicine(int index) async {
+    final item = _items[index];
+    if (item.mediListId == 0) {
+      setState(() {
+        _items.removeAt(index);
+        _errorMessage = '';
+      });
+      return;
+    }
+
+    try {
+      await _api.deleteMedicineListItem(mediListId: item.mediListId);
+      if (!mounted) return;
+      setState(() {
+        _items.removeAt(index);
+        _errorMessage = '';
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('ลบรายการยาไม่สำเร็จ: $e')),
+      );
+    }
+  }
+
   void _confirmDelete(int index) {
     showDialog(
       context: context,
@@ -206,9 +248,7 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
             TextButton(
               onPressed: () {
                 Navigator.pop(context);
-                setState(() {
-                  _items.removeAt(index);
-                });
+                _deleteMedicine(index);
               },
               child: const Text(
                 'ลบ',

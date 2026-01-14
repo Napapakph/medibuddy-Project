@@ -5,16 +5,21 @@ import 'package:image_picker/image_picker.dart';
 
 import 'package:medibuddy/Model/medicine_model.dart';
 import 'package:medibuddy/widgets/medicine_step_timeline.dart';
+import 'package:medibuddy/services/medicine_api.dart';
 
 import 'find_medicine.dart';
 
 class CreateNameMedicinePage extends StatefulWidget {
   final int profileId;
+  final bool isEditing;
+  final MedicineItem? initialItem;
 
   const CreateNameMedicinePage({
     super.key,
     required this.profileId,
-  });
+    this.isEditing = false,
+    this.initialItem,
+  }) : assert(isEditing == false || initialItem != null);
 
   @override
   State<CreateNameMedicinePage> createState() => _CreateNameMedicinePageState();
@@ -27,9 +32,27 @@ class _CreateNameMedicinePageState extends State<CreateNameMedicinePage> {
   bool _saving = false;
 
   @override
+  void initState() {
+    super.initState();
+    final initial = widget.initialItem;
+    if (widget.isEditing && initial != null) {
+      _nameController.text = initial.nickname_medi;
+      _imagePath = initial.imagePath;
+    }
+  }
+
+  @override
   void dispose() {
     _nameController.dispose();
     super.dispose();
+  }
+
+  bool _isRemotePath(String path) {
+    final trimmed = path.trim();
+    return trimmed.startsWith('http://') ||
+        trimmed.startsWith('https://') ||
+        trimmed.startsWith('/uploads') ||
+        trimmed.startsWith('uploads/');
   }
 
   Future<void> _pickImage(ImageSource source) async {
@@ -48,6 +71,51 @@ class _CreateNameMedicinePageState extends State<CreateNameMedicinePage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('กรุณาตั้งชื่อยา')),
       );
+      return;
+    }
+
+    if (widget.isEditing) {
+      final current = widget.initialItem;
+      if (current == null) return;
+      setState(() => _saving = true);
+
+      File? localImage;
+      if (_imagePath.isNotEmpty && !_isRemotePath(_imagePath)) {
+        localImage = File(_imagePath);
+      }
+
+      try {
+        final api = MedicineApi();
+        final res = await api.updateMedicineListItem(
+          mediListId: current.mediListId,
+          mediNickname: name,
+          pictureFile: localImage,
+        );
+
+        final serverPath = (res['picture'] ??
+                res['data']?['imagePath'] ??
+                res['data']?['picture'])
+            ?.toString()
+            .trim();
+
+        final updated = current.copyWith(
+          nickname_medi: name,
+          imagePath: (serverPath != null && serverPath.isNotEmpty)
+              ? serverPath
+              : (_imagePath.isNotEmpty ? _imagePath : current.imagePath),
+        );
+
+        if (!mounted) return;
+        Navigator.pop(context, updated);
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('อัปเดตรายการยาไม่สำเร็จ: $e')),
+        );
+      } finally {
+        if (!mounted) return;
+        setState(() => _saving = false);
+      }
       return;
     }
 
@@ -82,13 +150,14 @@ class _CreateNameMedicinePageState extends State<CreateNameMedicinePage> {
 
   @override
   Widget build(BuildContext context) {
+    final pageTitle = widget.isEditing ? 'แก้ไขรายการยา' : 'เพิ่มรายการยา';
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color(0xFF1F497D),
         iconTheme: const IconThemeData(color: Colors.white),
-        title: const Text(
-          'เพิ่มยา',
-          style: TextStyle(color: Colors.white),
+        title: Text(
+          pageTitle,
+          style: const TextStyle(color: Colors.white),
         ),
       ),
       body: SafeArea(
@@ -149,12 +218,29 @@ class _CreateNameMedicinePageState extends State<CreateNameMedicinePage> {
                           if (_imagePath.isNotEmpty)
                             ClipRRect(
                               borderRadius: BorderRadius.circular(16),
-                              child: Image.file(
-                                File(_imagePath),
-                                width: double.infinity,
-                                height: double.infinity,
-                                fit: BoxFit.cover,
-                              ),
+                              child: _isRemotePath(_imagePath)
+                                  ? Image.network(
+                                      _imagePath,
+                                      width: double.infinity,
+                                      height: double.infinity,
+                                      fit: BoxFit.cover,
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
+                                        return const Center(
+                                          child: Icon(
+                                            Icons.photo,
+                                            size: 64,
+                                            color: Color(0xFF9AA7B8),
+                                          ),
+                                        );
+                                      },
+                                    )
+                                  : Image.file(
+                                      File(_imagePath),
+                                      width: double.infinity,
+                                      height: double.infinity,
+                                      fit: BoxFit.cover,
+                                    ),
                             )
                           else
                             const Center(

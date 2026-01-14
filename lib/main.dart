@@ -19,25 +19,37 @@ import 'Home/pages/history.dart';
 import 'OCR/camera_ocr.dart';
 import 'services/sync_user.dart';
 import 'dart:async';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 const bool kDisableAuthGate =
     true; // เปลี่ยนเป็น false เมื่อต้องการเปิดใช้งาน AuthGate
 
 late final StreamSubscription<AuthState> _authSub;
+final FlutterLocalNotificationsPlugin flnp = FlutterLocalNotificationsPlugin();
+
+const AndroidNotificationChannel channel = AndroidNotificationChannel(
+  'medibuddy_high', // id ต้องคงที่
+  'MediBuddy Notifications',
+  description: 'Foreground notifications',
+  importance: Importance.high,
+);
 
 Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
+  // ✅ INIT FIREBASE แค่ครั้งเดียว
+  await Firebase.initializeApp();
+
   debugPrint('🌿 API_BASE_URL from env = "${dotenv.env['API_BASE_URL']}"');
   print('ENV = ${dotenv.env}');
   print('BASE = ${dotenv.env['API_BASE_URL']}');
-  WidgetsFlutterBinding.ensureInitialized();
 
   final isAndroid = !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
   debugPrint('Firebase init: start (isAndroid=$isAndroid)');
   var firebaseReady = false;
   if (isAndroid) {
     try {
-      await Firebase.initializeApp();
       debugPrint('Firebase init: ok (apps=${Firebase.apps.length})');
       firebaseReady = true;
     } catch (e) {
@@ -47,6 +59,45 @@ Future<void> main() async {
     debugPrint('Firebase init: skipped (non-android)');
   }
 
+  if (isAndroid && firebaseReady) {
+    debugPrint('DeviceTokenService: init listener');
+    // ✅ เรียกเฉพาะ Android เท่านั้น
+    await _setupLocalNotifications();
+  } else {
+    debugPrint('DeviceTokenService: skip init listener');
+  }
+
+  // ✅ request permission
+  await FirebaseMessaging.instance.requestPermission();
+
+  // ✅ 3. LISTENER สำหรับ FOREGROUND (จุดสำคัญที่สุด)
+  FirebaseMessaging.onMessage.listen((RemoteMessage msg) async {
+    debugPrint('📩 FCM onMessage (foreground)');
+    debugPrint('📌 title=${msg.notification?.title}');
+    debugPrint('📝 body=${msg.notification?.body}');
+    debugPrint('📦 data=${msg.data}');
+
+    final notification = msg.notification;
+    if (notification == null) return;
+
+    // 🔔 สร้าง banner เอง
+    await flnp.show(
+      notification.hashCode,
+      notification.title,
+      notification.body,
+      NotificationDetails(
+        android: AndroidNotificationDetails(
+          channel.id,
+          channel.name,
+          channelDescription: channel.description,
+          importance: Importance.high,
+          priority: Priority.high,
+          icon: '@mipmap/ic_launcher',
+        ),
+      ),
+    );
+  });
+
   await Supabase.initialize(
     url: 'https://aoiurdwibgudsxhoxcni.supabase.co',
     anonKey:
@@ -55,12 +106,11 @@ Future<void> main() async {
       autoRefreshToken: true,
     ),
   );
-  if (isAndroid && firebaseReady) {
-    debugPrint('DeviceTokenService: init listener');
-    await DeviceTokenService.instance.initializeAuthListener();
-  } else {
-    debugPrint('DeviceTokenService: skip init listener');
-  }
+
+  final supa = Supabase.instance.client;
+  final deviceTokenService = DeviceTokenService(supabase: supa);
+  await deviceTokenService.initializeAuthListener();
+
   // ⭐ โหลดข้อมูล format วันที่ของ locale ภาษาไทย
   await initializeDateFormatting('th_TH', null);
 
@@ -151,6 +201,26 @@ class MyApp extends StatelessWidget {
       },
     );
   }
+}
+
+Future<void> _setupLocalNotifications() async {
+  debugPrint('🧪 kIsWeb=$kIsWeb platform=$defaultTargetPlatform');
+
+  const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
+
+  const initSettings = InitializationSettings(
+    android: androidInit,
+  );
+
+  await flnp.initialize(initSettings);
+
+  // ✅ Android 8+ ต้องสร้าง channel
+  await flnp
+      .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>()
+      ?.createNotificationChannel(channel);
+
+  debugPrint('✅ Android notification channel ready');
 }
 
 Widget defaultPage() {

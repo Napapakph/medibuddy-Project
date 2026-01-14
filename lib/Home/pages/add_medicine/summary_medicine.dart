@@ -69,6 +69,7 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
         localImagePath.isNotEmpty ? localImagePath : catalog.imageUrl;
 
     final localItem = MedicineItem(
+      mediListId: 0,
       id: catalog.mediId.toString(),
       nickname_medi: nickname,
       officialName_medi: officialName,
