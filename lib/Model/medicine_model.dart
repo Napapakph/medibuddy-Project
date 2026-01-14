@@ -183,6 +183,5 @@ class MedicineItem {
     );
   }
 
-  // ? ?????????
   int get mediId => int.tryParse(id) ?? 0;
 }

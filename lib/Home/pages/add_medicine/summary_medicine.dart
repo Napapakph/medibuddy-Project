@@ -77,11 +77,31 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
 
     try {
       final api = MedicineApi();
-      await api.addMedicineToProfile(
+
+// ✅ MED_UPLOAD: receive response map (Dio-style)
+      final res = await api.addMedicineToProfile(
         profileId: widget.profileId,
         mediId: catalog.mediId,
         mediNickname: nickname,
         pictureFile: localImage,
+      );
+
+// 🔥 FIX: try to read server image path (backend key may differ)
+// ✅ NOTE: ปรับ key ให้ตรงกับ backend ของเดียร์ ถ้าไม่ตรงให้ดู log res แล้วแก้ key
+      final serverPath =
+          (res['picture'] ?? res['data']?['imagePath'])?.toString().trim();
+
+// ✅ DEBUG: show what backend returned
+
+      debugPrint('===========================================================');
+      debugPrint('🧾 MED_CREATE response = $res');
+      debugPrint('🖼️ serverPath = $serverPath');
+
+// ✅ PROFILE_ID + MEDI_ID: keep local item but prefer server path if exists
+      final savedItem = localItem.copyWith(
+        imagePath: (serverPath != null && serverPath.isNotEmpty)
+            ? serverPath // ✅ USE_SERVER_PATH
+            : localItem.imagePath, // fallback
       );
 
       if (!mounted) return;
@@ -89,16 +109,14 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
         const SnackBar(content: Text('บันทึกยาสำเร็จ')),
       );
 
-      Navigator.pop(context, localItem);
+// ✅ RETURN: send updated item back to list
+      Navigator.pop(context, savedItem);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('บันทึกยาลง Database ไม่สำเร็จ: $e'),
-          duration: const Duration(seconds: 3),
-        ),
+        SnackBar(content: Text('บันทึกยาลง Database ไม่สำเร็จ: $e')),
       );
-      Navigator.pop(context, localItem);
+      // ⚠️ GUARD: do NOT pop on failure (prevent ghost items)
     } finally {
       if (!mounted) return;
       setState(() => _saving = false);

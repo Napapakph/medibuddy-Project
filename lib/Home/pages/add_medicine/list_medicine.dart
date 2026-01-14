@@ -1,15 +1,14 @@
 ﻿import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:medibuddy/Home/pages/set_remind/remind_list_screen.dart';
 import 'package:medibuddy/Model/medicine_model.dart';
 import 'package:medibuddy/widgets/app_drawer.dart';
 import 'package:medibuddy/services/medicine_api.dart';
-
 import 'createName_medicine.dart';
 import '../home.dart';
 import '../set_remind/setRemind_screen.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ListMedicinePage extends StatefulWidget {
   final int profileId;
@@ -28,10 +27,32 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
   final List<MedicineItem> _items = [];
   bool _loading = true;
   String _errorMessage = '';
+  late final String _imageBaseUrl;
+
+  String _toFullImageUrl(String raw) {
+    final base = (dotenv.env['API_BASE_URL'] ?? '').trim();
+    final p = raw.trim();
+
+    if (p.isEmpty || p.toLowerCase() == 'null') return '';
+
+    // ✅ already full url
+    if (p.startsWith('http://') || p.startsWith('https://')) return p;
+
+    // ✅ need base url from env
+    if (base.isEmpty) return p; // fallback (จะไม่ขึ้นรูป แต่กัน crash)
+
+    // ✅ server path starts with "/"
+    if (p.startsWith('/')) return '$base$p';
+
+    // ✅ server path without leading "/"
+    return '$base/$p';
+  }
 
   @override
   void initState() {
     super.initState();
+    _imageBaseUrl =
+        (dotenv.env['API_BASE_URL'] ?? '').trim(); // ✅ BASE_URL from env
     _loadMedicines();
   }
 
@@ -66,7 +87,19 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
 
   ImageProvider? _buildMedicineImage(String path) {
     if (path.isEmpty) return null;
-    if (path.startsWith('http')) return NetworkImage(path);
+
+    // 🔹 server ส่ง path relative มา
+    if (path.startsWith('/uploads') || path.startsWith('uploads')) {
+      final baseUrl = dotenv.env['API_BASE_URL'] ?? '';
+      return NetworkImage('$baseUrl/$path'.replaceAll('//', '/'));
+    }
+
+    // 🔹 server ส่ง full url มา
+    if (path.startsWith('http')) {
+      return NetworkImage(path);
+    }
+
+    // 🔹 local file
     return FileImage(File(path));
   }
 
@@ -120,6 +153,10 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
   }
 
   void _showDetails(MedicineItem item) {
+    final url = _toFullImageUrl(item.imagePath);
+    debugPrint('🧪 MED imagePath = "${item.imagePath}"');
+    debugPrint('🧪 baseUrl = "$_imageBaseUrl"');
+
     final image = _buildMedicineImage(item.imagePath);
 
     showDialog(
@@ -192,7 +229,8 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
 
   Widget _buildMedicineCard(BuildContext context, int index) {
     final item = _items[index];
-    final image = _buildMedicineImage(item.imagePath);
+    final image = _buildMedicineImage(item.imagePath); // ✅ Use unified field
+    debugPrint('🧪 MED item imagePath = "${item.imagePath}"');
 
     return InkWell(
       onTap: () {

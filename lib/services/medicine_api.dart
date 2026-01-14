@@ -1,17 +1,22 @@
-import 'dart:io';
 import 'dart:convert';
+import 'dart:io';
 
+import 'package:dio/dio.dart' as dio;
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:mime/mime.dart';
 import 'package:path/path.dart' as p;
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'package:medibuddy/Model/medicine_model.dart';
 
 class MedicineApi {
-  MedicineApi();
+  MedicineApi({dio.Dio? client}) : _dio = client ?? dio.Dio();
 
+  final dio.Dio _dio;
   final _supabase = Supabase.instance.client;
 
   String get _baseUrl => (dotenv.env['API_BASE_URL'] ?? '').trim();
@@ -32,13 +37,15 @@ class MedicineApi {
     throw Exception('No access token. Please login again.');
   }
 
-  /// POST /api/admin/v1/medicine-list/create
+  /// POST /api/mobile/v1/medicine-list/create
   /// multipart/form-data:
   /// - profileId (required)
   /// - mediId (required)
   /// - mediNickname (optional)
-  /// - picture (optional binary)
-  Future<void> addMedicineToProfile({
+  /// - picture (optional binary)  ✅ FIELD_NAME MUST BE "picture"
+  ///
+  /// ✅ Style: same as ProfileApi (Dio + FormData + logs + validateStatus)
+  Future<Map<String, dynamic>> addMedicineToProfile({
     required int profileId,
     required int mediId,
     String? mediNickname,
@@ -48,56 +55,80 @@ class MedicineApi {
       throw Exception('API_BASE_URL is empty. Check your .env');
     }
 
-    final token = await _getAccessToken();
+    final accessToken = await _getAccessToken();
 
-    final uri = Uri.parse('$_baseUrl/api/mobile/v1/medicine-list/create');
-    final req = http.MultipartRequest('POST', uri);
+    final formMap = <String, dynamic>{
+      'profileId': profileId,
+      'mediId': mediId,
+      if (mediNickname != null && mediNickname.trim().isNotEmpty)
+        'mediNickname': mediNickname.trim(),
+    };
 
-    // headers
-    req.headers['Authorization'] = 'Bearer $token';
-    req.headers['Accept'] = 'application/json';
+    if (pictureFile != null) {
+      final mimeType = lookupMimeType(pictureFile.path) ?? 'image/jpeg';
 
-    // fields (ต้องเป็น string)
-    req.fields['profileId'] = profileId.toString();
-    req.fields['mediId'] = mediId.toString();
+      // ✅ same policy style as profile upload
+      const allowed = {'image/jpeg', 'image/png', 'image/webp'};
+      if (!allowed.contains(mimeType)) {
+        throw Exception('รองรับเฉพาะ jpg, jpeg, png, webp');
+      }
 
-    if (mediNickname != null && mediNickname.trim().isNotEmpty) {
-      req.fields['mediNickname'] = mediNickname.trim();
+      formMap['picture'] = await dio.MultipartFile.fromFile(
+        pictureFile.path,
+        filename: p.basename(pictureFile.path),
+        contentType: MediaType.parse(mimeType),
+      ); // ✅ DIO MultipartFile
     }
 
-    // file (optional)
-    if (pictureFile != null) {
-      final fileName = p.basename(pictureFile.path);
+    final formData = dio.FormData.fromMap(formMap);
 
-      // เดา content-type แบบง่าย ๆ (กัน server งอแง)
-      final ext = p.extension(fileName).toLowerCase();
-      MediaType contentType = MediaType('image', 'jpeg');
-      if (ext == '.png') contentType = MediaType('image', 'png');
-      if (ext == '.webp') contentType = MediaType('image', 'webp');
+    try {
+      final url = '$_baseUrl/api/mobile/v1/medicine-list/create';
 
-      req.files.add(
-        await http.MultipartFile.fromPath(
-          'picture',
-          pictureFile.path,
-          filename: fileName,
-          contentType: contentType,
+      debugPrint('💊 UPLOAD(MED) -> $url');
+      debugPrint('🔑 TOKEN -> ${accessToken.substring(0, 20)}...');
+      debugPrint('🧾 FIELDS -> profileId=$profileId mediId=$mediId '
+          'mediNickname=${(mediNickname ?? "").trim().isEmpty ? "(none)" : mediNickname!.trim()}');
+
+      if (pictureFile != null) {
+        debugPrint('🖼️ PICTURE -> ${pictureFile.path}');
+        debugPrint('📦 SIZE    -> ${await pictureFile.length()} bytes');
+      } else {
+        debugPrint('🖼️ PICTURE -> (no picture)');
+      }
+
+      final res = await _dio.post(
+        url,
+        data: formData,
+        options: dio.Options(
+          contentType: 'multipart/form-data',
+          headers: {'Authorization': 'Bearer $accessToken'},
+          validateStatus: (_) => true,
         ),
       );
-    }
 
-    final streamed = await req.send();
-    final resp = await http.Response.fromStream(streamed);
+      debugPrint('✅ STATUS=${res.statusCode}');
+      debugPrint('✅ DATA=${res.data}');
 
-    // ปรับตาม backend คุณได้ (บางที 200/201)
-    if (resp.statusCode == 200 || resp.statusCode == 201) return;
+      final status = res.statusCode ?? 0;
+      if (status < 200 || status >= 300) {
+        throw Exception('Add medicine failed: $status ${res.data}');
+      }
 
-    // พยายามอ่าน error message จาก json
-    try {
-      final data = jsonDecode(resp.body);
-      throw Exception(data['message'] ?? resp.body);
-    } catch (_) {
-      throw Exception(
-          resp.body.isNotEmpty ? resp.body : 'HTTP ${resp.statusCode}');
+      // ✅ return map (so caller can read server path เช่น /uploads/medicine_database/...)
+      if (res.data is Map) {
+        return Map<String, dynamic>.from(res.data as Map);
+      }
+
+      // backend บางทีส่ง string/array -> wrap ให้เป็น map
+      return {'data': res.data};
+    } on dio.DioException catch (e) {
+      debugPrint('❌ DIO ERROR (MEDICINE)');
+      debugPrint('type     = ${e.type}');
+      debugPrint('message  = ${e.message}');
+      debugPrint('status   = ${e.response?.statusCode}');
+      debugPrint('response = ${e.response?.data}');
+      rethrow;
     }
   }
 
@@ -112,6 +143,7 @@ class MedicineApi {
     }
 
     final token = await _getAccessToken();
+
     final params = <String, String>{
       'page': page.toString(),
       'pageSize': pageSize.toString(),
@@ -137,25 +169,63 @@ class MedicineApi {
 
     if (resp.statusCode != 200) {
       throw Exception(
-        resp.body.isNotEmpty ? resp.body : 'HTTP ${resp.statusCode}',
-      );
+          resp.body.isNotEmpty ? resp.body : 'HTTP ${resp.statusCode}');
     }
 
     final data = jsonDecode(resp.body);
-    final items = data is Map<String, dynamic>
-        ? (data['items'] ?? data['data'])
-        : data is List
-            ? data
-            : null;
-    if (items is! List) return [];
 
-    return items
+    final dynamic itemsDynamic = data is Map<String, dynamic>
+        ? (data['items'] ?? data['data'])
+        : (data is List ? data : null);
+
+    if (itemsDynamic is! List) return [];
+
+    // ✅ helper: normalize uploads path -> /uploads...
+    String normalizeServerPath(String raw) {
+      final p = raw.trim();
+      if (p.isEmpty) return '';
+      if (p.startsWith('http')) return p;
+      if (p.startsWith('/')) return p; // "/uploads/..."
+      if (p.startsWith('uploads/'))
+        return '/$p'; // "uploads/..." -> "/uploads/..."
+      return p;
+    }
+
+    // ✅ DEBUG: print only first 3 items for readability
+    final sampleCount = itemsDynamic.length < 3 ? itemsDynamic.length : 3;
+    for (int i = 0; i < sampleCount; i++) {
+      final row = itemsDynamic[i];
+      if (row is! Map) continue;
+
+      final mediId = row['mediId'];
+      final thName = row['mediThName'];
+      final enName = row['mediEnName'];
+      final tradeName = row['mediTradeName'];
+
+      final rawPic = (row['mediPicture'] ??
+              row['imageUrl'] ??
+              row['imagePath'] ??
+              row['picture'] ??
+              '')
+          .toString();
+
+      final normalized = normalizeServerPath(rawPic);
+      final fullUrl =
+          (normalized.startsWith('http')) ? normalized : '$_baseUrl$normalized';
+
+      debugPrint(
+          '🧪 CATALOG[$i] mediId=$mediId th="$thName" en="$enName" trade="$tradeName"');
+      debugPrint(
+          '🧪 CATALOG[$i] rawPic="$rawPic" normalized="$normalized" fullUrl="$fullUrl"');
+    }
+
+    return itemsDynamic
         .whereType<Map<String, dynamic>>()
         .map(MedicineCatalogItem.fromJson)
         .toList();
   }
 
-  /// GET /api/admin/v1/medicine-list/list?profileId=...
+  /// GET /api/mobile/v1/medicine-list/list?profileId=...
   Future<List<MedicineItem>> fetchProfileMedicineList({
     required int profileId,
   }) async {
@@ -164,10 +234,9 @@ class MedicineApi {
     }
 
     final token = await _getAccessToken();
+
     final uri = Uri.parse('$_baseUrl/api/mobile/v1/medicine-list/list').replace(
-      queryParameters: {
-        'profileId': profileId.toString(),
-      },
+      queryParameters: {'profileId': profileId.toString()},
     );
 
     final resp = await http.get(
@@ -180,8 +249,7 @@ class MedicineApi {
 
     if (resp.statusCode != 200) {
       throw Exception(
-        resp.body.isNotEmpty ? resp.body : 'HTTP ${resp.statusCode}',
-      );
+          resp.body.isNotEmpty ? resp.body : 'HTTP ${resp.statusCode}');
     }
 
     final data = jsonDecode(resp.body);
@@ -190,29 +258,38 @@ class MedicineApi {
         : data is List
             ? data
             : null;
+
     if (items is! List) return [];
 
     return items.whereType<Map<String, dynamic>>().map((item) {
-      final mediId = _readInt(
-        item['mediId'] ?? item['medId'] ?? item['medicineId'],
-      );
+      final mediId =
+          _readInt(item['mediId'] ?? item['medId'] ?? item['medicineId']);
+
       final id = _readString(item['id']);
       final nickname = _readString(
-        item['mediNickname'] ?? item['nickname'] ?? item['displayName'],
-      );
+          item['mediNickname'] ?? item['nickname'] ?? item['displayName']);
+
       final tradeName = _readString(item['mediTradeName']);
       final enName = _readString(item['mediEnName']);
       final thName = _readString(item['mediThName']);
+
       final official = tradeName.isNotEmpty
           ? tradeName
           : enName.isNotEmpty
               ? enName
               : thName;
+
+      // ✅ keep parsing keys like before
+      final med = item['medicine'];
       final imagePath = _readString(
-        item['picture'] ??
+        item['pictureOption'] ??
+            item['picture'] ??
             item['imageUrl'] ??
             item['image'] ??
-            item['mediPicture'],
+            item['mediPicture'] ??
+            (med is Map
+                ? (med['mediPicture'] ?? med['imageUrl'] ?? med['picture'])
+                : null),
       );
 
       return MedicineItem(
