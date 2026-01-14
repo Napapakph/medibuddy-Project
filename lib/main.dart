@@ -27,6 +27,7 @@ late final StreamSubscription<AuthState> _authSub;
 
 Future<void> main() async {
   await dotenv.load(fileName: ".env");
+  debugPrint('🌿 API_BASE_URL from env = "${dotenv.env['API_BASE_URL']}"');
   print('ENV = ${dotenv.env}');
   print('BASE = ${dotenv.env['API_BASE_URL']}');
   WidgetsFlutterBinding.ensureInitialized();

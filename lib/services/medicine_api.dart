@@ -180,15 +180,17 @@ class MedicineApi {
 
     if (itemsDynamic is! List) return [];
 
-    // ✅ helper: normalize uploads path -> /uploads...
     String normalizeServerPath(String raw) {
       final p = raw.trim();
-      if (p.isEmpty) return '';
-      if (p.startsWith('http')) return p;
-      if (p.startsWith('/')) return p; // "/uploads/..."
-      if (p.startsWith('uploads/'))
-        return '/$p'; // "uploads/..." -> "/uploads/..."
-      return p;
+      if (p.isEmpty || p.toLowerCase() == 'null') return '';
+
+      // ✅ full URL ที่ถูกต้องเท่านั้น
+      if (p.startsWith('http://') || p.startsWith('https://')) return p;
+
+      // ✅ บังคับให้ path เป็น absolute เสมอ
+      if (p.startsWith('/')) return p;
+
+      return '/$p';
     }
 
     // ✅ DEBUG: print only first 3 items for readability

@@ -35,17 +35,20 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
 
     if (p.isEmpty || p.toLowerCase() == 'null') return '';
 
-    // ✅ already full url
+    // already full url
     if (p.startsWith('http://') || p.startsWith('https://')) return p;
 
-    // ✅ need base url from env
-    if (base.isEmpty) return p; // fallback (จะไม่ขึ้นรูป แต่กัน crash)
+    if (base.isEmpty) return ''; // ไม่มี base ก็ไม่ต้องพยายามต่อ
 
-    // ✅ server path starts with "/"
-    if (p.startsWith('/')) return '$base$p';
-
-    // ✅ server path without leading "/"
-    return '$base/$p';
+    try {
+      final baseUri = Uri.parse(base);
+      final resolved =
+          baseUri.resolve(p); // p จะเป็น /uploads/... หรือ uploads/...
+      return resolved.toString();
+    } catch (e) {
+      debugPrint('❌ image url build failed: base=$base raw=$raw err=$e');
+      return '';
+    }
   }
 
   @override
@@ -91,16 +94,13 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
     // 🔹 server ส่ง path relative มา
     if (path.startsWith('/uploads') || path.startsWith('uploads')) {
       final baseUrl = dotenv.env['API_BASE_URL'] ?? '';
-      return NetworkImage('$baseUrl/$path'.replaceAll('//', '/'));
-    }
+      final base = Uri.parse(baseUrl);
 
-    // 🔹 server ส่ง full url มา
-    if (path.startsWith('http')) {
-      return NetworkImage(path);
-    }
+      final normalizedPath = path.startsWith('/') ? path : '/$path';
+      final url = base.resolve(normalizedPath).toString();
 
-    // 🔹 local file
-    return FileImage(File(path));
+      return NetworkImage(url);
+    }
   }
 
   String _friendlyErrorMessage() {
@@ -146,16 +146,11 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
     final current = _items[index];
     final controller = TextEditingController(text: current.nickname_medi);
     String tempImagePath = current.imagePath;
-
-    /* 
-    
-    */
   }
 
   void _showDetails(MedicineItem item) {
     final url = _toFullImageUrl(item.imagePath);
     debugPrint('🧪 MED imagePath = "${item.imagePath}"');
-    debugPrint('🧪 baseUrl = "$_imageBaseUrl"');
 
     final image = _buildMedicineImage(item.imagePath);
 
