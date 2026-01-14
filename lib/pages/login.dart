@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-//import '../services/mock_auth_service.dart';
 import 'signup.dart';
 import '../widgets/login_button.dart';
 import '../API/authen_login.dart';
-//import '../Home/pages/ocr.dart';
 import 'forget_password.dart';
 import '../Home/pages/profile_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -23,7 +21,6 @@ class _LoginScreenState extends State<LoginScreen> {
       TextEditingController(); //TextEditingController สำหรับคุมค่าช่องอีเมลและรหัสผ่าน, ใช้ดึงค่าและทำ dispose() เพื่อไม่ให้รั่วหน่วยความจำ
   final _passwordCtrl = TextEditingController();
   //final _auth = MockAuthService(); //จำลองการ Login
-  final _authAPI = AuthenSignUpEmail();
   final _authLoginAPI = AuthenLoginEmail();
   final _googleAuth = LoginWithGoogle();
   bool _isGoogleLoading = false;

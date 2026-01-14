@@ -3,6 +3,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
+import 'services/device_token_service.dart';
 import 'pages/login.dart';
 import 'pages/signup.dart';
 import 'pages/forget_password.dart';
@@ -23,6 +26,21 @@ Future<void> main() async {
   print('ENV = ${dotenv.env}');
   print('BASE = ${dotenv.env['API_BASE_URL']}');
 
+  final isAndroid = !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+  debugPrint('Firebase init: start (isAndroid=$isAndroid)');
+  var firebaseReady = false;
+  if (isAndroid) {
+    try {
+      await Firebase.initializeApp();
+      debugPrint('Firebase init: ok (apps=${Firebase.apps.length})');
+      firebaseReady = true;
+    } catch (e) {
+      debugPrint('Firebase init failed: $e');
+    }
+  } else {
+    debugPrint('Firebase init: skipped (non-android)');
+  }
+
   await Supabase.initialize(
     url: 'https://aoiurdwibgudsxhoxcni.supabase.co',
     anonKey:
@@ -31,6 +49,12 @@ Future<void> main() async {
       autoRefreshToken: true,
     ),
   );
+  if (isAndroid && firebaseReady) {
+    debugPrint('DeviceTokenService: init listener');
+    await DeviceTokenService.instance.initializeAuthListener();
+  } else {
+    debugPrint('DeviceTokenService: skip init listener');
+  }
   // ⭐ โหลดข้อมูล format วันที่ของ locale ภาษาไทย
   await initializeDateFormatting('th_TH', null);
 

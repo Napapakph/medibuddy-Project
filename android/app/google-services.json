@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "8294990069",
+    "project_id": "medi-buddy-569c4",
+    "storage_bucket": "medi-buddy-569c4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:8294990069:android:f23d261e1438afe825c5bc",
+        "android_client_info": {
+          "package_name": "com.example.medibuddy"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDaj5cvGD6SsBonC8QSgVrOq34ML7GK_bM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
