@@ -17,14 +17,19 @@ import 'Home/pages/library_profile.dart';
 import 'Home/pages/add_medicine/list_medicine.dart';
 import 'Home/pages/history.dart';
 import 'OCR/camera_ocr.dart';
+import 'services/sync_user.dart';
+import 'dart:async';
 
 const bool kDisableAuthGate =
     true; // เปลี่ยนเป็น false เมื่อต้องการเปิดใช้งาน AuthGate
+
+late final StreamSubscription<AuthState> _authSub;
+
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
   print('ENV = ${dotenv.env}');
   print('BASE = ${dotenv.env['API_BASE_URL']}');
+  WidgetsFlutterBinding.ensureInitialized();
 
   final isAndroid = !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
   debugPrint('Firebase init: start (isAndroid=$isAndroid)');
@@ -60,6 +65,15 @@ Future<void> main() async {
 
   // ⭐ ตั้ง locale default ให้เป็นไทย (จะได้ไม่ต้องใส่ใน DateFormat ทุกครั้ง)
   Intl.defaultLocale = 'th_TH';
+
+  // ✅ auth lifecycle listener (เรียกครั้งเดียว)
+  _authSub = Supabase.instance.client.auth.onAuthStateChange.listen(
+    (data) async {
+      if (data.event == AuthChangeEvent.signedIn) {
+        await SyncUserService().syncUser(allowMerge: true);
+      }
+    },
+  );
 
   runApp(MyApp());
 }
