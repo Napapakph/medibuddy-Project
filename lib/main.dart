@@ -118,7 +118,6 @@ class MyApp extends StatelessWidget {
               settings: settings, // 🔥 FIX: keep arguments
               builder: (_) => const Home(),
             );
-
           case '/forget_password':
             return MaterialPageRoute(builder: (_) => const ForgetPassword());
           case '/library_profile':

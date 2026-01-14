@@ -6,6 +6,7 @@ import '../../Model/profile_model.dart';
 import 'home.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../services/app_state.dart';
 
 // ถ้าคุณมีหน้า login จริง ๆ ให้ import แล้วเปลี่ยน route ได้
 // import 'login.dart';
@@ -199,6 +200,20 @@ class _SelectProfileState extends State<SelectProfile> {
                                       setState(() {
                                         selectedIndex = index;
                                       });
+
+                                      // ✅ จุดสำคัญ: บอก AppState ว่าเลือกโปรไฟล์ไหน
+                                      AppState.instance.setSelectedProfile(
+                                        profileId: profile.profileId!,
+                                        name: profile.username,
+                                        imagePath: profile.imagePath,
+                                      );
+
+                                      debugPrint(
+                                        '✅ Selected profile: '
+                                        'id=${profile.profileId}, '
+                                        'name=${profile.username}, '
+                                        'image=${profile.imagePath}',
+                                      );
                                     },
                                     child: Container(
                                       margin: const EdgeInsets.only(bottom: 12),
@@ -247,17 +262,19 @@ class _SelectProfileState extends State<SelectProfile> {
                   child: ElevatedButton(
                     onPressed: canConfirm
                         ? () {
-                            Navigator.pushNamed(
+                            AppState.instance.currentProfileId =
+                                selectedProfile.profileId;
+                            final pid = selectedProfile.profileId;
+                            Navigator.pushReplacementNamed(
                               context,
                               '/home',
                               arguments: {
-                                'profileId':
-                                    selectedProfile!.profileId, // ✅ PROFILE_ID: pass
-                                'profileName': selectedProfile!.username, // ✅ PROFILE_BIND: name
-                                'profileImage':
-                                    selectedProfile!.imagePath, // ✅ PROFILE_BIND: image
+                                'profileId': pid,
+                                'profileName': selectedProfile.username,
+                                'profileImage': selectedProfile.imagePath,
                               },
                             );
+
                             debugPrint(
                                 '================= check select ProfileID ==================');
                             debugPrint(

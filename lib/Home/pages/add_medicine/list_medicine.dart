@@ -1,14 +1,12 @@
-﻿import 'dart:io';
-import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:medibuddy/Home/pages/set_remind/remind_list_screen.dart';
 import 'package:medibuddy/Model/medicine_model.dart';
 import 'package:medibuddy/widgets/app_drawer.dart';
 import 'package:medibuddy/services/medicine_api.dart';
 import 'createName_medicine.dart';
-import '../home.dart';
-import '../set_remind/setRemind_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../../../services/app_state.dart';
+import '../../../widgets/bottomBar.dart';
 
 class ListMedicinePage extends StatefulWidget {
   final int profileId;
@@ -28,6 +26,7 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
   bool _loading = true;
   String _errorMessage = '';
   late final String _imageBaseUrl;
+  final profileId = AppState.instance.currentProfileId;
 
   String _toFullImageUrl(String raw) {
     final base = (dotenv.env['API_BASE_URL'] ?? '').trim();
@@ -317,46 +316,6 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
     );
   }
 
-  Widget _buildBottomBar() {
-    return Container(
-      height: 72,
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      decoration: const BoxDecoration(
-        color: Color(0xFF1F497D),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.calendar_today, color: Colors.white),
-          ),
-          GestureDetector(
-            onTap: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => const Home()),
-              );
-            },
-            child: Container(
-              width: 52,
-              height: 52,
-              decoration: const BoxDecoration(
-                color: Color(0xFFB7DAFF),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.home, color: Color(0xFF1F497D)),
-            ),
-          ),
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.medication, color: Color(0xFFB7DAFF)),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -485,7 +444,7 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
                 },
               ),
             ),
-            _buildBottomBar(),
+            BottomBar(currentRoute: '/list_medicine'),
           ],
         ),
       ),

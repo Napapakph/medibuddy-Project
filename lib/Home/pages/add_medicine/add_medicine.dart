@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:medibuddy/Model/medicine_model.dart';
 import 'package:medibuddy/widgets/medicine_step_timeline.dart';
 import 'package:medibuddy/services/medicine_api.dart';
-
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'summary_medicine.dart';
 import 'request_medicine.dart';
 
@@ -154,6 +154,22 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
     }
   }
 
+  String toFullImageUrl(String raw) {
+    final base = (dotenv.env['API_BASE_URL'] ?? '').trim();
+    final p = raw.trim();
+
+    if (p.isEmpty || p.toLowerCase() == 'null') return '';
+
+    // ถ้าเป็น URL เต็มอยู่แล้ว
+    if (p.startsWith('http://') || p.startsWith('https://')) return p;
+
+    if (base.isEmpty) return '';
+
+    final baseUri = Uri.parse(base);
+    final path = p.startsWith('/') ? p : '/$p';
+    return baseUri.resolve(path).toString();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -214,6 +230,7 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
                         final isSelected = _selectedItem?.mediId == item.mediId;
 
                         final imageUrl = item.imageUrl.trim();
+                        final mageUrl = toFullImageUrl(item.imageUrl ?? '');
 
                         return GestureDetector(
                           onTap: () {

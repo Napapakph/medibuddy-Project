@@ -1,11 +1,13 @@
 import 'dart:io';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:medibuddy/widgets/app_drawer.dart';
 import '../../Model/profile_model.dart';
-import 'add_medicine/list_medicine.dart';
 import 'select_profile.dart';
-//import 'package:buddhist_datetime_dateformat/buddhist_datetime_dateformat.dart';
+import '../../services/app_state.dart';
+import '../../Home/pages/select_profile.dart';
+import '../../widgets/bottomBar.dart';
 
 class Home extends StatefulWidget {
   final ProfileModel? selectedProfile;
@@ -50,7 +52,7 @@ class _Home extends State<Home> {
   String? _profileName; // ✅ PROFILE_BIND: resolved name
   String? _profileImagePath; // ✅ PROFILE_BIND: resolved image path
   bool _profileBound = false; // ⚠️ GUARD: bind once
-  int? _profileId; // ✅ PROFILE_ID: resolved from route args/selectedProfile
+  int? _profileId;
   bool _isLoading = false; // สถานะการโหลด
 
   @override
@@ -64,6 +66,7 @@ class _Home extends State<Home> {
     int? resolvedProfileId;
     String? resolvedProfileName;
     String? resolvedProfileImagePath;
+    _profileId = resolvedProfileId ?? AppState.instance.currentProfileId;
 
     if (routeArgs is Map) {
       final rawId = routeArgs['profileId'];
@@ -88,7 +91,7 @@ class _Home extends State<Home> {
 
     setState(() {
       // 🔥 FIX: trigger UI rebuild after binding
-      _profileId = resolvedProfileId; // ✅ PROFILE_ID
+
       _profileName =
           (resolvedProfileName != null && resolvedProfileName.trim().isNotEmpty)
               ? resolvedProfileName.trim()
@@ -254,60 +257,6 @@ class _Home extends State<Home> {
     );
   }
 
-  // Bottom bar widget ----------------------------------------------------------
-  Widget _buildBottomBar() {
-    return Container(
-      height: 72,
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      decoration: const BoxDecoration(
-        color: Color(0xFF1F497D),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.calendar_today, color: Colors.white),
-          ),
-          GestureDetector(
-            onTap: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (_) => const Home()),
-              );
-            },
-            child: Container(
-              width: 52,
-              height: 52,
-              decoration: const BoxDecoration(
-                color: Color(0xFFB7DAFF),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.home, color: Color(0xFF1F497D)),
-            ),
-          ),
-          IconButton(
-            onPressed: () {
-              final profileId = _profileId ?? // ✅ PROFILE_ID: use resolved id
-                  widget.selectedProfile?.profileId;
-              if (profileId != null) {
-                Navigator.pushNamed(
-                  context,
-                  '/list_medicine',
-                  arguments: {'profileId': profileId}, // ✅ PROFILE_ID: pass
-                );
-                debugPrint(
-                    '================= check select ProfileID ==================');
-                debugPrint('Selected Profile ID: $profileId');
-              }
-            },
-            icon: const Icon(Icons.medication, color: Color(0xFFB7DAFF)),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -440,7 +389,9 @@ class _Home extends State<Home> {
                       ),
                     ),
                   ),
-                  _buildBottomBar(),
+                  BottomBar(
+                    currentRoute: '/home',
+                  ),
                 ],
               ),
             );

@@ -1,13 +1,23 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import '../pages/login.dart';
 import '../API/authen_login.dart';
+import '../services/app_state.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
 
-  void _go(BuildContext context, String route) {
-    Navigator.pop(context);
-    Navigator.pushReplacementNamed(context, route);
+  void _go(
+    BuildContext context,
+    String route, {
+    Object? arguments,
+  }) {
+    Navigator.pushReplacementNamed(
+      context,
+      route,
+      arguments: arguments,
+    );
   }
 
   Future<void> logout(BuildContext context) async {
@@ -26,6 +36,7 @@ class AppDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final pid = AppState.instance.currentProfileId;
     return Drawer(
       child: SafeArea(
         child: LayoutBuilder(
@@ -72,12 +83,24 @@ class AppDrawer extends StatelessWidget {
                           ListTile(
                             leading: const Icon(Icons.home),
                             title: const Text('หน้าหลัก'),
-                            onTap: () => _go(context, '/home'),
+                            onTap: () => _go(
+                              context,
+                              '/home',
+                              arguments: {
+                                'profileId': pid,
+                                'profileName':
+                                    AppState.instance.currentProfileName,
+                                'profileImage':
+                                    AppState.instance.currentProfileImagePath,
+                              },
+                            ),
                           ),
                           ListTile(
                             leading: const Icon(Icons.medication),
                             title: const Text('รายการยาของฉัน'),
-                            onTap: () => _go(context, '/list_medicine'),
+                            onTap: () => _go(context, '/list_medicine',
+                                arguments:
+                                    pid == null ? null : {'profileId': pid}),
                           ),
                           ListTile(
                             leading: const Icon(Icons.find_in_page_rounded),
