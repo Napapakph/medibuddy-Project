@@ -313,7 +313,6 @@ class MedicineApi {
   /// (ถ้า backend ของคุณรับเป็น json-only ให้บอกฉัน เดี๋ยวปรับเป็น JSON)
   Future<Map<String, dynamic>> updateMedicineListItem({
     required int mediListId,
-    int? mediId,
     String? mediNickname,
     File? pictureFile,
   }) async {
@@ -322,10 +321,11 @@ class MedicineApi {
     }
 
     final accessToken = await _getAccessToken();
+    final url = '$_baseUrl/api/mobile/v1/medicine-list/update';
 
+    // ✅ สร้าง FormData ชุดเดียว
     final formMap = <String, dynamic>{
       'mediListId': mediListId,
-      if (mediId != null) 'mediId': mediId,
       if (mediNickname != null && mediNickname.trim().isNotEmpty)
         'mediNickname': mediNickname.trim(),
     };
@@ -337,7 +337,6 @@ class MedicineApi {
         throw Exception('รองรับเฉพาะ jpg, jpeg, png, webp');
       }
 
-      // ✅ ใช้ field "picture" ให้เหมือน create
       formMap['picture'] = await dio.MultipartFile.fromFile(
         pictureFile.path,
         filename: p.basename(pictureFile.path),
@@ -347,46 +346,31 @@ class MedicineApi {
 
     final formData = dio.FormData.fromMap(formMap);
 
-    try {
-      final url = '$_baseUrl/api/mobile/v1/medicine-list/update';
+    debugPrint('✏️ UPDATE(MED) -> $url');
+    debugPrint('🧾 FIELDS -> mediListId=$mediListId '
+        'mediNickname=${(mediNickname ?? "").trim().isEmpty ? "(no change)" : mediNickname!.trim()}');
+    debugPrint('🖼️ PICTURE -> ${pictureFile?.path ?? "(no change)"}');
 
-      debugPrint('✏️ UPDATE(MED) -> $url');
-      debugPrint('🔑 TOKEN -> ${accessToken.substring(0, 20)}...');
-      debugPrint('🧾 FIELDS -> mediListId=$mediListId '
-          'mediId=${mediId ?? "(no change)"} '
-          'mediNickname=${(mediNickname ?? "").trim().isEmpty ? "(no change)" : mediNickname!.trim()}');
-      debugPrint('🖼️ PICTURE -> ${pictureFile?.path ?? "(no change)"}');
+    final res = await _dio.patch(
+      url,
+      data: formData,
+      options: dio.Options(
+        headers: {'Authorization': 'Bearer $accessToken'},
+        // ✅ อย่าตั้ง Content-Type เอง ให้ Dio ใส่ boundary ให้
+        validateStatus: (_) => true,
+      ),
+    );
 
-      final res = await _dio.patch(
-        url,
-        data: formData,
-        options: dio.Options(
-          contentType: 'multipart/form-data',
-          headers: {'Authorization': 'Bearer $accessToken'},
-          validateStatus: (_) => true,
-        ),
-      );
+    debugPrint('✅ STATUS=${res.statusCode}');
+    debugPrint('✅ DATA=${res.data}');
 
-      debugPrint('✅ STATUS=${res.statusCode}');
-      debugPrint('✅ DATA=${res.data}');
-
-      final status = res.statusCode ?? 0;
-      if (status < 200 || status >= 300) {
-        throw Exception('Update medicine failed: $status ${res.data}');
-      }
-
-      if (res.data is Map) {
-        return Map<String, dynamic>.from(res.data as Map);
-      }
-      return {'data': res.data};
-    } on dio.DioException catch (e) {
-      debugPrint('❌ DIO ERROR (UPDATE MEDICINE)');
-      debugPrint('type     = ${e.type}');
-      debugPrint('message  = ${e.message}');
-      debugPrint('status   = ${e.response?.statusCode}');
-      debugPrint('response = ${e.response?.data}');
-      rethrow;
+    final status = res.statusCode ?? 0;
+    if (status < 200 || status >= 300) {
+      throw Exception('Update medicine failed: $status ${res.data}');
     }
+
+    if (res.data is Map) return Map<String, dynamic>.from(res.data as Map);
+    return {'data': res.data};
   }
 
   /// DELETE /api/mobile/v1/medicine-list/delete
@@ -411,9 +395,14 @@ class MedicineApi {
 
       final res = await _dio.delete(
         url,
-        queryParameters: {'mediListId': mediListId},
+        data: {
+          'mediListId': mediListId,
+        },
         options: dio.Options(
-          headers: {'Authorization': 'Bearer $accessToken'},
+          headers: {
+            'Authorization': 'Bearer $accessToken',
+            'Content-Type': 'application/json',
+          },
           validateStatus: (_) => true,
         ),
       );
