@@ -173,7 +173,7 @@ class _FindMedicinePageState extends State<FindMedicinePage> {
               Align(
                 alignment: Alignment.centerRight,
                 child: ElevatedButton(
-                  onPressed: () {},
+                  onPressed: _skipSearch,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF1F497D),
                     padding: const EdgeInsets.symmetric(
