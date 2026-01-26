@@ -47,7 +47,7 @@ class _RequestMedicinePageState extends State<RequestMedicinePage> {
         requestType: 'ADD_MEDICINE',
         requestTitle: widget.medicineName,
         requestDetails: 'add medicine for user',
-        pictureFile: null,
+        pictureFile: _imagePath.isNotEmpty ? File(_imagePath) : null,
       );
 
       if (!mounted) return;
