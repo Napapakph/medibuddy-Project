@@ -1,20 +1,23 @@
 import 'dart:io';
-
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/material.dart';
 import 'package:medibuddy/Model/medicine_model.dart';
 import 'package:medibuddy/widgets/medicine_step_timeline.dart';
 import 'package:medibuddy/services/medicine_api.dart';
-
 import 'detail_medicine.dart';
 
 class SummaryMedicinePage extends StatefulWidget {
   final MedicineDraft draft;
   final int profileId;
+  final bool isEdit;
+  final MedicineItem? initialItem;
 
   const SummaryMedicinePage({
     super.key,
     required this.draft,
     required this.profileId,
+    this.isEdit = false,
+    this.initialItem,
   });
 
   @override
@@ -45,15 +48,10 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
     if (_saving) return;
 
     final catalog = widget.draft.catalogItem;
-    if (catalog == null || catalog.mediId == 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('ยาไม่ถูกต้อง ไม่สามารถบันทึกได้')),
-      );
-
-      return;
-    }
+    final hasCatalog = catalog != null && catalog.mediId > 0;
 
     setState(() => _saving = true);
+    final isEditMode = widget.isEdit && widget.initialItem != null;
 // Debugging output ----------------------------------------------------------
     debugPrint(
         '================= check ProfileID & MedicineID  ==================');
@@ -65,27 +63,44 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
     final nickname = _resolveNickname(officialName);
     final localImagePath = widget.draft.imagePath;
     final localImage = localImagePath.isEmpty ? null : File(localImagePath);
-    final displayImage =
-        localImagePath.isNotEmpty ? localImagePath : catalog.imageUrl;
+    final displayImage = localImagePath.isNotEmpty
+        ? localImagePath
+        : catalog?.imageUrl.trim() ?? '';
 
     final localItem = MedicineItem(
-      mediListId: 0,
-      id: catalog.mediId.toString(),
+      mediListId: isEditMode ? widget.initialItem!.mediListId : 0,
+      id: catalog?.mediId.toString() ?? '',
       nickname_medi: nickname,
       officialName_medi: officialName,
       imagePath: displayImage,
     );
 
+    if (nickname.trim().isEmpty && officialName.trim().isEmpty) {
+      // ต้องมีชื่ออย่างน้อย 1 อย่าง
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('กรุณาระบุชื่อยาหรือชื่อเล่นยา')),
+      );
+      setState(() => _saving = false);
+      return;
+    }
+
     try {
       final api = MedicineApi();
 
-// ✅ MED_UPLOAD: receive response map (Dio-style)
-      final res = await api.addMedicineToProfile(
-        profileId: widget.profileId,
-        mediId: catalog.mediId,
-        mediNickname: nickname,
-        pictureFile: localImage,
-      );
+      final res = isEditMode
+          ? await api.updateMedicineListItem(
+              mediListId: widget.initialItem!.mediListId,
+              mediNickname: nickname,
+              pictureFile: localImage,
+              mediId: hasCatalog ? catalog!.mediId : null, // ✅ PASS_MEDI_ID
+            )
+          : await api.addMedicineToProfile(
+              profileId: widget.profileId,
+              mediId: hasCatalog ? catalog!.mediId : null, // ✅ PASS_MEDI_ID
+              mediNickname: nickname,
+              pictureFile: localImage,
+            );
 
 // 🔥 FIX: try to read server image path (backend key may differ)
 // ✅ NOTE: ปรับ key ให้ตรงกับ backend ของเดียร์ ถ้าไม่ตรงให้ดู log res แล้วแก้ key
@@ -124,13 +139,30 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
     }
   }
 
+  String toFullImageUrl(String raw) {
+    final base = (dotenv.env['API_BASE_URL'] ?? '').trim();
+    final p = raw.trim();
+
+    if (p.isEmpty || p.toLowerCase() == 'null') return '';
+
+    // ถ้าเป็น URL เต็มอยู่แล้ว
+    if (p.startsWith('http://') || p.startsWith('https://')) return p;
+
+    if (base.isEmpty) return '';
+
+    final baseUri = Uri.parse(base);
+    final path = p.startsWith('/') ? p : '/$p';
+    return baseUri.resolve(path).toString();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final pageTitle = widget.isEdit ? 'แก้ไขรายการยา' : 'เพิ่มรายการยา';
     final catalog = widget.draft.catalogItem;
     final officialName = _resolveOfficialName(catalog);
     final nickname = _resolveNickname(officialName);
     final localImagePath = widget.draft.imagePath;
-    final catalogImage = catalog?.imageUrl.trim() ?? '';
+    final catalogImage = toFullImageUrl(catalog?.imageUrl.trim() ?? '');
 
     return Scaffold(
       appBar: AppBar(
@@ -162,6 +194,24 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
               const MedicineStepTimeline(currentStep: 4),
               const SizedBox(height: 24),
               const Text(
+                'ชื่อเล่นยา',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF2F4F8),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(nickname),
+              ),
+              const SizedBox(height: 12),
+              const Text(
                 'ชื่อการค้า',
                 style: TextStyle(
                   fontSize: 14,
@@ -178,8 +228,7 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
                 ),
                 child: Text(officialName),
               ),
-              const SizedBox(height: 12),
-              const SizedBox(height: 6),
+              const SizedBox(height: 10),
               const Text(
                 'รูปยา',
                 style: TextStyle(

@@ -5,7 +5,6 @@ import 'package:medibuddy/widgets/app_drawer.dart';
 import 'package:medibuddy/services/medicine_api.dart';
 import 'createName_medicine.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import '../../../services/app_state.dart';
 import '../../../widgets/bottomBar.dart';
 
 class ListMedicinePage extends StatefulWidget {
@@ -25,9 +24,16 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
   final List<MedicineItem> _items = [];
   bool _loading = true;
   String _errorMessage = '';
-  late final String _imageBaseUrl;
-  final profileId = AppState.instance.currentProfileId;
 
+  @override
+  void initState() {
+    super.initState();
+    _loadMedicines();
+  }
+
+  /// สร้าง full url จาก path ที่ backend ส่งมา
+  /// - รองรับทั้ง full url, /uploads/..., uploads/...
+  /// - กัน crash ถ้า API_BASE_URL ไม่ใช่ url ถูกต้อง
   String _toFullImageUrl(String raw) {
     final base = (dotenv.env['API_BASE_URL'] ?? '').trim();
     final p = raw.trim();
@@ -37,25 +43,41 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
     // already full url
     if (p.startsWith('http://') || p.startsWith('https://')) return p;
 
-    if (base.isEmpty) return ''; // ไม่มี base ก็ไม่ต้องพยายามต่อ
+    if (base.isEmpty) return '';
 
     try {
       final baseUri = Uri.parse(base);
-      final resolved =
-          baseUri.resolve(p); // p จะเป็น /uploads/... หรือ uploads/...
-      return resolved.toString();
+      final normalizedPath = p.startsWith('/') ? p : '/$p';
+      return baseUri.resolve(normalizedPath).toString();
     } catch (e) {
       debugPrint('❌ image url build failed: base=$base raw=$raw err=$e');
       return '';
     }
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _imageBaseUrl =
-        (dotenv.env['API_BASE_URL'] ?? '').trim(); // ✅ BASE_URL from env
-    _loadMedicines();
+  /// คืน ImageProvider สำหรับใช้กับ DecorationImage / Image widget
+  /// ✅ ต้อง return ครบทุกกรณี เพื่อเลี่ยงพฤติกรรมแปลก ๆ ใน release
+  ImageProvider? _buildMedicineImage(String path) {
+    final p = path.trim();
+    if (p.isEmpty || p.toLowerCase() == 'null') return null;
+
+    // full url
+    if (p.startsWith('http://') || p.startsWith('https://')) {
+      return NetworkImage(p);
+    }
+
+    // relative uploads
+    if (p.startsWith('/uploads') || p.startsWith('uploads')) {
+      final url = _toFullImageUrl(p);
+      if (url.isEmpty) return null;
+      return NetworkImage(url);
+    }
+
+    // กรณี backend ส่ง path แบบอื่น (กันไว้ ไม่ให้เด้ง)
+    final maybeUrl = _toFullImageUrl(p);
+    if (maybeUrl.isNotEmpty) return NetworkImage(maybeUrl);
+
+    return null;
   }
 
   Future<void> _loadMedicines() async {
@@ -66,9 +88,10 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
 
     try {
       final items = await _api.fetchProfileMedicineList(
-        profileId: widget.profileId, // ✅ PROFILE_ID: use passed profileId
+        profileId: widget.profileId, // ✅ source เดียว
       );
       if (!mounted) return;
+
       setState(() {
         _items
           ..clear()
@@ -84,21 +107,6 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
       setState(() {
         _loading = false;
       });
-    }
-  }
-
-  ImageProvider? _buildMedicineImage(String path) {
-    if (path.isEmpty) return null;
-
-    // 🔹 server ส่ง path relative มา
-    if (path.startsWith('/uploads') || path.startsWith('uploads')) {
-      final baseUrl = dotenv.env['API_BASE_URL'] ?? '';
-      final base = Uri.parse(baseUrl);
-
-      final normalizedPath = path.startsWith('/') ? path : '/$path';
-      final url = base.resolve(normalizedPath).toString();
-
-      return NetworkImage(url);
     }
   }
 
@@ -126,15 +134,15 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
-          builder: (_) => CreateNameMedicinePage(
-                profileId: widget.profileId, // ✅ PROFILE_ID: pass through
-              )),
+        builder: (_) => CreateNameMedicinePage(
+          profileId: widget.profileId, // ✅ source เดียว
+        ),
+      ),
     );
 
     if (!mounted) return;
     if (result is MedicineItem) {
       setState(() {
-        _items.add(result);
         _errorMessage = '';
       });
       await _loadMedicines();
@@ -143,11 +151,12 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
 
   Future<void> _editMedicine(int index) async {
     final current = _items[index];
+
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => CreateNameMedicinePage(
-          profileId: widget.profileId,
+          profileId: widget.profileId, // ✅ source เดียว
           isEditing: true,
           initialItem: current,
         ),
@@ -157,7 +166,6 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
     if (!mounted) return;
     if (result is MedicineItem) {
       setState(() {
-        _items[index] = result;
         _errorMessage = '';
       });
       await _loadMedicines();
@@ -165,10 +173,9 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
   }
 
   void _showDetails(MedicineItem item) {
-    final url = _toFullImageUrl(item.imagePath);
     debugPrint('🧪 MED imagePath = "${item.imagePath}"');
 
-    final image = _buildMedicineImage(item.imagePath);
+    final imageProvider = _buildMedicineImage(item.imagePath);
 
     showDialog(
       context: context,
@@ -179,15 +186,26 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (image != null)
+              if (imageProvider != null)
                 Center(
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(12),
                     child: Image(
-                      image: image,
+                      image: imageProvider,
                       width: 120,
                       height: 120,
                       fit: BoxFit.cover,
+                      // ✅ กันรูปโหลดพังแล้ว UI แตก
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          width: 120,
+                          height: 120,
+                          alignment: Alignment.center,
+                          color: const Color(0xFFDDE7F5),
+                          child: const Icon(Icons.broken_image,
+                              color: Color(0xFF1F497D)),
+                        );
+                      },
                     ),
                   ),
                 ),
@@ -263,7 +281,7 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
 
   Widget _buildMedicineCard(BuildContext context, int index) {
     final item = _items[index];
-    final image = _buildMedicineImage(item.imagePath); // ✅ Use unified field
+    final imageProvider = _buildMedicineImage(item.imagePath);
     debugPrint('🧪 MED item imagePath = "${item.imagePath}"');
 
     return InkWell(
@@ -294,46 +312,47 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
               decoration: BoxDecoration(
                 color: const Color(0xFFDDE7F5),
                 borderRadius: BorderRadius.circular(12),
-                image: image != null
-                    ? DecorationImage(image: image, fit: BoxFit.cover)
+                image: imageProvider != null
+                    ? DecorationImage(image: imageProvider, fit: BoxFit.cover)
                     : null,
               ),
-              child: image == null
+              child: imageProvider == null
                   ? const Icon(Icons.medication, color: Color(0xFF1F497D))
                   : null,
             ),
             const SizedBox(width: 12),
             Expanded(
-                child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'ชื่อยา',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                    fontWeight: FontWeight.w500,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'ชื่อยา',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[600],
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  item.nickname_medi,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Color(0xFF1F497D), // สีหลัก
+                  const SizedBox(height: 2),
+                  Text(
+                    item.nickname_medi,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF1F497D),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'กดเพื่อดูรายการแจ้งเตือนการรับประทานยา',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[500],
+                  const SizedBox(height: 4),
+                  Text(
+                    'กดเพื่อดูรายการแจ้งเตือนการรับประทานยา',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.grey[500],
+                    ),
                   ),
-                ),
-              ],
-            )),
+                ],
+              ),
+            ),
             Column(
               children: [
                 IconButton(
@@ -412,45 +431,46 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
                           children: [
                             Expanded(
                               child: Container(
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(16),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.08),
-                                        blurRadius: 8,
-                                        offset: const Offset(0, 4),
-                                      ),
-                                    ],
-                                  ),
-                                  child: _loading
-                                      ? const Center(
-                                          child: CircularProgressIndicator(),
-                                        )
-                                      : _items.isNotEmpty
-                                          ? ListView.builder(
-                                              itemCount: _items.length,
-                                              itemBuilder: _buildMedicineCard,
-                                            )
-                                          : _errorMessage.isNotEmpty
-                                              ? Center(
-                                                  child: Text(
-                                                    _friendlyErrorMessage(),
-                                                    textAlign: TextAlign.center,
-                                                    style: const TextStyle(
-                                                        color:
-                                                            Color(0xFF8893A0)),
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(16),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.08),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: _loading
+                                    ? const Center(
+                                        child: CircularProgressIndicator(),
+                                      )
+                                    : _items.isNotEmpty
+                                        ? ListView.builder(
+                                            itemCount: _items.length,
+                                            itemBuilder: _buildMedicineCard,
+                                          )
+                                        : _errorMessage.isNotEmpty
+                                            ? Center(
+                                                child: Text(
+                                                  _friendlyErrorMessage(),
+                                                  textAlign: TextAlign.center,
+                                                  style: const TextStyle(
+                                                    color: Color(0xFF8893A0),
                                                   ),
-                                                )
-                                              : const Center(
-                                                  child: Text(
-                                                    'ไม่พบรายการยา',
-                                                    style: TextStyle(
-                                                        color:
-                                                            Color(0xFF8893A0)),
+                                                ),
+                                              )
+                                            : const Center(
+                                                child: Text(
+                                                  'ไม่พบรายการยา',
+                                                  style: TextStyle(
+                                                    color: Color(0xFF8893A0),
                                                   ),
-                                                )),
+                                                ),
+                                              ),
+                              ),
                             ),
                             SizedBox(height: maxWidth * 0.05),
                             SizedBox(

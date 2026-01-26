@@ -109,7 +109,7 @@ class _OTPScreenState extends State<OTPScreen> {
 
       // ส่งไป backend ของเพื่อน
       final syncRes = await http.post(
-        Uri.parse('http://82.26.104.199:3000/api/mobile/v1/auth/sync-user'),
+        Uri.parse('http://82.26.104.98:3000/api/mobile/v1/auth/sync-user'),
         headers: {
           'Authorization': 'Bearer $accessToken',
           'Content-Type': 'application/json',

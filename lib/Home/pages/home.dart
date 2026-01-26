@@ -22,7 +22,7 @@ class Home extends StatefulWidget {
 }
 
 class _Home extends State<Home> {
-  static const String _imageBaseUrl = 'http://82.26.104.199:3000';
+  static const String _imageBaseUrl = 'http://82.26.104.98:3000';
   final List<_MedicineReminder> _reminders = [
     _MedicineReminder(
       time: '07:00 น.',

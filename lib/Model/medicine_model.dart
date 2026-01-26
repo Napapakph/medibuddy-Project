@@ -126,6 +126,7 @@ class MedicineDraft {
   final String searchQuery_medi;
   final String officialName_medi;
   final String imagePath;
+  final String? mediId;
   final MedicineCatalogItem? catalogItem;
 
   const MedicineDraft({
@@ -133,6 +134,7 @@ class MedicineDraft {
     this.searchQuery_medi = '',
     this.officialName_medi = '',
     this.imagePath = '',
+    this.mediId,
     this.catalogItem,
   });
 
@@ -141,6 +143,7 @@ class MedicineDraft {
     String? searchQuery_medi,
     String? officialName_medi,
     String? imagePath,
+    String? mediId,
     MedicineCatalogItem? catalogItem,
   }) {
     return MedicineDraft(
@@ -149,6 +152,7 @@ class MedicineDraft {
       officialName_medi: officialName_medi ?? this.officialName_medi,
       imagePath: imagePath ?? this.imagePath,
       catalogItem: catalogItem ?? this.catalogItem,
+      mediId: mediId ?? this.mediId,
     );
   }
 }

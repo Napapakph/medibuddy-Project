@@ -37,17 +37,10 @@ class MedicineApi {
     throw Exception('No access token. Please login again.');
   }
 
-  /// POST /api/mobile/v1/medicine-list/create
-  /// multipart/form-data:
-  /// - profileId (required)
-  /// - mediId (required)
-  /// - mediNickname (optional)
-  /// - picture (optional binary)  ✅ FIELD_NAME MUST BE "picture"
-  ///
-  /// ✅ Style: same as ProfileApi (Dio + FormData + logs + validateStatus)
+  // ----- Medicine APIs -----
   Future<Map<String, dynamic>> addMedicineToProfile({
     required int profileId,
-    required int mediId,
+    int? mediId,
     String? mediNickname,
     File? pictureFile,
   }) async {
@@ -132,7 +125,7 @@ class MedicineApi {
     }
   }
 
-  /// GET /api/admin/v1/medicine/list
+//--------------- ยาในระบบ (Medicine Catalog) ---------------
   Future<List<MedicineCatalogItem>> fetchMedicineCatalog({
     String search = '',
     int page = 1,
@@ -156,7 +149,7 @@ class MedicineApi {
       params['search'] = trimmed;
     }
 
-    final uri = Uri.parse('$_baseUrl/api/admin/v1/medicine/list')
+    final uri = Uri.parse('$_baseUrl/api/mobile/v1/medicine/list')
         .replace(queryParameters: params);
 
     final resp = await http.get(
@@ -214,6 +207,7 @@ class MedicineApi {
       final normalized = normalizeServerPath(rawPic);
       final fullUrl =
           (normalized.startsWith('http')) ? normalized : '$_baseUrl$normalized';
+      // ✅ keep parsing keys like before
 
       debugPrint(
           '🧪 CATALOG[$i] mediId=$mediId th="$thName" en="$enName" trade="$tradeName"');
@@ -227,7 +221,7 @@ class MedicineApi {
         .toList();
   }
 
-  /// GET /api/mobile/v1/medicine-list/list?profileId=...
+// ----- list รายการยาใน profile -----
   Future<List<MedicineItem>> fetchProfileMedicineList({
     required int profileId,
   }) async {
@@ -305,14 +299,9 @@ class MedicineApi {
     }).toList();
   }
 
-  /// PATCH /api/mobile/v1/medicine-list/update
-  /// required: mediListId
-  /// optional: mediId, mediNickname, pictureFile
-  ///
-  /// ✅ ใช้ multipart/form-data เผื่อกรณีอัปเดตรูป
-  /// (ถ้า backend ของคุณรับเป็น json-only ให้บอกฉัน เดี๋ยวปรับเป็น JSON)
   Future<Map<String, dynamic>> updateMedicineListItem({
     required int mediListId,
+    int? mediId,
     String? mediNickname,
     File? pictureFile,
   }) async {
@@ -326,6 +315,7 @@ class MedicineApi {
     // ✅ สร้าง FormData ชุดเดียว
     final formMap = <String, dynamic>{
       'mediListId': mediListId,
+      if (mediId != null && mediId > 0) 'mediId': mediId, // ✅ เพิ่มบรรทัดนี้
       if (mediNickname != null && mediNickname.trim().isNotEmpty)
         'mediNickname': mediNickname.trim(),
     };
@@ -347,8 +337,9 @@ class MedicineApi {
     final formData = dio.FormData.fromMap(formMap);
 
     debugPrint('✏️ UPDATE(MED) -> $url');
-    debugPrint('🧾 FIELDS -> mediListId=$mediListId '
+    debugPrint('🧾 FIELDS -> mediListId=$mediListId mediId=$mediId '
         'mediNickname=${(mediNickname ?? "").trim().isEmpty ? "(no change)" : mediNickname!.trim()}');
+
     debugPrint('🖼️ PICTURE -> ${pictureFile?.path ?? "(no change)"}');
 
     final res = await _dio.patch(
@@ -373,11 +364,6 @@ class MedicineApi {
     return {'data': res.data};
   }
 
-  /// DELETE /api/mobile/v1/medicine-list/delete
-  /// required: mediListId
-  ///
-  /// ⚠️ หลาย backend รับ mediListId ผ่าน query หรือ body
-  /// โค้ดนี้ส่งผ่าน queryParameters (ปลอดภัยสุดกับ DELETE)
   Future<void> deleteMedicineListItem({
     required int mediListId,
   }) async {

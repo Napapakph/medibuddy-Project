@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:medibuddy/Model/medicine_model.dart';
 import 'package:medibuddy/widgets/medicine_step_timeline.dart';
 import 'package:medibuddy/services/medicine_api.dart';
@@ -74,64 +74,22 @@ class _CreateNameMedicinePageState extends State<CreateNameMedicinePage> {
       return;
     }
 
-    if (widget.isEditing) {
-      final current = widget.initialItem;
-      if (current == null) return;
-      setState(() => _saving = true);
-
-      File? localImage;
-      if (_imagePath.isNotEmpty && !_isRemotePath(_imagePath)) {
-        localImage = File(_imagePath);
-      }
-
-      try {
-        final api = MedicineApi();
-        final res = await api.updateMedicineListItem(
-          mediListId: current.mediListId,
-          mediNickname: name,
-          pictureFile: localImage,
-        );
-
-        final serverPath = (res['picture'] ??
-                res['data']?['imagePath'] ??
-                res['data']?['picture'])
-            ?.toString()
-            .trim();
-
-        final updated = current.copyWith(
-          nickname_medi: name,
-          imagePath: (serverPath != null && serverPath.isNotEmpty)
-              ? serverPath
-              : (_imagePath.isNotEmpty ? _imagePath : current.imagePath),
-        );
-
-        if (!mounted) return;
-        Navigator.pop(context, updated);
-      } catch (e) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('อัปเดตรายการยาไม่สำเร็จ: $e')),
-        );
-      } finally {
-        if (!mounted) return;
-        setState(() => _saving = false);
-      }
-      return;
-    }
-
-    // step 1: draft
+    // ✅ สร้าง draft จากค่าที่ผู้ใช้แก้ตอนนี้
     final draft = MedicineDraft(
       nickname_medi: name,
       imagePath: _imagePath,
+      mediId: widget.isEditing ? widget.initialItem?.id : null,
     );
 
-    // step 2: เลือกยาจาก database
+    // ✅ ไปเลือกยาจาก database ต่อ (แม้เป็นโหมดแก้ไข)
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => FindMedicinePage(
           draft: draft,
           profileId: widget.profileId,
+          isEdit: widget.isEditing, // ✅ ส่งต่อโหมดแก้ไข
+          initialItem: widget.initialItem, // ✅ ส่ง item เดิมไปด้วย
         ),
       ),
     );
@@ -139,13 +97,21 @@ class _CreateNameMedicinePageState extends State<CreateNameMedicinePage> {
     if (!mounted) return;
     if (result is! MedicineItem) return;
 
-    // step 3: เตรียม local item (สำเร็จในแอพเสมอ)
-    final MedicineItem localItem = result.copyWith(
-      nickname_medi: name,
-      imagePath: _imagePath,
-    );
+    // ✅ ส่งกลับไปหน้าก่อน (ให้หน้า Summary เป็นคนเซฟ/อัปเดตจริง)
+    Navigator.pop(context, result);
+  }
 
-    Navigator.pop(context, localItem);
+  String toFullImageUrl(String raw) {
+    final base = (dotenv.env['API_BASE_URL'] ?? '').trim();
+    final p = raw.trim();
+
+    if (p.isEmpty || p.toLowerCase() == 'null') return '';
+    if (p.startsWith('http://') || p.startsWith('https://')) return p;
+    if (base.isEmpty) return '';
+
+    final baseUri = Uri.parse(base);
+    final path = p.startsWith('/') ? p : '/$p';
+    return baseUri.resolve(path).toString();
   }
 
   @override
@@ -220,18 +186,16 @@ class _CreateNameMedicinePageState extends State<CreateNameMedicinePage> {
                               borderRadius: BorderRadius.circular(16),
                               child: _isRemotePath(_imagePath)
                                   ? Image.network(
-                                      _imagePath,
+                                      toFullImageUrl(_imagePath),
                                       width: double.infinity,
                                       height: double.infinity,
                                       fit: BoxFit.cover,
                                       errorBuilder:
                                           (context, error, stackTrace) {
                                         return const Center(
-                                          child: Icon(
-                                            Icons.photo,
-                                            size: 64,
-                                            color: Color(0xFF9AA7B8),
-                                          ),
+                                          child: Icon(Icons.photo,
+                                              size: 64,
+                                              color: Color(0xFF9AA7B8)),
                                         );
                                       },
                                     )

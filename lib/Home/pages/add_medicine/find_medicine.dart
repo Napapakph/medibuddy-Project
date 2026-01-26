@@ -1,18 +1,22 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:medibuddy/Model/medicine_model.dart';
 import 'package:medibuddy/widgets/medicine_step_timeline.dart';
-
 import 'add_medicine.dart';
-import '../../../OCR/camera_ocr.dart'; // ✅ เพิ่ม
+import '../../../OCR/camera_ocr.dart';
+import 'summary_medicine.dart';
 
 class FindMedicinePage extends StatefulWidget {
   final MedicineDraft draft;
   final int profileId;
+  final bool isEdit;
+  final MedicineItem? initialItem;
 
-  const FindMedicinePage({
+  FindMedicinePage({
     super.key,
     required this.draft,
     required this.profileId,
+    this.isEdit = false,
+    this.initialItem,
   });
 
   @override
@@ -29,7 +33,7 @@ class _FindMedicinePageState extends State<FindMedicinePage> {
   }
 
   /// 🔹 ค้นหาด้วยการพิมพ์
-  Future<void> _goNext() async {
+  Future<void> _goNextBySerch() async {
     final keyword = _searchController.text.trim();
 
     final result = await Navigator.push(
@@ -40,6 +44,8 @@ class _FindMedicinePageState extends State<FindMedicinePage> {
           draft: widget.draft.copyWith(
             searchQuery_medi: keyword,
           ),
+          isEdit: widget.isEdit,
+          initialItem: widget.initialItem,
         ),
       ),
     );
@@ -66,15 +72,14 @@ class _FindMedicinePageState extends State<FindMedicinePage> {
       setState(() {
         _searchController.text = result.trim();
       });
-
-      // optional: auto ไปหน้าถัดไป
-      // await _goNext();
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final pageTitle = widget.isEdit ? 'แก้ไขรายการยา' : 'เพิ่มรายการยา';
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         backgroundColor: const Color(0xFF1F497D),
         iconTheme: const IconThemeData(color: Colors.white),
@@ -86,8 +91,8 @@ class _FindMedicinePageState extends State<FindMedicinePage> {
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: ListView(
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             children: [
               const MedicineStepTimeline(currentStep: 2),
               const SizedBox(height: 24),
@@ -100,8 +105,6 @@ class _FindMedicinePageState extends State<FindMedicinePage> {
                 ),
               ),
               const SizedBox(height: 8),
-
-              /// 🔍 ช่องค้นหา
               TextField(
                 controller: _searchController,
                 decoration: InputDecoration(
@@ -114,18 +117,15 @@ class _FindMedicinePageState extends State<FindMedicinePage> {
                   ),
                   suffixIcon: IconButton(
                     icon: const Icon(Icons.search, color: Color(0xFF1F497D)),
-                    onPressed: _goNext,
+                    onPressed: _goNextBySerch,
                   ),
                 ),
               ),
-
               const SizedBox(height: 16),
-
-              /// 🔘 ปุ่มเลือกวิธีค้นหา
               Row(
                 children: [
                   ElevatedButton.icon(
-                    onPressed: _goNext,
+                    onPressed: _goNextBySerch,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF1F497D),
                       shape: RoundedRectangleBorder(
@@ -133,14 +133,12 @@ class _FindMedicinePageState extends State<FindMedicinePage> {
                       ),
                     ),
                     icon: const Icon(Icons.search, color: Colors.white),
-                    label: const Text(
-                      'ค้นหา',
-                      style: TextStyle(color: Colors.white),
-                    ),
+                    label: const Text('ค้นหา',
+                        style: TextStyle(color: Colors.white)),
                   ),
                   const SizedBox(width: 12),
                   OutlinedButton.icon(
-                    onPressed: _scanByCamera, // ✅ เชื่อม OCR
+                    onPressed: _scanByCamera,
                     style: OutlinedButton.styleFrom(
                       foregroundColor: const Color(0xFF1F497D),
                       side: const BorderSide(color: Color(0xFF1F497D)),
@@ -153,10 +151,9 @@ class _FindMedicinePageState extends State<FindMedicinePage> {
                   ),
                 ],
               ),
-
               const SizedBox(height: 24),
-
-              Expanded(
+              SizedBox(
+                height: 350,
                 child: Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
@@ -172,10 +169,53 @@ class _FindMedicinePageState extends State<FindMedicinePage> {
                   ),
                 ),
               ),
+              const SizedBox(height: 10),
+              Align(
+                alignment: Alignment.centerRight,
+                child: ElevatedButton(
+                  onPressed: () {},
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF1F497D),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 10),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    minimumSize: Size.zero,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: const Text(
+                    'ข้ามการค้นหา',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
       ),
     );
+  }
+
+  Future<void> _skipSearch() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => SummaryMedicinePage(
+          profileId: widget.profileId,
+          draft: widget.draft.copyWith(
+            searchQuery_medi: '',
+            catalogItem: null, // ✅ เพิ่มบรรทัดนี้ (ไม่ผูก DB)
+          ),
+          isEdit: widget.isEdit,
+          initialItem: widget.initialItem,
+        ),
+      ),
+    );
+
+    if (!mounted) return;
+    if (result is MedicineItem) {
+      Navigator.pop(context, result);
+    }
   }
 }

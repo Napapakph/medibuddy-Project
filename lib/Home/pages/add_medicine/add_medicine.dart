@@ -9,11 +9,15 @@ import 'request_medicine.dart';
 class AddMedicinePage extends StatefulWidget {
   final MedicineDraft draft;
   final int profileId;
+  final bool isEdit;
+  final MedicineItem? initialItem;
 
   const AddMedicinePage({
     super.key,
     required this.draft,
     required this.profileId,
+    this.isEdit = false,
+    this.initialItem,
   });
 
   @override
@@ -27,12 +31,16 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
   bool _loading = true;
   String _errorMessage = '';
   bool _shownNotFoundDialog = false;
+  bool _skipCatalogLink = false; // ✅ ไม่ผูกกับฐานข้อมูล
   late final String _searchQuery;
 
   @override
   void initState() {
     super.initState();
-    _searchQuery = widget.draft.searchQuery_medi;
+    _searchQuery = widget.draft.searchQuery_medi.isNotEmpty
+        ? widget.draft.searchQuery_medi
+        : (widget.isEdit ? (widget.initialItem?.officialName_medi ?? '') : '');
+    _skipCatalogLink = widget.isEdit && (widget.initialItem?.mediId ?? 0) <= 0;
     _loadMedicines();
   }
 
@@ -49,6 +57,19 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
         _items
           ..clear()
           ..addAll(items);
+        if (!_skipCatalogLink &&
+            _selectedItem == null &&
+            widget.isEdit &&
+            widget.initialItem != null &&
+            widget.initialItem!.mediId > 0) {
+          final initialId = widget.initialItem!.mediId;
+          for (final item in items) {
+            if (item.mediId == initialId) {
+              _selectedItem = item;
+              break;
+            }
+          }
+        }
       });
     } catch (e) {
       if (!mounted) return;
@@ -130,13 +151,24 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
   }
 
   Future<void> _goNext() async {
-    if (_selectedItem == null) return;
+    // ✅ ถ้าไม่ skip ต้องเลือกยา
+    if (!_skipCatalogLink && _selectedItem == null) return;
 
-    final selected = _selectedItem!;
-    final draft = widget.draft.copyWith(
-      officialName_medi: selected.displayOfficialName,
-      catalogItem: selected,
-    );
+    final MedicineDraft draft;
+    if (_skipCatalogLink) {
+      // ✅ ไม่ผูกกับฐานข้อมูล → ส่ง catalogItem = null
+      draft = widget.draft.copyWith(
+        catalogItem: null,
+        // officialName_medi: คงเดิมไว้ (ชื่อที่ผู้ใช้ตั้งจากขั้นก่อนหน้า)
+        // ถ้าอยากให้แสดงชัดขึ้นว่า "ไม่ผูก" ค่อยไปใส่ label ใน Summary ได้
+      );
+    } else {
+      final selected = _selectedItem!;
+      draft = widget.draft.copyWith(
+        officialName_medi: selected.displayOfficialName,
+        catalogItem: selected,
+      );
+    }
 
     final result = await Navigator.push(
       context,
@@ -144,6 +176,8 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
         builder: (_) => SummaryMedicinePage(
           draft: draft,
           profileId: widget.profileId,
+          isEdit: widget.isEdit,
+          initialItem: widget.initialItem,
         ),
       ),
     );
@@ -172,6 +206,7 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
 
   @override
   Widget build(BuildContext context) {
+    final pageTitle = widget.isEdit ? 'แก้ไขรายการยา' : 'เพิ่มรายการยา';
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color(0xFF1F497D),
@@ -229,15 +264,15 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
                         final item = filtered[index];
                         final isSelected = _selectedItem?.mediId == item.mediId;
 
-                        final imageUrl = item.imageUrl.trim();
-                        final mageUrl = toFullImageUrl(item.imageUrl ?? '');
+                        final imageUrl = (item.imageUrl ?? '').trim();
+                        final imagePath = toFullImageUrl(item.imageUrl ?? '');
 
                         return GestureDetector(
                           onTap: () {
                             setState(() {
                               _selectedItem = item;
                               debugPrint(
-                                  '================= check Medi ID  ==================');
+                                  '================= check Medi ID from addmedi  ==================');
                               debugPrint(
                                   'Medi ID: ${item.mediId}, Name: ${item.displayOfficialName}');
                             });
@@ -272,7 +307,7 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
                                     color: const Color(0xFFE9EEF6),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
-                                  child: imageUrl.isEmpty
+                                  child: imagePath.isEmpty
                                       ? const Icon(
                                           Icons.medication,
                                           color: Color(0xFF1F497D),
@@ -281,10 +316,26 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
                                           borderRadius:
                                               BorderRadius.circular(12),
                                           child: Image.network(
-                                            imageUrl,
+                                            imagePath,
                                             fit: BoxFit.cover,
+                                            loadingBuilder:
+                                                (context, child, progress) {
+                                              if (progress == null)
+                                                return child;
+                                              return const Center(
+                                                child: SizedBox(
+                                                  width: 20,
+                                                  height: 20,
+                                                  child:
+                                                      CircularProgressIndicator(
+                                                          strokeWidth: 2),
+                                                ),
+                                              );
+                                            },
                                             errorBuilder:
                                                 (context, error, stackTrace) {
+                                              debugPrint(
+                                                  '❌ Image load failed: $imagePath');
                                               return const Icon(
                                                 Icons.medication,
                                                 color: Color(0xFF1F497D),
