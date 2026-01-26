@@ -28,9 +28,10 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
   final MedicineApi _api = MedicineApi();
   final List<MedicineCatalogItem> _items = [];
   MedicineCatalogItem? _selectedItem;
+
   bool _loading = true;
   String _errorMessage = '';
-  bool _shownNotFoundDialog = false;
+
   bool _skipCatalogLink = false; // ✅ ไม่ผูกกับฐานข้อมูล
   late final String _searchQuery;
 
@@ -40,6 +41,7 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
     _searchQuery = widget.draft.searchQuery_medi.isNotEmpty
         ? widget.draft.searchQuery_medi
         : (widget.isEdit ? (widget.initialItem?.officialName_medi ?? '') : '');
+
     _skipCatalogLink = widget.isEdit && (widget.initialItem?.mediId ?? 0) <= 0;
     _loadMedicines();
   }
@@ -53,10 +55,13 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
     try {
       final items = await _api.fetchMedicineCatalog(search: _searchQuery);
       if (!mounted) return;
+
       setState(() {
         _items
           ..clear()
           ..addAll(items);
+
+        // ✅ ถ้าเป็น edit และเดิมผูกไว้ ให้ pre-select item เดิม
         if (!_skipCatalogLink &&
             _selectedItem == null &&
             widget.isEdit &&
@@ -98,55 +103,31 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
     }).toList();
   }
 
-  void _maybeShowNotFoundDialog(List<MedicineCatalogItem> filtered) {
-    final query = _searchQuery.trim();
-    if (query.isEmpty) return;
-    if (_loading || _errorMessage.isNotEmpty) return;
-    if (filtered.isNotEmpty) return;
-    if (_shownNotFoundDialog) return;
+  bool _hasExactMatch(List<MedicineCatalogItem> filtered) {
+    final q = _searchQuery.trim().toLowerCase();
+    if (q.isEmpty) return true; // ไม่ search ก็ถือว่าไม่ต้องโชว์โหมด notfound
 
-    _shownNotFoundDialog = true;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      _showNotFoundDialog(query);
-    });
+    for (final item in filtered) {
+      final en = item.mediEnName.trim().toLowerCase();
+      final trade = item.mediTradeName.trim().toLowerCase();
+      final th = item.mediThName.trim().toLowerCase();
+
+      if (en == q || trade == q || th == q) return true;
+    }
+    return false;
   }
 
-  Future<void> _showNotFoundDialog(String query) async {
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text('ไม่พบรายการยา'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
-              Text('ต้องการส่งคำขอเพิ่มรายการยานี้ไปยังระบบหรือไม่ ?'),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('ยกเลิก'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(dialogContext);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => RequestMedicinePage(
-                      medicineName: query,
-                    ),
-                  ),
-                );
-              },
-              child: const Text('ยืนยัน'),
-            ),
-          ],
-        );
-      },
+  void _goRequest() {
+    final query = _searchQuery.trim();
+    if (query.isEmpty) return;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => RequestMedicinePage(
+          medicineName: query,
+        ),
+      ),
     );
   }
 
@@ -159,8 +140,6 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
       // ✅ ไม่ผูกกับฐานข้อมูล → ส่ง catalogItem = null
       draft = widget.draft.copyWith(
         catalogItem: null,
-        // officialName_medi: คงเดิมไว้ (ชื่อที่ผู้ใช้ตั้งจากขั้นก่อนหน้า)
-        // ถ้าอยากให้แสดงชัดขึ้นว่า "ไม่ผูก" ค่อยไปใส่ label ใน Summary ได้
       );
     } else {
       final selected = _selectedItem!;
@@ -199,21 +178,109 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
 
     if (base.isEmpty) return '';
 
-    final baseUri = Uri.parse(base);
-    final path = p.startsWith('/') ? p : '/$p';
-    return baseUri.resolve(path).toString();
+    try {
+      final baseUri = Uri.parse(base);
+      final path = p.startsWith('/') ? p : '/$p';
+      return baseUri.resolve(path).toString();
+    } catch (e) {
+      debugPrint('❌ image url build failed: base=$base raw=$raw err=$e');
+      return '';
+    }
+  }
+
+  Widget _buildHelperZone({
+    required bool onlyHelper,
+    required bool showRequestHint,
+  }) {
+    // โซน “แมวผู้ช่วยนำทาง” (เดียร์จะเปลี่ยนไอคอนเป็นรูปเองทีหลังได้)
+    // - ไอคอนอยู่ชิดขอบขวา
+    // - บอลลูนเป็นปุ่มกด ส่งคำร้อง
+    final bubbleText = 'หายาไม่เจอใช่มัย!?\nกดตรงนี้สิ';
+
+    return Padding(
+      padding: EdgeInsets.only(
+        top: onlyHelper ? 12 : 8,
+        bottom: 8,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          // บอลลูนคำพูด (เป็นปุ่ม)
+          Expanded(
+            child: Opacity(
+              opacity: showRequestHint ? 1.0 : 0.85,
+              child: InkWell(
+                onTap: _goRequest,
+                borderRadius: BorderRadius.circular(22),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEAF3FF),
+                    borderRadius: BorderRadius.circular(22),
+                    border: Border.all(color: const Color(0xFFD2E6FF)),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          bubbleText,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            height: 1.25,
+                            color: Color(0xFF1F497D),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      const Icon(
+                        Icons.touch_app,
+                        color: Color(0xFF1F497D),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+
+          // ไอคอนชิดขอบขวา (placeholder)
+          // เดียร์เปลี่ยนเป็นรูป/asset ภายหลังได้
+          InkWell(
+            onTap: _goRequest,
+            borderRadius: BorderRadius.circular(28),
+            child: Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: const Color(0xFF1F497D),
+                borderRadius: BorderRadius.circular(28),
+              ),
+              child: const Icon(
+                Icons.pets,
+                color: Colors.white,
+                size: 28,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final pageTitle = widget.isEdit ? 'แก้ไขรายการยา' : 'เพิ่มรายการยา';
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color(0xFF1F497D),
         iconTheme: const IconThemeData(color: Colors.white),
-        title: const Text(
-          'เพิ่มยา',
-          style: TextStyle(color: Colors.white),
+        title: Text(
+          pageTitle,
+          style: const TextStyle(color: Colors.white),
         ),
       ),
       body: SafeArea(
@@ -223,14 +290,13 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const MedicineStepTimeline(currentStep: 3),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
+
               Expanded(
                 child: Builder(
                   builder: (context) {
                     if (_loading) {
-                      return const Center(
-                        child: CircularProgressIndicator(),
-                      );
+                      return const Center(child: CircularProgressIndicator());
                     }
 
                     if (_errorMessage.isNotEmpty) {
@@ -244,145 +310,164 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
                     }
 
                     final filtered = _filteredItems();
-                    _maybeShowNotFoundDialog(filtered);
+                    final hasAny = filtered.isNotEmpty;
+                    final exact = _hasExactMatch(filtered);
 
-                    if (filtered.isEmpty) {
-                      return const Center(
-                          child: Column(
-                        children: [
-                          Text(
-                            'ไม่พบรายการยา',
-                            style: TextStyle(color: Color(0xFF7A869A)),
-                          ),
-                        ],
-                      ));
-                    }
+                    // เงื่อนไขตามที่เดียร์ต้องการ:
+                    // - ถ้าไม่มีชื่อใกล้เคียงเลย: แสดงแค่แมว (no list)
+                    // - ถ้ามี list: แสดง list ด้านบน + แมวด้านล่าง
+                    // - ถ้าค้นหาแล้ว "ไม่ตรงชื่อ" (ไม่มี exact match): ให้เห็นโซนส่งคำร้องชัด ๆ
+                    final onlyHelper = !hasAny;
+                    final showRequestHint = !exact || !hasAny;
 
-                    return ListView.builder(
-                      itemCount: filtered.length,
-                      itemBuilder: (context, index) {
-                        final item = filtered[index];
-                        final isSelected = _selectedItem?.mediId == item.mediId;
+                    return Column(
+                      children: [
+                        // ===== โซนบน: list =====
+                        if (!onlyHelper)
+                          Expanded(
+                            child: ListView.builder(
+                              itemCount: filtered.length,
+                              itemBuilder: (context, index) {
+                                final item = filtered[index];
+                                final isSelected =
+                                    _selectedItem?.mediId == item.mediId;
 
-                        final imageUrl = (item.imageUrl ?? '').trim();
-                        final imagePath = toFullImageUrl(item.imageUrl ?? '');
+                                final imagePath =
+                                    toFullImageUrl(item.imageUrl ?? '');
 
-                        return GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _selectedItem = item;
-                              debugPrint(
-                                  '================= check Medi ID from addmedi  ==================');
-                              debugPrint(
-                                  'Medi ID: ${item.mediId}, Name: ${item.displayOfficialName}');
-                            });
-                          },
-                          child: Container(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: isSelected
-                                    ? const Color(0xFF1F497D)
-                                    : const Color(0xFFE0E6EF),
-                                width: isSelected ? 2 : 1,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
-                                  blurRadius: 6,
-                                  offset: const Offset(0, 3),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Container(
-                                  width: 56,
-                                  height: 56,
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFE9EEF6),
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: imagePath.isEmpty
-                                      ? const Icon(
-                                          Icons.medication,
-                                          color: Color(0xFF1F497D),
-                                        )
-                                      : ClipRRect(
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                          child: Image.network(
-                                            imagePath,
-                                            fit: BoxFit.cover,
-                                            loadingBuilder:
-                                                (context, child, progress) {
-                                              if (progress == null)
-                                                return child;
-                                              return const Center(
-                                                child: SizedBox(
-                                                  width: 20,
-                                                  height: 20,
-                                                  child:
-                                                      CircularProgressIndicator(
-                                                          strokeWidth: 2),
+                                return GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      _selectedItem = item;
+                                      debugPrint(
+                                          'Medi ID: ${item.mediId}, Name: ${item.displayOfficialName}');
+                                    });
+                                  },
+                                  child: Container(
+                                    margin: const EdgeInsets.only(bottom: 12),
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(16),
+                                      border: Border.all(
+                                        color: isSelected
+                                            ? const Color(0xFF1F497D)
+                                            : const Color(0xFFE0E6EF),
+                                        width: isSelected ? 2 : 1,
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.05),
+                                          blurRadius: 6,
+                                          offset: const Offset(0, 3),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Container(
+                                          width: 56,
+                                          height: 56,
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFE9EEF6),
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                          ),
+                                          child: imagePath.isEmpty
+                                              ? const Icon(
+                                                  Icons.medication,
+                                                  color: Color(0xFF1F497D),
+                                                )
+                                              : ClipRRect(
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                  child: Image.network(
+                                                    imagePath,
+                                                    fit: BoxFit.cover,
+                                                    loadingBuilder: (context,
+                                                        child, progress) {
+                                                      if (progress == null) {
+                                                        return child;
+                                                      }
+                                                      return const Center(
+                                                        child: SizedBox(
+                                                          width: 20,
+                                                          height: 20,
+                                                          child:
+                                                              CircularProgressIndicator(
+                                                                  strokeWidth:
+                                                                      2),
+                                                        ),
+                                                      );
+                                                    },
+                                                    errorBuilder: (context,
+                                                        error, stackTrace) {
+                                                      debugPrint(
+                                                          '❌ Image load failed: $imagePath');
+                                                      return const Icon(
+                                                        Icons.medication,
+                                                        color:
+                                                            Color(0xFF1F497D),
+                                                      );
+                                                    },
+                                                  ),
                                                 ),
-                                              );
-                                            },
-                                            errorBuilder:
-                                                (context, error, stackTrace) {
-                                              debugPrint(
-                                                  '❌ Image load failed: $imagePath');
-                                              return const Icon(
-                                                Icons.medication,
-                                                color: Color(0xFF1F497D),
-                                              );
-                                            },
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                'ชื่อสามัญ : ${item.mediEnName.isNotEmpty ? item.mediEnName : '-'}',
+                                                style: const TextStyle(
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                'ชื่อการค้า : ${item.mediTradeName.isNotEmpty ? item.mediTradeName : '-'}',
+                                                style: const TextStyle(
+                                                  fontSize: 12,
+                                                  color: Color(0xFF5E6C84),
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                         ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'ชื่อสามัญ : ${item.mediEnName.isNotEmpty ? item.mediEnName : '-'}',
-                                        style: const TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        'ชื่อการค้า : ${item.mediTradeName.isNotEmpty ? item.mediTradeName : '-'}',
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                          color: Color(0xFF5E6C84),
-                                        ),
-                                      ),
-                                    ],
+                                        if (isSelected)
+                                          const Icon(
+                                            Icons.check_circle,
+                                            color: Color(0xFF1F497D),
+                                          ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                                if (isSelected)
-                                  const Icon(
-                                    Icons.check_circle,
-                                    color: Color(0xFF1F497D),
-                                  ),
-                              ],
+                                );
+                              },
                             ),
                           ),
-                        );
-                      },
+
+                        // ===== โซนล่าง: แมว + บอลลูนกดส่งคำร้อง =====
+                        _buildHelperZone(
+                          onlyHelper: onlyHelper,
+                          showRequestHint: showRequestHint,
+                        ),
+                      ],
                     );
                   },
                 ),
               ),
+
               const SizedBox(height: 12),
+
+              // ปุ่มยืนยัน: ตามเดิม (ต้องเลือก item ก่อน)
+              // หมายเหตุ: ถ้าเดียร์อยากให้ "ไม่ผูก" แล้วไปต่อได้ด้วย
+              // ค่อยเพิ่ม toggle แยก (เดี๋ยวฉันทำให้ได้)
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(

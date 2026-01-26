@@ -1,7 +1,8 @@
 import 'dart:io';
-
+import '../../../services/request_api.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class RequestMedicinePage extends StatefulWidget {
   final String medicineName;
@@ -29,15 +30,37 @@ class _RequestMedicinePageState extends State<RequestMedicinePage> {
     });
   }
 
-  Future<void> _submitRequest() async {
-    setState(() => _saving = true);
-    await Future<void>.delayed(const Duration(milliseconds: 300));
+  String? _getToken() {
+    return Supabase.instance.client.auth.currentSession?.accessToken;
+  }
 
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('การส่งคำร้องขอเพิ่มยาสำเร็จ')),
-    );
-    Navigator.pop(context);
+  Future<void> _submitRequest() async {
+    try {
+      final token = await _getToken();
+
+      if (token == null || token.isEmpty) {
+        throw Exception('ไม่พบ token กรุณาเข้าสู่ระบบใหม่');
+      }
+
+      await sendUserRequest(
+        accessToken: token, // ✅ ตอนนี้เป็น String แน่นอน
+        requestType: 'ADD_MEDICINE',
+        requestTitle: widget.medicineName,
+        requestDetails: 'add medicine for user',
+        pictureFile: null,
+      );
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('ส่งคำร้องเรียบร้อยแล้ว')),
+      );
+      Navigator.pop(context);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('ส่งไม่สำเร็จ: $e')),
+      );
+    }
   }
 
   @override

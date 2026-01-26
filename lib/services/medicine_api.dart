@@ -1,16 +1,13 @@
 import 'dart:convert';
 import 'dart:io';
-
 import 'package:dio/dio.dart' as dio;
 import 'package:supabase_flutter/supabase_flutter.dart';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:mime/mime.dart';
 import 'package:path/path.dart' as p;
-
 import 'package:medibuddy/Model/medicine_model.dart';
 
 class MedicineApi {
