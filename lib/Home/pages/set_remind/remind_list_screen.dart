@@ -1,6 +1,5 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:medibuddy/Model/medicine_model.dart';
-
 import 'setFuctionRemind.dart';
 import 'setRemind_screen.dart';
 

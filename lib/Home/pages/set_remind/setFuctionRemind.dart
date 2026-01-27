@@ -1,5 +1,5 @@
 ﻿import 'dart:io';
-
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/material.dart';
 import 'package:medibuddy/Model/medicine_regimen_model.dart';
 import 'package:medibuddy/Model/medicine_model.dart';
@@ -129,10 +129,54 @@ class ReminderPlan {
   }
 }
 
-ImageProvider? buildMedicineImage(String path) {
-  if (path.isEmpty) return null;
-  if (path.startsWith('http')) return NetworkImage(path);
-  return FileImage(File(path));
+String _toFullImageUrl(String raw) {
+  final base = (dotenv.env['API_BASE_URL'] ?? '').trim();
+  final p = raw.trim();
+
+  if (p.isEmpty || p.toLowerCase() == 'null') return '';
+
+  // already full url
+  if (p.startsWith('http://') || p.startsWith('https://')) return p;
+
+  if (base.isEmpty) return '';
+
+  try {
+    final baseUri = Uri.parse(base);
+    final normalizedPath = p.startsWith('/') ? p : '/$p';
+    return baseUri.resolve(normalizedPath).toString();
+  } catch (e) {
+    debugPrint('❌ image url build failed: base=$base raw=$raw err=$e');
+    return '';
+  }
+}
+
+ImageProvider? buildMedicineImage(String raw) {
+  debugPrint('🖼️ [MedicineImage] raw="$raw"');
+
+  final trimmed = raw.trim();
+  if (trimmed.isEmpty || trimmed.toLowerCase() == 'null') return null;
+
+  final isLocalFile = trimmed.startsWith('/') ||
+      trimmed.startsWith('file://') ||
+      trimmed.contains(':\\');
+
+  if (isLocalFile) {
+    final filePath = trimmed.startsWith('file://')
+        ? Uri.parse(trimmed).toFilePath()
+        : trimmed;
+    final file = File(filePath);
+    final exists = file.existsSync();
+    debugPrint(
+      '🖼️ [MedicineImage] local file="$filePath" exists=$exists',
+    );
+    if (!exists) return null;
+    return FileImage(file);
+  }
+
+  final url = _toFullImageUrl(trimmed);
+  debugPrint('🖼️ [MedicineImage] network url="$url"');
+  if (url.isEmpty) return null;
+  return NetworkImage(url);
 }
 
 String formatTime(TimeOfDay time) {
@@ -173,7 +217,7 @@ Widget type_frequency({
   VoidCallback? onAddMedicine,
 }) {
   final hasMedicines = medicines.isNotEmpty;
-  final avatarImage = buildMedicineImage(selectedMedicine?.imagePath ?? '');
+  final image = buildMedicineImage(selectedMedicine?.imagePath ?? '');
 
   final weekDayLabels = const [
     'จ.',
@@ -225,11 +269,11 @@ Widget type_frequency({
               decoration: BoxDecoration(
                 color: const Color(0xFFE3EAF6),
                 borderRadius: BorderRadius.circular(12),
-                image: avatarImage != null
-                    ? DecorationImage(image: avatarImage, fit: BoxFit.cover)
+                image: image != null
+                    ? DecorationImage(image: image, fit: BoxFit.cover)
                     : null,
               ),
-              child: avatarImage == null
+              child: image == null
                   ? const Icon(Icons.medication, color: Color(0xFF1F497D))
                   : null,
             ),
@@ -1062,7 +1106,8 @@ DateTime computeDailyEndDateUtc({
     } else if (durationUnit == 'สัปดาห์') {
       endLocal = startLocal.add(Duration(days: 7 * v));
     } else if (durationUnit == 'ปี') {
-      endLocal = DateTime(startLocal.year + v, startLocal.month, startLocal.day);
+      endLocal =
+          DateTime(startLocal.year + v, startLocal.month, startLocal.day);
     } else {
       endLocal = startLocal.add(Duration(days: 7 * v));
     }
@@ -1113,7 +1158,8 @@ RegimenCreateInput buildRegimenCreateInput(
 }) {
   final scheduleType = mapRegimenScheduleType(plan.frequencyPattern);
   final start = startDateUtc ?? regimenStartDateUtc();
-  final times = buildRegimenTimes(plan, defaultMealOffsetMin: defaultMealOffsetMin);
+  final times =
+      buildRegimenTimes(plan, defaultMealOffsetMin: defaultMealOffsetMin);
 
   switch (scheduleType) {
     case 'DAILY':
