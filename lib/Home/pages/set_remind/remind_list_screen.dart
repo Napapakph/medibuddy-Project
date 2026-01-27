@@ -244,6 +244,8 @@ class _RemindListScreenState extends State<RemindListScreen> {
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
                       ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -285,8 +287,12 @@ class _RemindListScreenState extends State<RemindListScreen> {
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text('ปริมาณ ${dose.amount} ${dose.unit}'),
+                      child: Text(
+                        'ปริมาณ ${dose.amount} ${dose.unit}',
+                        textAlign: TextAlign.end,
+                      ),
                     ),
+                    const SizedBox(width: 8),
                     MealTimingIcon(timing: dose.mealTiming),
                   ],
                 ),
@@ -358,13 +364,17 @@ class _RemindListScreenState extends State<RemindListScreen> {
                           .map(
                             (item) => DropdownMenuItem(
                               value: item,
-                              child: Text(item.nickname_medi),
+                              child: Text(
+                                item.nickname_medi,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
                           )
                           .toList(),
                       onChanged: (value) {
                         setState(() {
                           _selectedMedicine = value;
+                          debugPrint('MedID : $value');
                         });
                       },
                     ),

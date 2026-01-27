@@ -44,6 +44,11 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
     return officialName;
   }
 
+  int _readInt(dynamic value) {
+    if (value == null) return 0;
+    return int.tryParse(value.toString()) ?? 0;
+  }
+
   Future<void> _saveMedicine() async {
     if (_saving) return;
 
@@ -106,6 +111,12 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
 // ✅ NOTE: ปรับ key ให้ตรงกับ backend ของเดียร์ ถ้าไม่ตรงให้ดู log res แล้วแก้ key
       final serverPath =
           (res['picture'] ?? res['data']?['imagePath'])?.toString().trim();
+      final serverMediListId = _readInt(
+        res['mediListId'] ??
+            res['id'] ??
+            res['data']?['mediListId'] ??
+            res['data']?['id'],
+      );
 
 // ✅ DEBUG: show what backend returned
 
@@ -118,6 +129,8 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
         imagePath: (serverPath != null && serverPath.isNotEmpty)
             ? serverPath // ✅ USE_SERVER_PATH
             : localItem.imagePath, // fallback
+        mediListId:
+            serverMediListId > 0 ? serverMediListId : localItem.mediListId,
       );
 
       if (!mounted) return;
@@ -175,10 +188,21 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
         actions: [
           IconButton(
             onPressed: () {
+              final catalog = widget.draft.catalogItem;
+              final mediId = catalog?.mediId ?? 0;
+
+              if (mediId <= 0) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                      content:
+                          Text('ยังไม่มีข้อมูลยาในฐานระบบให้แสดงรายละเอียด')),
+                );
+                return;
+              }
+
               showMedicineDetailDialog(
                 context: context,
-                catalog: catalog,
-                nickname: nickname,
+                mediId: mediId,
               );
             },
             icon: const Icon(Icons.info_outline, color: Colors.white),

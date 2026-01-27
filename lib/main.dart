@@ -21,6 +21,7 @@ import 'services/sync_user.dart';
 import 'dart:async';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'Home/pages/add_medicine/medicine_search_page.dart';
 
 const bool kDisableAuthGate =
     true; // เปลี่ยนเป็น false เมื่อต้องการเปิดใช้งาน AuthGate
@@ -194,7 +195,21 @@ class MyApp extends StatelessWidget {
             return MaterialPageRoute(builder: (_) => const HistoryPage());
           case '/camera_ocr':
             return MaterialPageRoute(builder: (_) => const CameraOcrPage());
-
+          case '/search_medicine':
+            final args = settings.arguments; // ✅ PROFILE_ID: accept Map or int
+            int profileId = 0; // ⚠️ NOTE: default when args missing
+            if (args is Map) {
+              final raw = args['profileId'];
+              if (raw is int) {
+                profileId = raw;
+              } else if (raw != null) {
+                profileId = int.tryParse(raw.toString()) ?? 0;
+              }
+            } else if (args is int) {
+              profileId = args;
+            }
+            return MaterialPageRoute(
+                builder: (_) => const MedicineSearchPage());
           default:
             return MaterialPageRoute(builder: (_) => defaultPage());
         }

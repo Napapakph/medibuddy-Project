@@ -1,6 +1,7 @@
 ﻿import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:medibuddy/Model/medicine_regimen_model.dart';
 import 'package:medibuddy/Model/medicine_model.dart';
 
 enum FrequencyMode { timesPerDay, everyHours }
@@ -41,6 +42,11 @@ class ReminderDose {
 
 class ReminderPlan {
   final String id;
+  final int mediListId;
+
+  /// id ที่ server สร้างให้ (จาก POST /medicine-regimen/create)
+  final int? mediRegimenId;
+
   final MedicineItem medicine;
   final FrequencyMode frequencyMode;
   final int timesPerDay;
@@ -57,6 +63,7 @@ class ReminderPlan {
 
   const ReminderPlan({
     required this.id,
+    required this.mediListId,
     required this.medicine,
     required this.frequencyMode,
     required this.timesPerDay,
@@ -70,9 +77,11 @@ class ReminderPlan {
     required this.durationUnit,
     required this.startTime,
     required this.doses,
+    this.mediRegimenId,
   });
 
   ReminderPlan copyWith({
+    int? mediRegimenId,
     MedicineItem? medicine,
     FrequencyMode? frequencyMode,
     int? timesPerDay,
@@ -89,6 +98,8 @@ class ReminderPlan {
   }) {
     return ReminderPlan(
       id: id,
+      mediListId: mediListId ?? this.mediListId,
+      mediRegimenId: mediRegimenId ?? this.mediRegimenId,
       medicine: medicine ?? this.medicine,
       frequencyMode: frequencyMode ?? this.frequencyMode,
       timesPerDay: timesPerDay ?? this.timesPerDay,
@@ -128,6 +139,12 @@ String formatTime(TimeOfDay time) {
   final hour = time.hour.toString().padLeft(2, '0');
   final minute = time.minute.toString().padLeft(2, '0');
   return '$hour:$minute น.';
+}
+
+String formatTimeValue(TimeOfDay time) {
+  final hour = time.hour.toString().padLeft(2, '0');
+  final minute = time.minute.toString().padLeft(2, '0');
+  return '$hour:$minute';
 }
 
 Widget type_frequency({
@@ -236,7 +253,10 @@ Widget type_frequency({
                     .map(
                       (item) => DropdownMenuItem(
                         value: item,
-                        child: Text(item.nickname_medi),
+                        child: Text(
+                          item.nickname_medi,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     )
                     .toList(),
@@ -590,6 +610,8 @@ Widget detail_time({
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],
@@ -806,6 +828,8 @@ Widget summary_rejimen({
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -847,8 +871,10 @@ Widget summary_rejimen({
                     child: Text(
                       'ปริมาณ ${dose.amount} ${dose.unit}',
                       style: const TextStyle(fontSize: 13),
+                      textAlign: TextAlign.end,
                     ),
                   ),
+                  const SizedBox(width: 8),
                   MealTimingIcon(timing: dose.mealTiming),
                 ],
               ),
@@ -971,4 +997,210 @@ class MealTimingIcon extends StatelessWidget {
 
     return Icon(icon, color: const Color(0xFF1F497D));
   }
+}
+
+class RegimenCreateInput {
+  final String scheduleType; // DAILY/WEEKLY/INTERVAL/CYCLE
+  final DateTime startDateUtc;
+  final DateTime? endDateUtc;
+  final List<int>? daysOfWeek;
+  final int? intervalDays;
+  final int? cycleOnDays;
+  final int? cycleBreakDays;
+  final List<MedicineRegimenTime> times;
+
+  const RegimenCreateInput({
+    required this.scheduleType,
+    required this.startDateUtc,
+    this.endDateUtc,
+    this.daysOfWeek,
+    this.intervalDays,
+    this.cycleOnDays,
+    this.cycleBreakDays,
+    required this.times,
+  });
+}
+
+String mapRegimenScheduleType(FrequencyPattern pattern) {
+  switch (pattern) {
+    case FrequencyPattern.everyDay:
+      return 'DAILY';
+    case FrequencyPattern.someDays:
+      return 'WEEKLY';
+    case FrequencyPattern.everyInterval:
+      return 'INTERVAL';
+  }
+}
+
+DateTime regimenStartDateUtc({DateTime? now}) {
+  final base = now ?? DateTime.now();
+  final local = DateTime(base.year, base.month, base.day, 0, 0, 0);
+  return local.toUtc();
+}
+
+int intervalDaysFrom(int everyCount, String unit) {
+  final count = everyCount < 1 ? 1 : everyCount;
+  if (unit == 'วัน') return count;
+  if (unit == 'เดือน') return count * 30;
+  if (unit == 'ปี') return count * 365;
+  return count;
+}
+
+DateTime computeDailyEndDateUtc({
+  required DurationMode durationMode,
+  required int durationValue,
+  required String durationUnit,
+  required DateTime startDateUtc,
+}) {
+  if (durationMode == DurationMode.custom) {
+    final v = durationValue < 1 ? 1 : durationValue;
+    final startLocal = startDateUtc.toLocal();
+    DateTime endLocal;
+
+    if (durationUnit == 'วัน') {
+      endLocal = startLocal.add(Duration(days: v));
+    } else if (durationUnit == 'สัปดาห์') {
+      endLocal = startLocal.add(Duration(days: 7 * v));
+    } else if (durationUnit == 'ปี') {
+      endLocal = DateTime(startLocal.year + v, startLocal.month, startLocal.day);
+    } else {
+      endLocal = startLocal.add(Duration(days: 7 * v));
+    }
+
+    final normalized =
+        DateTime(endLocal.year, endLocal.month, endLocal.day, 0, 0, 0);
+    return normalized.toUtc();
+  }
+
+  final startLocal = startDateUtc.toLocal();
+  final far =
+      DateTime(startLocal.year + 20, startLocal.month, startLocal.day, 0, 0, 0);
+  return far.toUtc();
+}
+
+String mapMealRelation(MealTiming timing) {
+  switch (timing) {
+    case MealTiming.beforeMeal:
+      return 'BEFORE_MEAL';
+    case MealTiming.afterMeal:
+      return 'AFTER_MEAL';
+    case MealTiming.betweenMeals:
+      return 'NONE';
+  }
+}
+
+String mapRegimenUnit(String uiUnit) {
+  switch (uiUnit) {
+    case 'เม็ด':
+      return 'tablet';
+    case 'มิลลิลิตร':
+      return 'ml';
+    case 'มิลลิกรัม':
+      return 'mg';
+    case 'เข็ม':
+      return 'injection';
+    case 'ยาหยอด':
+      return 'drop';
+    default:
+      return uiUnit;
+  }
+}
+
+RegimenCreateInput buildRegimenCreateInput(
+  ReminderPlan plan, {
+  DateTime? startDateUtc,
+  int defaultMealOffsetMin = 30,
+}) {
+  final scheduleType = mapRegimenScheduleType(plan.frequencyPattern);
+  final start = startDateUtc ?? regimenStartDateUtc();
+  final times = buildRegimenTimes(plan, defaultMealOffsetMin: defaultMealOffsetMin);
+
+  switch (scheduleType) {
+    case 'DAILY':
+      final endDateUtc = computeDailyEndDateUtc(
+        durationMode: plan.durationMode,
+        durationValue: plan.durationValue,
+        durationUnit: plan.durationUnit,
+        startDateUtc: start,
+      );
+      return RegimenCreateInput(
+        scheduleType: scheduleType,
+        startDateUtc: start,
+        endDateUtc: endDateUtc,
+        times: times,
+      );
+    case 'WEEKLY':
+      final days = plan.weekdays.toList()..sort();
+      if (days.isEmpty) {
+        throw StateError('WEEKLY requires at least 1 day.');
+      }
+      return RegimenCreateInput(
+        scheduleType: scheduleType,
+        startDateUtc: start,
+        daysOfWeek: days,
+        times: times,
+      );
+    case 'INTERVAL':
+      final interval = intervalDaysFrom(plan.everyCount, plan.everyUnit);
+      if (interval < 1) {
+        throw StateError('INTERVAL requires intervalDays >= 1.');
+      }
+      return RegimenCreateInput(
+        scheduleType: scheduleType,
+        startDateUtc: start,
+        intervalDays: interval,
+        times: times,
+      );
+    default:
+      throw StateError('Unsupported schedule type: $scheduleType');
+  }
+}
+
+List<MedicineRegimenTime> buildRegimenTimes(
+  ReminderPlan plan, {
+  int defaultMealOffsetMin = 30,
+}) {
+  final effectiveDoses = plan.frequencyMode == FrequencyMode.everyHours
+      ? _generateHourlyDoses(plan)
+      : plan.doses;
+
+  if (effectiveDoses.isEmpty) {
+    throw StateError('At least one time is required.');
+  }
+
+  return effectiveDoses.map((dose) {
+    final relation = mapMealRelation(dose.mealTiming);
+    return MedicineRegimenTime(
+      time: formatTimeValue(dose.time),
+      dose: num.tryParse(dose.amount) ?? 1,
+      unit: mapRegimenUnit(dose.unit),
+      mealRelation: relation,
+      mealOffsetMin: relation == 'NONE' ? null : defaultMealOffsetMin,
+    );
+  }).toList();
+}
+
+List<ReminderDose> _generateHourlyDoses(ReminderPlan plan) {
+  final step = plan.everyHours < 1 ? 1 : plan.everyHours;
+  final template = plan.doses.isNotEmpty ? plan.doses.first : null;
+
+  final start = plan.startTime;
+  final startMinutes = start.hour * 60 + start.minute;
+
+  final doses = <ReminderDose>[];
+  var m = startMinutes;
+  while (m < 24 * 60) {
+    final h = m ~/ 60;
+    final mm = m % 60;
+    doses.add(
+      ReminderDose(
+        time: TimeOfDay(hour: h, minute: mm),
+        amount: template?.amount ?? '1',
+        unit: template?.unit ?? 'เม็ด',
+        mealTiming: template?.mealTiming ?? MealTiming.afterMeal,
+      ),
+    );
+    m += step * 60;
+  }
+  return doses;
 }

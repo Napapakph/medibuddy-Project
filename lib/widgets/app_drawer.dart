@@ -103,10 +103,11 @@ class AppDrawer extends StatelessWidget {
                                     pid == null ? null : {'profileId': pid}),
                           ),
                           ListTile(
-                            leading: const Icon(Icons.find_in_page_rounded),
-                            title: const Text('ค้นหายา'),
-                            onTap: () {},
-                          ),
+                              leading: const Icon(Icons.find_in_page_rounded),
+                              title: const Text('ค้นหายา'),
+                              onTap: () => _go(context, '/search_medicine',
+                                  arguments:
+                                      pid == null ? null : {'profileId': pid})),
                           ListTile(
                             leading: const Icon(Icons.history),
                             title: const Text('ประวัติการทานยา'),

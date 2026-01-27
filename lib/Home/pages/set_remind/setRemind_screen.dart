@@ -1,6 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:medibuddy/Model/medicine_model.dart';
 
+import '../../../services/regimen_api.dart';
 import 'setFuctionRemind.dart';
 
 class SetRemindScreen extends StatefulWidget {
@@ -48,6 +49,8 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
   late TextEditingController _everyCountController;
   late TextEditingController _durationValueController;
 
+  bool _saving = false;
+
   @override
   void initState() {
     super.initState();
@@ -66,18 +69,14 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
       _syncDoseCount(_timesPerDay);
     }
 
-    _timesPerDayController.addListener(() {
-      _updateTimesPerDay(_timesPerDayController.text);
-    });
-    _everyHoursController.addListener(() {
-      _updateEveryHours(_everyHoursController.text);
-    });
-    _everyCountController.addListener(() {
-      _updateEveryCount(_everyCountController.text);
-    });
-    _durationValueController.addListener(() {
-      _updateDurationValue(_durationValueController.text);
-    });
+    _timesPerDayController
+        .addListener(() => _updateTimesPerDay(_timesPerDayController.text));
+    _everyHoursController
+        .addListener(() => _updateEveryHours(_everyHoursController.text));
+    _everyCountController
+        .addListener(() => _updateEveryCount(_everyCountController.text));
+    _durationValueController
+        .addListener(() => _updateDurationValue(_durationValueController.text));
   }
 
   MedicineItem? _resolveMedicine(MedicineItem? medicine) {
@@ -113,14 +112,12 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
     _durationValueController.text = _durationValue.toString();
 
     _doses = plan.doses
-        .map(
-          (dose) => ReminderDose(
-            time: dose.time,
-            amount: dose.amount,
-            unit: dose.unit,
-            mealTiming: dose.mealTiming,
-          ),
-        )
+        .map((dose) => ReminderDose(
+              time: dose.time,
+              amount: dose.amount,
+              unit: dose.unit,
+              mealTiming: dose.mealTiming,
+            ))
         .toList();
   }
 
@@ -139,13 +136,8 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
     final updated = List<ReminderDose>.from(_doses);
 
     while (updated.length < count) {
-      updated.add(
-        ReminderDose(
-          time: _defaultTimeForIndex(updated.length),
-        ),
-      );
+      updated.add(ReminderDose(time: _defaultTimeForIndex(updated.length)));
     }
-
     if (updated.length > count) {
       updated.removeRange(count, updated.length);
     }
@@ -164,34 +156,27 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
     final safe = parsed < 1 ? 1 : parsed;
     setState(() {
       _timesPerDay = safe;
-      if (_frequencyMode == FrequencyMode.timesPerDay) {
+      if (_frequencyMode == FrequencyMode.timesPerDay)
         _syncDoseCount(_timesPerDay);
-      }
     });
   }
 
   void _updateEveryHours(String value) {
     final parsed = int.tryParse(value);
     if (parsed == null) return;
-    setState(() {
-      _everyHours = parsed < 1 ? 1 : parsed;
-    });
+    setState(() => _everyHours = parsed < 1 ? 1 : parsed);
   }
 
   void _updateEveryCount(String value) {
     final parsed = int.tryParse(value);
     if (parsed == null) return;
-    setState(() {
-      _everyCount = parsed < 1 ? 1 : parsed;
-    });
+    setState(() => _everyCount = parsed < 1 ? 1 : parsed);
   }
 
   void _updateDurationValue(String value) {
     final parsed = int.tryParse(value);
     if (parsed == null) return;
-    setState(() {
-      _durationValue = parsed < 1 ? 1 : parsed;
-    });
+    setState(() => _durationValue = parsed < 1 ? 1 : parsed);
   }
 
   void _setFrequencyMode(FrequencyMode mode) {
@@ -207,9 +192,7 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
 
   void _nextStep() {
     if (_stepIndex >= 2) return;
-    setState(() {
-      _stepIndex += 1;
-    });
+    setState(() => _stepIndex += 1);
     _pageController.animateToPage(
       _stepIndex,
       duration: const Duration(milliseconds: 250),
@@ -222,9 +205,7 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
       Navigator.pop(context);
       return;
     }
-    setState(() {
-      _stepIndex -= 1;
-    });
+    setState(() => _stepIndex -= 1);
     _pageController.animateToPage(
       _stepIndex,
       duration: const Duration(milliseconds: 250),
@@ -232,12 +213,47 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
     );
   }
 
-  void _savePlan() {
-    if (_selectedMedicine == null) {
+  Future<void> _savePlan() async {
+    if (_saving) return;
+
+    final selected = _selectedMedicine;
+    if (selected == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('กรุณาเลือกรายการยา')),
       );
       return;
+    }
+
+    if (selected.mediListId <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('ไม่พบ mediListId ของรายการยานี้')),
+      );
+      return;
+    }
+
+    if (_doses.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('กรุณากำหนดเวลาอย่างน้อย 1 เวลา')),
+      );
+      return;
+    }
+
+    if (_frequencyPattern == FrequencyPattern.someDays &&
+        _selectedWeekdays.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('กรุณาเลือกวันอย่างน้อย 1 วัน')),
+      );
+      return;
+    }
+
+    if (_frequencyPattern == FrequencyPattern.everyInterval) {
+      final interval = intervalDaysFrom(_everyCount, _everyUnit);
+      if (interval < 1) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('ช่วงวันต้องมากกว่า 0')),
+        );
+        return;
+      }
     }
 
     final id = widget.reminderId ??
@@ -246,7 +262,8 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
 
     final plan = ReminderPlan(
       id: id,
-      medicine: _selectedMedicine!,
+      mediListId: selected.mediListId,
+      medicine: selected,
       frequencyMode: _frequencyMode,
       timesPerDay: _timesPerDay,
       everyHours: _everyHours,
@@ -261,7 +278,41 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
       doses: _doses,
     );
 
-    Navigator.pop(context, plan);
+    setState(() => _saving = true);
+
+    try {
+      final input = buildRegimenCreateInput(plan);
+      final api = RegimenApiService();
+      final response = await api.createMedicineRegimen(
+        mediListId: plan.mediListId,
+        scheduleType: input.scheduleType,
+        startDateUtc: input.startDateUtc,
+        endDateUtc: input.endDateUtc,
+        daysOfWeek: input.daysOfWeek,
+        intervalDays: input.intervalDays,
+        cycleOnDays: input.cycleOnDays,
+        cycleBreakDays: input.cycleBreakDays,
+        times: input.times,
+      );
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('✅ บันทึกข้อมูลสำเร็จ')),
+      );
+
+      Navigator.pop(
+        context,
+        plan.copyWith(mediRegimenId: response.mediRegimenId),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('❌ บันทึกไม่สำเร็จ: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
   }
 
   @override
@@ -277,50 +328,34 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
         subtitle: 'รูปแบบและความถี่การรับประทานยา',
         medicines: widget.medicines,
         selectedMedicine: _selectedMedicine,
-        onMedicineChanged: (medicine) {
-          setState(() {
-            _selectedMedicine = medicine;
-          });
-        },
+        onMedicineChanged: (medicine) =>
+            setState(() => _selectedMedicine = medicine),
         frequencyMode: _frequencyMode,
         onFrequencyModeChanged: _setFrequencyMode,
         timesPerDayController: _timesPerDayController,
         everyHoursController: _everyHoursController,
         frequencyPattern: _frequencyPattern,
-        onFrequencyPatternChanged: (value) {
-          setState(() {
-            _frequencyPattern = value;
-          });
-        },
+        onFrequencyPatternChanged: (value) =>
+            setState(() => _frequencyPattern = value),
         selectedWeekdays: _selectedWeekdays,
-        onWeekdaysChanged: (value) {
-          setState(() {
-            _selectedWeekdays
-              ..clear()
-              ..addAll(value);
-          });
-        },
+        onWeekdaysChanged: (value) => setState(() {
+          _selectedWeekdays
+            ..clear()
+            ..addAll(value);
+        }),
         everyCountController: _everyCountController,
         everyUnit: _everyUnit,
         onEveryUnitChanged: (value) {
           if (value == null) return;
-          setState(() {
-            _everyUnit = value;
-          });
+          setState(() => _everyUnit = value);
         },
         durationMode: _durationMode,
-        onDurationModeChanged: (value) {
-          setState(() {
-            _durationMode = value;
-          });
-        },
+        onDurationModeChanged: (value) => setState(() => _durationMode = value),
         durationValueController: _durationValueController,
         durationUnit: _durationUnit,
         onDurationUnitChanged: (value) {
           if (value == null) return;
-          setState(() {
-            _durationUnit = value;
-          });
+          setState(() => _durationUnit = value);
         },
         onAddMedicine: () {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -337,17 +372,9 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
         timesPerDay: _timesPerDay,
         everyHours: _everyHours,
         startTime: _startTime,
-        onStartTimeChanged: (value) {
-          setState(() {
-            _startTime = value;
-          });
-        },
+        onStartTimeChanged: (value) => setState(() => _startTime = value),
         doses: _doses,
-        onDoseChanged: (index, dose) {
-          setState(() {
-            _doses[index] = dose;
-          });
-        },
+        onDoseChanged: (index, dose) => setState(() => _doses[index] = dose),
       ),
       summary_rejimen(
         context: context,
@@ -361,73 +388,78 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
       ),
     ];
 
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF1F497D),
-        iconTheme: const IconThemeData(color: Colors.white),
-        title: Text(
-          pageTitle,
-          style: const TextStyle(color: Colors.white),
+    return WillPopScope(
+      onWillPop: () async => !_saving,
+      child: Scaffold(
+        appBar: AppBar(
+          backgroundColor: const Color(0xFF1F497D),
+          iconTheme: const IconThemeData(color: Colors.white),
+          title: Text(pageTitle, style: const TextStyle(color: Colors.white)),
         ),
-      ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: PageView(
-                controller: _pageController,
-                physics: const NeverScrollableScrollPhysics(),
-                children: steps
-                    .map(
-                      (step) => SingleChildScrollView(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 24, vertical: 20),
-                        child: step,
-                      ),
-                    )
-                    .toList(),
+        body: SafeArea(
+          child: Column(
+            children: [
+              Expanded(
+                child: PageView(
+                  controller: _pageController,
+                  physics: const NeverScrollableScrollPhysics(),
+                  children: steps
+                      .map((step) => SingleChildScrollView(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 20),
+                            child: step,
+                          ))
+                      .toList(),
+                ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
-              child: Row(
-                children: [
-                  _CircleNavButton(
-                    icon: Icons.arrow_back,
-                    onTap: _prevStep,
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _stepIndex == 2
-                        ? ElevatedButton(
-                            onPressed: _savePlan,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF1F497D),
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+                child: Row(
+                  children: [
+                    _CircleNavButton(
+                      icon: Icons.arrow_back,
+                      onTap: _saving ? () {} : _prevStep,
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _stepIndex == 2
+                          ? ElevatedButton(
+                              onPressed: _saving ? null : _savePlan,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF1F497D),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                              ),
+                              child: _saving
+                                  ? const SizedBox(
+                                      height: 18,
+                                      width: 18,
+                                      child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: Colors.white),
+                                    )
+                                  : const Text(
+                                      'บันทึกข้อมูล',
+                                      style: TextStyle(
+                                          color: Colors.white, fontSize: 16),
+                                    ),
+                            )
+                          : Align(
+                              alignment: Alignment.centerRight,
+                              child: _CircleNavButton(
+                                icon: Icons.arrow_forward,
+                                onTap: _saving ? () {} : _nextStep,
                               ),
                             ),
-                            child: const Text(
-                              'บันทึกข้อมูล',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                              ),
-                            ),
-                          )
-                        : Align(
-                            alignment: Alignment.centerRight,
-                            child: _CircleNavButton(
-                              icon: Icons.arrow_forward,
-                              onTap: _nextStep,
-                            ),
-                          ),
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -438,10 +470,7 @@ class _CircleNavButton extends StatelessWidget {
   final IconData icon;
   final VoidCallback onTap;
 
-  const _CircleNavButton({
-    required this.icon,
-    required this.onTap,
-  });
+  const _CircleNavButton({required this.icon, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
