@@ -136,7 +136,7 @@ class AppDrawer extends StatelessWidget {
                           ListTile(
                             leading: const Icon(Icons.switch_account),
                             title: const Text('ข้อเสนอแนะ'),
-                            onTap: () {},
+                            onTap: () => _go(context, '/user_request'),
                           ),
                         ],
                       ),

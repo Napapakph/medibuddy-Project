@@ -27,7 +27,7 @@ class BottomBar extends StatelessWidget {
               // TODO: ไปหน้าปฏิทิน (ถ้ามี route)
               // Navigator.pushNamed(context, '/calendar', arguments: {'profileId': pid});
             },
-            icon: const Icon(Icons.calendar_today, color: Colors.white),
+            icon: const Icon(Icons.people, color: Colors.white),
           ),
 
           // HOME

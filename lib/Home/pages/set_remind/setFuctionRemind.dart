@@ -1072,6 +1072,181 @@ String mapRegimenScheduleType(FrequencyPattern pattern) {
   }
 }
 
+List<String> toWeekdayCodes(Set<int> weekdays) {
+  const mapping = <int, String>{
+    1: 'MON',
+    2: 'TUE',
+    3: 'WED',
+    4: 'THU',
+    5: 'FRI',
+    6: 'SAT',
+    7: 'SUN',
+  };
+
+  final ordered = weekdays.toList()..sort();
+  final codes = <String>[];
+  for (final day in ordered) {
+    final code = mapping[day];
+    if (code != null) codes.add(code);
+  }
+  return codes;
+}
+
+Set<int> parseDaysOfWeekRaw(String? raw) {
+  if (raw == null || raw.trim().isEmpty) return {};
+  final items = raw.split(',');
+  final result = <int>{};
+  for (final item in items) {
+    final value = int.tryParse(item.trim());
+    if (value != null && value >= 1 && value <= 7) {
+      result.add(value);
+    }
+  }
+  return result;
+}
+
+ReminderPlan fromRegimenDetail({
+  required MedicineRegimenDetailResponse detail,
+  required MedicineItem medicineItemResolvedFromList,
+  String? localId,
+}) {
+  final scheduleType = detail.scheduleType.trim().toUpperCase();
+
+  FrequencyPattern pattern;
+  switch (scheduleType) {
+    case 'DAILY':
+      pattern = FrequencyPattern.everyDay;
+      break;
+    case 'WEEKLY':
+      pattern = FrequencyPattern.someDays;
+      break;
+    case 'INTERVAL':
+      pattern = FrequencyPattern.everyInterval;
+      break;
+    case 'CYCLE':
+      debugPrint('⚠️ CYCLE mapped to everyInterval for UI editing.');
+      pattern = FrequencyPattern.everyInterval;
+      break;
+    default:
+      pattern = FrequencyPattern.everyDay;
+  }
+
+  final weekdays =
+      pattern == FrequencyPattern.someDays ? parseDaysOfWeekRaw(detail.daysOfWeekRaw) : <int>{};
+
+  final doses = detail.times.map((time) {
+    return ReminderDose(
+      time: _parseTimeOfDay(time.time),
+      amount: _formatDoseAmount(time.dose),
+      unit: _mapBackendUnitToUi(time.unit),
+      mealTiming: _mealTimingFromRelation(time.mealRelation),
+    );
+  }).toList();
+
+  final effectiveDoses = doses.isNotEmpty
+      ? doses
+      : [
+          ReminderDose(time: const TimeOfDay(hour: 8, minute: 0)),
+        ];
+
+  final timesPerDay = effectiveDoses.length;
+  final startTime = effectiveDoses.first.time;
+
+  var everyCount = 1;
+  const everyUnit = 'วัน';
+  if (scheduleType == 'INTERVAL') {
+    everyCount = detail.intervalDays ?? 1;
+  } else if (scheduleType == 'CYCLE') {
+    everyCount = detail.cycleOnDays ?? 1;
+  }
+  if (everyCount < 1) everyCount = 1;
+
+  final hasEndDate = detail.endDate != null && detail.endDate!.trim().isNotEmpty;
+  final durationMode =
+      hasEndDate ? DurationMode.custom : DurationMode.forever;
+  var durationValue = 1;
+  var durationUnit = 'วัน';
+  if (hasEndDate) {
+    final start = DateTime.tryParse(detail.startDate) ?? DateTime.now();
+    final end = DateTime.tryParse(detail.endDate!) ?? start;
+    final diffDays = end.difference(start).inDays;
+    durationValue = diffDays < 1 ? 1 : diffDays;
+  }
+
+  return ReminderPlan(
+    id: (localId != null && localId.trim().isNotEmpty)
+        ? localId
+        : detail.mediRegimenId.toString(),
+    mediListId: detail.mediListId,
+    mediRegimenId: detail.mediRegimenId,
+    medicine: medicineItemResolvedFromList,
+    frequencyMode: FrequencyMode.timesPerDay,
+    timesPerDay: timesPerDay,
+    everyHours: 6,
+    frequencyPattern: pattern,
+    weekdays: weekdays,
+    everyCount: everyCount,
+    everyUnit: everyUnit,
+    durationMode: durationMode,
+    durationValue: durationValue,
+    durationUnit: durationUnit,
+    startTime: startTime,
+    doses: effectiveDoses,
+  );
+}
+
+MealTiming _mealTimingFromRelation(String relation) {
+  final normalized = relation.trim().toUpperCase();
+  switch (normalized) {
+    case 'BEFORE_MEAL':
+      return MealTiming.beforeMeal;
+    case 'AFTER_MEAL':
+      return MealTiming.afterMeal;
+    case 'NONE':
+      return MealTiming.betweenMeals;
+    default:
+      return MealTiming.afterMeal;
+  }
+}
+
+String _mapBackendUnitToUi(String unit) {
+  final normalized = unit.trim().toLowerCase();
+  switch (normalized) {
+    case 'tablet':
+      return 'เม็ด';
+    case 'ml':
+      return 'มิลลิลิตร';
+    case 'mg':
+      return 'มิลลิกรัม';
+    case 'drop':
+      return 'ยาหยอด';
+    case 'injection':
+      return 'เข็ม';
+    default:
+      return unit.trim().isEmpty ? 'เม็ด' : unit;
+  }
+}
+
+String _formatDoseAmount(num dose) {
+  if (dose % 1 == 0) {
+    return dose.toInt().toString();
+  }
+  return dose.toString();
+}
+
+TimeOfDay _parseTimeOfDay(String value) {
+  final parts = value.split(':');
+  if (parts.length < 2) {
+    return const TimeOfDay(hour: 0, minute: 0);
+  }
+  final hour = int.tryParse(parts[0]) ?? 0;
+  final minute = int.tryParse(parts[1]) ?? 0;
+  return TimeOfDay(
+    hour: hour.clamp(0, 23).toInt(),
+    minute: minute.clamp(0, 59).toInt(),
+  );
+}
+
 DateTime regimenStartDateUtc({DateTime? now}) {
   final base = now ?? DateTime.now();
   final local = DateTime(base.year, base.month, base.day, 0, 0, 0);

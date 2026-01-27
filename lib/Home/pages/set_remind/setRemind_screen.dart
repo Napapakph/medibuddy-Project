@@ -263,6 +263,7 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
     final plan = ReminderPlan(
       id: id,
       mediListId: selected.mediListId,
+      mediRegimenId: widget.initialPlan?.mediRegimenId,
       medicine: selected,
       frequencyMode: _frequencyMode,
       timesPerDay: _timesPerDay,
@@ -283,22 +284,42 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
     try {
       final input = buildRegimenCreateInput(plan);
       final api = RegimenApiService();
-      final response = await api.createMedicineRegimen(
-        mediListId: plan.mediListId,
-        scheduleType: input.scheduleType,
-        startDateUtc: input.startDateUtc,
-        endDateUtc: input.endDateUtc,
-        daysOfWeek: input.daysOfWeek,
-        intervalDays: input.intervalDays,
-        cycleOnDays: input.cycleOnDays,
-        cycleBreakDays: input.cycleBreakDays,
-        times: input.times,
-      );
+      final hasRegimenId = plan.mediRegimenId != null;
+
+      final response = hasRegimenId
+          ? await api.updateRegimen(
+              mediRegimenId: plan.mediRegimenId!,
+              scheduleType: input.scheduleType,
+              startDateUtc: input.startDateUtc,
+              endDateUtc: input.endDateUtc,
+              daysOfWeek: input.scheduleType == 'WEEKLY'
+                  ? toWeekdayCodes(plan.weekdays)
+                  : null,
+              intervalDays: input.intervalDays,
+              cycleOnDays: input.cycleOnDays,
+              cycleBreakDays: input.cycleBreakDays,
+              times: input.times,
+            )
+          : await api.createMedicineRegimen(
+              mediListId: plan.mediListId,
+              scheduleType: input.scheduleType,
+              startDateUtc: input.startDateUtc,
+              endDateUtc: input.endDateUtc,
+              daysOfWeek: input.daysOfWeek,
+              intervalDays: input.intervalDays,
+              cycleOnDays: input.cycleOnDays,
+              cycleBreakDays: input.cycleBreakDays,
+              times: input.times,
+            );
 
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('✅ บันทึกข้อมูลสำเร็จ')),
+        SnackBar(
+          content: Text(
+            hasRegimenId ? '✅ อัปเดตข้อมูลสำเร็จ' : '✅ บันทึกข้อมูลสำเร็จ',
+          ),
+        ),
       );
 
       Navigator.pop(

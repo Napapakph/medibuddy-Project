@@ -1,5 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:medibuddy/Model/medicine_model.dart';
+import 'package:medibuddy/Model/medicine_regimen_model.dart';
+import 'package:medibuddy/services/regimen_api.dart';
 import 'setFuctionRemind.dart';
 import 'setRemind_screen.dart';
 
@@ -59,6 +61,11 @@ class RemindListScreen extends StatefulWidget {
 class _RemindListScreenState extends State<RemindListScreen> {
   List<ReminderPlan> _plans = [];
   MedicineItem? _selectedMedicine;
+  final Set<String> _deletingPlanIds = {};
+  bool _loading = false;
+  String? _error;
+  bool _hasFetched = false;
+  List<MedicineRegimenItem> _serverItems = [];
 
   @override
   void initState() {
@@ -72,6 +79,7 @@ class _RemindListScreenState extends State<RemindListScreen> {
     _selectedMedicine = _resolveMedicine(widget.initialMedicine) ??
         (widget.medicines.isNotEmpty ? widget.medicines.first : null);
     _loadPlans();
+    _fetchRegimens();
   }
 
   MedicineItem? _resolveMedicine(MedicineItem? medicine) {
@@ -84,6 +92,265 @@ class _RemindListScreenState extends State<RemindListScreen> {
       if (item.id == id) return item;
     }
     return null;
+  }
+
+  MedicineItem? _resolveMedicineByMediListId(int mediListId) {
+    for (final item in widget.medicines) {
+      if (item.mediListId == mediListId) return item;
+    }
+    return null;
+  }
+
+  MedicineItem _buildMedicineItemFromDetail(
+    MedicineRegimenDetailResponse detail,
+  ) {
+    final list = detail.medicineList;
+    final medicine = list?.medicine;
+    final nickname = (list?.mediNickname ?? '').trim();
+    final fallbackName = nickname.isNotEmpty
+        ? nickname
+        : (medicine?.mediThName.isNotEmpty ?? false)
+            ? medicine!.mediThName
+            : (medicine?.mediEnName ?? '');
+    final officialName = (medicine?.mediThName.isNotEmpty ?? false)
+        ? medicine!.mediThName
+        : (medicine?.mediEnName.isNotEmpty ?? false)
+            ? medicine!.mediEnName
+            : nickname;
+
+    final pictureOption = list?.pictureOption ?? '';
+    final imagePath = pictureOption.trim().isNotEmpty
+        ? pictureOption
+        : (medicine?.mediPicture ?? '');
+
+    return MedicineItem(
+      mediListId: detail.mediListId,
+      id: detail.mediListId.toString(),
+      nickname_medi: fallbackName,
+      officialName_medi: officialName,
+      imagePath: imagePath,
+    );
+  }
+
+  MedicineItem _buildMedicineItemFromListItem(
+    MedicineRegimenItem item,
+  ) {
+    final list = item.medicineList;
+    final medicine = list?.medicine;
+    final nickname = (list?.mediNickname ?? '').trim();
+    final fallbackName = nickname.isNotEmpty
+        ? nickname
+        : (medicine?.mediThName.isNotEmpty ?? false)
+            ? medicine!.mediThName
+            : (medicine?.mediEnName ?? '');
+    final officialName = (medicine?.mediThName.isNotEmpty ?? false)
+        ? medicine!.mediThName
+        : (medicine?.mediEnName.isNotEmpty ?? false)
+            ? medicine!.mediEnName
+            : nickname;
+
+    final pictureOption = list?.pictureOption ?? '';
+    final imagePath = pictureOption.trim().isNotEmpty
+        ? pictureOption
+        : (medicine?.mediPicture ?? '');
+
+    return MedicineItem(
+      mediListId: item.mediListId,
+      id: item.mediListId.toString(),
+      nickname_medi: fallbackName,
+      officialName_medi: officialName,
+      imagePath: imagePath,
+    );
+  }
+
+  int _currentMedicineListId() {
+    final selected = _selectedMedicine;
+    if (selected != null && selected.mediListId > 0) {
+      return selected.mediListId;
+    }
+    final initial = widget.initialMedicine;
+    if (initial != null && initial.mediListId > 0) {
+      return initial.mediListId;
+    }
+    return 0;
+  }
+
+  Future<void> _fetchRegimens() async {
+    final medicineListId = _currentMedicineListId();
+    debugPrint('🧪 fetch regimens medicineListId=$medicineListId');
+
+    if (medicineListId <= 0) {
+      setState(() {
+        _serverItems = [];
+        _error = 'missing medicineListId';
+        _hasFetched = true;
+      });
+      debugPrint('❌ fetch regimens error=$_error');
+      return;
+    }
+
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+
+    try {
+      final res = await RegimenApiService().getRegimensByMedicineListId(
+        medicineListId: medicineListId,
+      );
+      if (!mounted) return;
+      setState(() {
+        _serverItems = res.items;
+        _hasFetched = true;
+      });
+      debugPrint('🧪 fetched count=${_serverItems.length}');
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = e.toString();
+        _hasFetched = true;
+      });
+      debugPrint('❌ fetch regimens error=$_error');
+    } finally {
+      if (mounted) {
+        setState(() => _loading = false);
+      }
+    }
+  }
+
+  ReminderPlan _planFromServerItem(MedicineRegimenItem item) {
+    final scheduleType = item.scheduleType.trim().toUpperCase();
+    FrequencyPattern pattern;
+    switch (scheduleType) {
+      case 'DAILY':
+        pattern = FrequencyPattern.everyDay;
+        break;
+      case 'WEEKLY':
+        pattern = FrequencyPattern.someDays;
+        break;
+      case 'INTERVAL':
+        pattern = FrequencyPattern.everyInterval;
+        break;
+      case 'CYCLE':
+        pattern = FrequencyPattern.everyInterval;
+        break;
+      default:
+        pattern = FrequencyPattern.everyDay;
+    }
+
+    final weekdays = pattern == FrequencyPattern.someDays
+        ? parseDaysOfWeekRaw(item.daysOfWeekRaw)
+        : <int>{};
+
+    final doses = item.times
+        .map(
+          (time) => ReminderDose(
+            time: _parseTimeOfDay(time.time),
+            amount: _formatDoseAmount(time.dose),
+            unit: _mapBackendUnitToUi(time.unit),
+            mealTiming: _mealTimingFromRelation(time.mealRelation),
+          ),
+        )
+        .toList();
+
+    final effectiveDoses = doses.isNotEmpty
+        ? doses
+        : [ReminderDose(time: const TimeOfDay(hour: 8, minute: 0))];
+
+    var everyCount = 1;
+    const everyUnit = 'วัน';
+    if (scheduleType == 'INTERVAL') {
+      everyCount = item.intervalDays ?? 1;
+    } else if (scheduleType == 'CYCLE') {
+      everyCount = item.cycleOnDays ?? 1;
+    }
+    if (everyCount < 1) everyCount = 1;
+
+    final hasEndDate = item.endDate != null && item.endDate!.trim().isNotEmpty;
+    final durationMode =
+        hasEndDate ? DurationMode.custom : DurationMode.forever;
+    var durationValue = 1;
+    var durationUnit = 'วัน';
+    if (hasEndDate) {
+      final start = DateTime.tryParse(item.startDate) ?? DateTime.now();
+      final end = DateTime.tryParse(item.endDate!) ?? start;
+      final diffDays = end.difference(start).inDays;
+      durationValue = diffDays < 1 ? 1 : diffDays;
+    }
+
+    final resolved = _resolveMedicineByMediListId(item.mediListId) ??
+        _buildMedicineItemFromListItem(item);
+
+    return ReminderPlan(
+      id: item.mediRegimenId.toString(),
+      mediListId: item.mediListId,
+      mediRegimenId: item.mediRegimenId,
+      medicine: resolved,
+      frequencyMode: FrequencyMode.timesPerDay,
+      timesPerDay: effectiveDoses.length,
+      everyHours: 6,
+      frequencyPattern: pattern,
+      weekdays: weekdays,
+      everyCount: everyCount,
+      everyUnit: everyUnit,
+      durationMode: durationMode,
+      durationValue: durationValue,
+      durationUnit: durationUnit,
+      startTime: effectiveDoses.first.time,
+      doses: effectiveDoses,
+    );
+  }
+
+  MealTiming _mealTimingFromRelation(String relation) {
+    final normalized = relation.trim().toUpperCase();
+    switch (normalized) {
+      case 'BEFORE_MEAL':
+        return MealTiming.beforeMeal;
+      case 'AFTER_MEAL':
+        return MealTiming.afterMeal;
+      case 'NONE':
+        return MealTiming.betweenMeals;
+      default:
+        return MealTiming.afterMeal;
+    }
+  }
+
+  String _mapBackendUnitToUi(String unit) {
+    final normalized = unit.trim().toLowerCase();
+    switch (normalized) {
+      case 'tablet':
+        return 'เม็ด';
+      case 'ml':
+        return 'มิลลิลิตร';
+      case 'mg':
+        return 'มิลลิกรัม';
+      case 'drop':
+        return 'ยาหยอด';
+      case 'injection':
+        return 'เข็ม';
+      default:
+        return unit.trim().isEmpty ? 'เม็ด' : unit;
+    }
+  }
+
+  String _formatDoseAmount(num dose) {
+    if (dose % 1 == 0) {
+      return dose.toInt().toString();
+    }
+    return dose.toString();
+  }
+
+  TimeOfDay _parseTimeOfDay(String value) {
+    final parts = value.split(':');
+    if (parts.length < 2) {
+      return const TimeOfDay(hour: 0, minute: 0);
+    }
+    final hour = int.tryParse(parts[0]) ?? 0;
+    final minute = int.tryParse(parts[1]) ?? 0;
+    return TimeOfDay(
+      hour: hour.clamp(0, 23).toInt(),
+      minute: minute.clamp(0, 59).toInt(),
+    );
   }
 
   bool _sameMedicine(MedicineItem a, MedicineItem b) {
@@ -116,6 +383,14 @@ class _RemindListScreenState extends State<RemindListScreen> {
     return _plans.where((plan) => plan.medicine.id == selected.id).toList();
   }
 
+  List<ReminderPlan> get _displayPlans {
+    if (_error != null) return _filteredPlans;
+    if (_hasFetched) {
+      return _serverItems.map(_planFromServerItem).toList();
+    }
+    return _filteredPlans;
+  }
+
   Future<void> _addPlan() async {
     if (widget.medicines.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -146,14 +421,75 @@ class _RemindListScreenState extends State<RemindListScreen> {
   }
 
   Future<void> _editPlan(ReminderPlan plan) async {
+    if (plan.mediRegimenId == null) {
+      final result = await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => SetRemindScreen(
+            medicines: widget.medicines,
+            initialPlan: plan,
+            reminderId: plan.id,
+            initialMedicine: plan.medicine,
+          ),
+        ),
+      );
+
+      if (!mounted) return;
+      if (result is ReminderPlan) {
+        _ReminderPlanStore.upsertPlan(
+          result,
+          previousMedicineId: plan.medicine.id,
+        );
+        setState(() {
+          _selectedMedicine =
+              _resolveMedicine(result.medicine) ?? _selectedMedicine;
+          _loadPlans();
+        });
+      }
+      return;
+    }
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => WillPopScope(
+        onWillPop: () async => false,
+        child: const Center(child: CircularProgressIndicator()),
+      ),
+    );
+
+    MedicineRegimenDetailResponse detail;
+    try {
+      final api = RegimenApiService();
+      detail = await api.getRegimenDetail(mediRegimenId: plan.mediRegimenId!);
+    } catch (e) {
+      if (mounted) Navigator.of(context, rootNavigator: true).pop();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('❌ โหลดข้อมูลไม่สำเร็จ: $e')),
+      );
+      return;
+    }
+
+    if (mounted) Navigator.of(context, rootNavigator: true).pop();
+    if (!mounted) return;
+
+    final resolved = _resolveMedicineByMediListId(detail.mediListId) ??
+        _buildMedicineItemFromDetail(detail);
+    final serverPlan = fromRegimenDetail(
+      detail: detail,
+      medicineItemResolvedFromList: resolved,
+      localId: plan.id,
+    );
+
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => SetRemindScreen(
           medicines: widget.medicines,
-          initialPlan: plan,
-          reminderId: plan.id,
-          initialMedicine: plan.medicine,
+          initialPlan: serverPlan,
+          reminderId: serverPlan.id,
+          initialMedicine: resolved,
         ),
       ),
     );
@@ -172,8 +508,8 @@ class _RemindListScreenState extends State<RemindListScreen> {
     }
   }
 
-  void _deletePlan(ReminderPlan plan) {
-    showDialog(
+  Future<void> _deletePlan(ReminderPlan plan) async {
+    final shouldDelete = await showDialog<bool>(
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
@@ -181,16 +517,12 @@ class _RemindListScreenState extends State<RemindListScreen> {
           content: const Text('ต้องการลบการแจ้งเตือนนี้หรือไม่'),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
+              onPressed: () => Navigator.pop(dialogContext, false),
               child: const Text('ยกเลิก'),
             ),
             TextButton(
               onPressed: () {
-                Navigator.pop(dialogContext);
-                _ReminderPlanStore.removePlan(plan);
-                setState(() {
-                  _loadPlans();
-                });
+                Navigator.pop(dialogContext, true);
               },
               child:
                   const Text('ลบ', style: TextStyle(color: Colors.redAccent)),
@@ -199,10 +531,53 @@ class _RemindListScreenState extends State<RemindListScreen> {
         );
       },
     );
+
+    if (shouldDelete != true || _deletingPlanIds.contains(plan.id)) return;
+
+    setState(() => _deletingPlanIds.add(plan.id));
+
+    if (plan.mediRegimenId == null) {
+      debugPrint('⚠️ delete local only: missing mediRegimenId for ${plan.id}');
+      _ReminderPlanStore.removePlan(plan);
+      if (!mounted) return;
+      setState(() {
+        _deletingPlanIds.remove(plan.id);
+        _loadPlans();
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('ลบเฉพาะในเครื่อง (ยังไม่ sync)')),
+      );
+      return;
+    }
+
+    try {
+      final api = RegimenApiService();
+      await api.deleteRegimen(mediRegimenId: plan.mediRegimenId!);
+      if (!mounted) return;
+      _ReminderPlanStore.removePlan(plan);
+      setState(() {
+        _deletingPlanIds.remove(plan.id);
+        if (plan.mediRegimenId != null) {
+          _serverItems.removeWhere(
+              (item) => item.mediRegimenId == plan.mediRegimenId);
+        }
+        _loadPlans();
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('✅ ลบแจ้งเตือนสำเร็จ')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _deletingPlanIds.remove(plan.id));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('❌ ลบไม่สำเร็จ: $e')),
+      );
+    }
   }
 
   Widget _buildReminderCard(ReminderPlan plan) {
     final image = buildMedicineImage(plan.medicine.imagePath);
+    final isDeleting = _deletingPlanIds.contains(plan.id);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -302,13 +677,19 @@ class _RemindListScreenState extends State<RemindListScreen> {
           Row(
             children: [
               OutlinedButton.icon(
-                onPressed: () => _deletePlan(plan),
-                icon: const Icon(Icons.delete, size: 18),
-                label: const Text('ลบแจ้งเตือน'),
+                onPressed: isDeleting ? null : () => _deletePlan(plan),
+                icon: isDeleting
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.delete, size: 18),
+                label: Text(isDeleting ? 'กำลังลบ...' : 'ลบแจ้งเตือน'),
               ),
               const SizedBox(width: 12),
               ElevatedButton.icon(
-                onPressed: () => _editPlan(plan),
+                onPressed: isDeleting ? null : () => _editPlan(plan),
                 icon: const Icon(Icons.edit, size: 18),
                 label: const Text('แก้ไขแจ้งเตือน'),
                 style: ElevatedButton.styleFrom(
@@ -338,85 +719,102 @@ class _RemindListScreenState extends State<RemindListScreen> {
         ),
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          child: widget.medicines.isEmpty
-              ? const Center(child: Text('ยังไม่มีรายการยา'))
-              : Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    DropdownButtonFormField<MedicineItem>(
-                      value: _selectedMedicine,
-                      isExpanded: true,
-                      hint: const Text('เลือกรายการยา'),
-                      decoration: InputDecoration(
-                        filled: true,
-                        fillColor: Colors.white,
-                        contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 10),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
+        child: Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              child: widget.medicines.isEmpty
+                  ? const Center(child: Text('ยังไม่มีรายการยา'))
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        DropdownButtonFormField<MedicineItem>(
+                          value: _selectedMedicine,
+                          isExpanded: true,
+                          hint: const Text('เลือกรายการยา'),
+                          decoration: InputDecoration(
+                            filled: true,
+                            fillColor: Colors.white,
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 10),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
+                          items: widget.medicines
+                              .map(
+                                (item) => DropdownMenuItem(
+                                  value: item,
+                                  child: Text(
+                                    item.nickname_medi,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedMedicine = value;
+                              debugPrint('MedID : $value');
+                            });
+                            _fetchRegimens();
+                          },
                         ),
-                      ),
-                      items: widget.medicines
-                          .map(
-                            (item) => DropdownMenuItem(
-                              value: item,
-                              child: Text(
-                                item.nickname_medi,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedMedicine = value;
-                          debugPrint('MedID : $value');
-                        });
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'รายละเอียดการรับประทานยา',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Expanded(
-                      child: _filteredPlans.isEmpty
-                          ? const Center(
-                              child: Text('ยังไม่มีการแจ้งเตือน'),
-                            )
-                          : ListView.builder(
-                              itemCount: _filteredPlans.length,
-                              itemBuilder: (context, index) =>
-                                  _buildReminderCard(_filteredPlans[index]),
-                            ),
-                    ),
-                    const SizedBox(height: 12),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: _addPlan,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF1F497D),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'รายละเอียดการรับประทานยา',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
-                        child: const Text(
-                          'เพิ่มการแจ้งเตือน',
-                          style: TextStyle(color: Colors.white, fontSize: 16),
+                        const SizedBox(height: 8),
+                        Expanded(
+                          child: _displayPlans.isEmpty
+                              ? const Center(
+                                  child: Text('ยังไม่มีการแจ้งเตือน'),
+                                )
+                              : ListView.builder(
+                                  itemCount: _displayPlans.length,
+                                  itemBuilder: (context, index) =>
+                                      _buildReminderCard(_displayPlans[index]),
+                                ),
                         ),
-                      ),
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: _addPlan,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF1F497D),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                            ),
+                            child: const Text(
+                              'เพิ่มการแจ้งเตือน',
+                              style: TextStyle(
+                                  color: Colors.white, fontSize: 16),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+            ),
+            if (_loading)
+              Positioned.fill(
+                child: IgnorePointer(
+                  child: Container(
+                    color: Colors.transparent,
+                    child: const Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                  ),
                 ),
+              ),
+          ],
         ),
       ),
     );

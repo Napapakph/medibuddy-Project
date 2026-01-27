@@ -22,6 +22,8 @@ import 'dart:async';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'Home/pages/add_medicine/medicine_search_page.dart';
+import 'Home/pages/user_request/user_request_screen.dart';
+import 'Home/pages/user_request/user_request_screen.dart';
 
 const bool kDisableAuthGate =
     true; // เปลี่ยนเป็น false เมื่อต้องการเปิดใช้งาน AuthGate
@@ -210,6 +212,9 @@ class MyApp extends StatelessWidget {
             }
             return MaterialPageRoute(
                 builder: (_) => const MedicineSearchPage());
+          case '/user_request':
+            return MaterialPageRoute(builder: (_) => const UserRequestScreen());
+
           default:
             return MaterialPageRoute(builder: (_) => defaultPage());
         }
