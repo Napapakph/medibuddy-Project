@@ -250,10 +250,6 @@ Widget type_frequency({
         ),
       ),
       const SizedBox(height: 16),
-      const Text(
-        'รูปแบบและความถี่การรับประทานยา',
-        style: TextStyle(fontWeight: FontWeight.w600),
-      ),
       const SizedBox(height: 8),
       Container(
         padding: const EdgeInsets.all(12),
