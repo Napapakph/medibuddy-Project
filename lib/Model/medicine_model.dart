@@ -173,13 +173,15 @@ class MedicineItem {
   });
 
   MedicineItem copyWith({
+    int? mediListId,
+    String? id,
     String? nickname_medi,
     String? officialName_medi,
     String? imagePath,
   }) {
     return MedicineItem(
-      mediListId: mediListId,
-      id: id,
+      mediListId: mediListId ?? this.mediListId,
+      id: id ?? this.id,
       nickname_medi: nickname_medi ?? this.nickname_medi,
       officialName_medi: officialName_medi ?? this.officialName_medi,
       imagePath: imagePath ?? this.imagePath,
