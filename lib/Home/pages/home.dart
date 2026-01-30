@@ -1,9 +1,10 @@
 import 'dart:io';
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:medibuddy/widgets/app_drawer.dart';
+import 'package:medibuddy/services/regimen_api.dart';
 import '../../Model/profile_model.dart';
+import '../../Model/medicine_regimen_model.dart';
 import 'select_profile.dart';
 import '../../services/app_state.dart';
 import '../../Home/pages/select_profile.dart';
@@ -23,37 +24,22 @@ class Home extends StatefulWidget {
 
 class _Home extends State<Home> {
   static const String _imageBaseUrl = 'http://82.26.104.98:3000';
-  final List<_MedicineReminder> _reminders = [
-    _MedicineReminder(
-      time: '07:00 น.',
-      name: 'ยาแก้แพ้',
-      meal: 'หลังอาหาร',
-      pills: '1 เม็ด',
-    ),
-    _MedicineReminder(
-      time: '12:00 น.',
-      name: 'ยาแก้ไอ',
-      meal: 'หลังอาหาร',
-      pills: '1 เม็ด',
-    ),
-    _MedicineReminder(
-      time: '18:00 น.',
-      name: 'ยาแก้แพ้',
-      meal: 'หลังอาหาร',
-      pills: '1 เม็ด',
-    ),
-    _MedicineReminder(
-      time: '21:00 น.',
-      name: 'ยาฆ่าเชื้อ',
-      meal: 'ก่อนอาหาร',
-      pills: '1 เม็ด',
-    ),
-  ];
+  final RegimenApiService _regimenApi = RegimenApiService();
+  bool _loading = false;
+  String? _error;
+  List<_MedicineReminder> _homeReminders = [];
   String? _profileName; // ✅ PROFILE_BIND: resolved name
   String? _profileImagePath; // ✅ PROFILE_BIND: resolved image path
   bool _profileBound = false; // ⚠️ GUARD: bind once
   int? _profileId;
-  bool _isLoading = false; // สถานะการโหลด
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fetchHomeReminders();
+    });
+  }
 
   @override
   void didChangeDependencies() {
@@ -137,14 +123,238 @@ class _Home extends State<Home> {
     return FileImage(File(p));
   }
 
+  int _resolveProfileId() {
+    final routeArgs = ModalRoute.of(context)?.settings.arguments;
+    int? resolved;
+
+    if (routeArgs is Map) {
+      final raw = routeArgs['profileId'] ?? routeArgs['profileID'] ?? routeArgs['id'];
+      resolved = _readInt(raw);
+    } else if (routeArgs is int) {
+      resolved = routeArgs;
+    } else if (routeArgs != null) {
+      resolved = _readInt(routeArgs);
+    }
+
+    resolved ??= _profileId;
+    resolved ??= widget.selectedProfile?.profileId;
+    resolved ??= AppState.instance.currentProfileId;
+
+    if (resolved != null && resolved > 0) {
+      _profileId = resolved;
+      return resolved;
+    }
+
+    return 0;
+  }
+
+  int? _readInt(dynamic value) {
+    if (value == null) return null;
+    return int.tryParse(value.toString());
+  }
+
+  Future<void> _fetchHomeReminders() async {
+    final profileId = _resolveProfileId();
+    debugPrint('\u{1F3E0} home profileId=$profileId');
+
+    if (profileId <= 0) {
+      const message = 'missing profileId';
+      debugPrint('\u274C home reminder error=$message');
+      if (mounted) {
+        setState(() {
+          _error = message;
+          _loading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text(message)),
+        );
+      } else {
+        _error = message;
+      }
+      return;
+    }
+
+    if (mounted) {
+      setState(() {
+        _loading = true;
+        _error = null;
+      });
+    }
+
+    try {
+      final response = await _regimenApi.getRegimensByProfileId(
+        profileId: profileId,
+      );
+      final items = response.items;
+      debugPrint('\u{1F3E0} fetched items=${items.length}');
+      final reminders = _mapHomeRemindersFromProfile(items);
+      if (!mounted) return;
+      setState(() {
+        _homeReminders = reminders;
+        _error = null;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      final message = e.toString();
+      debugPrint('\u274C home reminder error=$message');
+      setState(() {
+        _error = message;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _loading = false);
+      }
+    }
+  }
+
+  List<_MedicineReminder> _mapHomeRemindersFromProfile(
+    List<MedicineRegimenItem> items,
+  ) {
+    final flattened = <_HomeReminderFlat>[];
+    for (final item in items) {
+      final nickname = (item.medicineList?.mediNickname ?? '').trim();
+      for (final time in item.times) {
+        final timeValue = time.time.trim();
+        if (timeValue.isEmpty) continue;
+        flattened.add(
+          _HomeReminderFlat(
+            time: timeValue,
+            nickname: nickname,
+            mealRelation: time.mealRelation,
+            dose: time.dose,
+            unit: time.unit,
+          ),
+        );
+      }
+    }
+
+    debugPrint('\u{1F3E0} flattened times=${flattened.length}');
+
+    final grouped = <String, Map<String, _HomeReminderAggregate>>{};
+    for (final entry in flattened) {
+      final timeKey = entry.time;
+      final nameKey = entry.nickname;
+      final groupForTime = grouped.putIfAbsent(timeKey, () => {});
+      final existing = groupForTime[nameKey];
+      if (existing == null) {
+        groupForTime[nameKey] = _HomeReminderAggregate(
+          nickname: entry.nickname,
+          mealRelation: entry.mealRelation,
+          totalDose: entry.dose,
+          unit: entry.unit,
+        );
+      } else {
+        existing.totalDose += entry.dose;
+        existing.mealRelation =
+            _mergeMealRelation(existing.mealRelation, entry.mealRelation);
+        if (existing.unit.trim().isEmpty && entry.unit.trim().isNotEmpty) {
+          existing.unit = entry.unit;
+        }
+      }
+    }
+
+    debugPrint('\u{1F3E0} grouped times=${grouped.length}');
+
+    final reminders = <_MedicineReminder>[];
+    final sortedTimes = grouped.keys.toList()..sort(_compareTime);
+    for (final timeKey in sortedTimes) {
+      final medicines = grouped[timeKey]!;
+      final names = medicines.keys.toList()..sort();
+      for (final nameKey in names) {
+        final agg = medicines[nameKey]!;
+        final unitText = _mapUnitToText(agg.unit);
+        final doseText = unitText.isEmpty
+            ? _formatDose(agg.totalDose)
+            : '${_formatDose(agg.totalDose)} $unitText';
+        reminders.add(
+          _MedicineReminder(
+            time: timeKey,
+            name: agg.nickname,
+            meal: _mealTextFromRelation(agg.mealRelation),
+            pills: doseText,
+          ),
+        );
+      }
+    }
+
+    return reminders;
+  }
+
+  String _mergeMealRelation(String current, String incoming) {
+    final normalizedCurrent = current.trim().toUpperCase();
+    final normalizedIncoming = incoming.trim().toUpperCase();
+    if (normalizedCurrent.isEmpty || normalizedCurrent == 'NONE') {
+      return incoming;
+    }
+    if (normalizedIncoming.isEmpty || normalizedIncoming == 'NONE') {
+      return current;
+    }
+    return current;
+  }
+
+  String _mealTextFromRelation(String relation) {
+    switch (relation.trim().toUpperCase()) {
+      case 'AFTER_MEAL':
+        return '\u0E2B\u0E25\u0E31\u0E07\u0E2D\u0E32\u0E2B\u0E32\u0E23';
+      case 'BEFORE_MEAL':
+        return '\u0E01\u0E48\u0E2D\u0E19\u0E2D\u0E32\u0E2B\u0E32\u0E23';
+      case 'NONE':
+        return '';
+      default:
+        return '';
+    }
+  }
+
+  String _mapUnitToText(String unit) {
+    final normalized = unit.trim().toLowerCase();
+    switch (normalized) {
+      case 'tablet':
+        return '\u0E40\u0E21\u0E47\u0E14';
+      case 'mg':
+        return '\u0E21\u0E01.';
+      case 'ml':
+        return '\u0E21\u0E25.';
+      default:
+        return unit.trim();
+    }
+  }
+
+  String _formatDose(num dose) {
+    if (dose % 1 == 0) {
+      return dose.toInt().toString();
+    }
+    return dose.toString();
+  }
+
+  int _compareTime(String a, String b) {
+    final aMinutes = _timeToMinutes(a);
+    final bMinutes = _timeToMinutes(b);
+    final cmp = aMinutes.compareTo(bMinutes);
+    if (cmp != 0) return cmp;
+    return a.compareTo(b);
+  }
+
+  int _timeToMinutes(String value) {
+    final parts = value.split(':');
+    if (parts.length < 2) return 0;
+    final hour = int.tryParse(parts[0]) ?? 0;
+    final minute = int.tryParse(parts[1]) ?? 0;
+    final safeHour = hour.clamp(0, 23).toInt();
+    final safeMinute = minute.clamp(0, 59).toInt();
+    return (safeHour * 60) + safeMinute;
+  }
+
   void _toggleReminder(int index) {
     setState(() {
-      _reminders[index].isTaken = !_reminders[index].isTaken;
+      _homeReminders[index].isTaken = !_homeReminders[index].isTaken;
     });
   }
 
   Widget _buildReminderCard(BuildContext context, int index) {
-    final reminder = _reminders[index];
+    final reminder = _homeReminders[index];
     final isTaken = reminder.isTaken;
     final checkColor =
         isTaken ? const Color(0xFF1F497D) : const Color(0xFF9EC6F5);
@@ -371,16 +581,20 @@ class _Home extends State<Home> {
                                     color: const Color(0xFFE8F2FF),
                                     borderRadius: BorderRadius.circular(20),
                                   ),
-                                  child: _reminders.isEmpty
+                                  child: _loading
                                       ? const Center(
-                                          child: Text('No reminders yet'),
+                                          child: CircularProgressIndicator(),
                                         )
-                                      : ListView.separated(
-                                          itemCount: _reminders.length,
-                                          separatorBuilder: (_, __) =>
-                                              const SizedBox(height: 12),
-                                          itemBuilder: _buildReminderCard,
-                                        ),
+                                      : _homeReminders.isEmpty
+                                          ? const Center(
+                                              child: Text('No reminders yet'),
+                                            )
+                                          : ListView.separated(
+                                              itemCount: _homeReminders.length,
+                                              separatorBuilder: (_, __) =>
+                                                  const SizedBox(height: 12),
+                                              itemBuilder: _buildReminderCard,
+                                            ),
                                 ),
                               ),
                             ],
@@ -417,3 +631,34 @@ class _MedicineReminder {
     this.isTaken = false,
   });
 }
+
+class _HomeReminderFlat {
+  final String time;
+  final String nickname;
+  final String mealRelation;
+  final num dose;
+  final String unit;
+
+  _HomeReminderFlat({
+    required this.time,
+    required this.nickname,
+    required this.mealRelation,
+    required this.dose,
+    required this.unit,
+  });
+}
+
+class _HomeReminderAggregate {
+  final String nickname;
+  String mealRelation;
+  num totalDose;
+  String unit;
+
+  _HomeReminderAggregate({
+    required this.nickname,
+    required this.mealRelation,
+    required this.totalDose,
+    required this.unit,
+  });
+}
+

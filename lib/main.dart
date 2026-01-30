@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
@@ -23,13 +25,16 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'Home/pages/add_medicine/medicine_search_page.dart';
 import 'Home/pages/user_request/user_request_screen.dart';
-import 'Home/pages/user_request/user_request_screen.dart';
+import 'Home/pages/alarm_screen.dart';
 
 const bool kDisableAuthGate =
     true; // เปลี่ยนเป็น false เมื่อต้องการเปิดใช้งาน AuthGate
 
 late final StreamSubscription<AuthState> _authSub;
 final FlutterLocalNotificationsPlugin flnp = FlutterLocalNotificationsPlugin();
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+String? _pendingNotificationPayload;
 
 const AndroidNotificationChannel channel = AndroidNotificationChannel(
   'medibuddy_high', // id ต้องคงที่
@@ -37,6 +42,86 @@ const AndroidNotificationChannel channel = AndroidNotificationChannel(
   description: 'Foreground notifications',
   importance: Importance.high,
 );
+
+@pragma('vm:entry-point')
+void notificationTapBackground(NotificationResponse response) {
+  debugPrint('🔔 LOCAL NOTI TAP (bg) payload=${response.payload}');
+}
+
+Map<String, dynamic> _payloadFromRemoteMessage(RemoteMessage message) {
+  final data = Map<String, dynamic>.from(message.data);
+  final notification = message.notification;
+  int menuIndex = 0;
+  final rawMenuIndex = data['menuIndex'];
+  if (rawMenuIndex is int) {
+    menuIndex = rawMenuIndex;
+  } else if (rawMenuIndex != null) {
+    menuIndex = int.tryParse(rawMenuIndex.toString()) ?? 0;
+  }
+
+  return {
+    'route': data['route']?.toString() ?? '/alarm',
+    'title': data['title']?.toString() ?? (notification?.title ?? ''),
+    'body': data['body']?.toString() ?? (notification?.body ?? ''),
+    'time': data['time']?.toString() ?? '12:00',
+    'menuIndex': menuIndex,
+  };
+}
+
+Map<String, dynamic>? _payloadFromString(String? payload) {
+  if (payload == null || payload.trim().isEmpty) return null;
+  try {
+    final decoded = jsonDecode(payload);
+    if (decoded is Map<String, dynamic>) return decoded;
+    if (decoded is Map) {
+      return decoded.map((key, value) => MapEntry(key.toString(), value));
+    }
+  } catch (_) {}
+  return null;
+}
+
+void _navigateToAlarm(Map<String, dynamic> payload) {
+  final route = payload['route']?.toString() ?? '/alarm';
+  final nav = navigatorKey.currentState;
+  if (nav == null) {
+    _pendingNotificationPayload = jsonEncode(payload);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _flushPendingNotificationNavigation();
+    });
+    return;
+  }
+  nav.pushNamed(route, arguments: payload);
+}
+
+void _handleLocalNotificationTap(String? payload) {
+  final parsed = _payloadFromString(payload);
+  if (parsed == null) return;
+  _navigateToAlarm(parsed);
+}
+
+void openAlarmFromNoti({String? payload, Map<String, dynamic>? data}) {
+  debugPrint('➡️ ROUTING TO /alarm payload=$payload data=$data');
+  final nav = navigatorKey.currentState;
+  if (nav == null) {
+    if (payload != null) {
+      _pendingNotificationPayload = payload;
+    } else if (data != null) {
+      _pendingNotificationPayload = jsonEncode(data);
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _flushPendingNotificationNavigation();
+    });
+    return;
+  }
+  nav.pushNamed('/alarm', arguments: payload ?? data);
+}
+
+void _flushPendingNotificationNavigation() {
+  if (_pendingNotificationPayload == null) return;
+  final payload = _pendingNotificationPayload;
+  _pendingNotificationPayload = null;
+  openAlarmFromNoti(payload: payload);
+}
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -73,6 +158,20 @@ Future<void> main() async {
   // ✅ request permission
   await FirebaseMessaging.instance.requestPermission();
 
+  FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+    debugPrint('🔔 FCM TAP data=${message.data}');
+    debugPrint('➡️ ROUTING TO /alarm (fcm)');
+    openAlarmFromNoti(data: message.data);
+  });
+
+  final initialMessage = await FirebaseMessaging.instance.getInitialMessage();
+  debugPrint('🧪 initialMessage = ${initialMessage?.data}');
+  if (initialMessage != null) {
+    debugPrint('🔔 FCM INITIAL TAP data=${initialMessage.data}');
+    debugPrint('➡️ ROUTING TO /alarm (initial)');
+    openAlarmFromNoti(data: initialMessage.data);
+  }
+
   // ✅ 3. LISTENER สำหรับ FOREGROUND (จุดสำคัญที่สุด)
   FirebaseMessaging.onMessage.listen((RemoteMessage msg) async {
     debugPrint('📩 FCM onMessage (foreground)');
@@ -84,6 +183,8 @@ Future<void> main() async {
     if (notification == null) return;
 
     // 🔔 สร้าง banner เอง
+    final payload = jsonEncode(msg.data);
+    debugPrint('🧪 showing local noti payload=$payload');
     await flnp.show(
       notification.hashCode,
       notification.title,
@@ -98,6 +199,7 @@ Future<void> main() async {
           icon: '@mipmap/ic_launcher',
         ),
       ),
+      payload: payload,
     );
   });
 
@@ -129,7 +231,8 @@ Future<void> main() async {
     },
   );
 
-  runApp(MyApp());
+  runApp(const MyApp());
+  _flushPendingNotificationNavigation();
 }
 
 class MyApp extends StatelessWidget {
@@ -141,6 +244,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'MediBuddy',
+      navigatorKey: navigatorKey,
 
       //  รับ deep link ที่มาเป็น "/?code=..."
       onGenerateRoute: (settings) {
@@ -214,6 +318,20 @@ class MyApp extends StatelessWidget {
                 builder: (_) => const MedicineSearchPage());
           case '/user_request':
             return MaterialPageRoute(builder: (_) => const UserRequestScreen());
+          case '/alarm':
+            final args = settings.arguments;
+            Map<String, dynamic>? payload;
+            if (args is Map<String, dynamic>) {
+              payload = args;
+            } else if (args is Map) {
+              payload =
+                  args.map((key, value) => MapEntry(key.toString(), value));
+            } else if (args is String) {
+              payload = _payloadFromString(args);
+            }
+            return MaterialPageRoute(
+              builder: (_) => AlarmScreen(payload: payload),
+            );
 
           default:
             return MaterialPageRoute(builder: (_) => defaultPage());
@@ -232,7 +350,22 @@ Future<void> _setupLocalNotifications() async {
     android: androidInit,
   );
 
-  await flnp.initialize(initSettings);
+  await flnp.initialize(
+    initSettings,
+    onDidReceiveNotificationResponse: (NotificationResponse response) {
+      debugPrint('🔔 LOCAL NOTI TAP payload=${response.payload}');
+      debugPrint('➡️ ROUTING TO /alarm (local)');
+      openAlarmFromNoti(payload: response.payload);
+    },
+    onDidReceiveBackgroundNotificationResponse: notificationTapBackground,
+  );
+  debugPrint('✅ FLNP initialized');
+
+  final launchDetails = await flnp.getNotificationAppLaunchDetails();
+  if ((launchDetails?.didNotificationLaunchApp ?? false) &&
+      launchDetails?.notificationResponse?.payload != null) {
+    _pendingNotificationPayload = launchDetails?.notificationResponse?.payload;
+  }
 
   // ✅ Android 8+ ต้องสร้าง channel
   await flnp

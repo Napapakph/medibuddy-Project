@@ -256,6 +256,53 @@ class RegimenApiService {
     return MedicineRegimenDetailResponse.fromJson(data);
   }
 
+  Future<MedicineRegimenListResponse> getRegimensByProfileId({
+    required int profileId,
+  }) async {
+    if (profileId <= 0) {
+      throw RegimenApiException('profileId must be a positive integer.');
+    }
+    final token = _requireAccessToken();
+    final url = Uri.parse(
+      '${_baseUrl()}/api/mobile/v1/medicine-regimen/list?profileId=$profileId',
+    );
+
+    debugPrint('\u{1F9EA} regimen/list profileId=$profileId');
+
+    final res = await _client.get(
+      url,
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    debugPrint('\u{1F4E1} regimen/list status=${res.statusCode}');
+    debugPrint('\u{1F4E6} regimen/list body=${res.body}');
+
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      final parsed = _readErrorMessage(res.body);
+      final friendly = _friendlyAuthError(res.statusCode);
+      final message = parsed ?? friendly;
+      throw RegimenApiException(
+        message ?? 'Get regimen list failed (${res.statusCode}).',
+        statusCode: res.statusCode,
+      );
+    }
+
+    final decoded = jsonDecode(res.body);
+    if (decoded is! Map) {
+      throw RegimenApiException('Invalid response format (expected object).');
+    }
+
+    final data = decoded['data'] is Map
+        ? Map<String, dynamic>.from(decoded['data'] as Map)
+        : Map<String, dynamic>.from(decoded as Map);
+
+    return MedicineRegimenListResponse.fromJson(data);
+  }
+
+//------------------ list regimen ----------------------------------------
   Future<MedicineRegimenListResponse> getRegimensByMedicineListId({
     required int medicineListId,
   }) async {
@@ -275,8 +322,8 @@ class RegimenApiService {
       },
     );
 
-    debugPrint('📡 regimen/list status=${res.statusCode}');
-    debugPrint('📦 regimen/list body=${res.body}');
+    debugPrint('\u{1F4E1} home regimen list status=${res.statusCode}');
+    debugPrint('\u{1F4E6} home regimen list body=${res.body}');
 
     if (res.statusCode < 200 || res.statusCode >= 300) {
       final parsed = _readErrorMessage(res.body);
