@@ -16,6 +16,8 @@ import 'Home/pages/home.dart';
 import 'Home/pages/library_profile.dart';
 import 'Home/pages/add_medicine/list_medicine.dart';
 import 'Home/pages/history.dart';
+import 'Home/pages/medication-tracking/following.dart';
+import 'Home/pages/medication-tracking/follower.dart';
 import 'OCR/camera_ocr.dart';
 import 'services/sync_user.dart';
 import 'dart:async';
@@ -194,6 +196,10 @@ class MyApp extends StatelessWidget {
             return MaterialPageRoute(builder: (_) => const HistoryPage());
           case '/camera_ocr':
             return MaterialPageRoute(builder: (_) => const CameraOcrPage());
+          case '/following':
+            return MaterialPageRoute(builder: (_) => const FollowingScreen());
+          case '/follower':
+            return MaterialPageRoute(builder: (_) => const FollowerScreen());
 
           default:
             return MaterialPageRoute(builder: (_) => defaultPage());

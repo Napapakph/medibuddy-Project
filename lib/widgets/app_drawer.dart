@@ -115,12 +115,12 @@ class AppDrawer extends StatelessWidget {
                           ListTile(
                             leading: const Icon(Icons.favorite),
                             title: const Text('กำลังติดตาม'),
-                            onTap: () {},
+                            onTap: () => _go(context, '/following'),
                           ),
                           ListTile(
                             leading: const Icon(Icons.people),
                             title: const Text('ผู้ติดตาม'),
-                            onTap: () {},
+                            onTap: () => _go(context, '/follower'),
                           ),
                           ListTile(
                             leading: const Icon(Icons.person_add),
@@ -172,3 +172,4 @@ class AppDrawer extends StatelessWidget {
     );
   }
 }
+
