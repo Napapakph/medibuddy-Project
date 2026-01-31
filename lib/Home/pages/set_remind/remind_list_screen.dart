@@ -78,8 +78,7 @@ class _RemindListScreenState extends State<RemindListScreen> {
 
     _selectedMedicine = _resolveMedicine(widget.initialMedicine) ??
         (widget.medicines.isNotEmpty ? widget.medicines.first : null);
-    _loadPlans();
-    _fetchRegimens();
+    _refreshReminders();
   }
 
   MedicineItem? _resolveMedicine(MedicineItem? medicine) {
@@ -401,6 +400,11 @@ class _RemindListScreenState extends State<RemindListScreen> {
     }
   }
 
+  Future<void> _refreshReminders() async {
+    _loadPlans();
+    await _fetchRegimens();
+  }
+
   List<ReminderPlan> get _filteredPlans {
     final selected = _selectedMedicine;
     if (selected == null) return _plans;
@@ -435,13 +439,16 @@ class _RemindListScreenState extends State<RemindListScreen> {
     );
 
     if (!mounted) return;
+    final changed = result == true;
     if (result is ReminderPlan) {
       _ReminderPlanStore.upsertPlan(result);
       setState(() {
         _selectedMedicine =
             _resolveMedicine(result.medicine) ?? _selectedMedicine;
-        _loadPlans();
       });
+    }
+    if (changed || result is ReminderPlan) {
+      await _refreshReminders();
     }
   }
 
@@ -460,6 +467,7 @@ class _RemindListScreenState extends State<RemindListScreen> {
       );
 
       if (!mounted) return;
+      final changed = result == true;
       if (result is ReminderPlan) {
         _ReminderPlanStore.upsertPlan(
           result,
@@ -468,8 +476,10 @@ class _RemindListScreenState extends State<RemindListScreen> {
         setState(() {
           _selectedMedicine =
               _resolveMedicine(result.medicine) ?? _selectedMedicine;
-          _loadPlans();
         });
+      }
+      if (changed || result is ReminderPlan) {
+        await _refreshReminders();
       }
       return;
     }
@@ -520,6 +530,7 @@ class _RemindListScreenState extends State<RemindListScreen> {
     );
 
     if (!mounted) return;
+    final changed = result == true;
     if (result is ReminderPlan) {
       _ReminderPlanStore.upsertPlan(
         result,
@@ -528,8 +539,10 @@ class _RemindListScreenState extends State<RemindListScreen> {
       setState(() {
         _selectedMedicine =
             _resolveMedicine(result.medicine) ?? _selectedMedicine;
-        _loadPlans();
       });
+    }
+    if (changed || result is ReminderPlan) {
+      await _refreshReminders();
     }
   }
 

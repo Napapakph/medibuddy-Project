@@ -322,10 +322,7 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
         ),
       );
 
-      Navigator.pop(
-        context,
-        plan.copyWith(mediRegimenId: response.mediRegimenId),
-      );
+      Navigator.pop(context, true);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
