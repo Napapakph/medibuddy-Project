@@ -243,6 +243,9 @@ class MyApp extends StatelessWidget {
     // TODO: implement build
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        fontFamily: 'Mali',
+      ),
       title: 'MediBuddy',
       navigatorKey: navigatorKey,
 

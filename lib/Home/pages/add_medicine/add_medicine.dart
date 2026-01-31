@@ -94,9 +94,9 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
     if (query.isEmpty) return List<MedicineCatalogItem>.from(_items);
 
     return _items.where((item) {
-      final enName = item.mediEnName.toLowerCase();
-      final tradeName = item.mediTradeName.toLowerCase();
-      final thName = item.mediThName.toLowerCase();
+      final enName = (item.mediEnName ?? '').toLowerCase();
+      final tradeName = (item.mediTradeName ?? '').toLowerCase();
+      final thName = (item.mediThName ?? '').toLowerCase();
       return enName.startsWith(query) ||
           tradeName.startsWith(query) ||
           thName.startsWith(query);
@@ -108,9 +108,9 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
     if (q.isEmpty) return true; // ไม่ search ก็ถือว่าไม่ต้องโชว์โหมด notfound
 
     for (final item in filtered) {
-      final en = item.mediEnName.trim().toLowerCase();
-      final trade = item.mediTradeName.trim().toLowerCase();
-      final th = item.mediThName.trim().toLowerCase();
+      final en = (item.mediEnName ?? '').trim().toLowerCase();
+      final trade = (item.mediTradeName ?? '').trim().toLowerCase();
+      final th = (item.mediThName ?? '').trim().toLowerCase();
 
       if (en == q || trade == q || th == q) return true;
     }
@@ -333,7 +333,7 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
                                     _selectedItem?.mediId == item.mediId;
 
                                 final imagePath =
-                                    toFullImageUrl(item.imageUrl ?? '');
+                                    toFullImageUrl(item.mediPicture ?? '');
 
                                 return GestureDetector(
                                   onTap: () {
@@ -422,7 +422,7 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
                                                 CrossAxisAlignment.start,
                                             children: [
                                               Text(
-                                                'ชื่อสามัญ : ${item.mediEnName.isNotEmpty ? item.mediEnName : '-'}',
+                                                'ชื่อสามัญ : ${(item.mediEnName ?? '').isNotEmpty ? item.mediEnName : '-'}',
                                                 style: const TextStyle(
                                                   fontSize: 13,
                                                   fontWeight: FontWeight.w600,
@@ -430,7 +430,7 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
                                               ),
                                               const SizedBox(height: 4),
                                               Text(
-                                                'ชื่อการค้า : ${item.mediTradeName.isNotEmpty ? item.mediTradeName : '-'}',
+                                                'ชื่อการค้า : ${(item.mediTradeName ?? '').isNotEmpty ? item.mediTradeName : '-'}',
                                                 style: const TextStyle(
                                                   fontSize: 12,
                                                   color: Color(0xFF5E6C84),

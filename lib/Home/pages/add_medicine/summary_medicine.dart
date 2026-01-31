@@ -70,7 +70,7 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
     final localImage = localImagePath.isEmpty ? null : File(localImagePath);
     final displayImage = localImagePath.isNotEmpty
         ? localImagePath
-        : catalog?.imageUrl.trim() ?? '';
+        : (catalog?.mediPicture ?? '').trim();
 
     final localItem = MedicineItem(
       mediListId: isEditMode ? widget.initialItem!.mediListId : 0,
@@ -175,7 +175,7 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
     final officialName = _resolveOfficialName(catalog);
     final nickname = _resolveNickname(officialName);
     final localImagePath = widget.draft.imagePath;
-    final catalogImage = toFullImageUrl(catalog?.imageUrl.trim() ?? '');
+    final catalogImage = toFullImageUrl((catalog?.mediPicture ?? '').trim());
 
     return Scaffold(
       appBar: AppBar(

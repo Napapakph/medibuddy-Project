@@ -95,7 +95,38 @@ flutter:
      - assets/cat_profile.png
      - assets/main_mascot.png
      - assets/cat_profile.png
+     - assets/fonts/
 
+  fonts:
+     - family: Kodchasan
+       fonts:
+        - asset: assets/fonts/Kodchasan-Bold.ttf
+        - asset: assets/fonts/Kodchasan-BoldItalic.ttf
+        - asset: assets/fonts/Kodchasan-Italic.ttf
+        - asset: assets/fonts/Kodchasan-LightItalic.ttf
+        - asset: assets/fonts/Kodchasan-Medium.ttf
+        - asset: assets/fonts/Kodchasan-MediumItalic.ttf
+        - asset: assets/fonts/Kodchasan-SemiBold.ttf
+        - asset: assets/fonts/Kodchasan-SemiBoldItalic.ttf
+        - asset: assets/fonts/Kodchasan-ExtraLight.ttf
+        - asset: assets/fonts/Kodchasan-ExtraLightItalic.ttf
+        - asset: assets/fonts/Kodchasan-Light.ttf
+        - asset: assets/fonts/Kodchasan-Regular.ttf
+
+     - family: Mali
+       fonts:
+        - asset: assets/fonts/Mali-Bold.ttf
+        - asset: assets/fonts/Mali-BoldItalic.ttf
+        - asset: assets/fonts/Mali-ExtraLight.ttf
+        - asset: assets/fonts/Mali-ExtraLightItalic.ttf
+        - asset: assets/fonts/Mali-Italic.ttf
+        - asset: assets/fonts/Mali-Light.ttf
+        - asset: assets/fonts/Mali-LightItalic.ttf
+        - asset: assets/fonts/Mali-Medium.ttf
+        - asset: assets/fonts/Mali-MediumItalic.ttf
+        - asset: assets/fonts/Mali-Regular.ttf
+        - asset: assets/fonts/Mali-SemiBold.ttf
+        - asset: assets/fonts/Mali-SemiBoldItalic.ttf
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

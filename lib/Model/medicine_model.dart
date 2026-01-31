@@ -1,38 +1,46 @@
 class MedicineCatalogItem {
   final int mediId;
-  final String mediThName;
-  final String mediEnName;
-  final String mediTradeName;
-  final String mediType;
-  final String imageUrl;
-  final String indications;
-  final String usageAdvice;
-  final String adverseReactions;
-  final String contraindications;
-  final String precautions;
-  final String interactions;
-  final String storage;
+
+  final String? mediThName;
+  final String? mediEnName;
+  final String? mediTradeName;
+  final String? mediType;
+
+  final String? mediUse;
+  final String? mediGuide;
+  final String? mediEffects;
+  final String? mediNoUse;
+  final String? mediWarning;
+  final String? mediStore;
+  final String? mediPicture;
 
   const MedicineCatalogItem({
     required this.mediId,
-    required this.mediThName,
-    required this.mediEnName,
-    required this.mediTradeName,
-    required this.mediType,
-    required this.imageUrl,
-    required this.indications,
-    required this.usageAdvice,
-    required this.adverseReactions,
-    required this.contraindications,
-    required this.precautions,
-    required this.interactions,
-    required this.storage,
+    this.mediThName,
+    this.mediEnName,
+    this.mediTradeName,
+    this.mediType,
+    this.mediUse,
+    this.mediGuide,
+    this.mediEffects,
+    this.mediNoUse,
+    this.mediWarning,
+    this.mediStore,
+    this.mediPicture,
   });
 
+  /// ใช้เลือกชื่อหลักสำหรับแสดงใน UI
+  /// (ถ้ามีชื่อการค้าใช้ก่อน, รองลงมาชื่ออังกฤษ, แล้วชื่อไทย)
   String get displayOfficialName {
-    if (mediTradeName.isNotEmpty) return mediTradeName;
-    if (mediEnName.isNotEmpty) return mediEnName;
-    return mediThName;
+    final trade = (mediTradeName ?? '').trim();
+    if (trade.isNotEmpty) return trade;
+
+    final en = (mediEnName ?? '').trim();
+    if (en.isNotEmpty) return en;
+
+    return (mediThName ?? '-').trim().isEmpty
+        ? '-'
+        : (mediThName ?? '-').trim();
   }
 
   static int _readInt(dynamic value) {
@@ -40,82 +48,35 @@ class MedicineCatalogItem {
     return int.tryParse(value.toString()) ?? 0;
   }
 
-  static String _readString(dynamic value) {
-    if (value == null) return '';
-    return value.toString().trim();
-  }
-
-  static String _withFallback(String value, String fallback) {
-    return value.isEmpty ? fallback : value;
+  static String? _readNullableString(dynamic value) {
+    if (value == null) return null;
+    final s = value.toString().trim();
+    return s.isEmpty ? null : s;
   }
 
   factory MedicineCatalogItem.fromJson(Map<String, dynamic> json) {
-    final mediType = _readString(json['mediType']);
     return MedicineCatalogItem(
       mediId: _readInt(json['mediId'] ?? json['medId'] ?? json['id']),
-      mediThName: _readString(json['mediThName']),
-      mediEnName: _readString(json['mediEnName']),
-      mediTradeName: _readString(json['mediTradeName']),
-      mediType: mediType,
-      imageUrl: _readString(
-        json['imageUrl'] ??
+      mediThName: _readNullableString(json['mediThName']),
+      mediEnName: _readNullableString(json['mediEnName']),
+      mediTradeName: _readNullableString(json['mediTradeName']),
+      mediType: _readNullableString(json['mediType']),
+
+      // detail fields
+      mediUse: _readNullableString(json['mediUse']),
+      mediGuide: _readNullableString(json['mediGuide']),
+      mediEffects: _readNullableString(json['mediEffects']),
+      mediNoUse: _readNullableString(json['mediNoUse']),
+      mediWarning: _readNullableString(json['mediWarning']),
+      mediStore: _readNullableString(json['mediStore']),
+
+      // picture: รองรับ key หลายแบบ เผื่อ API/หน้าอื่นส่งต่างกัน
+      mediPicture: _readNullableString(
+        json['mediPicture'] ??
+            json['imageUrl'] ??
             json['image'] ??
             json['mediImage'] ??
-            json['mediPicture'] ??
             json['picture'],
-      ),
-      indications: _withFallback(
-        _readString(
-          json['indications'] ??
-              json['mediIndication'] ??
-              json['mediIndications'],
-        ),
-        '-',
-      ),
-      usageAdvice: _withFallback(
-        _readString(
-          json['usageAdvice'] ??
-              json['usage'] ??
-              json['mediUsage'] ??
-              json['howToUse'],
-        ),
-        '-',
-      ),
-      adverseReactions: _withFallback(
-        _readString(
-          json['adverseReactions'] ??
-              json['sideEffects'] ??
-              json['mediSideEffect'],
-        ),
-        '-',
-      ),
-      contraindications: _withFallback(
-        _readString(
-          json['contraindications'] ??
-              json['mediContraindication'] ??
-              json['contraindication'],
-        ),
-        '-',
-      ),
-      precautions: _withFallback(
-        _readString(
-          json['precautions'] ?? json['mediPrecaution'] ?? json['warning'],
-        ),
-        '-',
-      ),
-      interactions: _withFallback(
-        _readString(
-          json['interactions'] ??
-              json['mediInteraction'] ??
-              json['interaction'],
-        ),
-        '-',
-      ),
-      storage: _withFallback(
-        _readString(
-          json['storage'] ?? json['mediStorage'] ?? json['storageAdvice'],
-        ),
-        '-',
       ),
     );
   }
@@ -189,4 +150,51 @@ class MedicineItem {
   }
 
   int get mediId => int.tryParse(id) ?? 0;
+}
+
+class MedicineDetail {
+  final int mediId;
+  final String? mediThName;
+  final String? mediEnName;
+  final String? mediTradeName;
+  final String? mediType;
+  final String? mediUse;
+  final String? mediGuide;
+  final String? mediEffects;
+  final String? mediNoUse;
+  final String? mediWarning;
+  final String? mediStore;
+  final String? mediPicture;
+
+  MedicineDetail({
+    required this.mediId,
+    required this.mediThName,
+    required this.mediEnName,
+    required this.mediTradeName,
+    required this.mediType,
+    required this.mediUse,
+    required this.mediGuide,
+    required this.mediEffects,
+    required this.mediNoUse,
+    required this.mediWarning,
+    required this.mediStore,
+    required this.mediPicture,
+  });
+
+  factory MedicineDetail.fromJson(Map<String, dynamic> json) {
+    return MedicineDetail(
+      mediId: (json['mediId'] ?? 0) as int,
+      mediThName: json['mediThName'] as String?,
+      mediEnName: json['mediEnName'] as String?,
+      mediTradeName: json['mediTradeName'] as String?,
+      mediType: json['mediType'] as String?,
+      mediUse: json['mediUse'] as String?,
+      mediGuide: json['mediGuide'] as String?,
+      mediEffects: json['mediEffects'] as String?,
+      mediNoUse: json['mediNoUse'] as String?,
+      mediWarning: json['mediWarning'] as String?,
+      mediStore: json['mediStore'] as String?,
+      mediPicture: json['mediPicture'] as String?,
+    );
+  }
 }

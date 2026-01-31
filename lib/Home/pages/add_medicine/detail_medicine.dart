@@ -1,8 +1,7 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:http/http.dart' as http;
+import 'package:medibuddy/Model/medicine_model.dart';
+import 'package:medibuddy/services/medicine_api.dart';
 
 /// เรียก popup รายละเอียดยา โดยดึงข้อมูลจาก
 /// GET /api/mobile/v1/medicine/detail?mediId=...
@@ -44,28 +43,8 @@ class _MedicineDetailDialogState extends State<_MedicineDetailDialog> {
     });
 
     try {
-      final base = (dotenv.env['API_BASE_URL'] ?? '').trim();
-      if (base.isEmpty) {
-        throw Exception('API_BASE_URL is empty (.env)');
-      }
-      final baseNormalized =
-          base.endsWith('/') ? base.substring(0, base.length - 1) : base;
-
-      final uri = Uri.parse('$baseNormalized/api/mobile/v1/medicine/detail')
-          .replace(queryParameters: {'mediId': widget.mediId.toString()});
-
-      final res = await http.get(uri, headers: {
-        'Accept': 'application/json',
-      });
-
-      final body = res.body;
-      if (res.statusCode < 200 || res.statusCode >= 300) {
-        throw Exception(body.isEmpty ? 'Request failed' : body);
-      }
-
-      final decoded = jsonDecode(body) as Map<String, dynamic>;
-      final medicineJson = decoded['medicine'] as Map<String, dynamic>;
-      final detail = MedicineDetail.fromJson(medicineJson);
+      final api = MedicineApi();
+      final detail = await api.getMedicineDetail(mediId: widget.mediId);
 
       if (!mounted) return;
       setState(() {
@@ -307,54 +286,6 @@ class _MedicineDetailDialogState extends State<_MedicineDetailDialog> {
           ],
         ),
       ),
-    );
-  }
-}
-
-class MedicineDetail {
-  final int mediId;
-  final String? mediThName;
-  final String? mediEnName;
-  final String? mediTradeName;
-  final String? mediType;
-
-  final String? mediUse;
-  final String? mediGuide;
-  final String? mediEffects;
-  final String? mediNoUse;
-  final String? mediWarning;
-  final String? mediStore;
-  final String? mediPicture;
-
-  MedicineDetail({
-    required this.mediId,
-    required this.mediThName,
-    required this.mediEnName,
-    required this.mediTradeName,
-    required this.mediType,
-    required this.mediUse,
-    required this.mediGuide,
-    required this.mediEffects,
-    required this.mediNoUse,
-    required this.mediWarning,
-    required this.mediStore,
-    required this.mediPicture,
-  });
-
-  factory MedicineDetail.fromJson(Map<String, dynamic> json) {
-    return MedicineDetail(
-      mediId: (json['mediId'] ?? 0) as int,
-      mediThName: json['mediThName'] as String?,
-      mediEnName: json['mediEnName'] as String?,
-      mediTradeName: json['mediTradeName'] as String?,
-      mediType: json['mediType'] as String?,
-      mediUse: json['mediUse'] as String?,
-      mediGuide: json['mediGuide'] as String?,
-      mediEffects: json['mediEffects'] as String?,
-      mediNoUse: json['mediNoUse'] as String?,
-      mediWarning: json['mediWarning'] as String?,
-      mediStore: json['mediStore'] as String?,
-      mediPicture: json['mediPicture'] as String?,
     );
   }
 }

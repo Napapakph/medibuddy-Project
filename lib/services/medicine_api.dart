@@ -296,6 +296,39 @@ class MedicineApi {
     }).toList();
   }
 
+  Future<MedicineDetail> getMedicineDetail({required int mediId}) async {
+    if (_baseUrl.isEmpty) {
+      throw Exception('API_BASE_URL is empty. Check your .env');
+    }
+
+    final baseNormalized = _baseUrl.endsWith('/')
+        ? _baseUrl.substring(0, _baseUrl.length - 1)
+        : _baseUrl;
+
+    final uri = Uri.parse('$baseNormalized/api/mobile/v1/medicine/detail')
+        .replace(queryParameters: {'mediId': mediId.toString()});
+
+    final headers = <String, String>{
+      'Accept': 'application/json',
+    };
+    final token = _supabase.auth.currentSession?.accessToken;
+    if (token != null && token.isNotEmpty) {
+      headers['Authorization'] = 'Bearer $token';
+    }
+
+    final res = await http.get(uri, headers: headers);
+    final body = res.body;
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      throw Exception(body.isNotEmpty
+          ? 'HTTP ${res.statusCode}: $body'
+          : 'HTTP ${res.statusCode}');
+    }
+
+    final decoded = jsonDecode(body) as Map<String, dynamic>;
+    final medicineJson = decoded['medicine'] as Map<String, dynamic>;
+    return MedicineDetail.fromJson(medicineJson);
+  }
+
   Future<Map<String, dynamic>> updateMedicineListItem({
     required int mediListId,
     int? mediId,

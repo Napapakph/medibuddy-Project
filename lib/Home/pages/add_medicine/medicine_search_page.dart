@@ -56,6 +56,7 @@ class _MedicineSearchPageState extends State<MedicineSearchPage> {
       // - search='' => list เริ่มต้น
       // - search='tylenol' => query ด้วยชื่อ
       final items = await _api.fetchMedicineCatalog(search: search);
+
       if (!mounted) return;
       setState(() {
         _items = items;
@@ -91,17 +92,32 @@ class _MedicineSearchPageState extends State<MedicineSearchPage> {
     }
   }
 
-  String _safe(String s) => s.trim().isEmpty ? '-' : s.trim();
+  String _safe(String? s) {
+    final value = (s ?? '').trim();
+    return value.isEmpty ? '-' : value;
+  }
 
-  void _openDetails(MedicineCatalogItem item) {
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (_) => _MedicineDetailsDialog(
-        item: item,
-        imageUrl: _toFullImageUrl(item.imageUrl ?? ''),
-      ),
-    );
+  Future<void> _openDetails(MedicineCatalogItem item) async {
+    try {
+      final detail = await _api.getMedicineDetail(mediId: item.mediId);
+      if (!mounted) return;
+      final imageUrl = _toFullImageUrl(
+        detail.mediPicture ?? item.mediPicture ?? '',
+      );
+      showDialog(
+        context: context,
+        barrierDismissible: true,
+        builder: (_) => _MedicineDetailsDialog(
+          detail: detail,
+          imageUrl: imageUrl,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('❌ โหลดรายละเอียดไม่สำเร็จ: $e')),
+      );
+    }
   }
 
   Widget _buildSearchBar() {
@@ -147,7 +163,7 @@ class _MedicineSearchPageState extends State<MedicineSearchPage> {
     final en = _safe(item.mediEnName);
     final th = _safe(item.mediThName);
 
-    final imageUrl = _toFullImageUrl(item.imageUrl ?? '');
+    final imageUrl = _toFullImageUrl(item.mediPicture ?? '');
 
     return InkWell(
       onTap: () => _openDetails(item),
@@ -316,29 +332,49 @@ class _MedicineSearchPageState extends State<MedicineSearchPage> {
 
 /// Popup รายละเอียด (เหมือนทรงในรูป: หัวข้อ + ปุ่ม X + เลื่อน)
 class _MedicineDetailsDialog extends StatelessWidget {
-  final MedicineCatalogItem item;
+  final MedicineDetail detail;
   final String imageUrl;
 
-  const _MedicineDetailsDialog({
-    required this.item,
-    required this.imageUrl,
-  });
+  _MedicineDetailsDialog({
+    MedicineDetail? detail,
+    String? imageUrl,
+  })  : detail = detail ?? _emptyDetail(),
+        imageUrl = imageUrl ?? '';
 
-  String _safe(String s) => s.trim().isEmpty ? '-' : s.trim();
+  static MedicineDetail _emptyDetail() {
+    return MedicineDetail(
+      mediId: 0,
+      mediThName: null,
+      mediEnName: null,
+      mediTradeName: null,
+      mediType: null,
+      mediUse: null,
+      mediGuide: null,
+      mediEffects: null,
+      mediNoUse: null,
+      mediWarning: null,
+      mediStore: null,
+      mediPicture: null,
+    );
+  }
+
+  String _safe(String? s) {
+    final value = (s ?? '').trim();
+    return value.isEmpty ? '-' : value;
+  }
 
   @override
   Widget build(BuildContext context) {
-    final trade = _safe(item.mediTradeName);
-    final en = _safe(item.mediEnName);
-    final th = _safe(item.mediThName);
-    final type = _safe(item.mediType);
-    final use = _safe(item.indications);
-    final guide = _safe(item.usageAdvice);
-    final effect = _safe(item.adverseReactions);
-    final noUse = _safe(item.contraindications);
-    final warning = _safe(item.precautions);
-    final keep = _safe(item.storage);
-    final image = _safe(item.imageUrl);
+    final trade = _safe(detail.mediTradeName);
+    final en = _safe(detail.mediEnName);
+    final th = _safe(detail.mediThName);
+    final type = _safe(detail.mediType);
+    final use = _safe(detail.mediUse);
+    final guide = _safe(detail.mediGuide);
+    final effect = _safe(detail.mediEffects);
+    final noUse = _safe(detail.mediNoUse);
+    final warning = _safe(detail.mediWarning);
+    final keep = _safe(detail.mediStore);
 
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 20),
