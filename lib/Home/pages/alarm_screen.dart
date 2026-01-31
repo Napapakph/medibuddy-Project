@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 
 class AlarmScreen extends StatefulWidget {
@@ -11,32 +10,10 @@ class AlarmScreen extends StatefulWidget {
 }
 
 class _AlarmScreenState extends State<AlarmScreen> {
-  late final PageController _pageController;
-  int _menuIndex = 0;
-
   @override
   void initState() {
     super.initState();
     debugPrint('✅ AlarmScreen opened args=${widget.payload}');
-    _menuIndex = _parseMenuIndex(widget.payload?['menuIndex']);
-    _pageController = PageController(initialPage: _menuIndex);
-  }
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
-
-  int _parseMenuIndex(dynamic value) {
-    if (value is int) {
-      return value.clamp(0, 2);
-    }
-    if (value != null) {
-      final parsed = int.tryParse(value.toString());
-      if (parsed != null) return parsed.clamp(0, 2);
-    }
-    return 0;
   }
 
   // ✅ NEW: format TimeOfDay to HH:mm
@@ -139,7 +116,7 @@ class _AlarmScreenState extends State<AlarmScreen> {
                     height: 160,
                     fit: BoxFit.contain,
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 5),
                   Text(
                     _timeText(), // ✅ now shows scheduleTime/time
                     style: const TextStyle(
@@ -154,7 +131,7 @@ class _AlarmScreenState extends State<AlarmScreen> {
                       title,
                       style: const TextStyle(
                         fontSize: 16,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w800,
                       ),
                       textAlign: TextAlign.center,
                     ),
@@ -171,32 +148,11 @@ class _AlarmScreenState extends State<AlarmScreen> {
                 ],
               ),
             ),
-            SizedBox(
-              height: 130,
-              child: PageView(
-                controller: _pageController,
-                onPageChanged: (index) => setState(() => _menuIndex = index),
-                children: [
-                  const _MenuCard(
-                    title: 'Taken',
-                    subtitle: 'Confirm you took the dose',
-                    color: Colors.green,
-                  ),
-                  const _MenuCard(
-                    title: 'Skip',
-                    subtitle: 'Dismiss this dose',
-                    color: Colors.red,
-                  ),
-                  _SnoozeMenu(onSelect: _onSnooze),
-                ],
-              ),
-            ),
-            const SizedBox(height: 8),
-            _MenuIndicator(index: _menuIndex),
-            const SizedBox(height: 12),
-            _ActionRing(
-              onRed: _onRed,
-              onGreen: _onGreen,
+            const SizedBox(height: 24),
+            PillSlideAction(
+              onTake: _onGreen,
+              onSkip: _onRed,
+              onSnooze: () => _onSnooze(10),
             ),
             const SizedBox(height: 16),
           ],
@@ -206,193 +162,301 @@ class _AlarmScreenState extends State<AlarmScreen> {
   }
 }
 
-class _MenuCard extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final Color color;
+enum _SlideTarget { none, skip, take, snooze }
 
-  const _MenuCard({
-    required this.title,
-    required this.subtitle,
+class PillSlideAction extends StatefulWidget {
+  final VoidCallback onTake;
+  final VoidCallback onSkip;
+  final VoidCallback onSnooze;
+
+  const PillSlideAction({
+    required this.onTake,
+    required this.onSkip,
+    required this.onSnooze,
+  });
+
+  @override
+  State<PillSlideAction> createState() => _PillSlideActionState();
+}
+
+class _PillSlideActionState extends State<PillSlideAction>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  Animation<Offset> _animation = const AlwaysStoppedAnimation(Offset.zero);
+  Offset _thumbOffset = Offset.zero;
+  double _maxX = 0;
+  double _maxUp = 0;
+  double _maxDown = 0;
+  _SlideTarget _activeTarget = _SlideTarget.none;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 180),
+    )..addListener(() {
+        setState(() {
+          _thumbOffset = _animation.value;
+        });
+      });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _animateTo(Offset target) {
+    _animation = Tween<Offset>(begin: _thumbOffset, end: target).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
+    );
+    _controller.forward(from: 0);
+  }
+
+  _SlideTarget _resolveTarget(Offset offset) {
+    final sideThreshold = _maxX * 0.55;
+    final upThreshold = _maxUp * 0.55;
+
+    if (_maxUp > 0 &&
+        offset.dy <= -upThreshold &&
+        offset.dy.abs() > offset.dx.abs()) {
+      return _SlideTarget.snooze;
+    }
+    if (offset.dx <= -sideThreshold) return _SlideTarget.skip;
+    if (offset.dx >= sideThreshold) return _SlideTarget.take;
+    return _SlideTarget.none;
+  }
+
+  Offset _snapOffset(_SlideTarget target) {
+    switch (target) {
+      case _SlideTarget.skip:
+        return Offset(-_maxX, 0);
+      case _SlideTarget.take:
+        return Offset(_maxX, 0);
+      case _SlideTarget.snooze:
+        return Offset(0, -_maxUp);
+      case _SlideTarget.none:
+        return Offset.zero;
+    }
+  }
+
+  void _trigger(_SlideTarget target) {
+    switch (target) {
+      case _SlideTarget.skip:
+        debugPrint('ACTION: SKIP');
+        widget.onSkip();
+        break;
+      case _SlideTarget.take:
+        debugPrint('ACTION: TAKE');
+        widget.onTake();
+        break;
+      case _SlideTarget.snooze:
+        debugPrint('ACTION: SNOOZE');
+        widget.onSnooze();
+        break;
+      case _SlideTarget.none:
+        break;
+    }
+  }
+
+  void _handlePanUpdate(DragUpdateDetails details) {
+    if (_controller.isAnimating) {
+      _controller.stop();
+    }
+    final next = _thumbOffset + details.delta;
+    final clamped = Offset(
+      next.dx.clamp(-_maxX, _maxX),
+      next.dy.clamp(-_maxUp, _maxDown),
+    );
+    setState(() {
+      _thumbOffset = clamped;
+      _activeTarget = _resolveTarget(_thumbOffset);
+    });
+  }
+
+  void _handlePanEnd(DragEndDetails details) {
+    final target = _resolveTarget(_thumbOffset);
+    if (target == _SlideTarget.none) {
+      setState(() => _activeTarget = _SlideTarget.none);
+      _animateTo(Offset.zero);
+      return;
+    }
+
+    _trigger(target);
+    _animateTo(_snapOffset(target));
+    Future.delayed(const Duration(milliseconds: 220), () {
+      if (!mounted) return;
+      setState(() => _activeTarget = _SlideTarget.none);
+      _animateTo(Offset.zero);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final size = width.clamp(260.0, 360.0);
+        final scale = size / 320.0;
+        final pillWidth = 120.0 * scale;
+        final pillHeight = 46.0 * scale;
+        final iconSize = 36.0 * scale;
+        final inset = 24.0 * scale;
+
+        _maxX = (size / 2) - (pillWidth / 2) - inset;
+        if (_maxX < 0) _maxX = 0;
+        _maxUp = (size / 2) - (pillHeight / 2) - inset;
+        if (_maxUp < 0) _maxUp = 0;
+        _maxDown = 12.0 * scale;
+
+        final isSkip = _activeTarget == _SlideTarget.skip;
+        final isTake = _activeTarget == _SlideTarget.take;
+        final isSnooze = _activeTarget == _SlideTarget.snooze;
+
+        return SizedBox(
+          width: size,
+          height: size,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Container(
+                width: size,
+                height: size,
+                decoration: BoxDecoration(
+                  color: Colors.transparent,
+                  borderRadius: BorderRadius.circular(24),
+                ),
+              ),
+              Positioned(
+                top: inset,
+                child: _TargetIcon(
+                  icon: Icons.close,
+                  color: Colors.red,
+                  active: isSkip,
+                  size: iconSize,
+                  label: 'Skip',
+                ),
+              ),
+              Positioned(
+                left: inset,
+                child: _TargetIcon(
+                  icon: Icons.snooze,
+                  color: Colors.black87,
+                  active: isSnooze,
+                  size: iconSize,
+                  label: 'Snooze',
+                ),
+              ),
+              Positioned(
+                right: inset,
+                child: _TargetIcon(
+                  icon: Icons.check,
+                  color: Colors.green,
+                  active: isTake,
+                  size: iconSize,
+                  label: 'Take',
+                ),
+              ),
+              GestureDetector(
+                onPanUpdate: _handlePanUpdate,
+                onPanEnd: _handlePanEnd,
+                child: Transform.translate(
+                  offset: _thumbOffset,
+                  child: _PillThumb(
+                    width: pillWidth,
+                    height: pillHeight,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _TargetIcon extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final bool active;
+  final double size;
+  final String label;
+
+  const _TargetIcon({
+    required this.icon,
     required this.color,
+    required this.active,
+    required this.size,
+    required this.label,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: color,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            subtitle,
-            style: const TextStyle(fontSize: 14, color: Colors.black54),
-          ),
-        ],
-      ),
-    );
-  }
-}
+    final opacity = active ? 1.0 : 0.5;
+    final scale = active ? 1.1 : 1.0;
 
-class _SnoozeMenu extends StatelessWidget {
-  final void Function(int minutes) onSelect;
-
-  const _SnoozeMenu({required this.onSelect});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Text(
-            'Snooze',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            children: [
-              _SnoozeChip(label: '5 min', onTap: () => onSelect(5)),
-              _SnoozeChip(label: '10 min', onTap: () => onSelect(10)),
-              _SnoozeChip(label: '15 min', onTap: () => onSelect(15)),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SnoozeChip extends StatelessWidget {
-  final String label;
-  final VoidCallback onTap;
-
-  const _SnoozeChip({required this.label, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return OutlinedButton(
-      onPressed: onTap,
-      style: OutlinedButton.styleFrom(
-        foregroundColor: Colors.black87,
-        side: const BorderSide(color: Colors.black26),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      ),
-      child: Text(label),
-    );
-  }
-}
-
-class _MenuIndicator extends StatelessWidget {
-  final int index;
-
-  const _MenuIndicator({required this.index});
-
-  @override
-  Widget build(BuildContext context) {
-    const labels = ['Taken', 'Skip', 'Snooze'];
-    return Column(
-      children: [
-        Text(
-          'Menu: ${labels[index]}',
-          style: const TextStyle(fontSize: 13, color: Colors.black54),
-        ),
-        const SizedBox(height: 6),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(
-            labels.length,
-            (i) => Container(
-              width: 8,
-              height: 8,
-              margin: const EdgeInsets.symmetric(horizontal: 4),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: i == index ? Colors.black87 : Colors.black26,
+    return AnimatedOpacity(
+      duration: const Duration(milliseconds: 120),
+      opacity: opacity,
+      child: AnimatedScale(
+        duration: const Duration(milliseconds: 120),
+        scale: scale,
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: size),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: color,
               ),
             ),
-          ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }
 
-class _ActionRing extends StatelessWidget {
-  final VoidCallback onRed;
-  final VoidCallback onGreen;
+class _PillThumb extends StatelessWidget {
+  final double width;
+  final double height;
 
-  const _ActionRing({required this.onRed, required this.onGreen});
+  const _PillThumb({
+    required this.width,
+    required this.height,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 220,
-      height: 70,
+      width: width,
+      height: height,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(40),
-        border: Border.all(color: Colors.black12, width: 2),
         color: Colors.white,
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          _ActionButton(
-            color: Colors.red,
-            icon: Icons.close,
-            onTap: onRed,
-          ),
-          _ActionButton(
-            color: Colors.green,
-            icon: Icons.check,
-            onTap: onGreen,
+        borderRadius: BorderRadius.circular(height / 2),
+        border: Border.all(color: Colors.black12, width: 1.5),
+        boxShadow: const [
+          BoxShadow(
+            color: Colors.black26,
+            blurRadius: 6,
+            offset: Offset(0, 2),
           ),
         ],
       ),
-    );
-  }
-}
-
-class _ActionButton extends StatelessWidget {
-  final Color color;
-  final IconData icon;
-  final VoidCallback onTap;
-
-  const _ActionButton({
-    required this.color,
-    required this.icon,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
+      alignment: Alignment.center,
       child: Container(
-        width: 48,
-        height: 48,
+        width: width * 0.45,
+        height: height * 0.28,
         decoration: BoxDecoration(
-          color: color,
-          shape: BoxShape.circle,
-          boxShadow: const [
-            BoxShadow(
-              color: Colors.black26,
-              blurRadius: 6,
-              offset: Offset(0, 2),
-            ),
-          ],
+          color: Colors.black12,
+          borderRadius: BorderRadius.circular(12),
         ),
-        child: Icon(icon, color: Colors.white),
       ),
     );
   }

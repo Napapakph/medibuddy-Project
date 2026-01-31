@@ -1131,8 +1131,9 @@ ReminderPlan fromRegimenDetail({
       pattern = FrequencyPattern.everyDay;
   }
 
-  final weekdays =
-      pattern == FrequencyPattern.someDays ? parseDaysOfWeekRaw(detail.daysOfWeekRaw) : <int>{};
+  final weekdays = pattern == FrequencyPattern.someDays
+      ? parseDaysOfWeekRaw(detail.daysOfWeekRaw)
+      : <int>{};
 
   final doses = detail.times.map((time) {
     return ReminderDose(
@@ -1161,9 +1162,9 @@ ReminderPlan fromRegimenDetail({
   }
   if (everyCount < 1) everyCount = 1;
 
-  final hasEndDate = detail.endDate != null && detail.endDate!.trim().isNotEmpty;
-  final durationMode =
-      hasEndDate ? DurationMode.custom : DurationMode.forever;
+  final hasEndDate =
+      detail.endDate != null && detail.endDate!.trim().isNotEmpty;
+  final durationMode = hasEndDate ? DurationMode.custom : DurationMode.forever;
   var durationValue = 1;
   var durationUnit = 'วัน';
   if (hasEndDate) {
