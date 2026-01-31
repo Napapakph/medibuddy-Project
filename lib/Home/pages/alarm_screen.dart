@@ -300,8 +300,8 @@ class _PillSlideActionState extends State<PillSlideAction>
         final width = constraints.maxWidth;
         final size = width.clamp(260.0, 360.0);
         final scale = size / 320.0;
-        final pillWidth = 120.0 * scale;
-        final pillHeight = 46.0 * scale;
+        final pillWidth = 70.0 * scale;
+        final pillHeight = 50.0 * scale;
         final iconSize = 36.0 * scale;
         final inset = 24.0 * scale;
 
@@ -330,7 +330,7 @@ class _PillSlideActionState extends State<PillSlideAction>
                 ),
               ),
               Positioned(
-                top: inset,
+                left: inset,
                 child: _TargetIcon(
                   icon: Icons.close,
                   color: Colors.red,
@@ -340,7 +340,7 @@ class _PillSlideActionState extends State<PillSlideAction>
                 ),
               ),
               Positioned(
-                left: inset,
+                top: inset,
                 child: _TargetIcon(
                   icon: Icons.snooze,
                   color: Colors.black87,
@@ -448,15 +448,6 @@ class _PillThumb extends StatelessWidget {
             offset: Offset(0, 2),
           ),
         ],
-      ),
-      alignment: Alignment.center,
-      child: Container(
-        width: width * 0.45,
-        height: height * 0.28,
-        decoration: BoxDecoration(
-          color: Colors.black12,
-          borderRadius: BorderRadius.circular(12),
-        ),
       ),
     );
   }
