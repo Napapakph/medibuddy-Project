@@ -340,6 +340,31 @@ class _RemindListScreenState extends State<RemindListScreen> {
     return dose.toString();
   }
 
+  String _schedulePatternLabel(ReminderPlan plan) {
+    switch (plan.frequencyPattern) {
+      case FrequencyPattern.everyDay:
+        return 'ความถี่: ทุกวัน';
+      case FrequencyPattern.someDays:
+        if (plan.weekdays.isEmpty) return 'ความถี่: บางวัน';
+        final labels = <int, String>{
+          1: 'จ.',
+          2: 'อ.',
+          3: 'พ.',
+          4: 'พฤ.',
+          5: 'ศ.',
+          6: 'ส.',
+          7: 'อา.',
+        };
+        final days = plan.weekdays.toList()..sort();
+        final text = days.map((d) => labels[d] ?? d.toString()).join(', ');
+        return 'ความถี่: บางวัน ($text)';
+      case FrequencyPattern.everyInterval:
+        final count = plan.everyCount < 1 ? 1 : plan.everyCount;
+        final unit = plan.everyUnit.trim().isEmpty ? 'วัน' : plan.everyUnit;
+        return 'ความถี่: ทุก $count $unit';
+    }
+  }
+
   TimeOfDay _parseTimeOfDay(String value) {
     final parts = value.split(':');
     if (parts.length < 2) {
@@ -558,8 +583,8 @@ class _RemindListScreenState extends State<RemindListScreen> {
       setState(() {
         _deletingPlanIds.remove(plan.id);
         if (plan.mediRegimenId != null) {
-          _serverItems.removeWhere(
-              (item) => item.mediRegimenId == plan.mediRegimenId);
+          _serverItems
+              .removeWhere((item) => item.mediRegimenId == plan.mediRegimenId);
         }
         _loadPlans();
       });
@@ -632,6 +657,14 @@ class _RemindListScreenState extends State<RemindListScreen> {
                     const SizedBox(height: 2),
                     Text(
                       'ระยะเวลา ${plan.durationLabel}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF6B7C93),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      _schedulePatternLabel(plan),
                       style: const TextStyle(
                         fontSize: 12,
                         color: Color(0xFF6B7C93),
@@ -795,8 +828,8 @@ class _RemindListScreenState extends State<RemindListScreen> {
                             ),
                             child: const Text(
                               'เพิ่มการแจ้งเตือน',
-                              style: TextStyle(
-                                  color: Colors.white, fontSize: 16),
+                              style:
+                                  TextStyle(color: Colors.white, fontSize: 16),
                             ),
                           ),
                         ),
