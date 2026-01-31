@@ -39,6 +39,9 @@
         <data
             android:scheme="com.example.medibuddy"
             android:host="login-callback" />
+        <data
+            android:scheme="com.example.medibuddy"
+            android:host="alarm" />
     </intent-filter>
 
         </activity>

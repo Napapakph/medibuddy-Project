@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 
 class AlarmScreen extends StatefulWidget {
@@ -16,6 +17,7 @@ class _AlarmScreenState extends State<AlarmScreen> {
   @override
   void initState() {
     super.initState();
+    debugPrint('✅ AlarmScreen opened args=${widget.payload}');
     _menuIndex = _parseMenuIndex(widget.payload?['menuIndex']);
     _pageController = PageController(initialPage: _menuIndex);
   }
@@ -37,25 +39,78 @@ class _AlarmScreenState extends State<AlarmScreen> {
     return 0;
   }
 
+  // ✅ NEW: format TimeOfDay to HH:mm
+  String _formatHHmm(TimeOfDay t) {
+    final hh = t.hour.toString().padLeft(2, '0');
+    final mm = t.minute.toString().padLeft(2, '0');
+    return '$hh:$mm';
+  }
+
+  // ✅ NEW: Try parse scheduleTime (ISO) -> local HH:mm
+  String _timeFromScheduleTime(dynamic value) {
+    if (value == null) return '';
+    final raw = value.toString().trim();
+    if (raw.isEmpty) return '';
+    final dt = DateTime.tryParse(raw);
+    if (dt == null) return '';
+    final local = dt.toLocal();
+    final hh = local.hour.toString().padLeft(2, '0');
+    final mm = local.minute.toString().padLeft(2, '0');
+    return '$hh:$mm';
+  }
+
+  // ✅ UPDATED: Prefer payload['time'] then payload['scheduleTime']
   String _timeText() {
-    final raw = widget.payload?['time']?.toString().trim();
-    if (raw == null || raw.isEmpty) return '12:00';
-    return raw;
+    final rawTime = widget.payload?['time']?.toString().trim();
+    if (rawTime != null && rawTime.isNotEmpty) {
+      return rawTime;
+    }
+
+    final fromSchedule = _timeFromScheduleTime(widget.payload?['scheduleTime']);
+    if (fromSchedule.isNotEmpty) return fromSchedule;
+
+    return '12:00';
   }
 
   String _titleText() => widget.payload?['title']?.toString() ?? '';
   String _bodyText() => widget.payload?['body']?.toString() ?? '';
 
+  // ✅ NEW: exit helper (return to previous screen safely)
+  void _exitToApp({required String action, int? snoozeMinutes}) {
+    final payload = widget.payload ?? {};
+
+    debugPrint(
+        '✅ Alarm action="$action" payload=$payload snooze=$snoozeMinutes');
+
+    // (optional) ส่งผลลัพธ์กลับไปหน้าก่อนหน้า เผื่ออยากเอาไปใช้ต่อ
+    final result = <String, dynamic>{
+      'action': action,
+      'snoozeMinutes': snoozeMinutes,
+      'payload': payload,
+    };
+
+    // ถ้า stack มีหลายหน้า -> popUntil หน้าแรกของแอพ
+    // ถ้าเปิดมาจาก noti แล้วมีแค่หน้าเดียว -> popUntil จะไม่พัง และยังอยู่หน้าแรก
+    Navigator.of(context).popUntil((route) => route.isFirst);
+
+    // ถ้าอยากให้ "ปิด AlarmScreen" เฉพาะหน้าเดียว (กลับไปหน้าก่อนหน้าแบบเป๊ะ)
+    // ใช้บรรทัดนี้แทน popUntil:
+    // if (Navigator.of(context).canPop()) Navigator.of(context).pop(result);
+  }
+
   void _onGreen() {
     debugPrint('Alarm action: taken');
+    _exitToApp(action: 'taken');
   }
 
   void _onRed() {
-    debugPrint('Alarm action: dismissed');
+    debugPrint('Alarm action: skip');
+    _exitToApp(action: 'skip');
   }
 
   void _onSnooze(int minutes) {
     debugPrint('Alarm action: snooze $minutes minutes');
+    _exitToApp(action: 'snooze', snoozeMinutes: minutes);
   }
 
   @override
@@ -86,7 +141,7 @@ class _AlarmScreenState extends State<AlarmScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    _timeText(),
+                    _timeText(), // ✅ now shows scheduleTime/time
                     style: const TextStyle(
                       fontSize: 56,
                       fontWeight: FontWeight.bold,
