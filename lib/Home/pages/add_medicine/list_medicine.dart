@@ -4,6 +4,7 @@ import 'package:medibuddy/Model/medicine_model.dart';
 import 'package:medibuddy/widgets/app_drawer.dart';
 import 'package:medibuddy/services/medicine_api.dart';
 import 'createName_medicine.dart';
+import 'detail_medicine.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../../widgets/bottomBar.dart';
 
@@ -172,58 +173,29 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
     }
   }
 
-  void _showDetails(MedicineItem item) {
-    debugPrint('🧪 MED imagePath = "${item.imagePath}"');
+  Future<void> _showDetails(MedicineItem item) async {
+    try {
+      final detail = await _api.getMedicineDetail(mediId: item.mediId);
+      if (!mounted) return;
 
-    final imageProvider = _buildMedicineImage(item.imagePath);
+      final imageUrl = _toFullImageUrl(
+        detail.mediPicture ?? item.imagePath,
+      );
 
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('รายละเอียด'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (imageProvider != null)
-                Center(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image(
-                      image: imageProvider,
-                      width: 120,
-                      height: 120,
-                      fit: BoxFit.cover,
-                      // ✅ กันรูปโหลดพังแล้ว UI แตก
-                      errorBuilder: (context, error, stackTrace) {
-                        return Container(
-                          width: 120,
-                          height: 120,
-                          alignment: Alignment.center,
-                          color: const Color(0xFFDDE7F5),
-                          child: const Icon(Icons.broken_image,
-                              color: Color(0xFF1F497D)),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-              const SizedBox(height: 12),
-              Text('ชื่อยาที่ตั้ง: ${item.nickname_medi}'),
-              if (item.officialName_medi.isNotEmpty)
-                Text('ชื่อรายการยาที่เลือก: ${item.officialName_medi}'),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('ปิด'),
-            ),
-          ],
-        );
-      },
-    );
+      showDialog(
+        context: context,
+        barrierDismissible: true,
+        builder: (_) => DetailMedicineSheet(
+          detail: detail,
+          imageUrl: imageUrl,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('❌ โหลดรายละเอียดไม่สำเร็จ: $e')),
+      );
+    }
   }
 
   Future<void> _deleteMedicine(int index) async {
@@ -485,8 +457,8 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
                                     borderRadius: BorderRadius.circular(24),
                                   ),
                                 ),
-                                icon:
-                                    const Icon(Icons.add, color: Colors.white),
+                                icon: Icon(Icons.add_circle_outline_rounded,
+                                    color: Colors.white),
                                 label: const Text(
                                   'เพิ่มยา',
                                   style: TextStyle(

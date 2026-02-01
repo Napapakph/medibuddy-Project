@@ -734,6 +734,7 @@ class _RemindListScreenState extends State<RemindListScreen> {
                 label: Text(isDeleting ? 'กำลังลบ...' : 'ลบแจ้งเตือน'),
               ),
               const SizedBox(width: 12),
+              const Spacer(), // 👈 ดันปุ่มถัดไปไปชิดขวา
               ElevatedButton.icon(
                 onPressed: isDeleting ? null : () => _editPlan(plan),
                 icon: const Icon(Icons.edit, size: 18),
@@ -768,7 +769,7 @@ class _RemindListScreenState extends State<RemindListScreen> {
         child: Stack(
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
               child: widget.medicines.isEmpty
                   ? const Center(child: Text('ยังไม่มีรายการยา'))
                   : Column(
