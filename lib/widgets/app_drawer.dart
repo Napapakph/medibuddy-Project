@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../pages/login.dart';
 import '../services/authen_login.dart';
 import '../services/app_state.dart';
+import 'package:icofont_flutter/icofont_flutter.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -81,7 +82,11 @@ class AppDrawer extends StatelessWidget {
                         padding: EdgeInsets.zero,
                         children: [
                           ListTile(
-                            leading: const Icon(Icons.home),
+                            leading: const Icon(
+                              IcoFontIcons.home,
+                              color: Color.fromARGB(255, 69, 68, 87),
+                              size: 30,
+                            ),
                             title: const Text('หน้าหลัก'),
                             onTap: () => _go(
                               context,
@@ -96,45 +101,65 @@ class AppDrawer extends StatelessWidget {
                             ),
                           ),
                           ListTile(
-                            leading: const Icon(Icons.medication),
+                            leading: const Icon(
+                              Icons.medication_rounded,
+                              color: Color.fromARGB(255, 69, 68, 87),
+                              size: 30,
+                            ),
                             title: const Text('รายการยาของฉัน'),
                             onTap: () => _go(context, '/list_medicine',
                                 arguments:
                                     pid == null ? null : {'profileId': pid}),
                           ),
                           ListTile(
-                              leading: const Icon(Icons.find_in_page_rounded),
+                              leading: const Icon(
+                                Icons.find_in_page_rounded,
+                                size: 30,
+                                color: Color.fromARGB(255, 69, 68, 87),
+                              ),
                               title: const Text('ค้นหายา'),
                               onTap: () => _go(context, '/search_medicine',
                                   arguments:
                                       pid == null ? null : {'profileId': pid})),
                           ListTile(
-                            leading: const Icon(Icons.history),
+                            leading: const Icon(Icons.history,
+                                size: 30,
+                                color: Color.fromARGB(255, 69, 68, 87)),
                             title: const Text('ประวัติการทานยา'),
                             onTap: () => _go(context, '/history'),
                           ),
                           ListTile(
-                            leading: const Icon(Icons.favorite),
+                            leading: const Icon(Icons.favorite,
+                                size: 30,
+                                color: Color.fromARGB(255, 69, 68, 87)),
                             title: const Text('กำลังติดตาม'),
                             onTap: () {},
                           ),
                           ListTile(
-                            leading: const Icon(Icons.people),
+                            leading: const Icon(Icons.people,
+                                size: 30,
+                                color: Color.fromARGB(255, 69, 68, 87)),
                             title: const Text('ผู้ติดตาม'),
                             onTap: () {},
                           ),
                           ListTile(
-                            leading: const Icon(Icons.person_add),
+                            leading: const Icon(Icons.person_add_alt_rounded,
+                                size: 30,
+                                color: Color.fromARGB(255, 69, 68, 87)),
                             title: const Text('ผู้ใช้โปรไฟล์'),
                             onTap: () => _go(context, '/library_profile'),
                           ),
                           ListTile(
-                            leading: const Icon(Icons.switch_account),
+                            leading: const Icon(Icons.account_circle,
+                                size: 30,
+                                color: Color.fromARGB(255, 69, 68, 87)),
                             title: const Text('เลือกผู้ใช้โปรไฟล์'),
                             onTap: () => _go(context, '/select_profile'),
                           ),
                           ListTile(
-                            leading: const Icon(Icons.switch_account),
+                            leading: const Icon(Icons.feedback,
+                                size: 30,
+                                color: Color.fromARGB(255, 69, 68, 87)),
                             title: const Text('ข้อเสนอแนะ'),
                             onTap: () => _go(context, '/user_request'),
                           ),

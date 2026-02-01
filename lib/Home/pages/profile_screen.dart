@@ -67,7 +67,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         backgroundColor: Color(0xFF1F497D),
       ),
       resizeToAvoidBottomInset: false,
-      backgroundColor: const Color.fromARGB(255, 235, 246, 255),
+      backgroundColor: const Color.fromARGB(255, 227, 242, 255),
       body: SafeArea(child: LayoutBuilder(builder: (context, constraints) {
         final maxWidth = constraints.maxWidth;
         final maxHeight = constraints.maxHeight;
@@ -268,13 +268,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     return CircleAvatar(
       radius: radius, // ครึ่งหนึ่งของ avatarSize
-      backgroundColor: const Color(0xFFE9EEF3),
+      backgroundColor: const Color.fromARGB(255, 255, 255, 255),
       backgroundImage: _profileImage,
       child: _profileImage == null
           ? Icon(
               Icons.person,
               size: radius * 0.7, // สัดส่วนตามขนาดวง
-              color: Colors.white,
+              color: const Color.fromARGB(255, 182, 188, 213),
             )
           : null,
     );

@@ -126,7 +126,7 @@ class _LibraryProfileState extends State<LibraryProfile> {
         ),
         backgroundColor: const Color(0xFF1F497D),
       ),
-      backgroundColor: const Color.fromARGB(255, 235, 246, 255),
+      backgroundColor: const Color.fromARGB(255, 227, 242, 255),
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -154,7 +154,7 @@ class _LibraryProfileState extends State<LibraryProfile> {
                           maxWidth * 0.02,
                           maxHeight * 0.00,
                           maxWidth * 0.02,
-                          maxHeight * 0.04,
+                          maxHeight * 0.126,
                         ),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
@@ -269,7 +269,6 @@ class _LibraryProfileState extends State<LibraryProfile> {
                                                                 .blueGrey),
                                                       ),
                                                     ),
-                                                    SizedBox(width: 6),
                                                     InkWell(
                                                       onTap: () =>
                                                           _confirmDeleteProfile(
@@ -291,31 +290,28 @@ class _LibraryProfileState extends State<LibraryProfile> {
                                           ),
                               ),
                             ),
-                            SizedBox(height: maxHeight * 0.03),
-                            // 🔹 ปุ่มเพิ่มผู้ใช้งานใหม่ — จะอยู่ชิดกรอบเสมอ
-                            Align(
-                              alignment: Alignment.bottomCenter,
-                              child: ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF1F497D),
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: maxWidth * 0.1,
-                                    vertical: maxHeight * 0.02,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                ),
-                                onPressed: _addProfile,
-                                child: const Text(
-                                  'เพิ่มโปรไฟล์ใหม่',
-                                  style: TextStyle(
-                                      color: Colors.white, fontSize: 18),
-                                ),
-                              ),
-                            ),
                           ],
                         ),
+                      ),
+                    ),
+                  ),
+                  Align(
+                    alignment: Alignment.bottomCenter,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF1F497D),
+                        padding: EdgeInsets.symmetric(
+                          horizontal: maxWidth * 0.06,
+                          vertical: maxHeight * 0.02,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
+                      onPressed: _addProfile,
+                      child: const Text(
+                        'เพิ่มโปรไฟล์ใหม่',
+                        style: TextStyle(color: Colors.white, fontSize: 16),
                       ),
                     ),
                   ),
@@ -332,7 +328,7 @@ class _LibraryProfileState extends State<LibraryProfile> {
                           );
                         },
                         icon: Icon(Icons.navigate_next_outlined),
-                        iconSize: maxWidth * 0.13,
+                        iconSize: maxWidth * 0.15,
                         color: Color(0xFF1F497D),
                       ),
                     ),
@@ -457,11 +453,6 @@ class _LibraryProfileState extends State<LibraryProfile> {
                             if (!mounted) return;
 
                             Navigator.of(dialogContext).pop();
-
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text('แก้ไขข้อมูลเรียบร้อย')),
-                            );
                           } catch (e) {
                             if (!mounted) return;
                             ScaffoldMessenger.of(context).showSnackBar(
@@ -538,10 +529,6 @@ class _LibraryProfileState extends State<LibraryProfile> {
       setState(() {
         profiles.removeAt(index);
       });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('ลบโปรไฟล์เรียบร้อย')),
-      );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -644,9 +631,6 @@ class _LibraryProfileState extends State<LibraryProfile> {
                       );
 
                       if (!mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('เพิ่มโปรไฟล์สำเร็จ')),
-                      );
                     } catch (e) {
                       if (!mounted) return;
                       ScaffoldMessenger.of(context).showSnackBar(

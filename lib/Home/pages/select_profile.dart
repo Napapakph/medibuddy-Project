@@ -128,6 +128,7 @@ class _SelectProfileState extends State<SelectProfile> {
         backgroundColor: const Color(0xFFB7DAFF),
         centerTitle: true,
       ),
+      backgroundColor: const Color.fromARGB(255, 255, 255, 255),
       drawer: const AppDrawer(),
       body: SafeArea(
         child: LayoutBuilder(

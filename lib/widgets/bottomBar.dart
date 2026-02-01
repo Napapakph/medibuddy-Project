@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/app_state.dart';
+import 'package:icofont_flutter/icofont_flutter.dart';
 
 class BottomBar extends StatelessWidget {
   const BottomBar({
@@ -27,7 +28,11 @@ class BottomBar extends StatelessWidget {
               // TODO: ไปหน้าปฏิทิน (ถ้ามี route)
               // Navigator.pushNamed(context, '/calendar', arguments: {'profileId': pid});
             },
-            icon: const Icon(Icons.people, color: Colors.white),
+            icon: const Icon(
+              Icons.favorite,
+              color: Colors.white,
+              size: 40,
+            ),
           ),
 
           // HOME
@@ -47,13 +52,16 @@ class BottomBar extends StatelessWidget {
               );
             },
             child: Container(
-              width: 52,
-              height: 52,
+              width: 100,
+              height: 100,
               decoration: const BoxDecoration(
-                color: Color(0xFFB7DAFF),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.home, color: Color(0xFF1F497D)),
+              child: Image.asset(
+                'assets/main_mascot.png',
+                width: 100,
+                height: 100,
+              ),
             ),
           ),
 
@@ -75,7 +83,11 @@ class BottomBar extends StatelessWidget {
 
               debugPrint('💊 MainBottomBar: open list_medicine pid=$pid');
             },
-            icon: const Icon(Icons.medication, color: Color(0xFFB7DAFF)),
+            icon: const Icon(
+              IcoFontIcons.pills,
+              color: Colors.white,
+              size: 40,
+            ),
           ),
         ],
       ),

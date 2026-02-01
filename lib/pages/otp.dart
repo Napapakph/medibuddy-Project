@@ -4,6 +4,9 @@ import 'dart:convert'; //แปลง Object to JSON
 import 'package:http/http.dart' as http; //ยิง request ไปยัง backend API
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'login.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
+final baseUrl = dotenv.env['API_BASE_URL'] ?? '';
 
 class OTPScreen extends StatefulWidget {
   const OTPScreen({super.key, required this.email});
@@ -109,7 +112,7 @@ class _OTPScreenState extends State<OTPScreen> {
 
       // ส่งไป backend ของเพื่อน
       final syncRes = await http.post(
-        Uri.parse('http://82.26.104.98:3000/api/mobile/v1/auth/sync-user'),
+        Uri.parse('$baseUrl/api/mobile/v1/auth/sync-user'),
         headers: {
           'Authorization': 'Bearer $accessToken',
           'Content-Type': 'application/json',

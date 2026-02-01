@@ -9,6 +9,7 @@ import 'select_profile.dart';
 import '../../services/app_state.dart';
 import '../../Home/pages/select_profile.dart';
 import '../../widgets/bottomBar.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class Home extends StatefulWidget {
   final ProfileModel? selectedProfile;
@@ -23,7 +24,7 @@ class Home extends StatefulWidget {
 }
 
 class _Home extends State<Home> {
-  static const String _imageBaseUrl = 'http://82.26.104.98:3000';
+  String _imageBaseUrl = '';
   final RegimenApiService _regimenApi = RegimenApiService();
   bool _loading = false;
   String? _error;
@@ -39,6 +40,7 @@ class _Home extends State<Home> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _fetchHomeReminders();
     });
+    _imageBaseUrl = dotenv.env['API_BASE_URL'] ?? '';
   }
 
   @override
@@ -128,7 +130,8 @@ class _Home extends State<Home> {
     int? resolved;
 
     if (routeArgs is Map) {
-      final raw = routeArgs['profileId'] ?? routeArgs['profileID'] ?? routeArgs['id'];
+      final raw =
+          routeArgs['profileId'] ?? routeArgs['profileID'] ?? routeArgs['id'];
       resolved = _readInt(raw);
     } else if (routeArgs is int) {
       resolved = routeArgs;
@@ -492,6 +495,7 @@ class _Home extends State<Home> {
         ),
       ),
       drawer: const AppDrawer(),
+      backgroundColor: const Color.fromARGB(255, 255, 255, 255),
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -661,4 +665,3 @@ class _HomeReminderAggregate {
     required this.unit,
   });
 }
-
