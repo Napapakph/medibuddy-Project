@@ -10,10 +10,40 @@ class AlarmScreen extends StatefulWidget {
 }
 
 class _AlarmScreenState extends State<AlarmScreen> {
-  @override
+    @override
   void initState() {
     super.initState();
-    debugPrint('✅ AlarmScreen opened args=${widget.payload}');
+    _debugPayload();
+  }
+
+  Map<String, dynamic> _normalizedPayload() {
+    final raw = widget.payload ?? <String, dynamic>{};
+    final notif = (raw['notification'] is Map)
+        ? Map<String, dynamic>.from(raw['notification'] as Map)
+        : <String, dynamic>{};
+    final data = (raw['data'] is Map)
+        ? Map<String, dynamic>.from(raw['data'] as Map)
+        : <String, dynamic>{};
+
+    final merged = <String, dynamic>{};
+    if (notif.isNotEmpty) {
+      merged['title'] = notif['title'];
+      merged['body'] = notif['body'];
+    }
+    merged.addAll(data);
+    merged.addAll(raw);
+    return merged;
+  }
+
+  void _debugPayload() {
+    final n = _normalizedPayload();
+    debugPrint('?? AlarmScreen raw payload = ${widget.payload}');
+    debugPrint('? AlarmScreen normalized keys = ${n.keys.toList()}');
+    debugPrint('? title=${n['title']} body=${n['body']}');
+    debugPrint(
+        '? type=${n['type']} logId=${n['logId']} profileId=${n['profileId']} mediListId=${n['mediListId']} mediRegimenId=${n['mediRegimenId']}');
+    debugPrint(
+        '? scheduleTime=${n['scheduleTime']} snoozedCount=${n['snoozedCount']} isSnoozeReminder=${n['isSnoozeReminder']}');
   }
 
   // ✅ NEW: format TimeOfDay to HH:mm
@@ -38,19 +68,20 @@ class _AlarmScreenState extends State<AlarmScreen> {
 
   // ✅ UPDATED: Prefer payload['time'] then payload['scheduleTime']
   String _timeText() {
-    final rawTime = widget.payload?['time']?.toString().trim();
+    final payload = _normalizedPayload();
+    final rawTime = payload['time']?.toString().trim();
     if (rawTime != null && rawTime.isNotEmpty) {
       return rawTime;
     }
 
-    final fromSchedule = _timeFromScheduleTime(widget.payload?['scheduleTime']);
+    final fromSchedule = _timeFromScheduleTime(payload['scheduleTime']);
     if (fromSchedule.isNotEmpty) return fromSchedule;
 
     return '12:00';
   }
 
-  String _titleText() => widget.payload?['title']?.toString() ?? '';
-  String _bodyText() => widget.payload?['body']?.toString() ?? '';
+  String _titleText() => _normalizedPayload()['title']?.toString() ?? '';
+  String _bodyText() => _normalizedPayload()['body']?.toString() ?? '';
 
   // ✅ NEW: exit helper (return to previous screen safely)
   void _exitToApp({required String action, int? snoozeMinutes}) {
@@ -452,3 +483,6 @@ class _PillThumb extends StatelessWidget {
     );
   }
 }
+
+
+

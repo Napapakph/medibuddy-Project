@@ -232,14 +232,6 @@ Widget type_frequency({
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text(
-        title,
-        style: const TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.w700,
-          color: Color(0xFF1F497D),
-        ),
-      ),
       const SizedBox(height: 4),
       Text(
         subtitle,
@@ -252,7 +244,7 @@ Widget type_frequency({
       const SizedBox(height: 16),
       const SizedBox(height: 8),
       Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
           color: const Color(0xFFF2F4F8),
           borderRadius: BorderRadius.circular(16),
@@ -260,8 +252,8 @@ Widget type_frequency({
         child: Row(
           children: [
             Container(
-              width: 56,
-              height: 56,
+              width: 80,
+              height: 80,
               decoration: BoxDecoration(
                 color: const Color(0xFFE3EAF6),
                 borderRadius: BorderRadius.circular(12),
@@ -278,12 +270,15 @@ Widget type_frequency({
               child: DropdownButtonFormField<MedicineItem>(
                 value: selectedMedicine,
                 isExpanded: true,
-                hint: const Text('เลือกรายการยา'),
+                hint: const Text(
+                  'เลือกรายการยา',
+                  style: TextStyle(fontSize: 16),
+                ),
                 decoration: InputDecoration(
                   filled: true,
                   fillColor: Colors.white,
                   contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
@@ -303,16 +298,14 @@ Widget type_frequency({
                 onChanged: hasMedicines ? onMedicineChanged : null,
               ),
             ),
-            IconButton(
-              onPressed: onAddMedicine,
-              icon: const Icon(Icons.add_circle, color: Color(0xFF6FA8DC)),
-            ),
           ],
         ),
       ),
       const SizedBox(height: 16),
+
+      // ===== รูปแบบการรับประทานยา =====
       Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
           color: const Color(0xFFF2F4F8),
           borderRadius: BorderRadius.circular(16),
@@ -322,74 +315,100 @@ Widget type_frequency({
           children: [
             const Text(
               'รูปแบบการรับประทานยา',
-              style: TextStyle(fontWeight: FontWeight.w600),
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
             ),
             const SizedBox(height: 8),
-            Row(
-              children: [
-                Radio<FrequencyMode>(
-                  value: FrequencyMode.timesPerDay,
-                  groupValue: frequencyMode,
-                  onChanged: (value) {
-                    if (value != null) onFrequencyModeChanged(value);
-                  },
-                ),
-                const Text('จำนวน'),
-                const SizedBox(width: 8),
-                SizedBox(
-                  width: 72,
-                  child: TextField(
-                    controller: timesPerDayController,
-                    enabled: frequencyMode == FrequencyMode.timesPerDay,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      filled: true,
-                      fillColor: Colors.white,
-                      isDense: true,
-                      border: OutlineInputBorder(borderSide: BorderSide.none),
+
+            // จำนวน ...
+            InkWell(
+              onTap: () => onFrequencyModeChanged(FrequencyMode.timesPerDay),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 40,
+                    child: Radio<FrequencyMode>(
+                      value: FrequencyMode.timesPerDay,
+                      groupValue: frequencyMode,
+                      onChanged: (value) {
+                        if (value != null) onFrequencyModeChanged(value);
+                      },
+                      visualDensity:
+                          const VisualDensity(horizontal: -4, vertical: -4),
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                const Text('ครั้งต่อวัน'),
-              ],
+                  const Text('จำนวน', style: TextStyle(fontSize: 16)),
+                  const SizedBox(width: 8),
+                  SizedBox(
+                    width: 72,
+                    child: TextField(
+                      controller: timesPerDayController,
+                      enabled: frequencyMode == FrequencyMode.timesPerDay,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        filled: true,
+                        fillColor: Colors.white,
+                        isDense: true,
+                        border: OutlineInputBorder(borderSide: BorderSide.none),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Text('ครั้งต่อวัน', style: TextStyle(fontSize: 16)),
+                ],
+              ),
             ),
+
             const SizedBox(height: 8),
-            Row(
-              children: [
-                Radio<FrequencyMode>(
-                  value: FrequencyMode.everyHours,
-                  groupValue: frequencyMode,
-                  onChanged: (value) {
-                    if (value != null) onFrequencyModeChanged(value);
-                  },
-                ),
-                const Text('ทุก'),
-                const SizedBox(width: 8),
-                SizedBox(
-                  width: 72,
-                  child: TextField(
-                    controller: everyHoursController,
-                    enabled: frequencyMode == FrequencyMode.everyHours,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      filled: true,
-                      fillColor: Colors.white,
-                      isDense: true,
-                      border: OutlineInputBorder(borderSide: BorderSide.none),
+
+            // ทุก ... ชั่วโมง
+            InkWell(
+              onTap: () => onFrequencyModeChanged(FrequencyMode.everyHours),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 40,
+                    child: Radio<FrequencyMode>(
+                      value: FrequencyMode.everyHours,
+                      groupValue: frequencyMode,
+                      onChanged: (value) {
+                        if (value != null) onFrequencyModeChanged(value);
+                      },
+                      visualDensity:
+                          const VisualDensity(horizontal: -4, vertical: -4),
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                const Text('ชั่วโมง'),
-              ],
+                  const Text('ทุก', style: TextStyle(fontSize: 16)),
+                  const SizedBox(width: 35),
+                  SizedBox(
+                    width: 72,
+                    child: TextField(
+                      controller: everyHoursController,
+                      enabled: frequencyMode == FrequencyMode.everyHours,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        filled: true,
+                        fillColor: Colors.white,
+                        isDense: true,
+                        border: OutlineInputBorder(borderSide: BorderSide.none),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Text('ชั่วโมง', style: TextStyle(fontSize: 16)),
+                ],
+              ),
             ),
           ],
         ),
       ),
+
       const SizedBox(height: 16),
+
+      // ===== ความถี่ในการรับประทานยา =====
       Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
           color: const Color(0xFFF2F4F8),
           borderRadius: BorderRadius.circular(16),
@@ -402,129 +421,226 @@ Widget type_frequency({
               style: TextStyle(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
-            RadioListTile<FrequencyPattern>(
-              value: FrequencyPattern.everyDay,
-              groupValue: frequencyPattern,
-              onChanged: (value) {
-                if (value != null) onFrequencyPatternChanged(value);
-              },
-              title: const Text('ทุกวัน'),
-              dense: true,
-              contentPadding: EdgeInsets.zero,
-            ),
-            RadioListTile<FrequencyPattern>(
-              value: FrequencyPattern.someDays,
-              groupValue: frequencyPattern,
-              onChanged: (value) {
-                if (value != null) onFrequencyPatternChanged(value);
-              },
-              title: const Text('บางวัน'),
-              dense: true,
-              contentPadding: EdgeInsets.zero,
-            ),
-            Wrap(
-              spacing: 6,
-              children: List.generate(7, (index) {
-                final dayIndex = index + 1;
-                final isSelected = selectedWeekdays.contains(dayIndex);
-                final isEnabled = frequencyPattern == FrequencyPattern.someDays;
 
-                return FilterChip(
-                  label: Text(weekDayLabels[index]),
-                  selected: isSelected,
-                  onSelected: isEnabled
-                      ? (value) {
-                          final updated = Set<int>.from(selectedWeekdays);
-                          if (value) {
-                            updated.add(dayIndex);
-                          } else {
-                            updated.remove(dayIndex);
-                          }
-                          onWeekdaysChanged(updated);
-                        }
-                      : null,
-                );
-              }),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Radio<FrequencyPattern>(
-                  value: FrequencyPattern.everyInterval,
-                  groupValue: frequencyPattern,
-                  onChanged: (value) {
-                    if (value != null) onFrequencyPatternChanged(value);
-                  },
-                ),
-                const Text('ทุก'),
-                const SizedBox(width: 8),
-                SizedBox(
-                  width: 72,
-                  child: TextField(
-                    controller: everyCountController,
-                    enabled: frequencyPattern == FrequencyPattern.everyInterval,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      filled: true,
-                      fillColor: Colors.white,
-                      isDense: true,
-                      border: OutlineInputBorder(borderSide: BorderSide.none),
+            // ทุกวัน
+            InkWell(
+              onTap: () => onFrequencyPatternChanged(FrequencyPattern.everyDay),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: 40,
+                    height: 40,
+                    child: Radio<FrequencyPattern>(
+                      value: FrequencyPattern.everyDay,
+                      groupValue: frequencyPattern,
+                      onChanged: (v) {
+                        if (v != null) onFrequencyPatternChanged(v);
+                      },
+                      visualDensity:
+                          const VisualDensity(horizontal: -4, vertical: -4),
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                DropdownButton<String>(
-                  value: everyUnit,
-                  underline: const SizedBox.shrink(),
-                  items: const [
-                    DropdownMenuItem(value: 'วัน', child: Text('วัน')),
-                    DropdownMenuItem(value: 'เดือน', child: Text('เดือน')),
-                    DropdownMenuItem(value: 'ปี', child: Text('ปี')),
-                  ],
-                  onChanged: frequencyPattern == FrequencyPattern.everyInterval
-                      ? onEveryUnitChanged
-                      : null,
-                ),
-              ],
+                  const Text('ทุกวัน', style: TextStyle(fontSize: 16)),
+                ],
+              ),
+            ),
+
+            // บางวัน
+            InkWell(
+              onTap: () => onFrequencyPatternChanged(FrequencyPattern.someDays),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: 40,
+                    height: 40,
+                    child: Radio<FrequencyPattern>(
+                      value: FrequencyPattern.someDays,
+                      groupValue: frequencyPattern,
+                      onChanged: (v) {
+                        if (v != null) onFrequencyPatternChanged(v);
+                      },
+                      visualDensity:
+                          const VisualDensity(horizontal: -4, vertical: -4),
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                  ),
+                  const Text('บางวัน', style: TextStyle(fontSize: 16)),
+                ],
+              ),
+            ),
+
+            // วันในสัปดาห์
+            Padding(
+              padding: const EdgeInsets.only(left: 20),
+              child: Wrap(
+                spacing: 3,
+                runSpacing: 4,
+                children: List.generate(7, (index) {
+                  final dayIndex = index + 1;
+                  final isSelected = selectedWeekdays.contains(dayIndex);
+                  final isEnabled =
+                      frequencyPattern == FrequencyPattern.someDays;
+
+                  return FilterChip(
+                    showCheckmark: false,
+                    label: Text(
+                      weekDayLabels[index],
+                      style: TextStyle(
+                        color:
+                            isSelected ? Colors.white : const Color(0xFF1F497D),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    selected: isSelected,
+                    selectedColor: const Color.fromARGB(255, 142, 182, 231),
+                    backgroundColor: Colors.white,
+                    side: BorderSide(
+                      color: isSelected
+                          ? const Color.fromARGB(255, 248, 251, 255)
+                          : const Color.fromARGB(255, 174, 209, 255),
+                    ),
+                    onSelected: isEnabled
+                        ? (value) {
+                            final updated = Set<int>.from(selectedWeekdays);
+                            if (value) {
+                              updated.add(dayIndex);
+                            } else {
+                              updated.remove(dayIndex);
+                            }
+                            onWeekdaysChanged(updated);
+                          }
+                        : null,
+                  );
+                }),
+              ),
+            ),
+
+            const SizedBox(height: 8),
+
+            // ทุก X หน่วย
+            InkWell(
+              onTap: () =>
+                  onFrequencyPatternChanged(FrequencyPattern.everyInterval),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: 40,
+                    child: Radio<FrequencyPattern>(
+                      value: FrequencyPattern.everyInterval,
+                      groupValue: frequencyPattern,
+                      onChanged: (v) {
+                        if (v != null) onFrequencyPatternChanged(v);
+                      },
+                      visualDensity:
+                          const VisualDensity(horizontal: -4, vertical: -4),
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                  ),
+                  const Text('ทุก', style: TextStyle(fontSize: 16)),
+                  const SizedBox(width: 8),
+                  SizedBox(
+                    width: 72,
+                    child: TextField(
+                      controller: everyCountController,
+                      enabled:
+                          frequencyPattern == FrequencyPattern.everyInterval,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        filled: true,
+                        fillColor: Colors.white,
+                        isDense: true,
+                        border: OutlineInputBorder(borderSide: BorderSide.none),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  DropdownButton<String>(
+                    value: everyUnit,
+                    underline: const SizedBox.shrink(),
+                    items: const [
+                      DropdownMenuItem(
+                          value: 'วัน',
+                          child: Text('วัน', style: TextStyle(fontSize: 16))),
+                      DropdownMenuItem(
+                          value: 'เดือน',
+                          child: Text('เดือน', style: TextStyle(fontSize: 16))),
+                      DropdownMenuItem(
+                          value: 'ปี',
+                          child: Text('ปี', style: TextStyle(fontSize: 16))),
+                    ],
+                    onChanged:
+                        frequencyPattern == FrequencyPattern.everyInterval
+                            ? onEveryUnitChanged
+                            : null,
+                  ),
+                ],
+              ),
             ),
           ],
         ),
       ),
+
       const SizedBox(height: 16),
       const Text(
         'ระยะเวลา',
         style: TextStyle(fontWeight: FontWeight.w600),
       ),
       const SizedBox(height: 8),
+
+      // ===== ระยะเวลา =====
       Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
           color: const Color(0xFFF2F4F8),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
           children: [
-            RadioListTile<DurationMode>(
-              value: DurationMode.forever,
-              groupValue: durationMode,
-              onChanged: (value) {
-                if (value != null) onDurationModeChanged(value);
-              },
-              title: const Text('ตลอดไป'),
-              dense: true,
-              contentPadding: EdgeInsets.zero,
+            // ตลอดไป (เปลี่ยนจาก RadioListTile -> Row ให้เริ่มตรงกัน)
+            InkWell(
+              onTap: () => onDurationModeChanged(DurationMode.forever),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: 40,
+                    height: 40,
+                    child: Radio<DurationMode>(
+                      value: DurationMode.forever,
+                      groupValue: durationMode,
+                      onChanged: (v) {
+                        if (v != null) onDurationModeChanged(v);
+                      },
+                      visualDensity:
+                          const VisualDensity(horizontal: -4, vertical: -4),
+                      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                  ),
+                  const Text('ตลอดไป'),
+                ],
+              ),
             ),
+
+            // custom (ของเดิม แต่เริ่มตรงกับตัวอื่นแล้ว)
             Row(
               children: [
-                Radio<DurationMode>(
-                  value: DurationMode.custom,
-                  groupValue: durationMode,
-                  onChanged: (value) {
-                    if (value != null) onDurationModeChanged(value);
-                  },
+                SizedBox(
+                  width: 40,
+                  child: Radio<DurationMode>(
+                    value: DurationMode.custom,
+                    groupValue: durationMode,
+                    onChanged: (v) {
+                      if (v != null) onDurationModeChanged(v);
+                    },
+                    visualDensity:
+                        const VisualDensity(horizontal: -4, vertical: -4),
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
                 ),
-                const Text('ระยะเวลา'),
-                const SizedBox(width: 8),
                 SizedBox(
                   width: 72,
                   child: TextField(
@@ -602,14 +718,6 @@ Widget detail_time({
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text(
-        title,
-        style: const TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.w700,
-          color: Color(0xFF1F497D),
-        ),
-      ),
       const SizedBox(height: 4),
       Text(
         subtitle,
@@ -817,14 +925,6 @@ Widget summary_rejimen({
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text(
-        title,
-        style: const TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.w700,
-          color: Color(0xFF1F497D),
-        ),
-      ),
       const SizedBox(height: 4),
       Text(
         subtitle,

@@ -26,6 +26,8 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'Home/pages/add_medicine/medicine_search_page.dart';
 import 'Home/pages/user_request/user_request_screen.dart';
 import 'Home/pages/alarm_screen.dart';
+import 'Home/pages/set_remind/remind_list_screen.dart';
+import 'Home/pages/set_remind/setRemind_screen.dart';
 
 const bool kDisableAuthGate =
     true; // เปลี่ยนเป็น false เมื่อต้องการเปิดใช้งาน AuthGate
@@ -59,13 +61,28 @@ Map<String, dynamic> _payloadFromRemoteMessage(RemoteMessage message) {
     menuIndex = int.tryParse(rawMenuIndex.toString()) ?? 0;
   }
 
-  return {
-    'route': data['route']?.toString() ?? '/alarm',
-    'title': data['title']?.toString() ?? (notification?.title ?? ''),
-    'body': data['body']?.toString() ?? (notification?.body ?? ''),
-    'time': data['time']?.toString() ?? '12:00',
-    'menuIndex': menuIndex,
-  };
+  final payload = <String, dynamic>{}..addAll(data);
+  payload['route'] = data['route']?.toString() ?? '/alarm';
+  payload['title'] = data['title']?.toString() ?? (notification?.title ?? '');
+  payload['body'] = data['body']?.toString() ?? (notification?.body ?? '');
+  payload['time'] = data['time']?.toString() ?? '12:00';
+  payload['menuIndex'] = menuIndex;
+
+  payload['type'] = data['type']?.toString();
+  payload['logId'] = data['logId']?.toString();
+  payload['profileId'] = data['profileId']?.toString();
+  payload['mediListId'] = data['mediListId']?.toString();
+  payload['mediRegimenId'] = data['mediRegimenId']?.toString();
+  payload['scheduleTime'] = data['scheduleTime']?.toString();
+  payload['snoozedCount'] = data['snoozedCount']?.toString();
+  payload['isSnoozeReminder'] = data['isSnoozeReminder']?.toString();
+
+  debugPrint('🔔 onMessage payload to /alarm = $payload');
+  debugPrint('🔔 onMessage raw data = ${message.data}');
+  debugPrint(
+      '🔔 onMessage notification title=${message.notification?.title} body=${message.notification?.body}');
+
+  return payload;
 }
 
 Map<String, dynamic>? _payloadFromString(String? payload) {
@@ -100,20 +117,22 @@ void _handleLocalNotificationTap(String? payload) {
 }
 
 void openAlarmFromNoti({String? payload, Map<String, dynamic>? data}) {
-  debugPrint('➡️ ROUTING TO /alarm payload=$payload data=$data');
+  debugPrint('?? ROUTING TO /alarm payload=$payload data=$data');
+  Map<String, dynamic>? parsed;
+  if (payload != null) {
+    parsed = _payloadFromString(payload);
+  }
+  parsed ??= data;
+  if (parsed == null) return;
   final nav = navigatorKey.currentState;
   if (nav == null) {
-    if (payload != null) {
-      _pendingNotificationPayload = payload;
-    } else if (data != null) {
-      _pendingNotificationPayload = jsonEncode(data);
-    }
+    _pendingNotificationPayload = jsonEncode(parsed);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _flushPendingNotificationNavigation();
     });
     return;
   }
-  nav.pushNamed('/alarm', arguments: payload ?? data);
+  nav.pushNamed('/alarm', arguments: parsed);
 }
 
 void _flushPendingNotificationNavigation() {
@@ -161,7 +180,7 @@ Future<void> main() async {
   FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
     debugPrint('🔔 FCM TAP data=${message.data}');
     debugPrint('➡️ ROUTING TO /alarm (fcm)');
-    openAlarmFromNoti(data: message.data);
+    openAlarmFromNoti(data: _payloadFromRemoteMessage(message));
   });
 
   final initialMessage = await FirebaseMessaging.instance.getInitialMessage();
@@ -169,7 +188,7 @@ Future<void> main() async {
   if (initialMessage != null) {
     debugPrint('🔔 FCM INITIAL TAP data=${initialMessage.data}');
     debugPrint('➡️ ROUTING TO /alarm (initial)');
-    openAlarmFromNoti(data: initialMessage.data);
+    openAlarmFromNoti(data: _payloadFromRemoteMessage(initialMessage));
   }
 
   // ✅ 3. LISTENER สำหรับ FOREGROUND (จุดสำคัญที่สุด)
@@ -183,7 +202,7 @@ Future<void> main() async {
     if (notification == null) return;
 
     // 🔔 สร้าง banner เอง
-    final payload = jsonEncode(msg.data);
+    final payload = jsonEncode(_payloadFromRemoteMessage(msg));
     debugPrint('🧪 showing local noti payload=$payload');
     await flnp.show(
       notification.hashCode,
@@ -335,6 +354,12 @@ class MyApp extends StatelessWidget {
             return MaterialPageRoute(
               builder: (_) => AlarmScreen(payload: payload),
             );
+          case '/set_remind':
+            final args = settings.arguments as Map<String, dynamic>? ?? {};
+            final medicines = args['medicines']; // แคสต์ให้ถูกชนิดตามจริง
+            return MaterialPageRoute(
+              builder: (_) => SetRemindScreen(medicines: medicines),
+            );
 
           default:
             return MaterialPageRoute(builder: (_) => defaultPage());
@@ -380,5 +405,9 @@ Future<void> _setupLocalNotifications() async {
 }
 
 Widget defaultPage() {
-  return kDisableAuthGate ? const LoginScreen() : const AuthGate();
+  return kDisableAuthGate
+      ? const SetRemindScreen(
+          medicines: [],
+        )
+      : const AuthGate();
 }

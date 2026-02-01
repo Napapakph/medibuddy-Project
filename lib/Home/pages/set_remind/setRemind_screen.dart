@@ -414,6 +414,7 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
           iconTheme: const IconThemeData(color: Colors.white),
           title: Text(pageTitle, style: const TextStyle(color: Colors.white)),
         ),
+        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
         body: SafeArea(
           child: Column(
             children: [
@@ -424,7 +425,7 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
                   children: steps
                       .map((step) => SingleChildScrollView(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 20),
+                                horizontal: 15, vertical: 20),
                             child: step,
                           ))
                       .toList(),
@@ -456,8 +457,7 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
                                       height: 18,
                                       width: 18,
                                       child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: Colors.white),
+                                          strokeWidth: 2, color: Colors.white),
                                     )
                                   : const Text(
                                       'บันทึกข้อมูล',
