@@ -198,12 +198,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       );
 
                                       if (!mounted) return;
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        const SnackBar(
-                                            content:
-                                                Text('บันทึกลง DB สำเร็จ')),
-                                      );
                                     } catch (e) {
                                       if (!mounted) return;
                                       ScaffoldMessenger.of(context)

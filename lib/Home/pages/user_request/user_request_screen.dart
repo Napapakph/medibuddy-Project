@@ -16,9 +16,9 @@ class UserRequestScreen extends StatefulWidget {
 class _UserRequestScreenState extends State<UserRequestScreen> {
   static const Map<String, String> _requestTypeMap = {
     'ปัญหาการใช้งาน': 'PROBLEM',
-    'ฟังก์ชันการทำงาน': 'HELP',
-    'การแจ้งเตือน': 'IMPROVEMENT',
-    'อื่นๆ': 'FEEDBACK',
+    'ฟังก์ชันการทำงาน': 'FUNCTION',
+    'การแจ้งเตือน': 'NOTIFICATION',
+    'อื่นๆ': 'OTHER',
   };
 
   final _titleController = TextEditingController();

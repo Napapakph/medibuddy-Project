@@ -10,7 +10,7 @@ class AlarmScreen extends StatefulWidget {
 }
 
 class _AlarmScreenState extends State<AlarmScreen> {
-    @override
+  @override
   void initState() {
     super.initState();
     _debugPayload();
@@ -69,14 +69,23 @@ class _AlarmScreenState extends State<AlarmScreen> {
   // ✅ UPDATED: Prefer payload['time'] then payload['scheduleTime']
   String _timeText() {
     final payload = _normalizedPayload();
+
+    // 1) พยายามอ่านเวลาจริงจาก schedule ก่อน (แหล่งที่เชื่อถือได้)
+    final fromSchedule = _timeFromScheduleTime(payload['scheduleTime']);
+    if (fromSchedule.isNotEmpty) {
+      return fromSchedule;
+    }
+
+    // 2) fallback ไปใช้ time (ถ้ามีและไม่ใช่ค่าเพี้ยน)
     final rawTime = payload['time']?.toString().trim();
-    if (rawTime != null && rawTime.isNotEmpty) {
+    if (rawTime != null &&
+        rawTime.isNotEmpty &&
+        rawTime != 'null' &&
+        rawTime != '00:00') {
       return rawTime;
     }
 
-    final fromSchedule = _timeFromScheduleTime(payload['scheduleTime']);
-    if (fromSchedule.isNotEmpty) return fromSchedule;
-
+    // 3) fallback สุดท้าย
     return '12:00';
   }
 
@@ -483,6 +492,3 @@ class _PillThumb extends StatelessWidget {
     );
   }
 }
-
-
-
