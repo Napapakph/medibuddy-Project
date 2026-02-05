@@ -1,20 +1,28 @@
-// history.dart
+﻿// history.dart
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:medibuddy/services/app_state.dart';
+import 'package:medibuddy/services/log_api.dart';
 
 /// ===============================
-/// Models (โครงข้อมูล)
+/// Models
 /// ===============================
-enum MedicineTakeStatus { normal, missed }
+enum MedicineTakeStatus { take, skip, snooze, none }
 
 class MedicineHistoryItem {
-  final DateTime takenAt; // วัน-เวลา ที่บันทึก
-  final String titleTh; // ชื่อยาภาษาไทย (ชื่อเล่น)
-  final String titleEn; // ชื่อยาอังกฤษ/ชื่อจาก DB
-  final String detail; // รายละเอียด (เช่น paracetamol 500 mg)
-  final int amount; // จำนวนเม็ด
+  final DateTime takenAt;
+  final String titleTh;
+  final String titleEn;
+  final String detail;
+  final int amount;
+  final int? dose;
+  final String? unit;
   final MedicineTakeStatus status;
   final String? note;
+  final String nickname;
+  final String tradeName;
+  final String thName;
+  final String enName;
 
   const MedicineHistoryItem({
     required this.takenAt,
@@ -22,8 +30,14 @@ class MedicineHistoryItem {
     required this.titleEn,
     required this.detail,
     required this.amount,
-    this.status = MedicineTakeStatus.normal,
+    this.dose,
+    this.unit,
+    required this.status,
     this.note,
+    required this.nickname,
+    required this.tradeName,
+    required this.thName,
+    required this.enName,
   });
 }
 
@@ -40,20 +54,36 @@ class HistoryPage extends StatefulWidget {
 class _HistoryPageState extends State<HistoryPage> {
   // UI state
   final TextEditingController _searchCtrl = TextEditingController();
-  String _filterValue = 'ทั้งหมด';
+
+  static const _filterAll = 'ทั้งหมด';
+  static const _filterTaken = 'ทานแล้ว';
+  static const _filterSkip = 'ข้าม';
+  static const _filterSnooze = 'เลื่อนเตือน';
+  static const _filterPending = 'ยังไม่ตอบ';
+
+  static const _searchTrade = 'ชื่อการค้า';
+  static const _searchTh = 'ชื่อสามัญไทย';
+  static const _searchEn = 'ชื่อสามัญอังกฤษ';
+  static const _searchNickname = 'ชื่อเล่นยา';
+
+  String _filterValue = _filterAll;
+  String _searchMode = _searchTrade;
 
   DateTime _startDate = DateTime.now().subtract(const Duration(days: 7));
   DateTime _endDate = DateTime.now();
+  bool _isDateFilterUserSet = false;
 
   bool _loading = false;
+  String _errorMessage = '';
 
-  // TODO: เปลี่ยนเป็นข้อมูลจาก API ตาม profileId + date range + filter
-  late List<MedicineHistoryItem> _allItems;
+  List<MedicineHistoryItem> _allItems = [];
+  List<MedicineHistoryItem> _filteredItems = [];
 
   @override
   void initState() {
     super.initState();
-    _allItems = _mockItems();
+    _setDefaultDateRange();
+    _loadHistory();
   }
 
   @override
@@ -63,46 +93,180 @@ class _HistoryPageState extends State<HistoryPage> {
   }
 
   /// ===============================
-  /// Mock data
+  /// Data + Mapping
   /// ===============================
-  List<MedicineHistoryItem> _mockItems() {
-    final now = DateTime.now();
-    return [
-      MedicineHistoryItem(
-        takenAt: DateTime(now.year, now.month, now.day, 12, 23),
-        titleTh: 'Tylenol 500',
-        titleEn: 'TYLENOL 500 (paracetamol 500 mg)',
-        detail: 'พาราเซตามอล\nParacetamol',
-        amount: 1,
-      ),
-      MedicineHistoryItem(
-        takenAt: DateTime(now.year, now.month, now.day - 1, 11, 50),
-        titleTh: 'ยาแก้แพ้',
-        titleEn: 'KENYAMINE (dexchlorpheniramine maleate 2 mg)',
-        detail: 'เดกซ์คลอเฟนิรามีน มาเลเอต\nDexchlorpheniramine maleate',
-        amount: 2,
-      ),
-      MedicineHistoryItem(
-        takenAt: DateTime(now.year, now.month, now.day - 1, 11, 50),
-        titleTh: 'ยาลดอักเสบ',
-        titleEn: 'ASPIRIN CARDIO 100 (aspirin 100 mg)',
-        detail: 'แอสไพริน\nAspirin',
-        amount: 1,
-      ),
-      MedicineHistoryItem(
-        takenAt: DateTime(now.year, now.month, now.day - 1, 8, 5),
-        titleTh: 'ยาลดน้ำมูก',
-        titleEn: 'CETTEC (cetirizine hydrochloride 1 mg/1 mL)',
-        detail: 'ซิเทอริซีน\nCetirizine',
-        amount: 1,
-        status: MedicineTakeStatus.missed,
-      ),
+  String _readString(dynamic value) {
+    if (value == null) return '';
+    final text = value.toString().trim();
+    if (text.isEmpty) return '';
+    if (text.toLowerCase() == 'null') return '';
+    return text;
+  }
+
+  int? _readInt(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    return int.tryParse(value.toString());
+  }
+
+  MedicineTakeStatus _statusFromResponse(String? status) {
+    switch ((status ?? '').toUpperCase()) {
+      case 'TAKE':
+        return MedicineTakeStatus.take;
+      case 'SKIP':
+        return MedicineTakeStatus.skip;
+      case 'SNOOZE':
+        return MedicineTakeStatus.snooze;
+      default:
+        return MedicineTakeStatus.none;
+    }
+  }
+
+  int _resolveAmount(Map<String, dynamic> log) {
+    const keys = [
+      'quantityPills',
+      'doseCount',
+      'quantity',
+      'pillsCount',
+      'amount',
     ];
+    for (final key in keys) {
+      final value = _readInt(log[key]);
+      if (value != null && value > 0) return value;
+    }
+    return 1;
+  }
+
+  int? _resolveDose(Map<String, dynamic> log) {
+    final value = _readInt(log['dose']);
+    if (value == null || value <= 0) return null;
+    return value;
+  }
+
+  String? _resolveUnit(Map<String, dynamic> log) {
+    final value = _readString(log['unit']);
+    if (value.isEmpty) return null;
+    return value;
+  }
+
+  MedicineHistoryItem _mapLogToItem(Map<String, dynamic> log) {
+    final scheduleRaw = _readString(log['scheduleTime']);
+    final schedule =
+        scheduleRaw.isEmpty ? null : DateTime.tryParse(scheduleRaw)?.toLocal();
+
+    final medicineList = log['medicineList'] is Map
+        ? Map<String, dynamic>.from(log['medicineList'] as Map)
+        : <String, dynamic>{};
+    final medicine = medicineList['medicine'] is Map
+        ? Map<String, dynamic>.from(medicineList['medicine'] as Map)
+        : <String, dynamic>{};
+
+    final nickname = _readString(medicineList['mediNickname']);
+    final trade = _readString(medicine['mediTradeName']);
+    final th = _readString(medicine['mediThName']);
+    final en = _readString(medicine['mediEnName']);
+
+    final safeNickname = nickname.isNotEmpty ? nickname : '';
+    final safeTrade = trade.isNotEmpty ? trade : '';
+    final safeTh = th.isNotEmpty ? th : '';
+    final safeEn = en.isNotEmpty ? en : '';
+
+    final mainTitle = safeNickname.isNotEmpty
+        ? safeNickname
+        : (safeTrade.isNotEmpty
+            ? safeTrade
+            : (safeTh.isNotEmpty
+                ? safeTh
+                : (safeEn.isNotEmpty ? safeEn : '-')));
+
+    final subtitle = safeTrade;
+
+    final detailParts = <String>[];
+    if (safeTh.isNotEmpty) detailParts.add(safeTh);
+    if (safeEn.isNotEmpty) detailParts.add(safeEn);
+    final detail = detailParts.isEmpty ? '' : detailParts.join('\n');
+
+    final status = _statusFromResponse(_readString(log['responseStatus']));
+    final amount = _resolveAmount(log);
+    final dose = _resolveDose(log);
+    final unit = _resolveUnit(log);
+    final note = _readString(log['note']);
+
+    return MedicineHistoryItem(
+      takenAt: schedule ?? DateTime.now(),
+      titleTh: mainTitle,
+      titleEn: subtitle,
+      detail: detail,
+      amount: amount,
+      dose: dose,
+      unit: unit,
+      status: status,
+      note: note.isEmpty ? null : note,
+      nickname: safeNickname,
+      tradeName: safeTrade,
+      thName: safeTh,
+      enName: safeEn,
+    );
+  }
+
+  Future<void> _loadHistory() async {
+    final profileId = AppState.instance.currentProfileId;
+    if (profileId == null || profileId <= 0) {
+      setState(() {
+        _errorMessage = 'ไม่พบข้อมูลโปรไฟล์';
+        _allItems = [];
+        _filteredItems = [];
+      });
+      return;
+    }
+
+    setState(() {
+      _loading = true;
+      _errorMessage = '';
+    });
+
+    try {
+      final api = LogApiService();
+      final logs = await api.getMedicationLogs(profileId: profileId);
+      final items = logs.map(_mapLogToItem).toList();
+      items.sort((a, b) => b.takenAt.compareTo(a.takenAt));
+
+      if (!mounted) return;
+      setState(() {
+        _allItems = items;
+        _filteredItems = _filterItems(items);
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _errorMessage = e.toString();
+        _allItems = [];
+        _filteredItems = [];
+      });
+    } finally {
+      if (!mounted) return;
+      setState(() => _loading = false);
+    }
+  }
+
+  void _applyFilters() {
+    if (!mounted) return;
+    setState(() {
+      _filteredItems = _filterItems(_allItems);
+    });
   }
 
   /// ===============================
   /// Helpers
   /// ===============================
+  void _setDefaultDateRange() {
+    final now = DateTime.now();
+    _startDate = DateTime(now.year, now.month, now.day);
+    _endDate = DateTime(now.year, now.month, now.day, 23, 59, 59, 999);
+    _isDateFilterUserSet = false;
+  }
+
   Future<void> _pickDate({required bool isStart}) async {
     final initial = isStart ? _startDate : _endDate;
     final firstDate = DateTime(2000);
@@ -119,9 +283,9 @@ class _HistoryPageState extends State<HistoryPage> {
     if (picked == null) return;
 
     setState(() {
+      _isDateFilterUserSet = true;
       if (isStart) {
         _startDate = picked;
-        // กัน start > end
         if (_startDate.isAfter(_endDate)) {
           _endDate = _startDate;
         }
@@ -133,12 +297,10 @@ class _HistoryPageState extends State<HistoryPage> {
       }
     });
 
-    // TODO: เรียกโหลดข้อมูลใหม่จาก API
-    // await _loadHistory();
+    _applyFilters();
   }
 
   String _formatThaiDate(DateTime d) {
-    // ตัวอย่าง: "อ. 21 ม.ค. 2025"
     final weekDayTh = _weekdayTh(d.weekday);
     final monthTh = _monthTh(d.month);
     return '$weekDayTh ${d.day} $monthTh ${d.year}';
@@ -184,41 +346,79 @@ class _HistoryPageState extends State<HistoryPage> {
   }
 
   String _formatTime(DateTime d) {
-    // "12 : 23 น."
     final hh = d.hour.toString().padLeft(2, '0');
     final mm = d.minute.toString().padLeft(2, '0');
-    return '$hh : $mm น.';
+    return '$hh:$mm น.';
   }
 
-  List<MedicineHistoryItem> _filteredItems() {
-    final q = _searchCtrl.text.trim().toLowerCase();
+  bool _matchesStatus(MedicineTakeStatus status) {
+    switch (_filterValue) {
+      case _filterTaken:
+        return status == MedicineTakeStatus.take;
+      case _filterSkip:
+        return status == MedicineTakeStatus.skip;
+      case _filterSnooze:
+        return status == MedicineTakeStatus.snooze;
+      case _filterPending:
+        return status == MedicineTakeStatus.none;
+      case _filterAll:
+      default:
+        return true;
+    }
+  }
 
-    return _allItems.where((item) {
-      // date range (inclusive)
-      final day =
-          DateTime(item.takenAt.year, item.takenAt.month, item.takenAt.day);
-      final start = DateTime(_startDate.year, _startDate.month, _startDate.day);
-      final end = DateTime(_endDate.year, _endDate.month, _endDate.day);
+  bool _matchesKeyword(MedicineHistoryItem item) {
+    final keyword = _searchCtrl.text.trim().toLowerCase();
+    if (keyword.isEmpty) return true;
 
-      final inRange = !day.isBefore(start) && !day.isAfter(end);
+    switch (_searchMode) {
+      case _searchTrade:
+        if (item.tradeName.isEmpty) return false;
+        return item.tradeName.toLowerCase().contains(keyword);
+      case _searchTh:
+        if (item.thName.isEmpty) return false;
+        return item.thName.toLowerCase().contains(keyword);
+      case _searchEn:
+        if (item.enName.isEmpty) return false;
+        return item.enName.toLowerCase().contains(keyword);
+      case _searchNickname:
+        if (item.nickname.isEmpty) return false;
+        return item.nickname.toLowerCase().contains(keyword);
+      default:
+        return false;
+    }
+  }
 
-      // filter (โครง)
-      final byFilter = _filterValue == 'ทั้งหมด'
-          ? true
-          : (_filterValue == 'ข้าม'
-              ? item.status == MedicineTakeStatus.missed
-              : true);
+  bool _isInDateRange(MedicineHistoryItem item) {
+    final keyword = _searchCtrl.text.trim();
+    if (keyword.isNotEmpty && !_isDateFilterUserSet) {
+      return true;
+    }
 
-      // search
-      final bySearch = q.isEmpty
-          ? true
-          : (item.titleTh.toLowerCase().contains(q) ||
-              item.titleEn.toLowerCase().contains(q) ||
-              item.detail.toLowerCase().contains(q));
+    final day =
+        DateTime(item.takenAt.year, item.takenAt.month, item.takenAt.day);
+    final start = DateTime(_startDate.year, _startDate.month, _startDate.day);
+    final end = DateTime(_endDate.year, _endDate.month, _endDate.day);
 
-      return inRange && byFilter && bySearch;
+    return !day.isBefore(start) && !day.isAfter(end);
+  }
+
+  List<MedicineHistoryItem> _filterItems(List<MedicineHistoryItem> items) {
+    // final q = _searchCtrl.text.trim().toLowerCase();
+    // final start = DateTime(_startDate.year, _startDate.month, _startDate.day);
+    // final end = DateTime(_endDate.year, _endDate.month, _endDate.day);
+
+    final filtered = items.where((item) {
+      // final byFilter = _matchesStatus(item.status);
+      // TODO: Status filtering disabled (search dropdown only).
+      final inRange = _isInDateRange(item);
+      final bySearch = _matchesKeyword(item);
+
+      return inRange && bySearch;
     }).toList()
-      ..sort((a, b) => b.takenAt.compareTo(a.takenAt)); // ล่าสุดบน
+      ..sort((a, b) => b.takenAt.compareTo(a.takenAt));
+
+    return filtered;
   }
 
   Map<DateTime, List<MedicineHistoryItem>> _groupByDate(
@@ -232,23 +432,10 @@ class _HistoryPageState extends State<HistoryPage> {
   }
 
   Future<void> _exportPdf() async {
-    // TODO: ทำ export PDF (เช่นใช้ pdf + printing package) หรือเรียก backend generate
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('TODO: Export PDF')),
     );
-  }
-
-  Future<void> _loadHistory() async {
-    // TODO: เรียก API ด้วย profileId + date range + filter + search
-    setState(() => _loading = true);
-    try {
-      await Future.delayed(const Duration(milliseconds: 500));
-      // setState(() => _allItems = fetchedItems);
-    } finally {
-      if (!mounted) return;
-      setState(() => _loading = false);
-    }
   }
 
   /// ===============================
@@ -260,7 +447,7 @@ class _HistoryPageState extends State<HistoryPage> {
 
   @override
   Widget build(BuildContext context) {
-    final items = _filteredItems();
+    final items = _filteredItems;
     final grouped = _groupByDate(items);
     final dateKeys = grouped.keys.toList()..sort((a, b) => b.compareTo(a));
 
@@ -296,11 +483,41 @@ class _HistoryPageState extends State<HistoryPage> {
               padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
               child: Row(
                 children: [
-                  // icon list
-                  const Icon(Icons.format_list_bulleted, color: Colors.white),
-                  const SizedBox(width: 8),
-
-                  // filter dropdown
+                  // TODO: Removed list icon per requirement (can re-enable later)
+                  // const Icon(Icons.format_list_bulleted, color: Colors.white),
+                  // const SizedBox(width: 8),
+                  // TODO: Action/status filter dropdown disabled (will re-enable later).
+                  // Container(
+                  //   padding: const EdgeInsets.symmetric(horizontal: 10),
+                  //   decoration: BoxDecoration(
+                  //     color: Colors.white,
+                  //     borderRadius: BorderRadius.circular(12),
+                  //   ),
+                  //   child: DropdownButtonHideUnderline(
+                  //     child: DropdownButton<String>(
+                  //       value: _filterValue,
+                  //       items: const [
+                  //         DropdownMenuItem(
+                  //             value: _filterAll, child: Text(_filterAll)),
+                  //         DropdownMenuItem(
+                  //             value: _filterTaken, child: Text(_filterTaken)),
+                  //         DropdownMenuItem(
+                  //             value: _filterSkip, child: Text(_filterSkip)),
+                  //         DropdownMenuItem(
+                  //             value: _filterSnooze, child: Text(_filterSnooze)),
+                  //         DropdownMenuItem(
+                  //             value: _filterPending,
+                  //             child: Text(_filterPending)),
+                  //       ],
+                  //       onChanged: (v) {
+                  //         if (v == null) return;
+                  //         _filterValue = v;
+                  //         _applyFilters();
+                  //       },
+                  //     ),
+                  //   ),
+                  // ),
+                  // const SizedBox(width: 10),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10),
                     decoration: BoxDecoration(
@@ -309,24 +526,27 @@ class _HistoryPageState extends State<HistoryPage> {
                     ),
                     child: DropdownButtonHideUnderline(
                       child: DropdownButton<String>(
-                        value: _filterValue,
+                        value: _searchMode,
                         items: const [
                           DropdownMenuItem(
-                              value: 'ทั้งหมด', child: Text('ทั้งหมด')),
-                          DropdownMenuItem(value: 'ข้าม', child: Text('ข้าม')),
+                              value: _searchTrade, child: Text(_searchTrade)),
+                          DropdownMenuItem(
+                              value: _searchTh, child: Text(_searchTh)),
+                          DropdownMenuItem(
+                              value: _searchEn, child: Text(_searchEn)),
+                          DropdownMenuItem(
+                              value: _searchNickname,
+                              child: Text(_searchNickname)),
                         ],
                         onChanged: (v) {
                           if (v == null) return;
-                          setState(() => _filterValue = v);
-                          // TODO: ถ้าอยากให้ filter เรียก API ก็เรียก _loadHistory()
+                          _searchMode = v;
+                          _applyFilters();
                         },
                       ),
                     ),
                   ),
-
                   const SizedBox(width: 10),
-
-                  // search
                   Expanded(
                     child: Container(
                       height: 40,
@@ -336,7 +556,7 @@ class _HistoryPageState extends State<HistoryPage> {
                       ),
                       child: TextField(
                         controller: _searchCtrl,
-                        onChanged: (_) => setState(() {}),
+                        onChanged: (_) => _applyFilters(),
                         decoration: const InputDecoration(
                           hintText: 'ค้นหา...',
                           border: InputBorder.none,
@@ -378,50 +598,57 @@ class _HistoryPageState extends State<HistoryPage> {
             Expanded(
               child: _loading
                   ? const Center(child: CircularProgressIndicator())
-                  : items.isEmpty
-                      ? const Center(
-                          child: Text('ไม่มีประวัติในช่วงวันที่ที่เลือก'))
-                      : ListView.builder(
-                          padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
-                          itemCount: dateKeys.length,
-                          itemBuilder: (context, i) {
-                            final dayKey = dateKeys[i];
-                            final dayItems = grouped[dayKey]!
-                              ..sort((a, b) => b.takenAt.compareTo(a.takenAt));
+                  : _errorMessage.isNotEmpty
+                      ? Center(
+                          child: Text(
+                            _errorMessage,
+                            textAlign: TextAlign.center,
+                          ),
+                        )
+                      : items.isEmpty
+                          ? const Center(
+                              child: Text('ไม่มีประวัติในช่วงวันที่ที่เลือก'))
+                          : ListView.builder(
+                              padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
+                              itemCount: dateKeys.length,
+                              itemBuilder: (context, i) {
+                                final dayKey = dateKeys[i];
+                                final dayItems = grouped[dayKey]!
+                                  ..sort(
+                                      (a, b) => b.takenAt.compareTo(a.takenAt));
 
-                            return Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const SizedBox(height: 8),
-                                Padding(
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 6),
-                                  child: Text(
-                                    _formatThaiDate(dayKey),
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w700,
-                                      color: _primary,
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const SizedBox(height: 8),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 6),
+                                      child: Text(
+                                        _formatThaiDate(dayKey),
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w700,
+                                          color: _primary,
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                ),
-                                ...dayItems.map((it) => _HistoryRow(
-                                      timeText: _formatTime(it.takenAt),
-                                      item: it,
-                                      onTapComment: () {
-                                        // TODO: เปิด dialog ใส่ note/comment
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          const SnackBar(
-                                              content:
-                                                  Text('TODO: เพิ่มคอมเมนต์')),
-                                        );
-                                      },
-                                    )),
-                              ],
-                            );
-                          },
-                        ),
+                                    ...dayItems.map((it) => _HistoryRow(
+                                          timeText: _formatTime(it.takenAt),
+                                          item: it,
+                                          onTapComment: () {
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              const SnackBar(
+                                                  content: Text(
+                                                      'TODO: เพิ่มคอมเมนต์')),
+                                            );
+                                          },
+                                        )),
+                                  ],
+                                );
+                              },
+                            ),
             ),
           ],
         ),
@@ -503,17 +730,31 @@ class _HistoryRow extends StatelessWidget {
   static const _primary = Color(0xFF1F497D);
 
   Color _statusBarColor() {
-    if (item.status == MedicineTakeStatus.missed) {
-      return const Color(0xFFE35D5D); // แดง
+    switch (item.status) {
+      case MedicineTakeStatus.take:
+        return const Color(0xFF5FB0D7);
+      case MedicineTakeStatus.skip:
+        return const Color(0xFFE35D5D);
+      case MedicineTakeStatus.snooze:
+        return const Color(0xFFF0A24F);
+      case MedicineTakeStatus.none:
+        return const Color(0xFFB0B6C2);
     }
-    return const Color(0xFF5FB0D7); // ฟ้า
+  }
+
+  String _quantityLabel() {
+    final dose = item.dose;
+    final unit = item.unit;
+    if (dose != null && dose > 0 && unit != null && unit.isNotEmpty) {
+      return '$dose $unit';
+    }
+    return '${item.amount} เม็ด';
   }
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        // time
         SizedBox(
           width: 76,
           child: Text(
@@ -526,8 +767,6 @@ class _HistoryRow extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 8),
-
-        // card
         Expanded(
           child: Container(
             margin: const EdgeInsets.symmetric(vertical: 6),
@@ -544,7 +783,6 @@ class _HistoryRow extends StatelessWidget {
             ),
             child: Stack(
               children: [
-                // status bar
                 Positioned(
                   left: 0,
                   top: 0,
@@ -560,13 +798,11 @@ class _HistoryRow extends StatelessWidget {
                     ),
                   ),
                 ),
-
                 Padding(
                   padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // title row
                       Row(
                         children: [
                           Expanded(
@@ -580,7 +816,7 @@ class _HistoryRow extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            '${item.amount} เม็ด',
+                            _quantityLabel(),
                             style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w800,
@@ -589,27 +825,28 @@ class _HistoryRow extends StatelessWidget {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 6),
-
-                      Text(
-                        item.titleEn,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFF6E7C8B),
-                          fontWeight: FontWeight.w600,
+                      if (item.titleEn.isNotEmpty) ...[
+                        const SizedBox(height: 6),
+                        Text(
+                          item.titleEn,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF6E7C8B),
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 6),
-
-                      Text(
-                        item.detail,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFF6E7C8B),
+                      ],
+                      if (item.detail.isNotEmpty) ...[
+                        const SizedBox(height: 6),
+                        Text(
+                          item.detail,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF6E7C8B),
+                          ),
                         ),
-                      ),
-
-                      if (item.status == MedicineTakeStatus.missed) ...[
+                      ],
+                      if (item.status == MedicineTakeStatus.skip) ...[
                         const SizedBox(height: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(
@@ -628,6 +865,25 @@ class _HistoryRow extends StatelessWidget {
                           ),
                         ),
                       ],
+                      if (item.status == MedicineTakeStatus.snooze) ...[
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFF3E0),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Text(
+                            'เลื่อนเตือน',
+                            style: TextStyle(
+                              color: Color(0xFFB26A1B),
+                              fontWeight: FontWeight.w800,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -635,10 +891,7 @@ class _HistoryRow extends StatelessWidget {
             ),
           ),
         ),
-
         const SizedBox(width: 8),
-
-        // comment icon
         InkWell(
           onTap: onTapComment,
           borderRadius: BorderRadius.circular(10),

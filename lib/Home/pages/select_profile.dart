@@ -93,14 +93,14 @@ class _SelectProfileState extends State<SelectProfile> {
 
   ImageProvider _buildProfileImage(String path) {
     if (path.isEmpty) {
-      return const AssetImage('assets/images/default_profile.png');
+      return const AssetImage('assets/default_profile.png');
     }
 
     if (path.startsWith('/')) {
       return NetworkImage('$_imageBaseUrl$path');
     }
 
-    return const AssetImage('assets/images/default_profile.png');
+    return const AssetImage('assets/default_profile.png');
   }
 
   @override
