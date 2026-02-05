@@ -453,6 +453,7 @@ class _HistoryPageState extends State<HistoryPage> {
 
   @override
   Widget build(BuildContext context) {
+    final pid = AppState.instance.currentProfileId;
     final items = _filteredItems;
     final grouped = _groupByDate(items);
     final dateKeys = grouped.keys.toList()..sort((a, b) => b.compareTo(a));
@@ -464,7 +465,15 @@ class _HistoryPageState extends State<HistoryPage> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => Navigator.pushReplacementNamed(
+            context,
+            '/home',
+            arguments: {
+              'profileId': pid,
+              'profileName': AppState.instance.currentProfileName,
+              'profileImage': AppState.instance.currentProfileImagePath,
+            },
+          ),
         ),
         title: const Text(
           'ประวัติ\nการรับประทานยา',

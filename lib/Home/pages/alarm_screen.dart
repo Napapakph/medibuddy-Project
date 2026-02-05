@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:medibuddy/Home/pages/confirm_action.dart';
 import 'package:medibuddy/services/regimen_api.dart';
 
 class AlarmScreen extends StatefulWidget {
@@ -66,6 +67,27 @@ class _AlarmScreenState extends State<AlarmScreen> {
     return _parseLogId(normalized['logId']);
   }
 
+  List<int> _extractLogIds() {
+    final raw = widget.payload ?? <String, dynamic>{};
+    if (raw['data'] is Map) {
+      final data = Map<String, dynamic>.from(raw['data'] as Map);
+      if (data['logIds'] is List) {
+        final ids = <int>[];
+        for (final item in data['logIds'] as List) {
+          final parsed = _parseLogId(item);
+          if (parsed != null && parsed > 0) {
+            ids.add(parsed);
+          }
+        }
+        if (ids.isNotEmpty) return ids;
+      }
+    }
+
+    final single = _extractLogId();
+    if (single != null && single > 0) return [single];
+    return [];
+  }
+
   Future<void> _submitResponse(String responseStatus) async {
     if (_submitting) return;
     final logId = _extractLogId();
@@ -95,6 +117,19 @@ class _AlarmScreenState extends State<AlarmScreen> {
         setState(() => _submitting = false);
       }
     }
+  }
+
+  void _openConfirmAction({required List<int> logIds}) {
+    if (_submitting) return;
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ConfirmActionScreen(
+          logIds: logIds,
+          payload: widget.payload,
+          headerTimeText: _timeText(),
+        ),
+      ),
+    );
   }
 
   // ✅ NEW: format TimeOfDay to HH:mm
@@ -168,12 +203,31 @@ class _AlarmScreenState extends State<AlarmScreen> {
 
   void _onGreen() {
     debugPrint('Alarm action: taken');
-    _submitResponse('TAKE');
+    final logIds = _extractLogIds();
+    if (logIds.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Missing logId in notification payload')),
+      );
+      return;
+    }
+    _openConfirmAction(logIds: logIds);
+    // _submitResponse('TAKE');
   }
 
   void _onRed() {
     debugPrint('Alarm action: skip');
-    _submitResponse('SKIP');
+    final logIds = _extractLogIds();
+    if (logIds.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Missing logId in notification payload')),
+      );
+      return;
+    }
+    if (logIds.length == 1) {
+      _submitResponse('SKIP');
+      return;
+    }
+    _openConfirmAction(logIds: logIds);
   }
 
   void _onSnooze(int minutes) {

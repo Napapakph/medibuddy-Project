@@ -80,6 +80,57 @@ class LogApiService {
     return logs;
   }
 
+  Future<Map<String, dynamic>> getMedicationLogDetail({
+    required int logId,
+  }) async {
+    if (logId <= 0) {
+      throw LogApiException('logId must be a positive integer.');
+    }
+
+    final token = _requireAccessToken();
+    final url = Uri.parse('${_baseUrl()}/api/mobile/v1/medication-log/$logId');
+
+    debugPrint('medication-log detail logId=$logId');
+
+    final res = await _client.get(
+      url,
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    debugPrint('medication-log detail status=${res.statusCode}');
+    debugPrint('medication-log detail body length=${res.body.length}');
+
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      final parsed = _readErrorMessage(res.body);
+      final friendly = _friendlyAuthError(res.statusCode);
+      final message = parsed ?? friendly;
+      throw LogApiException(
+        message ?? 'Get medication log detail failed (${res.statusCode}).',
+        statusCode: res.statusCode,
+      );
+    }
+
+    final decoded = jsonDecode(res.body);
+    if (decoded is Map) {
+      if (decoded['log'] is Map) {
+        return Map<String, dynamic>.from(decoded['log'] as Map);
+      }
+      if (decoded['data'] is Map) {
+        final data = decoded['data'] as Map;
+        if (data['log'] is Map) {
+          return Map<String, dynamic>.from(data['log'] as Map);
+        }
+        return Map<String, dynamic>.from(data);
+      }
+      return Map<String, dynamic>.from(decoded);
+    }
+
+    throw LogApiException('Invalid response format (expected object).');
+  }
+
   String? _friendlyAuthError(int statusCode) {
     if (statusCode == 401) return 'Unauthorized. Please login again.';
     if (statusCode == 403) return 'Not allowed.';
