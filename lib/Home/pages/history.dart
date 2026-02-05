@@ -793,7 +793,7 @@ class _HistoryRow extends StatelessWidget {
   Color _statusBarColor() {
     switch (item.status) {
       case MedicineTakeStatus.take:
-        return const Color(0xFF5FB0D7);
+        return const Color.fromARGB(255, 105, 188, 143);
       case MedicineTakeStatus.skip:
         return const Color(0xFFE35D5D);
       case MedicineTakeStatus.snooze:
@@ -911,6 +911,25 @@ class _HistoryRow extends StatelessWidget {
                           style: const TextStyle(
                             fontSize: 12,
                             color: Color(0xFF6E7C8B),
+                          ),
+                        ),
+                      ],
+                      if (item.status == MedicineTakeStatus.take) ...[
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: const Color.fromARGB(255, 230, 255, 245),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Text(
+                            'กินแล้ว',
+                            style: TextStyle(
+                              color: Color.fromARGB(255, 55, 159, 114),
+                              fontWeight: FontWeight.w800,
+                              fontSize: 12,
+                            ),
                           ),
                         ),
                       ],
