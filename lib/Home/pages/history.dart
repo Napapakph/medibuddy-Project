@@ -351,6 +351,12 @@ class _HistoryPageState extends State<HistoryPage> {
     return '$hh:$mm น.';
   }
 
+  String _timeKey(DateTime d) {
+    final hh = d.hour.toString().padLeft(2, '0');
+    final mm = d.minute.toString().padLeft(2, '0');
+    return '$hh:$mm';
+  }
+
   bool _matchesStatus(MedicineTakeStatus status) {
     switch (_filterValue) {
       case _filterTaken:
@@ -452,7 +458,7 @@ class _HistoryPageState extends State<HistoryPage> {
     final dateKeys = grouped.keys.toList()..sort((a, b) => b.compareTo(a));
 
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: const Color.fromARGB(255, 255, 255, 255),
       appBar: AppBar(
         backgroundColor: _primary,
         elevation: 0,
@@ -577,15 +583,17 @@ class _HistoryPageState extends State<HistoryPage> {
                 children: [
                   Expanded(
                     child: _DateField(
-                      label: 'เริ่มต้น :',
+                      label: '',
                       value: DateFormat('d MMMM', 'th_TH').format(_startDate),
                       onTap: () => _pickDate(isStart: true),
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 5),
+                  Text('ถึง'),
+                  const SizedBox(width: 5),
                   Expanded(
                     child: _DateField(
-                      label: 'สิ้นสุด :',
+                      label: '',
                       value: DateFormat('d MMMM', 'th_TH').format(_endDate),
                       onTap: () => _pickDate(isStart: false),
                     ),
@@ -616,35 +624,86 @@ class _HistoryPageState extends State<HistoryPage> {
                                 final dayItems = grouped[dayKey]!
                                   ..sort(
                                       (a, b) => b.takenAt.compareTo(a.takenAt));
+                                final timeGroups =
+                                    <String, List<MedicineHistoryItem>>{};
+                                for (final it in dayItems) {
+                                  final key = _timeKey(it.takenAt);
+                                  timeGroups.putIfAbsent(key, () => []).add(it);
+                                }
 
                                 return Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     const SizedBox(height: 8),
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 6),
-                                      child: Text(
-                                        _formatThaiDate(dayKey),
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w700,
-                                          color: _primary,
+                                    Center(
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 100, vertical: 6),
+                                        decoration: BoxDecoration(
+                                          color: const Color.fromARGB(
+                                              255, 236, 238, 243),
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                        ),
+                                        child: Text(
+                                          _formatThaiDate(dayKey),
+                                          textAlign: TextAlign.center,
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w700,
+                                            color: _primary,
+                                          ),
                                         ),
                                       ),
                                     ),
-                                    ...dayItems.map((it) => _HistoryRow(
-                                          timeText: _formatTime(it.takenAt),
-                                          item: it,
-                                          onTapComment: () {
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(
-                                              const SnackBar(
-                                                  content: Text(
-                                                      'TODO: เพิ่มคอมเมนต์')),
-                                            );
-                                          },
-                                        )),
+                                    // ...dayItems.map((it) => _HistoryRow(
+                                    //       timeText: _formatTime(it.takenAt),
+                                    //       item: it,
+                                    //       onTapComment: () {
+                                    //         ScaffoldMessenger.of(context)
+                                    //             .showSnackBar(
+                                    //           const SnackBar(
+                                    //               content:
+                                    //                   Text('TODO: เพิ่มคอมเมนต์')),
+                                    //         );
+                                    //       },
+                                    //     )),
+                                    ...timeGroups.entries.map((entry) {
+                                      final timeKey = entry.key;
+                                      final groupItems = entry.value;
+                                      return Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Padding(
+                                            padding: const EdgeInsets.only(
+                                                top: 8, bottom: 4),
+                                            child: Text(
+                                              '$timeKey น.',
+                                              style: const TextStyle(
+                                                fontSize: 14,
+                                                color: _primary,
+                                                fontWeight: FontWeight.w700,
+                                              ),
+                                            ),
+                                          ),
+                                          ...groupItems.map((it) => _HistoryRow(
+                                                timeText:
+                                                    _formatTime(it.takenAt),
+                                                item: it,
+                                                onTapComment: () {
+                                                  ScaffoldMessenger.of(context)
+                                                      .showSnackBar(
+                                                    const SnackBar(
+                                                        content: Text(
+                                                            'TODO: เพิ่มคอมเมนต์')),
+                                                  );
+                                                },
+                                                showTime: false,
+                                              )),
+                                        ],
+                                      );
+                                    }),
                                   ],
                                 );
                               },
@@ -720,11 +779,13 @@ class _HistoryRow extends StatelessWidget {
   final String timeText;
   final MedicineHistoryItem item;
   final VoidCallback onTapComment;
+  final bool showTime;
 
   const _HistoryRow({
     required this.timeText,
     required this.item,
     required this.onTapComment,
+    this.showTime = true,
   });
 
   static const _primary = Color(0xFF1F497D);
@@ -742,31 +803,38 @@ class _HistoryRow extends StatelessWidget {
     }
   }
 
+  String _mapUnitToThai(String unit) {
+    final normalized = unit.trim().toLowerCase();
+    switch (normalized) {
+      case 'tablet':
+        return 'เม็ด';
+      case 'ml':
+        return 'มิลลิลิตร';
+      case 'mg':
+        return 'มิลลิกรัม';
+      case 'drop':
+        return 'ยาหยอด';
+      case 'injection':
+        return 'เข็ม';
+      default:
+        return unit.trim().isEmpty ? 'เม็ด' : unit;
+    }
+  }
+
   String _quantityLabel() {
     final dose = item.dose;
     final unit = item.unit;
-    if (dose != null && dose > 0 && unit != null && unit.isNotEmpty) {
-      return '$dose $unit';
+    if (dose != null && dose > 0) {
+      final unitLabel = _mapUnitToThai(unit ?? '');
+      return '$dose $unitLabel';
     }
     return '${item.amount} เม็ด';
   }
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    final row = Row(
       children: [
-        SizedBox(
-          width: 76,
-          child: Text(
-            timeText,
-            style: const TextStyle(
-              fontSize: 14,
-              color: _primary,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
         Expanded(
           child: Container(
             margin: const EdgeInsets.symmetric(vertical: 6),
@@ -907,6 +975,29 @@ class _HistoryRow extends StatelessWidget {
                 color: _primary, size: 18),
           ),
         ),
+      ],
+    );
+
+    if (!showTime) {
+      return row;
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Text(
+            timeText,
+            style: const TextStyle(
+              fontSize: 14,
+              color: _primary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+        const SizedBox(height: 4),
+        row,
       ],
     );
   }
