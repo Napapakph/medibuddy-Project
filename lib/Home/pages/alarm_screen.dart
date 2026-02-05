@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:medibuddy/services/regimen_api.dart';
 
 class AlarmScreen extends StatefulWidget {
   final Map<String, dynamic>? payload;
@@ -10,6 +11,8 @@ class AlarmScreen extends StatefulWidget {
 }
 
 class _AlarmScreenState extends State<AlarmScreen> {
+  bool _submitting = false;
+
   @override
   void initState() {
     super.initState();
@@ -37,13 +40,61 @@ class _AlarmScreenState extends State<AlarmScreen> {
 
   void _debugPayload() {
     final n = _normalizedPayload();
-    debugPrint('?? AlarmScreen raw payload = ${widget.payload}');
-    debugPrint('? AlarmScreen normalized keys = ${n.keys.toList()}');
-    debugPrint('? title=${n['title']} body=${n['body']}');
+    debugPrint('AlarmScreen raw payload = ${widget.payload}');
+    debugPrint('AlarmScreen normalized keys = ${n.keys.toList()}');
+    debugPrint('title=${n['title']} body=${n['body']}');
     debugPrint(
-        '? type=${n['type']} logId=${n['logId']} profileId=${n['profileId']} mediListId=${n['mediListId']} mediRegimenId=${n['mediRegimenId']}');
+        'type=${n['type']} logId=${n['logId']} profileId=${n['profileId']} mediListId=${n['mediListId']} mediRegimenId=${n['mediRegimenId']}');
     debugPrint(
-        '? scheduleTime=${n['scheduleTime']} snoozedCount=${n['snoozedCount']} isSnoozeReminder=${n['isSnoozeReminder']}');
+        'scheduleTime=${n['scheduleTime']} snoozedCount=${n['snoozedCount']} isSnoozeReminder=${n['isSnoozeReminder']}');
+  }
+
+  int? _parseLogId(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    return int.tryParse(value.toString());
+  }
+
+  int? _extractLogId() {
+    final raw = widget.payload ?? <String, dynamic>{};
+    if (raw['data'] is Map) {
+      final data = Map<String, dynamic>.from(raw['data'] as Map);
+      final fromData = _parseLogId(data['logId']);
+      if (fromData != null) return fromData;
+    }
+    final normalized = _normalizedPayload();
+    return _parseLogId(normalized['logId']);
+  }
+
+  Future<void> _submitResponse(String responseStatus) async {
+    if (_submitting) return;
+    final logId = _extractLogId();
+    if (logId == null || logId <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Missing logId in notification payload')),
+      );
+      return;
+    }
+
+    setState(() => _submitting = true);
+    try {
+      final api = RegimenApiService();
+      await api.submitMedicationLogResponse(
+        logId: logId,
+        responseStatus: responseStatus,
+      );
+      if (!mounted) return;
+      Navigator.of(context).pop();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to send response: $e')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _submitting = false);
+      }
+    }
   }
 
   // ✅ NEW: format TimeOfDay to HH:mm
@@ -117,17 +168,17 @@ class _AlarmScreenState extends State<AlarmScreen> {
 
   void _onGreen() {
     debugPrint('Alarm action: taken');
-    _exitToApp(action: 'taken');
+    _submitResponse('TAKE');
   }
 
   void _onRed() {
     debugPrint('Alarm action: skip');
-    _exitToApp(action: 'skip');
+    _submitResponse('SKIP');
   }
 
   void _onSnooze(int minutes) {
     debugPrint('Alarm action: snooze $minutes minutes');
-    _exitToApp(action: 'snooze', snoozeMinutes: minutes);
+    _submitResponse('SNOOZE');
   }
 
   @override
@@ -492,3 +543,15 @@ class _PillThumb extends StatelessWidget {
     );
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
