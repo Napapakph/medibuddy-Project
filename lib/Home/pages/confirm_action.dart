@@ -2,6 +2,7 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:medibuddy/services/log_api.dart';
 import 'package:medibuddy/services/regimen_api.dart';
+import 'package:medibuddy/services/app_state.dart';
 
 class ConfirmActionScreen extends StatefulWidget {
   final List<int> logIds;
@@ -25,6 +26,7 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
   List<Map<String, dynamic>> _logs = [];
   final Set<int> _submittingIds = <int>{};
   final Map<int, String> _responses = <int, String>{};
+  final pid = AppState.instance.currentProfileId;
 
   @override
   void initState() {
@@ -188,7 +190,15 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
         _responses[logId] = responseStatus;
       });
       if (_responses.length >= _logs.length && _logs.isNotEmpty) {
-        Navigator.of(context).pop();
+        Navigator.pushReplacementNamed(
+          context,
+          '/home',
+          arguments: {
+            'profileId': pid,
+            'profileName': AppState.instance.currentProfileName,
+            'profileImage': AppState.instance.currentProfileImagePath,
+          },
+        );
       }
     } catch (e) {
       if (!mounted) return;
