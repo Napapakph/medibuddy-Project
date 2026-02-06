@@ -380,20 +380,6 @@ class _Home extends State<Home> {
             ),
             child: Row(
               children: [
-                InkWell(
-                  onTap: () => _toggleReminder(index),
-                  borderRadius: BorderRadius.circular(12),
-                  child: Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: checkColor,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(Icons.check, color: Colors.white),
-                  ),
-                ),
-                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -452,18 +438,6 @@ class _Home extends State<Home> {
                 ),
               ],
             ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        IconButton(
-          onPressed: () {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Comments coming soon')),
-            );
-          },
-          icon: const Icon(
-            Icons.chat_bubble_outline,
-            color: Color(0xFF7FA9DD),
           ),
         ),
       ],
