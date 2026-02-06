@@ -199,6 +199,46 @@ class FollowApi {
     _ensureSuccess(res, 'Update follower failed');
   }
 
+  Future<void> updateFollowerNickname({
+    required String accessToken,
+    required int followerId,
+    required String nickname,
+    List<int> profileIds = const [],
+  }) async {
+    final base = <String, dynamic>{
+      'followerId': followerId,
+      if (profileIds.isNotEmpty) 'profileIds': profileIds,
+    };
+
+    final payloads = [
+      {...base, 'nickname': nickname},
+      {...base, 'profileName': nickname},
+      {...base, 'displayName': nickname},
+      {...base, 'name': nickname},
+    ];
+
+    Response? lastRes;
+    for (final data in payloads) {
+      final res = await _dio.patch(
+        _followersUpdatePath,
+        data: data,
+        options: _authOptions(accessToken),
+      );
+      lastRes = res;
+      final status = res.statusCode ?? 0;
+      if (status >= 200 && status < 300) {
+        return;
+      }
+      if (status == 400 || status == 404) {
+        continue;
+      }
+      throw Exception('Update follower failed: $status ${res.data}');
+    }
+
+    final status = lastRes?.statusCode ?? 0;
+    throw Exception('Update follower failed: $status ${lastRes?.data}');
+  }
+
   Future<void> removeFollower({
     required String accessToken,
     required int followerId,
@@ -224,11 +264,11 @@ class FollowApi {
 
   Future<void> acceptInvite({
     required String accessToken,
-    required int inviteId,
+    required int relationshipId,
   }) async {
     final res = await _dio.post(
       _invitesAcceptPath,
-      data: {'inviteId': inviteId},
+      queryParameters: {'relationshipId': relationshipId},
       options: _authOptions(accessToken),
     );
     _ensureSuccess(res, 'Accept invite failed');
@@ -236,11 +276,11 @@ class FollowApi {
 
   Future<void> rejectInvite({
     required String accessToken,
-    required int inviteId,
+    required int relationshipId,
   }) async {
     final res = await _dio.post(
       _invitesRejectPath,
-      data: {'inviteId': inviteId},
+      queryParameters: {'relationshipId': relationshipId},
       options: _authOptions(accessToken),
     );
     _ensureSuccess(res, 'Reject invite failed');

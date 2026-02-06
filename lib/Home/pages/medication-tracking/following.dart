@@ -35,7 +35,8 @@ class _FollowingScreenState extends State<FollowingScreen>
   }
 
   int _readId(Map<String, dynamic> data) {
-    final raw = data['inviteId'] ??
+    final raw = data['relationshipId'] ??
+        data['inviteId'] ??
         data['id'] ??
         data['followId'] ??
         data['followingId'] ??
@@ -110,12 +111,12 @@ class _FollowingScreenState extends State<FollowingScreen>
       if (accept) {
         await _followApi.acceptInvite(
           accessToken: accessToken,
-          inviteId: invitationId,
+          relationshipId: invitationId,
         );
       } else {
         await _followApi.rejectInvite(
           accessToken: accessToken,
-          inviteId: invitationId,
+          relationshipId: invitationId,
         );
       }
 

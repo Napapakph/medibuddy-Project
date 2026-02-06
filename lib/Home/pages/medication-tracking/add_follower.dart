@@ -166,11 +166,14 @@ class _AddFollowerScreenState extends State<AddFollowerScreen> {
   }
 
   Widget _buildFoundAccount(Map<String, dynamic> user) {
-    final name = user['profileName'] ??
-        user['name'] ??
-        user['displayName'] ??
-        'ไม่ระบุชื่อ';
-    final email = user['email'] ?? user['mail'] ?? '';
+    final email = (user['email'] ?? user['mail'] ?? '').toString();
+    final rawName = (user['profileName'] ??
+            user['name'] ??
+            user['displayName'] ??
+            '')
+        .toString();
+    final name =
+        rawName.trim().isNotEmpty ? rawName : (email.isNotEmpty ? email : 'ไม่ระบุชื่อ');
     final avatarUrl =
         (user['profilePicture'] ?? user['profilePictureUrl'] ?? user['avatar'])
             as String?;
@@ -428,13 +431,20 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
         userId: userId > 0 ? userId : null,
         profileIds: profileIds,
       );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('ส่งคำเชิญไม่สำเร็จ: $e')),
-      );
-      return;
-    }
+      } catch (e) {
+        if (!mounted) return;
+        final raw = e.toString();
+        final lower = raw.toLowerCase();
+        final isPending = raw.contains('409') &&
+            (lower.contains('pending') || lower.contains('already exists'));
+        final message = isPending
+            ? 'ส่งคำเชิญไปแล้ว กำลังรอการตอบรับ'
+            : 'ส่งคำเชิญไม่สำเร็จ: $e';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+        return;
+      }
 
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -498,11 +508,14 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final name = widget.user['profileName'] ??
-        widget.user['name'] ??
-        widget.user['displayName'] ??
-        'ไม่ระบุชื่อ';
-    final email = widget.user['email'] ?? widget.user['mail'] ?? '';
+    final email = (widget.user['email'] ?? widget.user['mail'] ?? '').toString();
+    final rawName = (widget.user['profileName'] ??
+            widget.user['name'] ??
+            widget.user['displayName'] ??
+            '')
+        .toString();
+    final name =
+        rawName.trim().isNotEmpty ? rawName : (email.isNotEmpty ? email : 'ไม่ระบุชื่อ');
     final avatarUrl = (widget.user['profilePicture'] ??
         widget.user['profilePictureUrl'] ??
         widget.user['avatar']) as String?;

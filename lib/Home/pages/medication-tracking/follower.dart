@@ -1,7 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:medibuddy/services/auth_session.dart';
 import 'package:medibuddy/services/follow_api.dart';
-import 'package:medibuddy/services/profile_api.dart';
 import 'add_follower.dart';
 
 // ===== หน้าจอจัดการผู้ติดตาม =====
@@ -39,6 +38,68 @@ class _FollowerScreenState extends State<FollowerScreen> {
     return int.tryParse(raw.toString()) ?? 0;
   }
 
+  String _readFollowerName(Map<String, dynamic> follower) {
+    final rawName = (follower['nickname'] ??
+            follower['profileName'] ??
+            follower['name'] ??
+            follower['displayName'] ??
+            '')
+        .toString();
+    if (rawName.trim().isNotEmpty) return rawName;
+    final email = (follower['email'] ?? follower['mail'] ?? '').toString();
+    if (email.isNotEmpty) return email;
+    return 'ไม่มีชื่อ';
+  }
+
+  List<int> _readFollowerProfileIds(Map<String, dynamic> follower) {
+    final raw = follower['profileIds'] ??
+        follower['allowedProfileIds'] ??
+        follower['profiles'] ??
+        follower['allowedProfiles'];
+    if (raw is! List) return const [];
+    final ids = <int>{};
+    for (final item in raw) {
+      if (item is int) {
+        if (item > 0) ids.add(item);
+        continue;
+      }
+      if (item is String) {
+        final id = int.tryParse(item);
+        if (id != null && id > 0) ids.add(id);
+        continue;
+      }
+      if (item is Map) {
+        final rawId = item['profileId'] ?? item['id'] ?? item['profile_id'];
+        final id = int.tryParse(rawId.toString()) ?? 0;
+        if (id > 0) ids.add(id);
+      }
+    }
+    return ids.toList(growable: false);
+  }
+
+  bool _isAcceptedFollower(Map<String, dynamic> follower) {
+    final status =
+        (follower['status'] ?? follower['state'] ?? follower['inviteStatus'])
+            ?.toString()
+            .toLowerCase();
+    if (status != null && status.isNotEmpty) {
+      if (status.contains('pending') || status.contains('wait')) return false;
+      if (status.contains('accept') ||
+          status.contains('active') ||
+          status.contains('approve') ||
+          status.contains('confirmed')) {
+        return true;
+      }
+    }
+    final accepted =
+        follower['isAccepted'] ?? follower['accepted'] ?? follower['approved'];
+    if (accepted is bool) return accepted;
+    if (follower['acceptedAt'] != null || follower['accepted_at'] != null) {
+      return true;
+    }
+    return true;
+  }
+
   Future<void> _loadFollowers() async {
     try {
       setState(() => _isLoading = true);
@@ -52,7 +113,7 @@ class _FollowerScreenState extends State<FollowerScreen> {
       );
 
       setState(() {
-        _followers = followers;
+        _followers = followers.where(_isAcceptedFollower).toList();
         _isLoading = false;
         _errorMessage = null;
       });
@@ -99,10 +160,7 @@ class _FollowerScreenState extends State<FollowerScreen> {
   }
 
   Widget _buildFollowerCard(Map<String, dynamic> follower) {
-    final name = follower['profileName'] ??
-        follower['name'] ??
-        follower['displayName'] ??
-        'ไม่มีชื่อ';
+    final name = _readFollowerName(follower);
     final email = follower['email'] ?? follower['mail'] ?? '';
     final id = _readFollowerId(follower);
     final avatarUrl = (follower['profilePicture'] ??
@@ -128,7 +186,7 @@ class _FollowerScreenState extends State<FollowerScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    name,
+                    'ชื่อ : $name',
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
@@ -147,7 +205,7 @@ class _FollowerScreenState extends State<FollowerScreen> {
             ),
             IconButton(
               icon: const Icon(Icons.edit, color: Color(0xFF1F497D)),
-              onPressed: () => _showEditPermissionDialog(follower),
+              onPressed: () => _showEditNicknameDialog(follower),
             ),
             IconButton(
               icon: const Icon(Icons.delete, color: Colors.red),
@@ -210,17 +268,99 @@ class _FollowerScreenState extends State<FollowerScreen> {
     );
   }
 
-  void _showEditPermissionDialog(Map<String, dynamic> follower) {
+  void _showEditNicknameDialog(Map<String, dynamic> follower) {
+    final controller = TextEditingController(text: _readFollowerName(follower));
     showDialog(
       context: context,
-      builder: (ctx) => _EditPermissionDialog(
-        follower: follower,
-        onSave: () {
-          Navigator.pop(ctx);
-          _loadFollowers(); // โหลดข้อมูลใหม่
-        },
+      builder: (ctx) => AlertDialog(
+        title: const Text('แก้ไขชื่อเล่น'),
+        content: TextField(
+          controller: controller,
+          decoration: const InputDecoration(
+            labelText: 'ชื่อเล่น',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('ยกเลิก'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              await _saveNickname(follower, controller.text);
+              if (mounted) {
+                Navigator.pop(ctx);
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF1F497D),
+            ),
+            child: const Text('บันทึก'),
+          ),
+        ],
       ),
     );
+  }
+
+  Future<void> _saveNickname(
+    Map<String, dynamic> follower,
+    String nickname,
+  ) async {
+    final trimmed = nickname.trim();
+    if (trimmed.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('กรุณากรอกชื่อเล่น')),
+        );
+      }
+      return;
+    }
+
+    final followerId = _readFollowerId(follower);
+    if (followerId == 0) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('ไม่พบรหัสผู้ติดตาม')),
+        );
+      }
+      return;
+    }
+
+    try {
+      final accessToken = AuthSession.accessToken;
+      if (accessToken == null) throw Exception('No access token');
+
+      final profileIds = _readFollowerProfileIds(follower);
+      await _followApi.updateFollowerNickname(
+        accessToken: accessToken,
+        followerId: followerId,
+        nickname: trimmed,
+        profileIds: profileIds,
+      );
+
+      if (!mounted) return;
+      setState(() {
+        final index =
+            _followers.indexWhere((f) => _readFollowerId(f) == followerId);
+        if (index >= 0) {
+          final updated = Map<String, dynamic>.from(_followers[index]);
+          updated['nickname'] = trimmed;
+          updated['profileName'] = trimmed;
+          updated['displayName'] = trimmed;
+          updated['name'] = trimmed;
+          _followers[index] = updated;
+        }
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('บันทึกชื่อเล่นสำเร็จ')),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('บันทึกไม่สำเร็จ: $e')),
+        );
+      }
+    }
   }
 
   @override
@@ -286,175 +426,6 @@ class _FollowerScreenState extends State<FollowerScreen> {
               ),
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-// ===== DIALOG แก้ไขสิทธิ์ =====
-class _EditPermissionDialog extends StatefulWidget {
-  final Map<String, dynamic> follower;
-  final VoidCallback onSave;
-
-  const _EditPermissionDialog({
-    required this.follower,
-    required this.onSave,
-  });
-
-  @override
-  State<_EditPermissionDialog> createState() => _EditPermissionDialogState();
-}
-
-class _EditPermissionDialogState extends State<_EditPermissionDialog> {
-  final _profileApi = ProfileApi();
-  final _followApi = FollowApi();
-  List<Map<String, dynamic>> _myProfiles = [];
-  List<int> _selectedProfileIds = [];
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadMyProfiles();
-  }
-
-  Future<void> _loadMyProfiles() async {
-    try {
-      final accessToken = AuthSession.accessToken;
-      if (accessToken == null) throw Exception('No access token');
-
-      // เรียก API ดึงโปรไฟล์ของเรา
-      final profiles = await _profileApi.fetchProfiles(
-        accessToken: accessToken,
-      );
-
-      setState(() {
-        _myProfiles = profiles;
-        // ชั่วคราวเลือกโปรไฟล์แรก
-        _selectedProfileIds =
-            _myProfiles.isNotEmpty ? [_myProfiles[0]['id'] ?? 0] : [];
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() => _isLoading = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('โหลดโปรไฟล์ไม่สำเร็จ: $e')),
-        );
-      }
-    }
-  }
-
-  Future<void> _savePermissions() async {
-    try {
-      final accessToken = AuthSession.accessToken;
-      if (accessToken == null) throw Exception('No access token');
-
-      final rawId = widget.follower['followerId'] ?? widget.follower['id'];
-      final followerId = int.tryParse(rawId.toString()) ?? 0;
-      if (followerId == 0) {
-        throw Exception('Invalid follower id');
-      }
-
-      await _followApi.updateFollowerProfiles(
-        accessToken: accessToken,
-        followerId: followerId,
-        profileIds: _selectedProfileIds,
-      );
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('บันทึกสิทธิ์สำเร็จ')),
-        );
-        widget.onSave();
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('บันทึกไม่สำเร็จ: $e')),
-        );
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final followerName = widget.follower['profileName'] ?? 'ไม่มีชื่อ';
-
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            Text(
-              'แก้ไขสิทธิ์: $followerName',
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // รายการโปรไฟล์
-            if (_isLoading)
-              const Center(child: CircularProgressIndicator())
-            else if (_myProfiles.isEmpty)
-              const Text('ไม่มีโปรไฟล์')
-            else
-              Column(
-                children: [
-                  const Text(
-                    'อนุญาตให้ผู้ติดตามดูโปรไฟล์ต่อไปนี้:',
-                    style: TextStyle(fontSize: 14, color: Colors.grey),
-                  ),
-                  const SizedBox(height: 12),
-                  ..._myProfiles.map((profile) {
-                    final profileId = profile['id'] ?? 0;
-                    final profileName = profile['profileName'] ?? 'ไม่มีชื่อ';
-
-                    return CheckboxListTile(
-                      title: Text(profileName),
-                      value: _selectedProfileIds.contains(profileId),
-                      onChanged: (isChecked) {
-                        setState(() {
-                          if (isChecked ?? false) {
-                            _selectedProfileIds.add(profileId);
-                          } else {
-                            _selectedProfileIds.remove(profileId);
-                          }
-                        });
-                      },
-                    );
-                  }).toList(),
-                ],
-              ),
-
-            const SizedBox(height: 24),
-
-            // ปุ่ม
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('ยกเลิก'),
-                ),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed: _savePermissions,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1F497D),
-                  ),
-                  child: const Text('ยืนยัน'),
-                ),
-              ],
-            ),
-          ],
         ),
       ),
     );
