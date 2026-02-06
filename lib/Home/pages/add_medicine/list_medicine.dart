@@ -7,6 +7,7 @@ import 'createName_medicine.dart';
 import 'detail_medicine.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../../widgets/bottomBar.dart';
+import 'medication_plan_screen.dart';
 
 class ListMedicinePage extends StatefulWidget {
   final int profileId;
@@ -271,7 +272,7 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
       borderRadius: BorderRadius.circular(16),
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(5),
         decoration: BoxDecoration(
           color: const Color(0xFFF4F7FB),
           borderRadius: BorderRadius.circular(16),
@@ -279,8 +280,8 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
         child: Row(
           children: [
             Container(
-              width: 56,
-              height: 56,
+              width: 80,
+              height: 80,
               decoration: BoxDecoration(
                 color: const Color(0xFFDDE7F5),
                 borderRadius: BorderRadius.circular(12),
@@ -298,18 +299,9 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'ชื่อยา',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
                     item.nickname_medi,
                     style: const TextStyle(
-                      fontSize: 16,
+                      fontSize: 18,
                       fontWeight: FontWeight.w600,
                       color: Color(0xFF1F497D),
                     ),
@@ -319,7 +311,7 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
                     'กดเพื่อดูรายการแจ้งเตือนการรับประทานยา',
                     style: TextStyle(
                       fontSize: 12,
-                      color: Colors.grey[500],
+                      color: const Color.fromARGB(255, 85, 85, 85),
                     ),
                   ),
                 ],
@@ -371,8 +363,12 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
         actions: [
           IconButton(
             onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('ฟีเจอร์ PDF กำลังพัฒนา')),
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) =>
+                      MedicationPlanScreen(profileId: widget.profileId),
+                ),
               );
             },
             icon: const Icon(Icons.picture_as_pdf, color: Colors.redAccent),

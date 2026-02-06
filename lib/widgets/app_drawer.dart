@@ -39,6 +39,7 @@ class AppDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     final pid = AppState.instance.currentProfileId;
     return Drawer(
+      backgroundColor: const Color.fromARGB(255, 227, 242, 255),
       child: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {

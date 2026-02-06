@@ -147,6 +147,7 @@ class _UserRequestScreenState extends State<UserRequestScreen> {
           style: TextStyle(color: Colors.white),
         ),
       ),
+      backgroundColor: const Color.fromARGB(255, 227, 242, 255),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
@@ -313,6 +314,28 @@ class _UserRequestScreenState extends State<UserRequestScreen> {
                                   color: Color(0xFF9AA7B8),
                                 ),
                               ),
+                            Positioned(
+                              right: 64,
+                              bottom: 12,
+                              child: InkWell(
+                                onTap: _submitting
+                                    ? null
+                                    : () => _pickImage(ImageSource.gallery),
+                                borderRadius: BorderRadius.circular(24),
+                                child: Container(
+                                  width: 44,
+                                  height: 44,
+                                  decoration: const BoxDecoration(
+                                    color: Color(0xFF1F497D),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.photo_library,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
                             Positioned(
                               right: 12,
                               bottom: 12,

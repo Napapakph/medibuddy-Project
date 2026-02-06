@@ -74,6 +74,7 @@ class _RequestMedicinePageState extends State<RequestMedicinePage> {
           style: TextStyle(color: Colors.white),
         ),
       ),
+      backgroundColor: const Color.fromARGB(255, 227, 242, 255),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),

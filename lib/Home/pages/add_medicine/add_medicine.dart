@@ -216,7 +216,7 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFEAF3FF),
+                    color: const Color.fromARGB(255, 255, 255, 255),
                     borderRadius: BorderRadius.circular(22),
                     border: Border.all(color: const Color(0xFFD2E6FF)),
                   ),
@@ -283,6 +283,7 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
           style: const TextStyle(color: Colors.white),
         ),
       ),
+      backgroundColor: const Color.fromARGB(255, 227, 242, 255),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),

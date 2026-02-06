@@ -1,9 +1,14 @@
 ﻿// history.dart
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:medibuddy/services/app_state.dart';
 import 'package:medibuddy/services/log_api.dart';
 import 'package:medibuddy/widgets/comment.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 
 /// ===============================
 /// Models
@@ -459,10 +464,121 @@ class _HistoryPageState extends State<HistoryPage> {
   }
 
   Future<void> _exportPdf() async {
+    // ScaffoldMessenger.of(context).showSnackBar(
+    //   const SnackBar(content: Text('ห้ไส่งออก'),
+    // );
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('TODO: Export PDF')),
-    );
+    final items = List<MedicineHistoryItem>.from(_filteredItems);
+    if (items.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('ไม่มีข้อมูลให้ส่งออก')),
+      );
+      return;
+    }
+
+    final grouped = _groupByDate(items);
+    final dateKeys = grouped.keys.toList()..sort((a, b) => b.compareTo(a));
+    final dateRangeText = _formatDateRangeForPdf(_startDate, _endDate);
+
+    try {
+      final fontData =
+          await rootBundle.load('assets/fonts/Kodchasan-Regular.ttf');
+      final boldData = await rootBundle.load('assets/fonts/Kodchasan-Bold.ttf');
+      final baseFont = pw.Font.ttf(fontData);
+      final boldFont = pw.Font.ttf(boldData);
+
+      final pdf = pw.Document();
+      pdf.addPage(
+        pw.MultiPage(
+          pageFormat: PdfPageFormat.a4,
+          margin: const pw.EdgeInsets.all(24),
+          build: (context) {
+            final widgets = <pw.Widget>[
+              pw.Text(
+                'ประวัติการรับประทานยา',
+                style: pw.TextStyle(font: boldFont, fontSize: 20),
+              ),
+              pw.SizedBox(height: 8),
+              pw.Text(
+                dateRangeText,
+                style: pw.TextStyle(font: baseFont, fontSize: 12),
+              ),
+              pw.SizedBox(height: 16),
+            ];
+
+            for (final day in dateKeys) {
+              final dayItems =
+                  List<MedicineHistoryItem>.from(grouped[day] ?? [])
+                    ..sort((a, b) => b.takenAt.compareTo(a.takenAt));
+              widgets.addAll([
+                pw.Text(
+                  _formatThaiDate(day),
+                  style: pw.TextStyle(font: boldFont, fontSize: 14),
+                ),
+                pw.SizedBox(height: 6),
+                ...dayItems.expand((item) {
+                  final timeText = _formatTime(item.takenAt);
+                  final quantity = _quantityLabelForPdf(item);
+                  final status = _statusLabelForPdf(item.status);
+                  final note = item.note?.trim() ?? '';
+
+                  final rows = <pw.Widget>[
+                    pw.Text(
+                      '$timeText - ${item.titleTh}',
+                      style: pw.TextStyle(font: baseFont, fontSize: 12),
+                    ),
+                    pw.Text(
+                      quantity,
+                      style: pw.TextStyle(font: baseFont, fontSize: 12),
+                    ),
+                  ];
+
+                  if (status.isNotEmpty) {
+                    rows.add(
+                      pw.Text(
+                        status,
+                        style: pw.TextStyle(font: baseFont, fontSize: 12),
+                      ),
+                    );
+                  }
+
+                  if (note.isNotEmpty) {
+                    rows.add(
+                      pw.Text(
+                        note,
+                        style: pw.TextStyle(font: baseFont, fontSize: 12),
+                      ),
+                    );
+                  }
+
+                  rows.add(pw.SizedBox(height: 6));
+                  return rows;
+                }),
+                pw.Divider(),
+                pw.SizedBox(height: 8),
+              ]);
+            }
+
+            return widgets;
+          },
+        ),
+      );
+
+      final Uint8List bytes = await pdf.save();
+      try {
+        await Printing.sharePdf(
+          bytes: bytes,
+          filename: 'medication_history.pdf',
+        );
+      } catch (_) {
+        await Printing.layoutPdf(onLayout: (_) async => bytes);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('ส่งออกไม่สำเร็จ: $e')),
+      );
+    }
   }
 
   /// ===============================
@@ -471,6 +587,53 @@ class _HistoryPageState extends State<HistoryPage> {
   static const _primary = Color(0xFF1F497D);
   static const _lightBlue = Color(0xFFB7DAFF);
   static const _bg = Color(0xFFF3F6FB);
+
+  String _formatDateRangeForPdf(DateTime start, DateTime end) {
+    final startText = DateFormat('d MMM yyyy', 'th').format(start);
+    final endText = DateFormat('d MMM yyyy', 'th').format(end);
+    if (startText == endText) return startText;
+    return '$startText - $endText';
+  }
+
+  String _statusLabelForPdf(MedicineTakeStatus status) {
+    switch (status) {
+      case MedicineTakeStatus.take:
+        return 'กินแล้ว';
+      case MedicineTakeStatus.skip:
+        return 'ข้าม';
+      case MedicineTakeStatus.snooze:
+        return 'เลื่อนเตือน';
+      case MedicineTakeStatus.none:
+        return '';
+    }
+  }
+
+  String _mapUnitToThai(String unit) {
+    final normalized = unit.trim().toLowerCase();
+    switch (normalized) {
+      case 'tablet':
+        return 'เม็ด';
+      case 'ml':
+        return 'มิลลิลิตร';
+      case 'mg':
+        return 'มิลลิกรัม';
+      case 'drop':
+        return 'ยาหยอด';
+      case 'injection':
+        return 'เข็ม';
+      default:
+        return unit.trim().isEmpty ? 'เม็ด' : unit;
+    }
+  }
+
+  String _quantityLabelForPdf(MedicineHistoryItem item) {
+    final dose = item.dose;
+    if (dose != null && dose > 0) {
+      final unitLabel = _mapUnitToThai(item.unit ?? '');
+      return '$dose $unitLabel';
+    }
+    return '${item.amount} เม็ด';
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -343,6 +343,67 @@ class RegimenApiService {
     return MedicineRegimenListResponse.fromJson(data);
   }
 
+  Future<MedicineRegimenListResponse> getAllRegimens({
+    required int profileId,
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
+    if (profileId <= 0) {
+      throw RegimenApiException('profileId must be a positive integer.');
+    }
+    final token = _requireAccessToken();
+    final queryParams = <String, String>{
+      'profileId': profileId.toString(),
+    };
+    if (startDate != null) {
+      queryParams['startDate'] = _iso(startDate);
+    }
+    if (endDate != null) {
+      queryParams['endDate'] = _iso(endDate);
+    }
+
+    final url = Uri.parse('${_baseUrl()}/api/mobile/v1/medicine-regimen/list')
+        .replace(queryParameters: queryParams);
+
+    debugPrint(
+      '🧪 regimen/list all profileId=$profileId '
+      'startDate=${queryParams['startDate']} '
+      'endDate=${queryParams['endDate']}',
+    );
+
+    final res = await _client.get(
+      url,
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    debugPrint('📡 regimen/list all status=${res.statusCode}');
+    debugPrint('📦 regimen/list all body=${res.body}');
+
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      final parsed = _readErrorMessage(res.body);
+      final friendly = _friendlyAuthError(res.statusCode);
+      final message = parsed ?? friendly;
+      throw RegimenApiException(
+        message ?? 'Get regimen list failed (${res.statusCode}).',
+        statusCode: res.statusCode,
+      );
+    }
+
+    final decoded = jsonDecode(res.body);
+    if (decoded is! Map) {
+      throw RegimenApiException('Invalid response format (expected object).');
+    }
+
+    final data = decoded['data'] is Map
+        ? Map<String, dynamic>.from(decoded['data'] as Map)
+        : Map<String, dynamic>.from(decoded as Map);
+
+    return MedicineRegimenListResponse.fromJson(data);
+  }
+
 //------------------ list regimen ----------------------------------------
   Future<MedicineRegimenListResponse> getRegimensByMedicineListId({
     required int medicineListId,

@@ -209,6 +209,7 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
           ),
         ],
       ),
+      backgroundColor: const Color.fromARGB(255, 227, 242, 255),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
@@ -229,7 +230,7 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF2F4F8),
+                  color: const Color.fromARGB(255, 255, 255, 255),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(nickname),
@@ -247,7 +248,7 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF2F4F8),
+                  color: const Color.fromARGB(255, 255, 255, 255),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(officialName),

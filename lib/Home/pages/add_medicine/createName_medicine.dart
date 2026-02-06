@@ -126,6 +126,7 @@ class _CreateNameMedicinePageState extends State<CreateNameMedicinePage> {
           style: const TextStyle(color: Colors.white),
         ),
       ),
+      backgroundColor: const Color.fromARGB(255, 227, 242, 255),
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {

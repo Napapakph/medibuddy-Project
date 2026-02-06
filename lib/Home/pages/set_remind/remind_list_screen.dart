@@ -621,7 +621,7 @@ class _RemindListScreenState extends State<RemindListScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFFF2F4F8),
+        color: const Color.fromARGB(255, 255, 255, 255),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: const Color(0xFFD6E3F3)),
       ),
@@ -765,6 +765,7 @@ class _RemindListScreenState extends State<RemindListScreen> {
           ),
         ),
       ),
+      backgroundColor: const Color.fromARGB(255, 227, 242, 255),
       body: SafeArea(
         child: Stack(
           children: [
