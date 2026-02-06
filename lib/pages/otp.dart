@@ -1,12 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_otp_text_field/flutter_otp_text_field.dart';
-import 'dart:convert'; //แปลง Object to JSON
-import 'package:http/http.dart' as http; //ยิง request ไปยัง backend API
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'login.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-
-final baseUrl = dotenv.env['API_BASE_URL'] ?? '';
+import 'authen_api.dart';
 
 class OTPScreen extends StatefulWidget {
   const OTPScreen({super.key, required this.email});
@@ -16,30 +11,9 @@ class OTPScreen extends StatefulWidget {
   State<OTPScreen> createState() => _OTPScreenState();
 }
 
-Map<String, dynamic> _parseJwt(String token) {
-  final parts = token.split('.');
-  if (parts.length != 3) throw Exception('invalid token');
-
-  String normalize(String str) {
-    str = str.replaceAll('-', '+').replaceAll('_', '/');
-    switch (str.length % 4) {
-      case 0:
-        return str;
-      case 2:
-        return '$str==';
-      case 3:
-        return '$str=';
-      default:
-        throw Exception('invalid base64');
-    }
-  }
-
-  final payload = utf8.decode(base64Url.decode(normalize(parts[1])));
-  return jsonDecode(payload) as Map<String, dynamic>;
-}
-
 class _OTPScreenState extends State<OTPScreen> {
   final _otp = TextEditingController();
+  final AuthenApi _authenApi = AuthenApi();
   bool _isLoading = false;
 
   @override
@@ -61,73 +35,10 @@ class _OTPScreenState extends State<OTPScreen> {
     setState(() => _isLoading = true);
 
     try {
-      print("⏳ DEBUG: กำลังเรียก /auth/v1/verify (แบบเดียวกับ Postman)");
-      print("OTP: $verificationCode");
-      print("Email: ${widget.email}");
-
-      // TODO: ใส่ anon key เดียวกับที่ใช้ใน Supabase.initialize
-      const supabaseAnonKey =
-          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFvaXVyZHdpYmd1ZHN4aG94Y25pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQxNjY3OTcsImV4cCI6MjA3OTc0Mjc5N30.3aPHErdnVMHVmjcOk55KCLhUw6rPCzu4Ke5DWqQNsy';
-
-      final uri = Uri.parse(
-        'https://aoiurdwibgudsxhoxcni.supabase.co/auth/v1/verify',
+      await _authenApi.confirmOtpAndSync(
+        email: widget.email,
+        token: verificationCode,
       );
-
-      final response = await http.post(
-        uri,
-        headers: {
-          'apikey': supabaseAnonKey,
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          'email': widget.email,
-          'token': verificationCode,
-          'type': 'email', // ให้ตรงกับที่เพื่อนใช้ใน Postman
-        }),
-      );
-      if (!mounted) return;
-      print('📨 DEBUG statusCode: ${response.statusCode}');
-      print('📨 DEBUG body: ${response.body}');
-
-      if (response.statusCode != 200) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Verify ไม่สำเร็จ: ${response.statusCode}')),
-        );
-        return;
-      }
-
-      final data = jsonDecode(response.body);
-      final accessToken = data['access_token'];
-
-      if (accessToken == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Verify สำเร็จแต่ไม่พบ access_token')),
-        );
-        return;
-      }
-
-      final supabaseUserIdFromUser = data['user']?['id'] as String?;
-      final supabaseUserId =
-          supabaseUserIdFromUser ?? (_parseJwt(accessToken)['sub'] as String);
-
-      // ส่งไป backend ของเพื่อน
-      final syncRes = await http.post(
-        Uri.parse('$baseUrl/api/mobile/v1/auth/sync-user'),
-        headers: {
-          'Authorization': 'Bearer $accessToken',
-          'Content-Type': 'application/json',
-        },
-        body: jsonEncode({
-          "supabaseUserId": supabaseUserId,
-          "email": widget.email,
-          "provider": "email",
-          "allowMerge": true,
-        }),
-      );
-      if (!mounted) return;
-
-      print("Backend status: ${syncRes.statusCode}");
-      print(syncRes.body);
 
       Navigator.pushReplacement(
           context,
@@ -208,13 +119,18 @@ class _OTPScreenState extends State<OTPScreen> {
                     Center(
                       child: TextButton(
                         onPressed: () async {
-                          await Supabase.instance.client.auth.resend(
-                            type: OtpType.signup,
-                            email: widget.email,
-                          );
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text("ส่ง OTP ใหม่แล้ว")),
-                          );
+                          try {
+                            await _authenApi.resendOtp(email: widget.email);
+                            if (!mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text("ส่ง OTP ใหม่แล้ว")),
+                            );
+                          } catch (e) {
+                            if (!mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Resend OTP failed: $e'))
+                            );
+                          }
                         },
                         child: const Text("ส่ง OTP อีกครั้ง"),
                       ),

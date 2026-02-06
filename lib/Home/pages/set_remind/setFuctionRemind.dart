@@ -150,33 +150,27 @@ String _toFullImageUrl(String raw) {
   }
 }
 
-ImageProvider? buildMedicineImage(String raw) {
-  debugPrint('🖼️ [MedicineImage] raw="$raw"');
+ImageProvider? buildMedicineImage(String? pathOrUrl) {
+  final v = pathOrUrl?.trim();
+  if (v == null || v.isEmpty) return null;
 
-  final trimmed = raw.trim();
-  if (trimmed.isEmpty || trimmed.toLowerCase() == 'null') return null;
-
-  final isLocalFile = trimmed.startsWith('/') ||
-      trimmed.startsWith('file://') ||
-      trimmed.contains(':\\');
-
-  if (isLocalFile) {
-    final filePath = trimmed.startsWith('file://')
-        ? Uri.parse(trimmed).toFilePath()
-        : trimmed;
-    final file = File(filePath);
-    final exists = file.existsSync();
-    debugPrint(
-      '🖼️ [MedicineImage] local file="$filePath" exists=$exists',
-    );
-    if (!exists) return null;
-    return FileImage(file);
+  // URL from backend
+  if (v.startsWith('http://') || v.startsWith('https://')) {
+    return NetworkImage(v);
   }
 
-  final url = _toFullImageUrl(trimmed);
-  debugPrint('🖼️ [MedicineImage] network url="$url"');
-  if (url.isEmpty) return null;
-  return NetworkImage(url);
+  // Sometimes backend returns relative path like "uploads/.."
+  if (v.startsWith('uploads/') || v.startsWith('/uploads/')) {
+    final base = dotenv.env['API_BASE_URL'] ?? '';
+    final fixed = v.startsWith('/') ? v : '/$v';
+    return NetworkImage('$base$fixed');
+  }
+
+  // Local file from gallery/camera
+  final f = File(v);
+  if (f.existsSync()) return FileImage(f);
+
+  return null;
 }
 
 String formatTime(TimeOfDay time) {

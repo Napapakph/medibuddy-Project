@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'otp.dart';
+import 'authen_api.dart';
+import 'forget_password.dart';
+import 'login.dart';
 import '../services/authen_login.dart';
 import '../services/sync_user.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -18,7 +21,8 @@ class _SignupScreenState extends State<SignupScreen> {
   final _email = TextEditingController();
   final _password = TextEditingController();
   final _confirmPasswordCtrl = TextEditingController();
-  final _authAPI = AuthenSignUpEmail(); // ใช้ class จากไฟล์ API
+  final _authAPI = AuthenSignUpEmail();
+  final AuthenApi _authenApi = AuthenApi(); // ใช้ class จากไฟล์ API
   bool _obscurePassword = true; //ดู password
   bool _obscureConfirmPassword = true;
   bool _isGoogleLoading = false;
@@ -36,6 +40,157 @@ class _SignupScreenState extends State<SignupScreen> {
   final LoginWithGoogle _googleAuth = LoginWithGoogle();
 //---------------- Login with Google Sign in-------------------------------------
 
+  bool containsUnsafeChar(String value) {
+    const unsafeChars = ['<', '>', '"', "'", '/', '\\', '`'];
+    for (final ch in unsafeChars) {
+      if (value.contains(ch)) return true;
+    }
+    return false;
+  }
+
+  Future<void> _showExistingEmailDialog(String email) async {
+    if (!mounted) return;
+    final rootContext = context;
+
+    await showDialog<void>(
+      context: rootContext,
+      barrierDismissible: true,
+      builder: (dialogContext) {
+        return Dialog(
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: SizedBox(
+            width: 360,
+            child: Stack(
+              children: [
+                // ❎ ปุ่มกากบาทมุมขวาบน
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: IconButton(
+                    icon: const Icon(Icons.close),
+                    color: Colors.grey,
+                    onPressed: () {
+                      Navigator.of(dialogContext).pop();
+                    },
+                  ),
+                ),
+
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 20),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const SizedBox(height: 8),
+
+                      const Text(
+                        'อีเมลนี้ถูกลงทะเบียนแล้ว',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      RichText(
+                        textAlign: TextAlign.center,
+                        text: TextSpan(
+                          style: const TextStyle(
+                            fontSize: 15,
+                            color: Colors.black87,
+                          ),
+                          children: [
+                            const TextSpan(text: 'อีเมล '),
+                            TextSpan(
+                              text: email,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF1F497D), // 👈 สีหลัก MediBuddy
+                              ),
+                            ),
+                            const TextSpan(
+                              text:
+                                  ' นี้\nมีบัญชีผู้ใช้แล้ว\nกรุณาเข้าสู่ระบบ หรือกดลืมรหัสผ่าน',
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // 🔘 ปุ่มด้านล่าง
+                      Row(
+                        children: [
+                          // ⬅️ ลืมรหัสผ่าน
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () {
+                                Navigator.of(dialogContext).pop();
+                                Navigator.push(
+                                  rootContext,
+                                  MaterialPageRoute(
+                                    builder: (_) => const ForgetPassword(),
+                                  ),
+                                );
+                              },
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: const Color(0xFF1F497D),
+                                side: const BorderSide(
+                                  color: Color(0xFF1F497D),
+                                ),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: const Text('ลืมรหัสผ่าน'),
+                            ),
+                          ),
+
+                          const SizedBox(width: 12),
+
+                          // ➡️ เข้าสู่ระบบ (ปุ่มหลัก)
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: () {
+                                Navigator.of(dialogContext).pop();
+                                Navigator.push(
+                                  rootContext,
+                                  MaterialPageRoute(
+                                    builder: (_) => const LoginScreen(),
+                                  ),
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF1F497D),
+                                foregroundColor: Colors.white,
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                              child: const Text('เข้าสู่ระบบ'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   Future<void> _handleSignup() async {
     if (!_formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -47,6 +202,22 @@ class _SignupScreenState extends State<SignupScreen> {
     final password = _password.text.trim();
 
     setState(() => _isLoading = true); // เริ่มหมุนโหลด
+    try {
+      final status = await _authenApi.checkEmailStatus(email: email);
+      if (!mounted) return;
+      if (status == 'existing') {
+        setState(() => _isLoading = false);
+        await _showExistingEmailDialog(email);
+        return;
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Check email failed: $e')),
+      );
+      return;
+    }
     // เรียกไปหา Supabase ผ่าน AuthAPI
     final error = await _authAPI.signUpWithEmail(
       email: email,
@@ -96,6 +267,7 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   //---------------- Login with Google Sign in-------------------------------------
+
   Future<void> _handleGoogleLogin() async {
     if (_isGoogleLoading) return;
     setState(() => _isGoogleLoading = true);
@@ -123,23 +295,14 @@ class _SignupScreenState extends State<SignupScreen> {
       return 'รหัสผ่านต้องยาวอย่างน้อย 6 ตัวอักษร';
     }
 
-    bool hasUpper = false;
-    bool hasLower = false;
-    bool hasDigitOrSymbol = false;
-
-    for (int i = 0; i < password.length; i++) {
-      final char = password[i];
-
-      if (char.contains(RegExp(r'[A-Z]'))) {
-        hasUpper = true;
-      } else if (char.contains(RegExp(r'[a-z]'))) {
-        hasLower = true;
-      } else if (char.contains(RegExp(r'[0-9]')) ||
-          !char.contains(RegExp(r'[A-Za-z0-9]'))) {
-        // ตัวเลข หรืออย่างอื่นที่ไม่ใช่ตัวอักษร = สัญลักษณ์
-        hasDigitOrSymbol = true;
-      }
+    if (containsUnsafeChar(password)) {
+      return 'ห้ามใช้สัญลักษณ์ < > " \' / \\ `';
     }
+
+    bool hasUpper = RegExp(r'[A-Z]').hasMatch(password);
+    bool hasLower = RegExp(r'[a-z]').hasMatch(password);
+    bool hasDigitOrSymbol =
+        RegExp(r'[0-9!@#\$%\^&\*\(\)_\+\-=\.]').hasMatch(password);
 
     if (!hasUpper) {
       return 'ต้องมีตัวอักษรพิมพ์ใหญ่ อย่างน้อย 1 ตัว';
@@ -151,7 +314,7 @@ class _SignupScreenState extends State<SignupScreen> {
       return 'ต้องมีตัวเลขหรือสัญลักษณ์พิเศษ อย่างน้อย 1 ตัว';
     }
 
-    return null; // ผ่านทุกเงื่อนไข
+    return null;
   }
 
   @override
