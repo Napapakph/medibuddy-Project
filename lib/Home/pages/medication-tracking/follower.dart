@@ -1,8 +1,10 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:medibuddy/services/auth_session.dart';
+import 'package:medibuddy/services/follow_api.dart';
 import 'package:medibuddy/services/profile_api.dart';
 import 'add_follower.dart';
 
+// ===== หน้าจอจัดการผู้ติดตาม =====
 class FollowerScreen extends StatefulWidget {
   const FollowerScreen({super.key});
 
@@ -10,27 +12,31 @@ class FollowerScreen extends StatefulWidget {
   State<FollowerScreen> createState() => _FollowerScreenState();
 }
 
+// ===== หน้าจอหลักผู้ติดตาม =====
 class _FollowerScreenState extends State<FollowerScreen> {
-  final _profileApi = ProfileApi();
-  final TextEditingController _inviteNameController = TextEditingController();
-  final TextEditingController _inviteEmailController = TextEditingController();
-  final List<Map<String, dynamic>> _followers = [];
-  final List<Map<String, dynamic>> _pendingInvites = [];
+  final _followApi = FollowApi();
   bool _isLoading = false;
-  bool _canShowFollowers = false;
   String? _errorMessage;
-  int _tempInviteId = 1;
+  List<Map<String, dynamic>> _followers = [];
 
   @override
   void initState() {
     super.initState();
+    _loadFollowers();
   }
-
+// โหลดรายชื่อผู้ติดตามเมื่อเปิดหน้าจอ
   @override
   void dispose() {
-    _inviteNameController.dispose();
-    _inviteEmailController.dispose();
     super.dispose();
+  }
+// โหลดรายชื่อผู้ติดตามจาก API
+  int _readFollowerId(Map<String, dynamic> follower) {
+    final raw = follower['followerId'] ??
+        follower['id'] ??
+        follower['followId'] ??
+        follower['profileId'] ??
+        follower['userId'];
+    return int.tryParse(raw.toString()) ?? 0;
   }
 
   Future<void> _loadFollowers() async {
@@ -41,18 +47,12 @@ class _FollowerScreenState extends State<FollowerScreen> {
         throw Exception('No access token');
       }
 
-      // TODO: ต้องเรียก API ที่ดึงรายชื่อผู้ติดตาม
-      // ปัจจุบัน API อาจยังไม่มี ต้องคุยกับ Backend
-      // ชั่วคราวใช้ fetchProfiles แทน (ในอนาคตให้เปลี่ยนเป็น API followers ที่ถูกต้อง)
-
-      final profiles = await _profileApi.fetchProfiles(
+      final followers = await _followApi.fetchFollowers(
         accessToken: accessToken,
       );
 
       setState(() {
-        _followers
-          ..clear()
-          ..addAll(profiles);
+        _followers = followers;
         _isLoading = false;
         _errorMessage = null;
       });
@@ -64,119 +64,6 @@ class _FollowerScreenState extends State<FollowerScreen> {
     }
   }
 
-  void _openInviteDialog() {
-    _inviteNameController.clear();
-    _inviteEmailController.clear();
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('ส่งคำเชิญผู้ติดตาม'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: _inviteNameController,
-              decoration: const InputDecoration(
-                labelText: 'ชื่อผู้ติดตาม',
-              ),
-            ),
-            TextField(
-              controller: _inviteEmailController,
-              keyboardType: TextInputType.emailAddress,
-              decoration: const InputDecoration(
-                labelText: 'อีเมล (ไม่จำเป็น)',
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('ยกเลิก'),
-          ),
-          ElevatedButton(
-            onPressed: () => _submitInvite(ctx),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF1F497D),
-            ),
-            child: const Text('ส่งคำเชิญ'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _submitInvite(BuildContext dialogContext) {
-    final name = _inviteNameController.text.trim();
-    final email = _inviteEmailController.text.trim();
-
-    if (name.isEmpty && email.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('กรุณากรอกชื่อหรืออีเมลก่อนส่งคำเชิญ')),
-      );
-      return;
-    }
-
-    final invite = {
-      'id': _tempInviteId++,
-      'profileName': name.isEmpty ? 'ผู้ติดตามใหม่' : name,
-      'email': email,
-      'profilePicture': null,
-    };
-
-    setState(() {
-      _pendingInvites.add(invite);
-      _errorMessage = null;
-    });
-
-    Navigator.pop(dialogContext);
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('ส่งคำเชิญติดตามแล้ว')),
-    );
-  }
-
-  void _showConfirmFollowDialog(Map<String, dynamic> invite) {
-    final name = invite['profileName'] ?? 'ผู้ติดตาม';
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('ยืนยันการติดตาม'),
-        content: Text('ยืนยันให้ $name ติดตามใช่หรือไม่?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('ไม่'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              _acceptInvite(invite);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF1F497D),
-            ),
-            child: const Text('ใช่'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _acceptInvite(Map<String, dynamic> invite) {
-    setState(() {
-      _pendingInvites.removeWhere((i) => i['id'] == invite['id']);
-      _followers.add(invite);
-      _canShowFollowers = true;
-    });
-  }
-
-  void _cancelInvite(Map<String, dynamic> invite) {
-    setState(() {
-      _pendingInvites.removeWhere((i) => i['id'] == invite['id']);
-    });
-  }
-
   Widget _sectionTitle(String text) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -185,78 +72,6 @@ class _FollowerScreenState extends State<FollowerScreen> {
         style: const TextStyle(
           fontWeight: FontWeight.bold,
           fontSize: 16,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInviteCard(Map<String, dynamic> invite) {
-    final name = invite['profileName'] ?? 'ผู้ติดตาม';
-    final email = invite['email'] ?? '';
-
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 24,
-                  backgroundImage: invite['profilePicture'] != null &&
-                          (invite['profilePicture'] as String).isNotEmpty
-                      ? NetworkImage(invite['profilePicture'])
-                      : null,
-                  child: invite['profilePicture'] == null
-                      ? const Icon(Icons.person)
-                      : null,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        name,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                        ),
-                      ),
-                      if (email.isNotEmpty)
-                        Text(
-                          email,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey,
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                OutlinedButton(
-                  onPressed: () => _cancelInvite(invite),
-                  child: const Text('ยกเลิก'),
-                ),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed: () => _showConfirmFollowDialog(invite),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1F497D),
-                  ),
-                  child: const Text('ยืนยัน'),
-                ),
-              ],
-            ),
-          ],
         ),
       ),
     );
@@ -284,9 +99,16 @@ class _FollowerScreenState extends State<FollowerScreen> {
   }
 
   Widget _buildFollowerCard(Map<String, dynamic> follower) {
-    final name = follower['profileName'] ?? 'ไม่มีชื่อ';
-    final email = follower['email'] ?? '';
-    final id = follower['id'] ?? 0;
+    final name = follower['profileName'] ??
+        follower['name'] ??
+        follower['displayName'] ??
+        'ไม่มีชื่อ';
+    final email = follower['email'] ?? follower['mail'] ?? '';
+    final id = _readFollowerId(follower);
+    final avatarUrl = (follower['profilePicture'] ??
+        follower['profilePictureUrl'] ??
+        follower['avatar'] ??
+        '') as String;
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -296,13 +118,9 @@ class _FollowerScreenState extends State<FollowerScreen> {
           children: [
             CircleAvatar(
               radius: 30,
-              backgroundImage: follower['profilePicture'] != null &&
-                      (follower['profilePicture'] as String).isNotEmpty
-                  ? NetworkImage(follower['profilePicture'])
-                  : null,
-              child: follower['profilePicture'] == null
-                  ? const Icon(Icons.person)
-                  : null,
+              backgroundImage:
+                  avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
+              child: avatarUrl.isEmpty ? const Icon(Icons.person) : null,
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -346,20 +164,13 @@ class _FollowerScreenState extends State<FollowerScreen> {
       final accessToken = AuthSession.accessToken;
       if (accessToken == null) throw Exception('No access token');
 
-      // TODO: เรียก API ลบผู้ติดตาม
-      // ปัจจุบัน Backend ยังไม่มี API ลบ ต้องเพิ่มหรือใช้ PUT/PATCH
-
-      // ตัวอย่างเบื้องต้น - ใช้ deleteProfile
-      // await _profileApi.deleteProfile(
-      //   accessToken: accessToken,
-      //   profileId: followerId,
-      // );
+      await _followApi.removeFollower(
+        accessToken: accessToken,
+        followerId: followerId,
+      );
 
       setState(() {
-        _followers.removeWhere((f) => f['id'] == followerId);
-        if (_followers.isEmpty) {
-          _canShowFollowers = false;
-        }
+        _followers.removeWhere((f) => _readFollowerId(f) == followerId);
       });
 
       if (mounted) {
@@ -414,25 +225,8 @@ class _FollowerScreenState extends State<FollowerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final hasPendingInvites = _pendingInvites.isNotEmpty;
-    final showFollowers = _canShowFollowers && _followers.isNotEmpty;
+    final showFollowers = _followers.isNotEmpty;
     final listChildren = <Widget>[];
-
-    if (hasPendingInvites) {
-      listChildren.add(_sectionTitle('คำเชิญที่ส่ง'));
-      listChildren.addAll(_pendingInvites.map(_buildInviteCard));
-      if (!showFollowers) {
-        listChildren.add(
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Text(
-              'รอการยืนยันคำเชิญก่อนจะแสดงรายชื่อผู้ติดตาม',
-              style: TextStyle(color: Colors.grey),
-            ),
-          ),
-        );
-      }
-    }
 
     if (showFollowers) {
       listChildren.add(_sectionTitle('ผู้ติดตาม'));
@@ -456,7 +250,7 @@ class _FollowerScreenState extends State<FollowerScreen> {
           ],
         ),
       );
-    } else if (!hasPendingInvites && !showFollowers) {
+    } else if (!showFollowers) {
       content = _buildEmptyState();
     } else {
       content = ListView(
@@ -514,6 +308,7 @@ class _EditPermissionDialog extends StatefulWidget {
 
 class _EditPermissionDialogState extends State<_EditPermissionDialog> {
   final _profileApi = ProfileApi();
+  final _followApi = FollowApi();
   List<Map<String, dynamic>> _myProfiles = [];
   List<int> _selectedProfileIds = [];
   bool _isLoading = true;
@@ -556,16 +351,17 @@ class _EditPermissionDialogState extends State<_EditPermissionDialog> {
       final accessToken = AuthSession.accessToken;
       if (accessToken == null) throw Exception('No access token');
 
-      // TODO: เรียก API PATCH /api/mobile/v1/profile/update
-      // เพื่อบันทึกสิทธิ์การเข้าถึง
-      // ปัจจุบัน updateProfile ไม่รองรับการส่งสิทธิ์ ต้องปรับแต่ง Backend หรือสร้าง endpoint ใหม่
+      final rawId = widget.follower['followerId'] ?? widget.follower['id'];
+      final followerId = int.tryParse(rawId.toString()) ?? 0;
+      if (followerId == 0) {
+        throw Exception('Invalid follower id');
+      }
 
-      // ตัวอย่างการใช้ (รอ Backend ปรับปรุง):
-      // await _profileApi.updateProfile(
-      //   accessToken: accessToken,
-      //   profileId: widget.follower['id'],
-      //   allowedProfiles: _selectedProfileIds,
-      // );
+      await _followApi.updateFollowerProfiles(
+        accessToken: accessToken,
+        followerId: followerId,
+        profileIds: _selectedProfileIds,
+      );
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -664,3 +460,15 @@ class _EditPermissionDialogState extends State<_EditPermissionDialog> {
     );
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+

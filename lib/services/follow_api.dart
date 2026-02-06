@@ -1,0 +1,297 @@
+import 'package:dio/dio.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
+// สำหรับติดต่อกับ Follow API
+// DIO คือไลบรารี HTTP ที่ใช้ในการส่งคำขอไปยัง API
+class FollowApi {
+  final Dio _dio = Dio();
+
+// สร้างอินสแตนซ์ของ FollowApi
+  FollowApi() {
+    final baseUrl = dotenv.env['API_BASE_URL'];
+    if (baseUrl == null || baseUrl.isEmpty) {
+      throw Exception('API_BASE_URL not found. Did you load .env in main.dart?');
+    }
+// กำหนดค่าเริ่มต้นของ Dio
+    _dio.options = BaseOptions(
+      baseUrl: baseUrl,
+      connectTimeout: const Duration(seconds: 10),
+      sendTimeout: const Duration(seconds: 30),
+      receiveTimeout: const Duration(seconds: 30),
+      headers: {'Accept': 'application/json'},
+      validateStatus: (_) => true,
+    );
+
+    _dio.interceptors.add(
+      LogInterceptor(
+        request: true,
+        requestHeader: true,
+        requestBody: true,
+        responseHeader: true,
+        responseBody: true,
+        error: true,
+      ),
+    );
+  }
+
+  static const _invitePath = '/api/mobile/v1/follow/invite';
+  static const _followersPath = '/api/mobile/v1/follow/followers';
+  static const _followersUpdatePath = '/api/mobile/v1/follow/followers/update';
+  static const _followersRemovePath = '/api/mobile/v1/follow/followers/remove';
+  static const _invitesPath = '/api/mobile/v1/follow/invites';
+  static const _invitesAcceptPath = '/api/mobile/v1/follow/invites/accept';
+  static const _invitesRejectPath = '/api/mobile/v1/follow/invites/reject';
+  static const _followingPath = '/api/mobile/v1/follow/following';
+  static const _followingDetailPath = '/api/mobile/v1/follow/following/detail';
+  static const _followingLogsPath = '/api/mobile/v1/follow/following/logs';
+  static const _followingRemovePath = '/api/mobile/v1/follow/following/remove';
+  static const _searchUserPath = '/api/mobile/v1/follow/search-user';
+
+  Options _authOptions(String accessToken) => Options(
+        headers: {'Authorization': 'Bearer $accessToken'},
+        validateStatus: (_) => true,
+      );
+
+  static List<Map<String, dynamic>> _extractList(dynamic data) {
+    if (data is List) {
+      return data
+          .whereType<Map>()
+          .map((e) => Map<String, dynamic>.from(e))
+          .toList();
+    }
+
+    if (data is Map) {
+      final map = Map<String, dynamic>.from(data);
+      const listKeys = [
+        'data',
+        'items',
+        'list',
+        'results',
+        'followers',
+        'following',
+        'invites',
+        'users',
+      ];
+      for (final key in listKeys) {
+        final value = map[key];
+        if (value is List) {
+          return value
+              .whereType<Map>()
+              .map((e) => Map<String, dynamic>.from(e))
+              .toList();
+        }
+      }
+
+      const singleKeys = ['user', 'target', 'profile'];
+      for (final key in singleKeys) {
+        final value = map[key];
+        if (value is Map) {
+          return [Map<String, dynamic>.from(value)];
+        }
+      }
+
+      if (map.containsKey('id') ||
+          map.containsKey('profileName') ||
+          map.containsKey('email')) {
+        return [map];
+      }
+    }
+
+    return [];
+  }
+
+  static Map<String, dynamic> _extractMap(dynamic data) {
+    if (data is Map) {
+      return Map<String, dynamic>.from(data);
+    }
+    return {'data': data};
+  }
+
+  static void _ensureSuccess(Response res, String label) {
+    final status = res.statusCode ?? 0;
+    if (status < 200 || status >= 300) {
+      throw Exception('$label: $status ${res.data}');
+    }
+  }
+// ค้นหาผู้ใช้ โดยใช้อีเมล เพื่อค้นหาผู้ติดตามหรือผู้ที่กำลังติดตาม
+  Future<List<Map<String, dynamic>>> searchUsers({
+    required String accessToken,
+    required String email,
+  }) async {
+    final trimmed = email.trim();
+    if (trimmed.isEmpty) return [];
+
+    final res = await _dio.get(
+      _searchUserPath,
+      queryParameters: {'query': trimmed},
+      options: _authOptions(accessToken),
+    );
+    _ensureSuccess(res, 'Search users failed');
+    if (res.data is Map) {
+      final map = Map<String, dynamic>.from(res.data as Map);
+      final users = map['users'];
+      if (users is List) {
+        final mapped = users.map((item) {
+          if (item is Map) {
+            return Map<String, dynamic>.from(item);
+          }
+          if (item is String && item.trim().isNotEmpty) {
+            return {'email': item.trim()};
+          }
+          return <String, dynamic>{};
+        }).where((item) => item.isNotEmpty).toList();
+        if (mapped.isNotEmpty) return mapped;
+      }
+    }
+    return _extractList(res.data);
+  }
+
+  Future<Map<String, dynamic>> sendInvite({
+    required String accessToken,
+    required List<int> profileIds,
+    String? email,
+    int? userId,
+  }) async {
+    if ((email == null || email.trim().isEmpty) &&
+        (userId == null || userId <= 0)) {
+      throw Exception('Missing invite target');
+    }
+
+    final body = <String, dynamic>{
+      if (email != null && email.trim().isNotEmpty) 'email': email.trim(),
+      if (userId != null && userId > 0) 'userId': userId,
+      'profileIds': profileIds,
+    };
+
+    final res = await _dio.post(
+      _invitePath,
+      data: body,
+      options: _authOptions(accessToken),
+    );
+    _ensureSuccess(res, 'Send invite failed');
+    return _extractMap(res.data);
+  }
+
+  Future<List<Map<String, dynamic>>> fetchFollowers({
+    required String accessToken,
+  }) async {
+    final res = await _dio.get(
+      _followersPath,
+      options: _authOptions(accessToken),
+    );
+    _ensureSuccess(res, 'Fetch followers failed');
+    return _extractList(res.data);
+  }
+
+  Future<void> updateFollowerProfiles({
+    required String accessToken,
+    required int followerId,
+    required List<int> profileIds,
+  }) async {
+    final res = await _dio.patch(
+      _followersUpdatePath,
+      data: {
+        'followerId': followerId,
+        'profileIds': profileIds,
+      },
+      options: _authOptions(accessToken),
+    );
+    _ensureSuccess(res, 'Update follower failed');
+  }
+
+  Future<void> removeFollower({
+    required String accessToken,
+    required int followerId,
+  }) async {
+    final res = await _dio.delete(
+      _followersRemovePath,
+      queryParameters: {'followerId': followerId},
+      options: _authOptions(accessToken),
+    );
+    _ensureSuccess(res, 'Remove follower failed');
+  }
+
+  Future<List<Map<String, dynamic>>> fetchInvites({
+    required String accessToken,
+  }) async {
+    final res = await _dio.get(
+      _invitesPath,
+      options: _authOptions(accessToken),
+    );
+    _ensureSuccess(res, 'Fetch invites failed');
+    return _extractList(res.data);
+  }
+
+  Future<void> acceptInvite({
+    required String accessToken,
+    required int inviteId,
+  }) async {
+    final res = await _dio.post(
+      _invitesAcceptPath,
+      data: {'inviteId': inviteId},
+      options: _authOptions(accessToken),
+    );
+    _ensureSuccess(res, 'Accept invite failed');
+  }
+
+  Future<void> rejectInvite({
+    required String accessToken,
+    required int inviteId,
+  }) async {
+    final res = await _dio.post(
+      _invitesRejectPath,
+      data: {'inviteId': inviteId},
+      options: _authOptions(accessToken),
+    );
+    _ensureSuccess(res, 'Reject invite failed');
+  }
+
+  Future<List<Map<String, dynamic>>> fetchFollowing({
+    required String accessToken,
+  }) async {
+    final res = await _dio.get(
+      _followingPath,
+      options: _authOptions(accessToken),
+    );
+    _ensureSuccess(res, 'Fetch following failed');
+    return _extractList(res.data);
+  }
+
+  Future<Map<String, dynamic>> fetchFollowingDetail({
+    required String accessToken,
+    required int followingId,
+  }) async {
+    final res = await _dio.get(
+      _followingDetailPath,
+      queryParameters: {'followingId': followingId},
+      options: _authOptions(accessToken),
+    );
+    _ensureSuccess(res, 'Fetch following detail failed');
+    return _extractMap(res.data);
+  }
+
+  Future<List<Map<String, dynamic>>> fetchFollowingLogs({
+    required String accessToken,
+    required int followingId,
+  }) async {
+    final res = await _dio.get(
+      _followingLogsPath,
+      queryParameters: {'followingId': followingId},
+      options: _authOptions(accessToken),
+    );
+    _ensureSuccess(res, 'Fetch following logs failed');
+    return _extractList(res.data);
+  }
+
+  Future<void> removeFollowing({
+    required String accessToken,
+    required int followingId,
+  }) async {
+    final res = await _dio.delete(
+      _followingRemovePath,
+      queryParameters: {'followingId': followingId},
+      options: _authOptions(accessToken),
+    );
+    _ensureSuccess(res, 'Remove following failed');
+  }
+}

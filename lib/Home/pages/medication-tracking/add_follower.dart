@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:medibuddy/services/auth_session.dart';
+import 'package:medibuddy/services/follow_api.dart';
 import 'package:medibuddy/services/profile_api.dart';
 
 const Color _primaryBlue = Color(0xFF1F497D);
@@ -16,11 +17,11 @@ class AddFollowerScreen extends StatefulWidget {
 
 class _AddFollowerScreenState extends State<AddFollowerScreen> {
   final _searchController = TextEditingController();
-  final _profileApi = ProfileApi();
+  final _followApi = FollowApi();
+  final Set<String> _sentInviteEmails = {};
 
-  Map<String, dynamic>? _foundUser;
+  List<Map<String, dynamic>> _foundUsers = [];
   bool _isSearching = false;
-  bool _isInviteSent = false;
   String? _searchError;
 
   @override
@@ -37,38 +38,28 @@ class _AddFollowerScreenState extends State<AddFollowerScreen> {
       return;
     }
 
-    final accessToken = AuthSession.accessToken;
-    if (accessToken == null) {
-      setState(() => _searchError = 'ไม่พบข้อมูลการเข้าสู่ระบบ');
-      return;
-    }
-
     try {
       setState(() {
         _isSearching = true;
         _searchError = null;
-        _foundUser = null;
-        _isInviteSent = false;
+        _foundUsers = [];
       });
-
-      final profiles = await _profileApi.fetchProfiles(
-        accessToken: accessToken,
-      );
-
-      final matching = profiles.firstWhere(
-        (p) =>
-            (p['email'] ?? '')
-                .toString()
-                .toLowerCase()
-                .contains(email.toLowerCase()),
-        orElse: () => {},
-      );
-
-      if (matching.isEmpty) {
-        setState(() => _searchError = 'ไม่พบผู้ใช้ที่ค้นหา');
-      } else {
-        setState(() => _foundUser = matching);
+// ค้นหาผู้ใช้ตามอีเมล
+      final accessToken = AuthSession.accessToken;
+      if (accessToken == null) {
+        throw Exception('No access token');
       }
+// ค้นหาผู้ใช้
+      final results = await _followApi.searchUsers(
+        accessToken: accessToken,
+        email: email,
+      );
+      setState(() {
+        _foundUsers = results;
+        if (_foundUsers.isEmpty) {
+          _searchError = 'ไม่พบผู้ใช้ที่ค้นหา';
+        }
+      });
     } catch (e) {
       setState(() => _searchError = 'เกิดข้อผิดพลาด: $e');
     } finally {
@@ -87,7 +78,10 @@ class _AddFollowerScreenState extends State<AddFollowerScreen> {
     );
     if (!mounted) return;
     if (invited == true) {
-      setState(() => _isInviteSent = true);
+      final invitedEmail = (user['email'] ?? '').toString().toLowerCase();
+      if (invitedEmail.isNotEmpty) {
+        setState(() => _sentInviteEmails.add(invitedEmail));
+      }
     }
   }
 
@@ -106,7 +100,7 @@ class _AddFollowerScreenState extends State<AddFollowerScreen> {
           Positioned(
             bottom: 0,
             child: Image.asset(
-              'assets/cat_login.png',
+              'assets/cat_add_follower.png',
               height: 120,
               fit: BoxFit.contain,
             ),
@@ -172,9 +166,17 @@ class _AddFollowerScreenState extends State<AddFollowerScreen> {
   }
 
   Widget _buildFoundAccount(Map<String, dynamic> user) {
-    final name = user['profileName'] ?? 'ไม่ระบุชื่อ';
-    final email = user['email'] ?? '';
-    final avatarUrl = user['profilePicture'] as String?;
+    final name = user['profileName'] ??
+        user['name'] ??
+        user['displayName'] ??
+        'ไม่ระบุชื่อ';
+    final email = user['email'] ?? user['mail'] ?? '';
+    final avatarUrl =
+        (user['profilePicture'] ?? user['profilePictureUrl'] ?? user['avatar'])
+            as String?;
+    final normalizedEmail = email.toString().toLowerCase();
+    final isInvited =
+        (user['isInvited'] == true) || _sentInviteEmails.contains(normalizedEmail);
 
     return InkWell(
       onTap: () => _openPermissionScreen(user),
@@ -215,13 +217,25 @@ class _AddFollowerScreenState extends State<AddFollowerScreen> {
                       fontWeight: FontWeight.w700,
                       fontSize: 14,
                     ),
-                  ),
+                    ),
                   if (email.isNotEmpty)
                     Text(
                       email,
                       style: const TextStyle(
                         fontSize: 12,
                         color: Colors.black54,
+                      ),
+                    ),
+                  if (isInvited)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 4),
+                      child: Text(
+                        'ส่งคำเชิญแล้ว',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: _primaryBlue,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                 ],
@@ -281,30 +295,22 @@ class _AddFollowerScreenState extends State<AddFollowerScreen> {
                 ),
               ),
               const SizedBox(height: 10),
-              if (_foundUser != null) _buildFoundAccount(_foundUser!),
-              if (_foundUser == null && _searchError == null)
+              if (_foundUsers.isNotEmpty)
+                Column(
+                  children: _foundUsers
+                      .map(
+                        (user) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: _buildFoundAccount(user),
+                        ),
+                      )
+                      .toList(growable: false),
+                ),
+              if (_foundUsers.isEmpty && _searchError == null)
                 const Text(
                   'ยังไม่มีผลการค้นหา',
                   style: TextStyle(color: Colors.black38),
                 ),
-              if (_isInviteSent) ...[
-                const SizedBox(height: 12),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE6F0FF),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: const Text(
-                    'ส่งคำเชิญแล้ว',
-                    style: TextStyle(
-                      color: _primaryBlue,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
             ],
           ),
         ),
@@ -322,14 +328,10 @@ class FollowerPermissionScreen extends StatefulWidget {
   State<FollowerPermissionScreen> createState() =>
       _FollowerPermissionScreenState();
 }
-
+// หน้าจอการอนุญาตผู้ติดตาม
 class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
   final _profileApi = ProfileApi();
-  final List<Map<String, dynamic>> _demoProfiles = const [
-    {'id': 1, 'profileName': 'ฉัน'},
-    {'id': 2, 'profileName': 'ยาย'},
-    {'id': 3, 'profileName': 'แม่'},
-  ];
+  final _followApi = FollowApi();
 
   List<Map<String, dynamic>> _myProfiles = [];
   final Set<int> _selectedProfileIds = {};
@@ -346,36 +348,33 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
     if (raw is int) return raw;
     return int.tryParse(raw.toString()) ?? 0;
   }
-
+// โหลดโปรไฟล์ของผู้ใช้ปัจจุบัน
   Future<void> _loadMyProfiles() async {
     final accessToken = AuthSession.accessToken;
     if (accessToken == null) {
       setState(() {
-        _myProfiles = _demoProfiles;
-        _selectedProfileIds.add(_asProfileId(_demoProfiles.first['id']));
+        _myProfiles = [];
+        _selectedProfileIds.clear();
         _isLoading = false;
-        _loadError = 'ไม่พบข้อมูลการเข้าสู่ระบบ';
+        _loadError = 'ไม่พบข้อมูลเข้าสู่ระบบ กรุณาเข้าสู่ระบบอีกครั้ง';
       });
       return;
     }
-
+// Load profiles
     try {
       final profiles = await _profileApi.fetchProfiles(
         accessToken: accessToken,
       );
-      if (profiles.isEmpty) {
-        _myProfiles = _demoProfiles;
-      } else {
-        _myProfiles = profiles;
-      }
+      _myProfiles = profiles;
+      _selectedProfileIds.clear();
       if (_myProfiles.isNotEmpty) {
         _selectedProfileIds.add(_asProfileId(_myProfiles.first['id']));
       }
       _loadError = null;
     } catch (e) {
-      _myProfiles = _demoProfiles;
-      _selectedProfileIds.add(_asProfileId(_demoProfiles.first['id']));
-      _loadError = 'โหลดโปรไฟล์ไม่สำเร็จ';
+      _myProfiles = [];
+      _selectedProfileIds.clear();
+      _loadError = 'โหลดโปรไฟล์ไม่สำเร็จ: $e';
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -397,6 +396,29 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
     if (_selectedProfileIds.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('กรุณาเลือกอย่างน้อย 1 โปรไฟล์')),
+      );
+      return;
+    }
+
+    try {
+      final accessToken = AuthSession.accessToken;
+      if (accessToken == null) {
+        throw Exception('No access token');
+      }
+
+      final email = widget.user['email']?.toString();
+      final userId = _asProfileId(widget.user['id']);
+
+      await _followApi.sendInvite(
+        accessToken: accessToken,
+        email: email,
+        userId: userId > 0 ? userId : null,
+        profileIds: _selectedProfileIds.toList(),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('ส่งคำเชิญไม่สำเร็จ: $e')),
       );
       return;
     }
@@ -461,9 +483,14 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final name = widget.user['profileName'] ?? 'ไม่ระบุชื่อ';
-    final email = widget.user['email'] ?? '';
-    final avatarUrl = widget.user['profilePicture'] as String?;
+    final name = widget.user['profileName'] ??
+        widget.user['name'] ??
+        widget.user['displayName'] ??
+        'ไม่ระบุชื่อ';
+    final email = widget.user['email'] ?? widget.user['mail'] ?? '';
+    final avatarUrl = (widget.user['profilePicture'] ??
+        widget.user['profilePictureUrl'] ??
+        widget.user['avatar']) as String?;
 
     return Scaffold(
       appBar: AppBar(
@@ -533,6 +560,14 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
                   child: Text(
                     _loadError!,
                     style: const TextStyle(color: Colors.black45, fontSize: 12),
+                  ),
+                ),
+              if (_loadError == null && _myProfiles.isEmpty)
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 8),
+                  child: Text(
+                    'ไม่พบโปรไฟล์',
+                    style: TextStyle(color: Colors.black45, fontSize: 12),
                   ),
                 ),
               Column(
@@ -623,3 +658,4 @@ class _TrianglePainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
+

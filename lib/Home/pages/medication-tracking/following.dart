@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:medibuddy/services/follow_api.dart';
 import 'package:medibuddy/services/auth_session.dart';
-import 'package:medibuddy/services/profile_api.dart';
 import 'package:medibuddy/services/medicine_api.dart';
 import 'package:medibuddy/widgets/medicine_step_timeline.dart';
 
@@ -14,7 +14,7 @@ class FollowingScreen extends StatefulWidget {
 class _FollowingScreenState extends State<FollowingScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  final _profileApi = ProfileApi();
+  final _followApi = FollowApi();
 
   List<Map<String, dynamic>> _invitations = [];
   List<Map<String, dynamic>> _following = [];
@@ -34,28 +34,58 @@ class _FollowingScreenState extends State<FollowingScreen>
     super.dispose();
   }
 
+  int _readId(Map<String, dynamic> data) {
+    final raw = data['inviteId'] ??
+        data['id'] ??
+        data['followId'] ??
+        data['followingId'] ??
+        data['profileId'] ??
+        data['userId'];
+    return int.tryParse(raw.toString()) ?? 0;
+  }
+
+  String _readName(Map<String, dynamic> data) {
+    return (data['profileName'] ??
+            data['name'] ??
+            data['displayName'] ??
+            data['fullName'] ??
+            data['email'] ??
+            'ไม่มีชื่อ')
+        .toString();
+  }
+
+  String _readEmail(Map<String, dynamic> data) {
+    return (data['email'] ?? data['mail'] ?? '').toString();
+  }
+
+  String _readAvatar(Map<String, dynamic> data) {
+    return (data['profilePicture'] ??
+            data['profilePictureUrl'] ??
+            data['avatar'] ??
+            data['picture'] ??
+            '')
+        .toString();
+  }
+
   Future<void> _loadData() async {
     try {
       setState(() => _isLoading = true);
+
       final accessToken = AuthSession.accessToken;
-      if (accessToken == null) throw Exception('No access token');
+      if (accessToken == null) {
+        throw Exception('No access token');
+      }
 
-      // TODO: เรียก API ดึง Invitations
-      // Backend ต้องให้ endpoint: GET /api/mobile/v1/invitations/list
-      // ระบบจะดึงรายการคำเชิญที่รอการตอบรับ
-
-      // TODO: เรียก API ดึง Following List
-      // Backend ต้องให้ endpoint: GET /api/mobile/v1/followers/following
-      // ระบบจะดึงรายการผู้ที่เราติดตามอยู่
-
-      // ชั่วคราวใช้ fetchProfiles แทน
-      final profiles = await _profileApi.fetchProfiles(
+      final invites = await _followApi.fetchInvites(
+        accessToken: accessToken,
+      );
+      final following = await _followApi.fetchFollowing(
         accessToken: accessToken,
       );
 
       setState(() {
-        _invitations = profiles.take(2).toList(); // ตัวอย่างชั่วคราว
-        _following = profiles.skip(1).toList();
+        _invitations = invites;
+        _following = following;
         _isLoading = false;
         _errorMessage = null;
       });
@@ -73,24 +103,23 @@ class _FollowingScreenState extends State<FollowingScreen>
   ) async {
     try {
       final accessToken = AuthSession.accessToken;
-      if (accessToken == null) throw Exception('No access token');
+      if (accessToken == null) {
+        throw Exception('No access token');
+      }
 
-      // TODO: เรียก API ตอบรับหรือปฏิเสธคำเชิญ
-      // Backend ต้องให้ endpoint: PATCH /api/mobile/v1/invitations/{id}/respond
-      // ส่ง { action: 'accept' | 'reject' }
+      if (accept) {
+        await _followApi.acceptInvite(
+          accessToken: accessToken,
+          inviteId: invitationId,
+        );
+      } else {
+        await _followApi.rejectInvite(
+          accessToken: accessToken,
+          inviteId: invitationId,
+        );
+      }
 
-      setState(() {
-        _invitations.removeWhere((inv) => inv['id'] == invitationId);
-        if (accept) {
-          final inv = _invitations.firstWhere(
-            (inv) => inv['id'] == invitationId,
-            orElse: () => {},
-          );
-          if (inv.isNotEmpty) {
-            _following.add(inv);
-          }
-        }
-      });
+      await _loadData();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -149,15 +178,16 @@ class _FollowingScreenState extends State<FollowingScreen>
               : TabBarView(
                   controller: _tabController,
                   children: [
-                    // ======== TAB 1: คำเชิญ ========
+                    // ======== TAB 1: ไม่มีคำเชิญ ========
                     _invitations.isEmpty
                         ? const Center(child: Text('ไม่มีคำเชิญ'))
                         : ListView.builder(
                             itemCount: _invitations.length,
                             itemBuilder: (context, index) {
                               final inv = _invitations[index];
-                              final name = inv['profileName'] ?? 'ไม่มีชื่อ';
-                              final id = inv['id'] ?? 0;
+                              final name = _readName(inv);
+                              final id = _readId(inv);
+                              final avatarUrl = _readAvatar(inv);
 
                               return Card(
                                 margin: const EdgeInsets.symmetric(
@@ -168,15 +198,10 @@ class _FollowingScreenState extends State<FollowingScreen>
                                     children: [
                                       CircleAvatar(
                                         radius: 30,
-                                        backgroundImage:
-                                            inv['profilePicture'] != null &&
-                                                    (inv['profilePicture']
-                                                            as String)
-                                                        .isNotEmpty
-                                                ? NetworkImage(
-                                                    inv['profilePicture'])
-                                                : null,
-                                        child: inv['profilePicture'] == null
+                                        backgroundImage: avatarUrl.isNotEmpty
+                                            ? NetworkImage(avatarUrl)
+                                            : null,
+                                        child: avatarUrl.isEmpty
                                             ? const Icon(Icons.person)
                                             : null,
                                       ),
@@ -218,17 +243,15 @@ class _FollowingScreenState extends State<FollowingScreen>
                             itemCount: _following.length,
                             itemBuilder: (context, index) {
                               final user = _following[index];
-                              final name = user['profileName'] ?? 'ไม่มีชื่อ';
+                              final name = _readName(user);
+                              final avatarUrl = _readAvatar(user);
 
                               return ListTile(
                                 leading: CircleAvatar(
-                                  backgroundImage:
-                                      user['profilePicture'] != null &&
-                                              (user['profilePicture'] as String)
-                                                  .isNotEmpty
-                                          ? NetworkImage(user['profilePicture'])
-                                          : null,
-                                  child: user['profilePicture'] == null
+                                  backgroundImage: avatarUrl.isNotEmpty
+                                      ? NetworkImage(avatarUrl)
+                                      : null,
+                                  child: avatarUrl.isEmpty
                                       ? const Icon(Icons.person)
                                       : null,
                                 ),
@@ -257,7 +280,7 @@ class _MonitoringDetailView extends StatefulWidget {
 class _MonitoringDetailViewState extends State<_MonitoringDetailView> {
   final _medicineApi = MedicineApi();
 
-  int _currentStep = 1; // สำหรับ Timeline
+  int _currentStep = 1;
   bool _isLoading = true;
   List<Map<String, dynamic>> _medicines = [];
   String? _errorMessage;
@@ -272,10 +295,14 @@ class _MonitoringDetailViewState extends State<_MonitoringDetailView> {
     try {
       setState(() => _isLoading = true);
 
-      // ดึง Profile ID ของผู้ที่เราติดตาม
-      final profileId = widget.user['id'] ?? 0;
+      final rawId = widget.user['profileId'] ??
+          widget.user['id'] ??
+          widget.user['followedProfileId'];
+      final profileId = int.tryParse(rawId.toString()) ?? 0;
+      if (profileId == 0) {
+        throw Exception('Invalid profile id');
+      }
 
-      // เรียก API ดึงตารางยาของเขา
       final medicines = await _medicineApi.fetchProfileMedicineList(
         profileId: profileId,
       );
@@ -283,8 +310,6 @@ class _MonitoringDetailViewState extends State<_MonitoringDetailView> {
       setState(() {
         _isLoading = false;
         _errorMessage = null;
-        // TODO: แปลง MedicineItem เป็น Map สำหรับแสดงผล
-        // ปัจจุบันให้ใช้ชั่วคราว
         _medicines = medicines
             .map((med) => {
                   'id': med.id,
@@ -334,7 +359,6 @@ class _MonitoringDetailViewState extends State<_MonitoringDetailView> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Header ข้อมูลผู้ใช้
                         Row(
                           children: [
                             CircleAvatar(
@@ -385,8 +409,6 @@ class _MonitoringDetailViewState extends State<_MonitoringDetailView> {
                         const SizedBox(height: 12),
                         MedicineStepTimeline(currentStep: _currentStep),
                         const SizedBox(height: 24),
-
-                        // รายการยา
                         const Text(
                           'รายการยาของผู้ใช้',
                           style: TextStyle(
@@ -441,3 +463,16 @@ class _MonitoringDetailViewState extends State<_MonitoringDetailView> {
     );
   }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
