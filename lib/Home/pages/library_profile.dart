@@ -46,6 +46,18 @@ class _LibraryProfileState extends State<LibraryProfile> {
     return FileImage(File(imagePath));
   }
 
+  ImageProvider ProfileImageDefault(String path) {
+    if (path.isEmpty) {
+      return const AssetImage('assets/default_profile.png');
+    }
+
+    if (path.startsWith('/')) {
+      return NetworkImage('$_imageBaseUrl$path');
+    }
+
+    return const AssetImage('assets/default_profile.png');
+  }
+
   bool _loading = false;
 
   Future<void> _loadProfiles() async {
@@ -218,13 +230,11 @@ class _LibraryProfileState extends State<LibraryProfile> {
                                                             : null,
                                                       )
                                                     : CircleAvatar(
-                                                        radius: avatarSize,
-                                                        backgroundColor:
-                                                            const Color
-                                                                .fromARGB(255,
-                                                                224, 212, 233),
-                                                        child: const Icon(
-                                                            Icons.person),
+                                                        radius: 30,
+                                                        backgroundImage:
+                                                            ProfileImageDefault(
+                                                          profile.imagePath,
+                                                        ),
                                                       ),
 
                                                 title: Container(

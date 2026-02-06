@@ -17,7 +17,7 @@ class ProfileApi {
 
     _dio.options = BaseOptions(
       baseUrl: baseUrl, // ✅ เก็บไว้ที่นี่ที่เดียว
-      connectTimeout: const Duration(seconds: 10),
+      connectTimeout: const Duration(seconds: 30),
       sendTimeout: const Duration(seconds: 30),
       receiveTimeout: const Duration(seconds: 30),
       headers: {'Accept': 'application/json'},
