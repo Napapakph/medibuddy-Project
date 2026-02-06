@@ -175,8 +175,7 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
 
   void _toggleCommentPanel(int logId) {
     setState(() {
-      _expandedCommentLogId =
-          _expandedCommentLogId == logId ? null : logId;
+      _expandedCommentLogId = _expandedCommentLogId == logId ? null : logId;
     });
   }
 
@@ -486,7 +485,7 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
     final profileName = _profileName();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F2EA),
+      backgroundColor: const Color(0xFFB7DAFF),
       appBar: AppBar(
         backgroundColor: const Color(0xFFF6F2EA),
         elevation: 0,

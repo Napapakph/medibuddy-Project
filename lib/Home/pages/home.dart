@@ -350,6 +350,22 @@ class _Home extends State<Home> {
     return (safeHour * 60) + safeMinute;
   }
 
+  int? _tryTimeToMinutes(String value) {
+    final parts = value.split(':');
+    if (parts.length < 2) return null;
+    final hour = int.tryParse(parts[0]);
+    final minute = int.tryParse(parts[1]);
+    if (hour == null || minute == null) return null;
+    if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return null;
+    return (hour * 60) + minute;
+  }
+
+  bool _isPastDueTime(String time, int nowMinutes) {
+    final minutes = _tryTimeToMinutes(time);
+    if (minutes == null) return false;
+    return minutes < nowMinutes;
+  }
+
   void _toggleReminder(int index) {
     setState(() {
       _homeReminders[index].isTaken = !_homeReminders[index].isTaken;
@@ -363,54 +379,77 @@ class _Home extends State<Home> {
         isTaken ? const Color(0xFF1F497D) : const Color(0xFF9EC6F5);
     final timeColor =
         isTaken ? const Color(0xFF1F497D) : const Color(0xFF6FA8DC);
+    final now = DateTime.now();
+    final nowMinutes = (now.hour * 60) + now.minute;
+    final pastDue = _isPastDueTime(reminder.time, nowMinutes);
 
     return Row(
       children: [
         Expanded(
-          child: Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color:
-                    isTaken ? const Color(0xFF1F497D) : const Color(0xFFD6E3F3),
-                width: 1.5,
-              ),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        reminder.time,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: timeColor,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        reminder.name,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
+          child: Stack(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: isTaken
+                        ? const Color(0xFF1F497D)
+                        : const Color(0xFFD6E3F3),
+                    width: 1.5,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(
-                            Icons.circle,
-                            size: 6,
-                            color: Color(0xFF6FA8DC),
-                          ),
-                          const SizedBox(width: 6),
                           Text(
-                            reminder.meal,
+                            reminder.time,
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: timeColor,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            reminder.name,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.circle,
+                                size: 6,
+                                color: Color(0xFF6FA8DC),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                reminder.meal,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Color(0xFF6FA8DC),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(
+                      width: 56,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            reminder.pills,
                             style: const TextStyle(
                               fontSize: 12,
                               color: Color(0xFF6FA8DC),
@@ -418,26 +457,24 @@ class _Home extends State<Home> {
                           ),
                         ],
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-                SizedBox(
-                  width: 56,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        reminder.pills,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: Color(0xFF6FA8DC),
-                        ),
+              ),
+              if (pastDue)
+                Positioned.fill(
+                  child: IgnorePointer(
+                    ignoring: true,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        color: const Color.fromARGB(255, 159, 159, 183)
+                            .withOpacity(0.18),
                       ),
-                    ],
+                    ),
                   ),
                 ),
-              ],
-            ),
+            ],
           ),
         ),
       ],
@@ -490,6 +527,17 @@ class _Home extends State<Home> {
                 _profileImagePath ?? ''); // ✅ PROFILE_BIND: image
             final profileName =
                 _profileName ?? 'Profile'; // ✅ PROFILE_BIND: name
+            final nowMinutes = (now.hour * 60) + now.minute;
+            final uiReminders = List.of(_homeReminders);
+            final indexedReminders = uiReminders.asMap().entries.toList();
+            indexedReminders.sort((a, b) {
+              final aPast = _isPastDueTime(a.value.time, nowMinutes);
+              final bPast = _isPastDueTime(b.value.time, nowMinutes);
+              if (aPast == bPast) return a.key.compareTo(b.key);
+              return aPast ? 1 : -1;
+            });
+            final orderedIndices =
+                indexedReminders.map((entry) => entry.key).toList();
 
             return Align(
               child: Column(
@@ -568,10 +616,15 @@ class _Home extends State<Home> {
                                               child: Text('No reminders yet'),
                                             )
                                           : ListView.separated(
-                                              itemCount: _homeReminders.length,
+                                              itemCount: orderedIndices.length,
                                               separatorBuilder: (_, __) =>
                                                   const SizedBox(height: 12),
-                                              itemBuilder: _buildReminderCard,
+                                              itemBuilder: (context, index) {
+                                                final originalIndex =
+                                                    orderedIndices[index];
+                                                return _buildReminderCard(
+                                                    context, originalIndex);
+                                              },
                                             ),
                                 ),
                               ),
