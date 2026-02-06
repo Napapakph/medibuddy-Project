@@ -3,6 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:medibuddy/services/log_api.dart';
 import 'package:medibuddy/services/regimen_api.dart';
 import 'package:medibuddy/services/app_state.dart';
+import 'package:medibuddy/widgets/comment.dart';
 
 class ConfirmActionScreen extends StatefulWidget {
   final List<int> logIds;
@@ -26,6 +27,9 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
   List<Map<String, dynamic>> _logs = [];
   final Set<int> _submittingIds = <int>{};
   final Map<int, String> _responses = <int, String>{};
+  final Map<int, String> _notesByLogId = <int, String>{};
+  // int? _activeCommentLogId;
+  int? _expandedCommentLogId;
   final pid = AppState.instance.currentProfileId;
 
   @override
@@ -169,6 +173,50 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
     return NetworkImage(url);
   }
 
+  void _toggleCommentPanel(int logId) {
+    setState(() {
+      _expandedCommentLogId =
+          _expandedCommentLogId == logId ? null : logId;
+    });
+  }
+
+  /*
+  Future<void> _openCommentDialog({
+    required int logId,
+    required String medicineNickname,
+  }) async {
+    setState(() {
+      _activeCommentLogId = logId;
+    });
+
+    final initial = _notesByLogId[logId] ?? '';
+    await showDialog<void>(
+      context: context,
+      builder: (_) => CommentPopup(
+        title: 'คอมเมนต์',
+        medicineNickname: medicineNickname.isEmpty ? '-' : medicineNickname,
+        initialText: initial,
+        onCancel: () {},
+        onSubmit: (text) {
+          final trimmed = text.trim();
+          setState(() {
+            if (trimmed.isEmpty) {
+              _notesByLogId.remove(logId);
+            } else {
+              _notesByLogId[logId] = trimmed;
+            }
+          });
+        },
+      ),
+    );
+
+    if (!mounted) return;
+    setState(() {
+      _activeCommentLogId = null;
+    });
+  }
+  */
+
   Future<void> _submitResponse({
     required int logId,
     required String responseStatus,
@@ -179,11 +227,18 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
     });
 
     try {
-      final api = RegimenApiService();
+      final note = _notesByLogId[logId];
+      final api = LogApiService();
       await api.submitMedicationLogResponse(
         logId: logId,
         responseStatus: responseStatus,
+        note: note?.trim().isEmpty ?? true ? null : note?.trim(),
       );
+      // final api = RegimenApiService();
+      // await api.submitMedicationLogResponse(
+      //   logId: logId,
+      //   responseStatus: responseStatus,
+      // );
       if (!mounted) return;
       setState(() {
         _submittingIds.remove(logId);
@@ -237,6 +292,8 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
     final imagePath = pictureOption.isNotEmpty ? pictureOption : mediPicture;
     final imageProvider = _buildImageProvider(imagePath);
 
+    // final isActive = _activeCommentLogId == logId;
+    // final hasNote = (_notesByLogId[logId]?.trim().isNotEmpty ?? false);
     final isSubmitting = _submittingIds.contains(logId);
     final status = _responses[logId];
     final disabled = status != null || isSubmitting;
@@ -247,6 +304,10 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
+        // border: Border.all(
+        //   color: isActive ? const Color(0xFF1F497D) : Colors.transparent,
+        //   width: 2,
+        // ),
         boxShadow: const [
           BoxShadow(
             color: Color(0x12000000),
@@ -320,6 +381,27 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
                       ),
                     ),
                   ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              InkWell(
+                onTap: disabled ? null : () => _toggleCommentPanel(logId),
+                borderRadius: BorderRadius.circular(10),
+                child: Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: const Color(0xFFB7DAFF),
+                    ),
+                    color: Colors.white,
+                  ),
+                  child: Icon(
+                    Icons.chat_bubble_outline,
+                    color: const Color(0xFF1F497D),
+                    size: 18,
+                  ),
                 ),
               ),
             ],
@@ -470,7 +552,65 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
                                     const EdgeInsets.fromLTRB(16, 4, 16, 16),
                                 itemCount: _logs.length,
                                 itemBuilder: (context, index) {
-                                  return _buildLogCard(_logs[index]);
+                                  final log = _logs[index];
+                                  final logId = _readInt(log['logId']) ?? 0;
+                                  final medicineList =
+                                      _readMap(log['medicineList']);
+                                  final medicine =
+                                      _readMap(medicineList['medicine']);
+                                  final nickname =
+                                      _readString(medicineList['mediNickname']);
+                                  final tradeName =
+                                      _readString(medicine['mediTradeName']);
+                                  final thName =
+                                      _readString(medicine['mediThName']);
+                                  final enName =
+                                      _readString(medicine['mediEnName']);
+
+                                  final displayName = nickname.isNotEmpty
+                                      ? nickname
+                                      : (tradeName.isNotEmpty
+                                          ? tradeName
+                                          : (thName.isNotEmpty
+                                              ? thName
+                                              : (enName.isNotEmpty
+                                                  ? enName
+                                                  : '-')));
+
+                                  return Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      _buildLogCard(log),
+                                      if (_expandedCommentLogId == logId)
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                              top: 8, left: 12, right: 12),
+                                          child: CommentInline(
+                                            medicineNickname: displayName,
+                                            initialText:
+                                                _notesByLogId[logId] ?? '',
+                                            onChanged: (text) {
+                                              _notesByLogId[logId] = text;
+                                            },
+                                            onSubmit: () {
+                                              final text =
+                                                  _notesByLogId[logId] ?? '';
+                                              final trimmed = text.trim();
+                                              setState(() {
+                                                if (trimmed.isEmpty) {
+                                                  _notesByLogId.remove(logId);
+                                                } else {
+                                                  _notesByLogId[logId] =
+                                                      trimmed;
+                                                }
+                                                _expandedCommentLogId = null;
+                                              });
+                                            },
+                                          ),
+                                        ),
+                                    ],
+                                  );
                                 },
                               ),
                       ),

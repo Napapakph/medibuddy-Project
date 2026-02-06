@@ -131,6 +131,54 @@ class LogApiService {
     throw LogApiException('Invalid response format (expected object).');
   }
 
+  Future<void> submitMedicationLogResponse({
+    required int logId,
+    required String responseStatus,
+    String? note,
+  }) async {
+    if (logId <= 0) {
+      throw LogApiException('logId must be a positive integer.');
+    }
+
+    final token = _requireAccessToken();
+    final url =
+        Uri.parse('${_baseUrl()}/api/mobile/v1/medication-log/response');
+
+    final trimmedNote = note?.trim();
+    final body = <String, dynamic>{
+      'logId': logId,
+      'responseStatus': responseStatus,
+    };
+    if (trimmedNote != null && trimmedNote.isNotEmpty) {
+      body['note'] = trimmedNote;
+    }
+
+    debugPrint('medication-log response request=${jsonEncode(body)}');
+
+    final res = await _client.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode(body),
+    );
+
+    debugPrint('medication-log response status=${res.statusCode}');
+    debugPrint('medication-log response body length=${res.body.length}');
+
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      final parsed = _readErrorMessage(res.body);
+      final friendly = _friendlyAuthError(res.statusCode);
+      final message = parsed ?? friendly;
+      throw LogApiException(
+        message ?? 'Submit medication response failed (${res.statusCode}).',
+        statusCode: res.statusCode,
+      );
+    }
+  }
+
   String? _friendlyAuthError(int statusCode) {
     if (statusCode == 401) return 'Unauthorized. Please login again.';
     if (statusCode == 403) return 'Not allowed.';

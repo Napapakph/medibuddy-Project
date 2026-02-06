@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:medibuddy/services/app_state.dart';
 import 'package:medibuddy/services/log_api.dart';
+import 'package:medibuddy/widgets/comment.dart';
 
 /// ===============================
 /// Models
@@ -255,6 +256,26 @@ class _HistoryPageState extends State<HistoryPage> {
     setState(() {
       _filteredItems = _filterItems(_allItems);
     });
+  }
+
+  void _showNoteViewer(MedicineHistoryItem item) {
+    final note = item.note?.trim() ?? '';
+    if (note.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('ไม่มีคอมเมนต์')),
+      );
+      return;
+    }
+
+    final nickname = item.nickname.isNotEmpty ? item.nickname : item.titleTh;
+    showDialog<void>(
+      context: context,
+      builder: (_) => CommentViewer(
+        title: 'comment',
+        medicineNickname: nickname.isNotEmpty ? nickname : '-',
+        note: note,
+      ),
+    );
   }
 
   /// ===============================
@@ -701,12 +722,13 @@ class _HistoryPageState extends State<HistoryPage> {
                                                     _formatTime(it.takenAt),
                                                 item: it,
                                                 onTapComment: () {
-                                                  ScaffoldMessenger.of(context)
-                                                      .showSnackBar(
-                                                    const SnackBar(
-                                                        content: Text(
-                                                            'TODO: เพิ่มคอมเมนต์')),
-                                                  );
+                                                  _showNoteViewer(it);
+                                                  // ScaffoldMessenger.of(context)
+                                                  //     .showSnackBar(
+                                                  //   const SnackBar(
+                                                  //       content: Text(
+                                                  //           'TODO: เพิ่มคอมเมนต์')),
+                                                  // );
                                                 },
                                                 showTime: false,
                                               )),
