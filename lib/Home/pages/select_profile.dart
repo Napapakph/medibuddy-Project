@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:medibuddy/widgets/app_drawer.dart';
+import 'package:lottie/lottie.dart';
 import '../../services/profile_api.dart';
 import '../../Model/profile_model.dart';
-import 'home.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../services/app_state.dart';
@@ -86,8 +86,9 @@ class _SelectProfileState extends State<SelectProfile> {
         SnackBar(content: Text('โหลดโปรไฟล์ไม่สำเร็จ: $e')),
       );
     } finally {
-      if (!mounted) return;
-      setState(() => _loading = false);
+      if (mounted) {
+        setState(() => _loading = false);
+      }
     }
   }
 
@@ -130,8 +131,10 @@ class _SelectProfileState extends State<SelectProfile> {
       ),
       backgroundColor: const Color.fromARGB(255, 255, 255, 255),
       drawer: const AppDrawer(),
-      body: SafeArea(
-        child: LayoutBuilder(
+      body: Stack(
+        children: [
+          SafeArea(
+            child: LayoutBuilder(
           builder: (context, constraints) {
             final maxWidth = constraints.maxWidth;
             final maxHeight = constraints.maxHeight;
@@ -174,9 +177,7 @@ class _SelectProfileState extends State<SelectProfile> {
                       color: Colors.grey.shade100,
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: _loading
-                        ? const Center(child: CircularProgressIndicator())
-                        : profiles.isEmpty
+                    child: profiles.isEmpty
                             ? Center(
                                 child: Column(
                                   mainAxisSize: MainAxisSize.min,
@@ -204,7 +205,7 @@ class _SelectProfileState extends State<SelectProfile> {
 
                                       // ✅ จุดสำคัญ: บอก AppState ว่าเลือกโปรไฟล์ไหน
                                       AppState.instance.setSelectedProfile(
-                                        profileId: profile.profileId!,
+                                        profileId: profile.profileId,
                                         name: profile.username,
                                         imagePath: profile.imagePath,
                                       );
@@ -279,7 +280,7 @@ class _SelectProfileState extends State<SelectProfile> {
                             debugPrint(
                                 '================= check select ProfileID ==================');
                             debugPrint(
-                                'Selected Profile ID: ${selectedProfile!.profileId}');
+                                'Selected Profile ID: ${selectedProfile.profileId}');
                           }
                         : null,
                     style: ElevatedButton.styleFrom(
@@ -305,6 +306,36 @@ class _SelectProfileState extends State<SelectProfile> {
             );
           },
         ),
+      ),
+      if (_loading)
+        Positioned.fill(
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              const ModalBarrier(
+                dismissible: false,
+                color: Colors.black26,
+              ),
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Lottie.asset(
+                    'assets/lottie/loader_cat.json',
+                    width: 180,
+                    height: 180,
+                    repeat: true,
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'กำลังโหลด…',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        ],
       ),
     );
   }

@@ -8,6 +8,7 @@ import 'detail_medicine.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../../widgets/bottomBar.dart';
 import 'medication_plan_screen.dart';
+import 'package:lottie/lottie.dart';
 
 class ListMedicinePage extends StatefulWidget {
   final int profileId;
@@ -24,7 +25,7 @@ class ListMedicinePage extends StatefulWidget {
 class _ListMedicinePageState extends State<ListMedicinePage> {
   final MedicineApi _api = MedicineApi();
   final List<MedicineItem> _items = [];
-  bool _loading = true;
+  bool _isLoading = true;
   String _errorMessage = '';
 
   @override
@@ -52,7 +53,6 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
       final normalizedPath = p.startsWith('/') ? p : '/$p';
       return baseUri.resolve(normalizedPath).toString();
     } catch (e) {
-      debugPrint('❌ image url build failed: base=$base raw=$raw err=$e');
       return '';
     }
   }
@@ -84,7 +84,7 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
 
   Future<void> _loadMedicines() async {
     setState(() {
-      _loading = true;
+      _isLoading = true;
       _errorMessage = '';
     });
 
@@ -107,7 +107,7 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
     } finally {
       if (!mounted) return;
       setState(() {
-        _loading = false;
+        _isLoading = false;
       });
     }
   }
@@ -378,101 +378,136 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
       drawer: const AppDrawer(),
       backgroundColor: const Color(0xFFEFF6FF),
       body: SafeArea(
-        child: Column(
+        child: Stack(
           children: [
-            Expanded(
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final maxWidth = constraints.maxWidth;
-                  final containerWidth = maxWidth > 600 ? 500.0 : maxWidth;
+            Column(
+              children: [
+                Expanded(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final maxWidth = constraints.maxWidth;
+                      final containerWidth = maxWidth > 600 ? 500.0 : maxWidth;
 
-                  return Align(
-                    alignment: Alignment.topCenter,
-                    child: SizedBox(
-                      width: containerWidth,
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: maxWidth * 0.04,
-                          vertical: maxWidth * 0.03,
-                        ),
-                        child: Column(
-                          children: [
-                            Expanded(
-                              child: Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  borderRadius: BorderRadius.circular(16),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.08),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 4),
+                      return Align(
+                        alignment: Alignment.topCenter,
+                        child: SizedBox(
+                          width: containerWidth,
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(
+                              horizontal: maxWidth * 0.04,
+                              vertical: maxWidth * 0.03,
+                            ),
+                            child: Column(
+                              children: [
+                                Expanded(
+                                  child: Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(16),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.08),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ),
-                                child: _loading
-                                    ? const Center(
-                                        child: CircularProgressIndicator(),
-                                      )
-                                    : _items.isNotEmpty
-                                        ? ListView.builder(
-                                            itemCount: _items.length,
-                                            itemBuilder: _buildMedicineCard,
+                                    child: _isLoading
+                                        ? const Center(
+                                            child: CircularProgressIndicator(),
                                           )
-                                        : _errorMessage.isNotEmpty
-                                            ? Center(
-                                                child: Text(
-                                                  _friendlyErrorMessage(),
-                                                  textAlign: TextAlign.center,
-                                                  style: const TextStyle(
-                                                    color: Color(0xFF8893A0),
-                                                  ),
-                                                ),
+                                        : _items.isNotEmpty
+                                            ? ListView.builder(
+                                                itemCount: _items.length,
+                                                itemBuilder: _buildMedicineCard,
                                               )
-                                            : const Center(
-                                                child: Text(
-                                                  'ไม่พบรายการยา',
-                                                  style: TextStyle(
-                                                    color: Color(0xFF8893A0),
+                                            : _errorMessage.isNotEmpty
+                                                ? Center(
+                                                    child: Text(
+                                                      _friendlyErrorMessage(),
+                                                      textAlign:
+                                                          TextAlign.center,
+                                                      style: const TextStyle(
+                                                        color:
+                                                            Color(0xFF8893A0),
+                                                      ),
+                                                    ),
+                                                  )
+                                                : const Center(
+                                                    child: Text(
+                                                      'ไม่พบรายการยา',
+                                                      style: TextStyle(
+                                                        color:
+                                                            Color(0xFF8893A0),
+                                                      ),
+                                                    ),
                                                   ),
-                                                ),
-                                              ),
-                              ),
-                            ),
-                            SizedBox(height: maxWidth * 0.05),
-                            SizedBox(
-                              width: double.infinity,
-                              child: ElevatedButton.icon(
-                                onPressed: _addMedicine,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF1F497D),
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 14),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(24),
                                   ),
                                 ),
-                                icon: Icon(Icons.add_circle_outline_rounded,
-                                    color: Colors.white),
-                                label: const Text(
-                                  'เพิ่มยา',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
+                                SizedBox(height: maxWidth * 0.05),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: ElevatedButton.icon(
+                                    onPressed: _addMedicine,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFF1F497D),
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 14),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(24),
+                                      ),
+                                    ),
+                                    icon: Icon(Icons.add_circle_outline_rounded,
+                                        color: Colors.white),
+                                    label: const Text(
+                                      'เพิ่มยา',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              ),
+                              ],
                             ),
-                          ],
+                          ),
                         ),
-                      ),
-                    ),
-                  );
-                },
-              ),
+                      );
+                    },
+                  ),
+                ),
+                BottomBar(currentRoute: '/list_medicine'),
+              ],
             ),
-            BottomBar(currentRoute: '/list_medicine'),
+            if (_isLoading)
+              Positioned.fill(
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    const ModalBarrier(
+                      dismissible: false,
+                      color: Colors.black26,
+                    ),
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Lottie.asset(
+                          'assets/lottie/loader_cat.json',
+                          width: 180,
+                          height: 180,
+                          repeat: true,
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'กำลังโหลด…',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
           ],
         ),
       ),

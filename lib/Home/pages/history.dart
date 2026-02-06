@@ -1,6 +1,6 @@
 ﻿// history.dart
-import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:medibuddy/services/app_state.dart';
@@ -251,8 +251,9 @@ class _HistoryPageState extends State<HistoryPage> {
         _filteredItems = [];
       });
     } finally {
-      if (!mounted) return;
-      setState(() => _loading = false);
+      if (mounted) {
+        setState(() => _loading = false);
+      }
     }
   }
 
@@ -383,6 +384,7 @@ class _HistoryPageState extends State<HistoryPage> {
     return '$hh:$mm';
   }
 
+  // ignore: unused_element
   bool _matchesStatus(MedicineTakeStatus status) {
     switch (_filterValue) {
       case _filterTaken:
@@ -585,7 +587,9 @@ class _HistoryPageState extends State<HistoryPage> {
   /// UI
   /// ===============================
   static const _primary = Color(0xFF1F497D);
+  // ignore: unused_field
   static const _lightBlue = Color(0xFFB7DAFF);
+  // ignore: unused_field
   static const _bg = Color(0xFFF3F6FB);
 
   String _formatDateRangeForPdf(DateTime start, DateTime end) {
@@ -673,133 +677,135 @@ class _HistoryPageState extends State<HistoryPage> {
           ),
         ],
       ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Toolbar: filter + search
-            Container(
-              color: _primary,
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-              child: Row(
-                children: [
-                  // TODO: Removed list icon per requirement (can re-enable later)
-                  // const Icon(Icons.format_list_bulleted, color: Colors.white),
-                  // const SizedBox(width: 8),
-                  // TODO: Action/status filter dropdown disabled (will re-enable later).
-                  // Container(
-                  //   padding: const EdgeInsets.symmetric(horizontal: 10),
-                  //   decoration: BoxDecoration(
-                  //     color: Colors.white,
-                  //     borderRadius: BorderRadius.circular(12),
-                  //   ),
-                  //   child: DropdownButtonHideUnderline(
-                  //     child: DropdownButton<String>(
-                  //       value: _filterValue,
-                  //       items: const [
-                  //         DropdownMenuItem(
-                  //             value: _filterAll, child: Text(_filterAll)),
-                  //         DropdownMenuItem(
-                  //             value: _filterTaken, child: Text(_filterTaken)),
-                  //         DropdownMenuItem(
-                  //             value: _filterSkip, child: Text(_filterSkip)),
-                  //         DropdownMenuItem(
-                  //             value: _filterSnooze, child: Text(_filterSnooze)),
-                  //         DropdownMenuItem(
-                  //             value: _filterPending,
-                  //             child: Text(_filterPending)),
-                  //       ],
-                  //       onChanged: (v) {
-                  //         if (v == null) return;
-                  //         _filterValue = v;
-                  //         _applyFilters();
-                  //       },
-                  //     ),
-                  //   ),
-                  // ),
-                  // const SizedBox(width: 10),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: _searchMode,
-                        items: const [
-                          DropdownMenuItem(
-                              value: _searchTrade, child: Text(_searchTrade)),
-                          DropdownMenuItem(
-                              value: _searchTh, child: Text(_searchTh)),
-                          DropdownMenuItem(
-                              value: _searchEn, child: Text(_searchEn)),
-                          DropdownMenuItem(
-                              value: _searchNickname,
-                              child: Text(_searchNickname)),
-                        ],
-                        onChanged: (v) {
-                          if (v == null) return;
-                          _searchMode = v;
-                          _applyFilters();
-                        },
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Container(
-                      height: 40,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: TextField(
-                        controller: _searchCtrl,
-                        onChanged: (_) => _applyFilters(),
-                        decoration: const InputDecoration(
-                          hintText: 'ค้นหา...',
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 10),
+      body: Stack(
+        children: [
+          SafeArea(
+            child: Column(
+              children: [
+                // Toolbar: filter + search
+                Container(
+                  color: _primary,
+                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+                  child: Row(
+                    children: [
+                      // TODO: Removed list icon per requirement (can re-enable later)
+                      // const Icon(Icons.format_list_bulleted, color: Colors.white),
+                      // const SizedBox(width: 8),
+                      // TODO: Action/status filter dropdown disabled (will re-enable later).
+                      // Container(
+                      //   padding: const EdgeInsets.symmetric(horizontal: 10),
+                      //   decoration: BoxDecoration(
+                      //     color: Colors.white,
+                      //     borderRadius: BorderRadius.circular(12),
+                      //   ),
+                      //   child: DropdownButtonHideUnderline(
+                      //     child: DropdownButton<String>(
+                      //       value: _filterValue,
+                      //       items: const [
+                      //         DropdownMenuItem(
+                      //             value: _filterAll, child: Text(_filterAll)),
+                      //         DropdownMenuItem(
+                      //             value: _filterTaken, child: Text(_filterTaken)),
+                      //         DropdownMenuItem(
+                      //             value: _filterSkip, child: Text(_filterSkip)),
+                      //         DropdownMenuItem(
+                      //             value: _filterSnooze, child: Text(_filterSnooze)),
+                      //         DropdownMenuItem(
+                      //             value: _filterPending,
+                      //             child: Text(_filterPending)),
+                      //       ],
+                      //       onChanged: (v) {
+                      //         if (v == null) return;
+                      //         _filterValue = v;
+                      //         _applyFilters();
+                      //       },
+                      //     ),
+                      //   ),
+                      // ),
+                      // const SizedBox(width: 10),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: _searchMode,
+                            items: const [
+                              DropdownMenuItem(
+                                  value: _searchTrade,
+                                  child: Text(_searchTrade)),
+                              DropdownMenuItem(
+                                  value: _searchTh, child: Text(_searchTh)),
+                              DropdownMenuItem(
+                                  value: _searchEn, child: Text(_searchEn)),
+                              DropdownMenuItem(
+                                  value: _searchNickname,
+                                  child: Text(_searchNickname)),
+                            ],
+                            onChanged: (v) {
+                              if (v == null) return;
+                              _searchMode = v;
+                              _applyFilters();
+                            },
+                          ),
                         ),
                       ),
-                    ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Container(
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: TextField(
+                            controller: _searchCtrl,
+                            onChanged: (_) => _applyFilters(),
+                            decoration: const InputDecoration(
+                              hintText: 'ค้นหา...',
+                              border: InputBorder.none,
+                              contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 10),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            ),
+                ),
 
-            // Date range row
-            Container(
-              padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _DateField(
-                      label: '',
-                      value: DateFormat('d MMMM', 'th_TH').format(_startDate),
-                      onTap: () => _pickDate(isStart: true),
-                    ),
+                // Date range row
+                Container(
+                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _DateField(
+                          label: '',
+                          value:
+                              DateFormat('d MMMM', 'th_TH').format(_startDate),
+                          onTap: () => _pickDate(isStart: true),
+                        ),
+                      ),
+                      const SizedBox(width: 5),
+                      Text('ถึง'),
+                      const SizedBox(width: 5),
+                      Expanded(
+                        child: _DateField(
+                          label: '',
+                          value: DateFormat('d MMMM', 'th_TH').format(_endDate),
+                          onTap: () => _pickDate(isStart: false),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 5),
-                  Text('ถึง'),
-                  const SizedBox(width: 5),
-                  Expanded(
-                    child: _DateField(
-                      label: '',
-                      value: DateFormat('d MMMM', 'th_TH').format(_endDate),
-                      onTap: () => _pickDate(isStart: false),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+                ),
 
-            // List
-            Expanded(
-              child: _loading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _errorMessage.isNotEmpty
+                // List
+                Expanded(
+                  child: _errorMessage.isNotEmpty
                       ? Center(
                           child: Text(
                             _errorMessage,
@@ -902,9 +908,39 @@ class _HistoryPageState extends State<HistoryPage> {
                                 );
                               },
                             ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+          if (_loading)
+            Positioned.fill(
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  const ModalBarrier(
+                    dismissible: false,
+                    color: Colors.black26,
+                  ),
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Lottie.asset(
+                        'assets/lottie/loader_cat.json',
+                        width: 180,
+                        height: 180,
+                        repeat: true,
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'กำลังโหลด…',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+        ],
       ),
     );
   }

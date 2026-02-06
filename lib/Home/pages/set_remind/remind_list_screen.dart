@@ -4,6 +4,7 @@ import 'package:medibuddy/Model/medicine_regimen_model.dart';
 import 'package:medibuddy/services/regimen_api.dart';
 import 'setFuctionRemind.dart';
 import 'setRemind_screen.dart';
+import 'package:lottie/lottie.dart';
 
 class _ReminderPlanStore {
   static final Map<String, List<ReminderPlan>> _plansByMedicine = {};
@@ -853,13 +854,30 @@ class _RemindListScreenState extends State<RemindListScreen> {
             ),
             if (_loading)
               Positioned.fill(
-                child: IgnorePointer(
-                  child: Container(
-                    color: Colors.transparent,
-                    child: const Center(
-                      child: CircularProgressIndicator(),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    const ModalBarrier(
+                      dismissible: false,
+                      color: Colors.black26,
                     ),
-                  ),
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Lottie.asset(
+                          'assets/lottie/loader_cat.json',
+                          width: 180,
+                          height: 180,
+                          repeat: true,
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'กำลังโหลด…',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
           ],

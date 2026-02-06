@@ -5,6 +5,7 @@ import 'package:medibuddy/services/medicine_api.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'summary_medicine.dart';
 import 'request_medicine.dart';
+import 'package:lottie/lottie.dart';
 
 class AddMedicinePage extends StatefulWidget {
   final MedicineDraft draft;
@@ -285,209 +286,244 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
       ),
       backgroundColor: const Color.fromARGB(255, 227, 242, 255),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const MedicineStepTimeline(currentStep: 3),
-              const SizedBox(height: 16),
+        child: Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const MedicineStepTimeline(currentStep: 3),
+                  const SizedBox(height: 16),
 
-              Expanded(
-                child: Builder(
-                  builder: (context) {
-                    if (_loading) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-
-                    if (_errorMessage.isNotEmpty) {
-                      return Center(
-                        child: Text(
-                          _errorMessage,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(color: Color(0xFF7A869A)),
-                        ),
-                      );
-                    }
-
-                    final filtered = _filteredItems();
-                    final hasAny = filtered.isNotEmpty;
-                    final exact = _hasExactMatch(filtered);
-
-                    // เงื่อนไขตามที่เดียร์ต้องการ:
-                    // - ถ้าไม่มีชื่อใกล้เคียงเลย: แสดงแค่แมว (no list)
-                    // - ถ้ามี list: แสดง list ด้านบน + แมวด้านล่าง
-                    // - ถ้าค้นหาแล้ว "ไม่ตรงชื่อ" (ไม่มี exact match): ให้เห็นโซนส่งคำร้องชัด ๆ
-                    final onlyHelper = !hasAny;
-                    final showRequestHint = !exact || !hasAny;
-
-                    return Column(
-                      children: [
-                        // ===== โซนบน: list =====
-                        if (!onlyHelper)
-                          Expanded(
-                            child: ListView.builder(
-                              itemCount: filtered.length,
-                              itemBuilder: (context, index) {
-                                final item = filtered[index];
-                                final isSelected =
-                                    _selectedItem?.mediId == item.mediId;
-
-                                final imagePath =
-                                    toFullImageUrl(item.mediPicture ?? '');
-
-                                return GestureDetector(
-                                  onTap: () {
-                                    setState(() {
-                                      _selectedItem = item;
-                                      debugPrint(
-                                          'Medi ID: ${item.mediId}, Name: ${item.displayOfficialName}');
-                                    });
-                                  },
-                                  child: Container(
-                                    margin: const EdgeInsets.only(bottom: 12),
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(16),
-                                      border: Border.all(
-                                        color: isSelected
-                                            ? const Color(0xFF1F497D)
-                                            : const Color(0xFFE0E6EF),
-                                        width: isSelected ? 2 : 1,
-                                      ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withOpacity(0.05),
-                                          blurRadius: 6,
-                                          offset: const Offset(0, 3),
-                                        ),
-                                      ],
-                                    ),
-                                    child: Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Container(
-                                          width: 56,
-                                          height: 56,
-                                          decoration: BoxDecoration(
-                                            color: const Color(0xFFE9EEF6),
-                                            borderRadius:
-                                                BorderRadius.circular(12),
-                                          ),
-                                          child: imagePath.isEmpty
-                                              ? const Icon(
-                                                  Icons.medication,
-                                                  color: Color(0xFF1F497D),
-                                                )
-                                              : ClipRRect(
-                                                  borderRadius:
-                                                      BorderRadius.circular(12),
-                                                  child: Image.network(
-                                                    imagePath,
-                                                    fit: BoxFit.cover,
-                                                    loadingBuilder: (context,
-                                                        child, progress) {
-                                                      if (progress == null) {
-                                                        return child;
-                                                      }
-                                                      return const Center(
-                                                        child: SizedBox(
-                                                          width: 20,
-                                                          height: 20,
-                                                          child:
-                                                              CircularProgressIndicator(
-                                                                  strokeWidth:
-                                                                      2),
-                                                        ),
-                                                      );
-                                                    },
-                                                    errorBuilder: (context,
-                                                        error, stackTrace) {
-                                                      debugPrint(
-                                                          '❌ Image load failed: $imagePath');
-                                                      return const Icon(
-                                                        Icons.medication,
-                                                        color:
-                                                            Color(0xFF1F497D),
-                                                      );
-                                                    },
-                                                  ),
-                                                ),
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                'ชื่อสามัญ : ${(item.mediEnName ?? '').isNotEmpty ? item.mediEnName : '-'}',
-                                                style: const TextStyle(
-                                                  fontSize: 13,
-                                                  fontWeight: FontWeight.w600,
-                                                ),
-                                              ),
-                                              const SizedBox(height: 4),
-                                              Text(
-                                                'ชื่อการค้า : ${(item.mediTradeName ?? '').isNotEmpty ? item.mediTradeName : '-'}',
-                                                style: const TextStyle(
-                                                  fontSize: 12,
-                                                  color: Color(0xFF5E6C84),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        if (isSelected)
-                                          const Icon(
-                                            Icons.check_circle,
-                                            color: Color(0xFF1F497D),
-                                          ),
-                                      ],
-                                    ),
-                                  ),
-                                );
-                              },
+                  Expanded(
+                    child: Builder(
+                      builder: (context) {
+                        if (_errorMessage.isNotEmpty) {
+                          return Center(
+                            child: Text(
+                              _errorMessage,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(color: Color(0xFF7A869A)),
                             ),
-                          ),
+                          );
+                        }
 
-                        // ===== โซนล่าง: แมว + บอลลูนกดส่งคำร้อง =====
-                        _buildHelperZone(
-                          onlyHelper: onlyHelper,
-                          showRequestHint: showRequestHint,
-                        ),
-                      ],
-                    );
-                  },
-                ),
-              ),
+                        final filtered = _filteredItems();
+                        final hasAny = filtered.isNotEmpty;
+                        final exact = _hasExactMatch(filtered);
 
-              const SizedBox(height: 12),
+                        // เงื่อนไขตามที่เดียร์ต้องการ:
+                        // - ถ้าไม่มีชื่อใกล้เคียงเลย: แสดงแค่แมว (no list)
+                        // - ถ้ามี list: แสดง list ด้านบน + แมวด้านล่าง
+                        // - ถ้าค้นหาแล้ว "ไม่ตรงชื่อ" (ไม่มี exact match): ให้เห็นโซนส่งคำร้องชัด ๆ
+                        final onlyHelper = !hasAny;
+                        final showRequestHint = !exact || !hasAny;
 
-              // ปุ่มยืนยัน: ตามเดิม (ต้องเลือก item ก่อน)
-              // หมายเหตุ: ถ้าเดียร์อยากให้ "ไม่ผูก" แล้วไปต่อได้ด้วย
-              // ค่อยเพิ่ม toggle แยก (เดี๋ยวฉันทำให้ได้)
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _selectedItem == null ? null : _goNext,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1F497D),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
+                        return Column(
+                          children: [
+                            // ===== โซนบน: list =====
+                            if (!onlyHelper)
+                              Expanded(
+                                child: ListView.builder(
+                                  itemCount: filtered.length,
+                                  itemBuilder: (context, index) {
+                                    final item = filtered[index];
+                                    final isSelected =
+                                        _selectedItem?.mediId == item.mediId;
+
+                                    final imagePath =
+                                        toFullImageUrl(item.mediPicture ?? '');
+
+                                    return GestureDetector(
+                                      onTap: () {
+                                        setState(() {
+                                          _selectedItem = item;
+                                          debugPrint(
+                                              'Medi ID: ${item.mediId}, Name: ${item.displayOfficialName}');
+                                        });
+                                      },
+                                      child: Container(
+                                        margin:
+                                            const EdgeInsets.only(bottom: 12),
+                                        padding: const EdgeInsets.all(12),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius:
+                                              BorderRadius.circular(16),
+                                          border: Border.all(
+                                            color: isSelected
+                                                ? const Color(0xFF1F497D)
+                                                : const Color(0xFFE0E6EF),
+                                            width: isSelected ? 2 : 1,
+                                          ),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Colors.black
+                                                  .withOpacity(0.05),
+                                              blurRadius: 6,
+                                              offset: const Offset(0, 3),
+                                            ),
+                                          ],
+                                        ),
+                                        child: Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Container(
+                                              width: 56,
+                                              height: 56,
+                                              decoration: BoxDecoration(
+                                                color: const Color(0xFFE9EEF6),
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                              ),
+                                              child: imagePath.isEmpty
+                                                  ? const Icon(
+                                                      Icons.medication,
+                                                      color: Color(0xFF1F497D),
+                                                    )
+                                                  : ClipRRect(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              12),
+                                                      child: Image.network(
+                                                        imagePath,
+                                                        fit: BoxFit.cover,
+                                                        loadingBuilder:
+                                                            (context, child,
+                                                                progress) {
+                                                          if (progress ==
+                                                              null) {
+                                                            return child;
+                                                          }
+                                                          return const Center(
+                                                            child: SizedBox(
+                                                              width: 20,
+                                                              height: 20,
+                                                              child:
+                                                                  CircularProgressIndicator(
+                                                                      strokeWidth:
+                                                                          2),
+                                                            ),
+                                                          );
+                                                        },
+                                                        errorBuilder: (context,
+                                                            error, stackTrace) {
+                                                          debugPrint(
+                                                              '❌ Image load failed: $imagePath');
+                                                          return const Icon(
+                                                            Icons.medication,
+                                                            color: Color(
+                                                                0xFF1F497D),
+                                                          );
+                                                        },
+                                                      ),
+                                                    ),
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    'ชื่อสามัญ : ${(item.mediEnName ?? '').isNotEmpty ? item.mediEnName : '-'}',
+                                                    style: const TextStyle(
+                                                      fontSize: 13,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(height: 4),
+                                                  Text(
+                                                    'ชื่อการค้า : ${(item.mediTradeName ?? '').isNotEmpty ? item.mediTradeName : '-'}',
+                                                    style: const TextStyle(
+                                                      fontSize: 12,
+                                                      color: Color(0xFF5E6C84),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            if (isSelected)
+                                              const Icon(
+                                                Icons.check_circle,
+                                                color: Color(0xFF1F497D),
+                                              ),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+
+                            // ===== โซนล่าง: แมว + บอลลูนกดส่งคำร้อง =====
+                            _buildHelperZone(
+                              onlyHelper: onlyHelper,
+                              showRequestHint: showRequestHint,
+                            ),
+                          ],
+                        );
+                      },
                     ),
                   ),
-                  child: const Text(
-                    'ยืนยัน',
-                    style: TextStyle(color: Colors.white, fontSize: 16),
+
+                  const SizedBox(height: 12),
+
+                  // ปุ่มยืนยัน: ตามเดิม (ต้องเลือก item ก่อน)
+                  // หมายเหตุ: ถ้าเดียร์อยากให้ "ไม่ผูก" แล้วไปต่อได้ด้วย
+                  // ค่อยเพิ่ม toggle แยก (เดี๋ยวฉันทำให้ได้)
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _selectedItem == null ? null : _goNext,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF1F497D),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                      ),
+                      child: const Text(
+                        'ยืนยัน',
+                        style: TextStyle(color: Colors.white, fontSize: 16),
+                      ),
+                    ),
                   ),
+                ],
+              ),
+            ),
+            if (_loading)
+              Positioned.fill(
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    const ModalBarrier(
+                      dismissible: false,
+                      color: Colors.black26,
+                    ),
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Lottie.asset(
+                          'assets/lottie/loader_cat.json',
+                          width: 180,
+                          height: 180,
+                          repeat: true,
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'กำลังโหลด…',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
+          ],
         ),
       ),
     );

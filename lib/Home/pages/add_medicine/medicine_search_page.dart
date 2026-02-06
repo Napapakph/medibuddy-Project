@@ -3,6 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:medibuddy/Model/medicine_model.dart';
 import 'package:medibuddy/services/medicine_api.dart';
 import '../../../services/app_state.dart';
+import 'package:lottie/lottie.dart';
 
 /// หน้า "ค้นหาข้อมูลยา"
 /// ✅ เปิดหน้ามา: โหลด list ก่อนทันที
@@ -315,15 +316,43 @@ class _MedicineSearchPageState extends State<MedicineSearchPage> {
       ),
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Column(
-            children: [
-              _buildSearchBar(),
-              const SizedBox(height: 12),
-              Expanded(child: _buildBody()),
-            ],
-          ),
+        child: Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              child: Column(
+                children: [
+                  _buildSearchBar(),
+                  const SizedBox(height: 12),
+                  Expanded(child: _buildBody()),
+                ],
+              ),
+            ),
+            if (_loading)
+              Positioned.fill(
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    const ModalBarrier(
+                        dismissible: false, color: Colors.black26),
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Lottie.asset(
+                          'assets/lottie/loader_cat.json',
+                          width: 180,
+                          height: 180,
+                          repeat: true,
+                        ),
+                        const SizedBox(height: 8),
+                        const Text('กำลังโหลด…',
+                            style: TextStyle(color: Colors.white)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+          ],
         ),
       ),
     );

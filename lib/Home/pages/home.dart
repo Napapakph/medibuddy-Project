@@ -1,13 +1,13 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:lottie/lottie.dart';
 import 'package:medibuddy/widgets/app_drawer.dart';
 import 'package:medibuddy/services/regimen_api.dart';
 import '../../Model/profile_model.dart';
 import '../../Model/medicine_regimen_model.dart';
 import 'select_profile.dart';
 import '../../services/app_state.dart';
-import '../../Home/pages/select_profile.dart';
 import '../../widgets/bottomBar.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -27,6 +27,7 @@ class _Home extends State<Home> {
   String _imageBaseUrl = '';
   final RegimenApiService _regimenApi = RegimenApiService();
   bool _loading = false;
+  bool _isLoading = false;
   String? _error;
   List<_MedicineReminder> _homeReminders = [];
   String? _profileName; // ✅ PROFILE_BIND: resolved name
@@ -213,6 +214,7 @@ class _Home extends State<Home> {
         setState(() {
           _error = message;
           _loading = false;
+          _isLoading = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text(message)),
@@ -227,6 +229,9 @@ class _Home extends State<Home> {
       setState(() {
         _loading = true;
         _loadingPageIndex = pageIndex;
+        if (pageIndex == _currentPageIndex) {
+          _isLoading = true;
+        }
         _error = null;
       });
     }
@@ -266,6 +271,7 @@ class _Home extends State<Home> {
         setState(() {
           _loading = false;
           _loadingPageIndex = null;
+          _isLoading = false;
         });
       }
     }
@@ -653,123 +659,123 @@ class _Home extends State<Home> {
       ),
       drawer: const AppDrawer(),
       backgroundColor: const Color.fromARGB(255, 255, 255, 255),
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final maxWidth = constraints.maxWidth;
-            final maxHeight = constraints.maxHeight;
+      body: Stack(
+        children: [
+          SafeArea(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final maxWidth = constraints.maxWidth;
+                final maxHeight = constraints.maxHeight;
 
-            //ถ้าจอกว้างแบบแท็บเล็ต
-            final bool isTablet = maxWidth > 600;
+                //ถ้าจอกว้างแบบแท็บเล็ต
+                final bool isTablet = maxWidth > 600;
 
-            //จำกัดความกว้างสูงสุดของหน้าจอ
-            final double containerWidth = isTablet ? 500 : maxWidth;
-            // ใช้ DateTime + intl ได้เลย เพราะ main() init ไว้แล้ว
-            final displayedDate = _dateForIndex(_currentPageIndex);
-            final buddhistYear = displayedDate.year + 543;
-            final dayMonth = DateFormat('d MMMM').format(displayedDate);
-            final thaiBuddhistDate = '$dayMonth $buddhistYear';
-            final profileImage = _buildProfileImage(
-                _profileImagePath ?? ''); // ✅ PROFILE_BIND: image
-            final profileName =
-                _profileName ?? 'Profile'; // ✅ PROFILE_BIND: name
+                //จำกัดความกว้างสูงสุดของหน้าจอ
+                final double containerWidth = isTablet ? 500 : maxWidth;
+                // ใช้ DateTime + intl ได้เลย เพราะ main() init ไว้แล้ว
+                final displayedDate = _dateForIndex(_currentPageIndex);
+                final buddhistYear = displayedDate.year + 543;
+                final dayMonth = DateFormat('d MMMM').format(displayedDate);
+                final thaiBuddhistDate = '$dayMonth $buddhistYear';
+                final profileImage = _buildProfileImage(
+                    _profileImagePath ?? ''); // ✅ PROFILE_BIND: image
+                final profileName =
+                    _profileName ?? 'Profile'; // ✅ PROFILE_BIND: name
 
-            return Align(
-              child: Column(
-                children: [
-                  Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.only(bottom: maxHeight * 0.03),
-                    color: const Color(0xFFB7DAFF), // สีฟ้าของเดียร์
-                    child: Column(
-                      children: [
-                        InkWell(
-                          onTap: () => _pickDisplayedDate(displayedDate),
-                          child: Text(
-                            thaiBuddhistDate,
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: Color(0xFF1F497D),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Expanded(
-                    child: Align(
-                      alignment: Alignment.topCenter,
-                      child: SizedBox(
-                        width: containerWidth,
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: maxWidth * 0.05,
-                            vertical: maxHeight * 0.02,
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              InkWell(
-                                borderRadius: BorderRadius.circular(40),
-                                onTap: () {
-                                  Navigator.pushReplacement(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => const SelectProfile(),
-                                    ),
-                                  );
-                                },
-                                child: Row(
-                                  children: [
-                                    CircleAvatar(
-                                      radius: 22,
-                                      backgroundImage: profileImage,
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Text(
-                                      profileName,
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                        color: Color(0xFF1F497D),
-                                      ),
-                                    ),
-                                  ],
+                return Align(
+                  child: Column(
+                    children: [
+                      Container(
+                        width: double.infinity,
+                        padding: EdgeInsets.only(bottom: maxHeight * 0.03),
+                        color: const Color(0xFFB7DAFF), // สีฟ้าของเดียร์
+                        child: Column(
+                          children: [
+                            InkWell(
+                              onTap: () => _pickDisplayedDate(displayedDate),
+                              child: Text(
+                                thaiBuddhistDate,
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  color: Color(0xFF1F497D),
                                 ),
                               ),
-                              SizedBox(height: maxHeight * 0.02),
-                              Expanded(
-                                child: PageView.builder(
-                                  controller: _pageController,
-                                  itemCount: _maxForwardDays + 1,
-                                  onPageChanged: _handlePageChanged,
-                                  itemBuilder: (context, pageIndex) {
-                                    final pageDate = _dateForIndex(pageIndex);
-                                    final reminders =
-                                        _remindersByIndex[pageIndex] ??
-                                            (pageIndex == _currentPageIndex
-                                                ? _homeReminders
-                                                : <_MedicineReminder>[]);
-                                    final orderedReminders =
-                                        _orderedReminders(reminders, pageDate);
-                                    final now = DateTime.now();
-                                    final nowMinutes =
-                                        (now.hour * 60) + now.minute;
-                                    final isLoading = _loading &&
-                                        _loadingPageIndex == pageIndex;
+                            ),
+                          ],
+                        ),
+                      ),
+                      Expanded(
+                        child: Align(
+                          alignment: Alignment.topCenter,
+                          child: SizedBox(
+                            width: containerWidth,
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: maxWidth * 0.05,
+                                vertical: maxHeight * 0.02,
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  InkWell(
+                                    borderRadius: BorderRadius.circular(40),
+                                    onTap: () {
+                                      Navigator.pushReplacement(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => const SelectProfile(),
+                                        ),
+                                      );
+                                    },
+                                    child: Row(
+                                      children: [
+                                        CircleAvatar(
+                                          radius: 22,
+                                          backgroundImage: profileImage,
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Text(
+                                          profileName,
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
+                                            color: Color(0xFF1F497D),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  SizedBox(height: maxHeight * 0.02),
+                                  Expanded(
+                                    child: PageView.builder(
+                                      controller: _pageController,
+                                      itemCount: _maxForwardDays + 1,
+                                      onPageChanged: _handlePageChanged,
+                                      itemBuilder: (context, pageIndex) {
+                                        final pageDate =
+                                            _dateForIndex(pageIndex);
+                                        final reminders =
+                                            _remindersByIndex[pageIndex] ??
+                                                (pageIndex == _currentPageIndex
+                                                    ? _homeReminders
+                                                    : <_MedicineReminder>[]);
+                                        final orderedReminders =
+                                            _orderedReminders(
+                                                reminders, pageDate);
+                                        final now = DateTime.now();
+                                        final nowMinutes =
+                                            (now.hour * 60) + now.minute;
+                                        final isLoading = _loading &&
+                                            _loadingPageIndex == pageIndex;
 
-                                    return Container(
-                                      padding: const EdgeInsets.all(12),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFFE8F2FF),
-                                        borderRadius: BorderRadius.circular(20),
-                                      ),
-                                      child: isLoading
-                                          ? const Center(
-                                              child:
-                                                  CircularProgressIndicator(),
-                                            )
-                                          : reminders.isEmpty
+                                        return Container(
+                                          padding: const EdgeInsets.all(12),
+                                          decoration: BoxDecoration(
+                                            color: const Color(0xFFE8F2FF),
+                                            borderRadius:
+                                                BorderRadius.circular(20),
+                                          ),
+                                          child: reminders.isEmpty
                                               ? const Center(
                                                   child:
                                                       Text('No reminders yet'),
@@ -797,24 +803,54 @@ class _Home extends State<Home> {
                                                     );
                                                   },
                                                 ),
-                                    );
-                                  },
-                                ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ],
+                            ),
                           ),
                         ),
                       ),
-                    ),
+                      BottomBar(
+                        currentRoute: '/home',
+                      ),
+                    ],
                   ),
-                  BottomBar(
-                    currentRoute: '/home',
+                );
+              },
+            ),
+          ),
+          if (_isLoading)
+            Positioned.fill(
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  const ModalBarrier(
+                    dismissible: false,
+                    color: Colors.black26,
+                  ),
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Lottie.asset(
+                        'assets/lottie/loader_cat.json',
+                        width: 180,
+                        height: 180,
+                        repeat: true,
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'กำลังโหลด…',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            );
-          },
-        ),
+            ),
+        ],
       ),
     );
   }
