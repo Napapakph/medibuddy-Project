@@ -348,6 +348,11 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
     if (raw is int) return raw;
     return int.tryParse(raw.toString()) ?? 0;
   }
+
+  int _readProfileId(Map<String, dynamic> profile) {
+    final raw = profile['profileId'] ?? profile['id'] ?? profile['profile_id'];
+    return _asProfileId(raw);
+  }
 // โหลดโปรไฟล์ของผู้ใช้ปัจจุบัน
   Future<void> _loadMyProfiles() async {
     final accessToken = AuthSession.accessToken;
@@ -368,7 +373,12 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
       _myProfiles = profiles;
       _selectedProfileIds.clear();
       if (_myProfiles.isNotEmpty) {
-        _selectedProfileIds.add(_asProfileId(_myProfiles.first['id']));
+        for (final profile in _myProfiles) {
+          final id = _readProfileId(profile);
+          if (id > 0) {
+            _selectedProfileIds.add(id);
+          }
+        }
       }
       _loadError = null;
     } catch (e) {
@@ -383,6 +393,7 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
   }
 
   void _toggleProfile(int id, bool selected) {
+    if (id <= 0) return;
     setState(() {
       if (selected) {
         _selectedProfileIds.add(id);
@@ -393,7 +404,9 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
   }
 
   Future<void> _confirmInvite() async {
-    if (_selectedProfileIds.isEmpty) {
+    final profileIds =
+        _selectedProfileIds.where((id) => id > 0).toList(growable: false);
+    if (profileIds.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('กรุณาเลือกอย่างน้อย 1 โปรไฟล์')),
       );
@@ -413,7 +426,7 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
         accessToken: accessToken,
         email: email,
         userId: userId > 0 ? userId : null,
-        profileIds: _selectedProfileIds.toList(),
+        profileIds: profileIds,
       );
     } catch (e) {
       if (!mounted) return;
@@ -431,10 +444,11 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
   }
 
   Widget _buildProfileRow(Map<String, dynamic> profile) {
-    final id = _asProfileId(profile['id']);
+    final id = _readProfileId(profile);
     final name = profile['profileName'] ?? 'ไม่ระบุชื่อ';
     final avatarUrl = profile['profilePicture'] as String?;
-    final isSelected = _selectedProfileIds.contains(id);
+    final isSelectable = id > 0;
+    final isSelected = isSelectable && _selectedProfileIds.contains(id);
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
@@ -447,7 +461,8 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
               borderRadius: BorderRadius.circular(4),
             ),
             side: const BorderSide(color: Color(0xFF7FA6D6), width: 1.4),
-            onChanged: (value) => _toggleProfile(id, value ?? false),
+            onChanged:
+                isSelectable ? (value) => _toggleProfile(id, value ?? false) : null,
           ),
           CircleAvatar(
             radius: 22,
@@ -658,4 +673,3 @@ class _TrianglePainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
-
