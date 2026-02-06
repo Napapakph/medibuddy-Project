@@ -33,12 +33,19 @@ class _Home extends State<Home> {
   String? _profileImagePath; // ✅ PROFILE_BIND: resolved image path
   bool _profileBound = false; // ⚠️ GUARD: bind once
   int? _profileId;
+  static const int _maxForwardDays = 365;
+  late final PageController _pageController;
+  final DateTime _today = DateUtils.dateOnly(DateTime.now());
+  int _currentPageIndex = 0;
+  int? _loadingPageIndex;
+  final Map<int, List<_MedicineReminder>> _remindersByIndex = {};
 
   @override
   void initState() {
     super.initState();
+    _pageController = PageController(initialPage: 0);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _fetchHomeReminders();
+      _fetchHomeReminders(date: _today, pageIndex: 0);
     });
     _imageBaseUrl = dotenv.env['API_BASE_URL'] ?? '';
   }
@@ -98,6 +105,7 @@ class _Home extends State<Home> {
 
   @override
   void dispose() {
+    _pageController.dispose();
     super.dispose();
   }
 
@@ -156,9 +164,47 @@ class _Home extends State<Home> {
     return int.tryParse(value.toString());
   }
 
-  Future<void> _fetchHomeReminders() async {
+  DateTime _dateForIndex(int index) {
+    return _today.add(Duration(days: index));
+  }
+
+  int _indexForDate(DateTime date) {
+    final diff = DateUtils.dateOnly(date).difference(_today).inDays;
+    if (diff < 0) return 0;
+    if (diff > _maxForwardDays) return _maxForwardDays;
+    return diff;
+  }
+
+  Future<void> _pickDisplayedDate(DateTime currentDate) async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: currentDate,
+      firstDate: _today,
+      lastDate: _today.add(const Duration(days: _maxForwardDays)),
+    );
+    if (picked == null) return;
+    final targetIndex = _indexForDate(picked);
+    await _pageController.animateToPage(
+      targetIndex,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+    );
+  }
+
+  void _handlePageChanged(int index) {
+    setState(() {
+      _currentPageIndex = index;
+      _homeReminders = _remindersByIndex[index] ?? [];
+    });
+    _fetchHomeReminders(date: _dateForIndex(index), pageIndex: index);
+  }
+
+  Future<void> _fetchHomeReminders({
+    required DateTime date,
+    required int pageIndex,
+  }) async {
     final profileId = _resolveProfileId();
-    debugPrint('\u{1F3E0} home profileId=$profileId');
+    debugPrint('\u{1F3E0} home profileId=$profileId date=$date');
 
     if (profileId <= 0) {
       const message = 'missing profileId';
@@ -180,6 +226,7 @@ class _Home extends State<Home> {
     if (mounted) {
       setState(() {
         _loading = true;
+        _loadingPageIndex = pageIndex;
         _error = null;
       });
     }
@@ -190,34 +237,50 @@ class _Home extends State<Home> {
       );
       final items = response.items;
       debugPrint('\u{1F3E0} fetched items=${items.length}');
-      final reminders = _mapHomeRemindersFromProfile(items);
+      final reminders = _mapHomeRemindersFromProfile(
+        items,
+        forDate: date,
+      );
       if (!mounted) return;
       setState(() {
-        _homeReminders = reminders;
-        _error = null;
+        _remindersByIndex[pageIndex] = reminders;
+        if (pageIndex == _currentPageIndex) {
+          _homeReminders = reminders;
+          _error = null;
+        }
       });
     } catch (e) {
       if (!mounted) return;
       final message = e.toString();
       debugPrint('\u274C home reminder error=$message');
       setState(() {
-        _error = message;
+        if (pageIndex == _currentPageIndex) {
+          _error = message;
+        }
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(message)),
       );
     } finally {
-      if (mounted) {
-        setState(() => _loading = false);
+      if (mounted && pageIndex == _currentPageIndex) {
+        setState(() {
+          _loading = false;
+          _loadingPageIndex = null;
+        });
       }
     }
   }
 
   List<_MedicineReminder> _mapHomeRemindersFromProfile(
-    List<MedicineRegimenItem> items,
-  ) {
+    List<MedicineRegimenItem> items, {
+    DateTime? forDate,
+  }) {
     final flattened = <_HomeReminderFlat>[];
+    final targetDate = forDate != null ? DateUtils.dateOnly(forDate) : null;
     for (final item in items) {
+      if (targetDate != null && !_isRegimenActiveOnDate(item, targetDate)) {
+        continue;
+      }
       final nickname = (item.medicineList?.mediNickname ?? '').trim();
       for (final time in item.times) {
         final timeValue = time.time.trim();
@@ -284,6 +347,65 @@ class _Home extends State<Home> {
     }
 
     return reminders;
+  }
+
+  DateTime? _parseDateOnly(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty) return null;
+    final parsed = DateTime.tryParse(trimmed);
+    if (parsed == null) return null;
+    return DateUtils.dateOnly(parsed);
+  }
+
+  List<int> _parseDaysOfWeek(String? raw) {
+    if (raw == null) return [];
+    final trimmed = raw.trim();
+    if (trimmed.isEmpty) return [];
+    final parts = trimmed.split(',');
+    final days = <int>[];
+    for (final part in parts) {
+      final value = int.tryParse(part.trim());
+      if (value != null) {
+        days.add(value);
+      }
+    }
+    return days;
+  }
+
+  bool _isRegimenActiveOnDate(MedicineRegimenItem item, DateTime date) {
+    final target = DateUtils.dateOnly(date);
+    final start = _parseDateOnly(item.startDate);
+    if (start != null && target.isBefore(start)) return false;
+
+    final end = item.endDate == null ? null : _parseDateOnly(item.endDate!);
+    if (end != null && target.isAfter(end)) return false;
+
+    final schedule = item.scheduleType.trim().toUpperCase();
+    switch (schedule) {
+      case 'WEEKLY':
+        final days = _parseDaysOfWeek(item.daysOfWeekRaw);
+        if (days.isEmpty) return true;
+        return days.contains(target.weekday);
+      case 'INTERVAL':
+        final interval = item.intervalDays ?? 0;
+        if (interval <= 0 || start == null) return true;
+        final diffDays = target.difference(start).inDays;
+        if (diffDays < 0) return false;
+        return diffDays % interval == 0;
+      case 'CYCLE':
+        final onDays = item.cycleOnDays ?? 0;
+        final breakDays = item.cycleBreakDays ?? 0;
+        if (onDays <= 0 || start == null) return true;
+        final total = onDays + breakDays;
+        if (total <= 0) return true;
+        final diffDays = target.difference(start).inDays;
+        if (diffDays < 0) return false;
+        final pos = diffDays % total;
+        return pos < onDays;
+      case 'DAILY':
+      default:
+        return true;
+    }
   }
 
   String _mergeMealRelation(String current, String incoming) {
@@ -366,22 +488,46 @@ class _Home extends State<Home> {
     return minutes < nowMinutes;
   }
 
+  bool _isPastDueForDate(String time, DateTime displayDate, int nowMinutes) {
+    final display = DateUtils.dateOnly(displayDate);
+    if (display.isAfter(_today)) return false;
+    if (display.isBefore(_today)) return true;
+    return _isPastDueTime(time, nowMinutes);
+  }
+
+  List<_MedicineReminder> _orderedReminders(
+    List<_MedicineReminder> reminders,
+    DateTime displayDate,
+  ) {
+    final now = DateTime.now();
+    final nowMinutes = (now.hour * 60) + now.minute;
+    final indexed = reminders.asMap().entries.toList();
+    indexed.sort((a, b) {
+      final aPast = _isPastDueForDate(a.value.time, displayDate, nowMinutes);
+      final bPast = _isPastDueForDate(b.value.time, displayDate, nowMinutes);
+      if (aPast == bPast) return a.key.compareTo(b.key);
+      return aPast ? 1 : -1;
+    });
+    return indexed.map((entry) => entry.value).toList();
+  }
+
   void _toggleReminder(int index) {
     setState(() {
       _homeReminders[index].isTaken = !_homeReminders[index].isTaken;
+      _remindersByIndex[_currentPageIndex] = _homeReminders;
     });
   }
 
-  Widget _buildReminderCard(BuildContext context, int index) {
-    final reminder = _homeReminders[index];
+  Widget _buildReminderCard(
+    BuildContext context,
+    _MedicineReminder reminder, {
+    required bool pastDue,
+  }) {
     final isTaken = reminder.isTaken;
     final checkColor =
         isTaken ? const Color(0xFF1F497D) : const Color(0xFF9EC6F5);
     final timeColor =
         isTaken ? const Color(0xFF1F497D) : const Color(0xFF6FA8DC);
-    final now = DateTime.now();
-    final nowMinutes = (now.hour * 60) + now.minute;
-    final pastDue = _isPastDueTime(reminder.time, nowMinutes);
 
     return Row(
       children: [
@@ -519,25 +665,14 @@ class _Home extends State<Home> {
             //จำกัดความกว้างสูงสุดของหน้าจอ
             final double containerWidth = isTablet ? 500 : maxWidth;
             // ใช้ DateTime + intl ได้เลย เพราะ main() init ไว้แล้ว
-            final now = DateTime.now();
-            final buddhistYear = now.year + 543;
-            final dayMonth = DateFormat('d MMMM').format(now);
+            final displayedDate = _dateForIndex(_currentPageIndex);
+            final buddhistYear = displayedDate.year + 543;
+            final dayMonth = DateFormat('d MMMM').format(displayedDate);
             final thaiBuddhistDate = '$dayMonth $buddhistYear';
             final profileImage = _buildProfileImage(
                 _profileImagePath ?? ''); // ✅ PROFILE_BIND: image
             final profileName =
                 _profileName ?? 'Profile'; // ✅ PROFILE_BIND: name
-            final nowMinutes = (now.hour * 60) + now.minute;
-            final uiReminders = List.of(_homeReminders);
-            final indexedReminders = uiReminders.asMap().entries.toList();
-            indexedReminders.sort((a, b) {
-              final aPast = _isPastDueTime(a.value.time, nowMinutes);
-              final bPast = _isPastDueTime(b.value.time, nowMinutes);
-              if (aPast == bPast) return a.key.compareTo(b.key);
-              return aPast ? 1 : -1;
-            });
-            final orderedIndices =
-                indexedReminders.map((entry) => entry.key).toList();
 
             return Align(
               child: Column(
@@ -548,11 +683,14 @@ class _Home extends State<Home> {
                     color: const Color(0xFFB7DAFF), // สีฟ้าของเดียร์
                     child: Column(
                       children: [
-                        Text(
-                          thaiBuddhistDate,
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Color(0xFF1F497D),
+                        InkWell(
+                          onTap: () => _pickDisplayedDate(displayedDate),
+                          child: Text(
+                            thaiBuddhistDate,
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Color(0xFF1F497D),
+                            ),
                           ),
                         ),
                       ],
@@ -601,31 +739,66 @@ class _Home extends State<Home> {
                               ),
                               SizedBox(height: maxHeight * 0.02),
                               Expanded(
-                                child: Container(
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFE8F2FF),
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: _loading
-                                      ? const Center(
-                                          child: CircularProgressIndicator(),
-                                        )
-                                      : _homeReminders.isEmpty
+                                child: PageView.builder(
+                                  controller: _pageController,
+                                  itemCount: _maxForwardDays + 1,
+                                  onPageChanged: _handlePageChanged,
+                                  itemBuilder: (context, pageIndex) {
+                                    final pageDate = _dateForIndex(pageIndex);
+                                    final reminders =
+                                        _remindersByIndex[pageIndex] ??
+                                            (pageIndex == _currentPageIndex
+                                                ? _homeReminders
+                                                : <_MedicineReminder>[]);
+                                    final orderedReminders =
+                                        _orderedReminders(reminders, pageDate);
+                                    final now = DateTime.now();
+                                    final nowMinutes =
+                                        (now.hour * 60) + now.minute;
+                                    final isLoading = _loading &&
+                                        _loadingPageIndex == pageIndex;
+
+                                    return Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFE8F2FF),
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                      child: isLoading
                                           ? const Center(
-                                              child: Text('No reminders yet'),
+                                              child:
+                                                  CircularProgressIndicator(),
                                             )
-                                          : ListView.separated(
-                                              itemCount: orderedIndices.length,
-                                              separatorBuilder: (_, __) =>
-                                                  const SizedBox(height: 12),
-                                              itemBuilder: (context, index) {
-                                                final originalIndex =
-                                                    orderedIndices[index];
-                                                return _buildReminderCard(
-                                                    context, originalIndex);
-                                              },
-                                            ),
+                                          : reminders.isEmpty
+                                              ? const Center(
+                                                  child:
+                                                      Text('No reminders yet'),
+                                                )
+                                              : ListView.separated(
+                                                  itemCount:
+                                                      orderedReminders.length,
+                                                  separatorBuilder: (_, __) =>
+                                                      const SizedBox(
+                                                          height: 12),
+                                                  itemBuilder:
+                                                      (context, index) {
+                                                    final reminder =
+                                                        orderedReminders[index];
+                                                    final pastDue =
+                                                        _isPastDueForDate(
+                                                      reminder.time,
+                                                      pageDate,
+                                                      nowMinutes,
+                                                    );
+                                                    return _buildReminderCard(
+                                                      context,
+                                                      reminder,
+                                                      pastDue: pastDue,
+                                                    );
+                                                  },
+                                                ),
+                                    );
+                                  },
                                 ),
                               ),
                             ],
