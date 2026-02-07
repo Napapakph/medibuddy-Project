@@ -37,6 +37,13 @@ class _AddFollowerScreenState extends State<AddFollowerScreen> {
       setState(() => _searchError = 'กรุณากรอกอีเมล');
       return;
     }
+    if (email.length < 3) {
+      setState(() {
+        _searchError = 'กรุณาพิมพ์อย่างน้อย 3 ตัวอักษร';
+        _foundUsers = [];
+      });
+      return;
+    }
 
     try {
       setState(() {
