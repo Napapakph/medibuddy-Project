@@ -1,6 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:medibuddy/services/auth_session.dart';
 import 'package:medibuddy/services/follow_api.dart';
+import 'package:medibuddy/widgets/bottomBar.dart';
 import 'add_follower.dart';
 
 // ===== หน้าจอจัดการผู้ติดตาม =====
@@ -156,7 +157,7 @@ class _FollowerScreenState extends State<FollowerScreen> {
           ),
           SizedBox(height: 6),
           Text(
-            'กดปุ่มส่งคำเชิญเพื่อเริ่มต้น',
+            'กดปุ่ม "เพิ่มผู้ติดตาม" เพื่อส่งคำเชิญ',
             style: TextStyle(color: Colors.grey),
           ),
         ],
@@ -421,27 +422,33 @@ class _FollowerScreenState extends State<FollowerScreen> {
           elevation: 0,
         ),
         body: content,
-        bottomNavigationBar: SafeArea(
-          minimum: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-          child: SizedBox(
-            height: 46,
-            child: ElevatedButton.icon(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const AddFollowerScreen()),
-                );
-              },
-              icon: const Icon(Icons.person_add),
-              label: const Text('ส่งคำเชิญผู้ติดตาม +'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF1F497D),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
+        bottomNavigationBar: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SafeArea(
+              minimum: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+              child: SizedBox(
+                height: 46,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const AddFollowerScreen()),
+                    );
+                  },
+                  icon: const Icon(Icons.person_add),
+                  label: const Text('เพิ่มผู้ติดตาม'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF1F497D),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
+            const BottomBar(currentRoute: '/follower'),
+          ],
         ),
       ),
     );
