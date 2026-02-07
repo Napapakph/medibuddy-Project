@@ -134,14 +134,14 @@ class AppDrawer extends StatelessWidget {
                                 size: 30,
                                 color: Color.fromARGB(255, 69, 68, 87)),
                             title: const Text('กำลังติดตาม'),
-                            onTap: () {},
+                            onTap: () => _go(context, '/following'),
                           ),
                           ListTile(
                             leading: const Icon(Icons.people,
                                 size: 30,
                                 color: Color.fromARGB(255, 69, 68, 87)),
                             title: const Text('ผู้ติดตาม'),
-                            onTap: () {},
+                            onTap: () => _go(context, '/follower'),
                           ),
                           ListTile(
                             leading: const Icon(Icons.person_add_alt_rounded,
@@ -199,3 +199,4 @@ class AppDrawer extends StatelessWidget {
     );
   }
 }
+
