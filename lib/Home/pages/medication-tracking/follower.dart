@@ -18,6 +18,11 @@ class _FollowerScreenState extends State<FollowerScreen> {
   String? _errorMessage;
   List<Map<String, dynamic>> _followers = [];
 
+  Future<void> _goHome() async {
+    if (!mounted) return;
+    Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -399,30 +404,41 @@ class _FollowerScreenState extends State<FollowerScreen> {
       );
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('ผู้ติดตาม'),
-        backgroundColor: const Color(0xFF1F497D),
-        elevation: 0,
-      ),
-      body: content,
-      bottomNavigationBar: SafeArea(
-        minimum: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-        child: SizedBox(
-          height: 46,
-          child: ElevatedButton.icon(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const AddFollowerScreen()),
-              );
-            },
-            icon: const Icon(Icons.person_add),
-            label: const Text('ส่งคำเชิญผู้ติดตาม +'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF1F497D),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(24),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        _goHome();
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: _goHome,
+          ),
+          title: const Text('ผู้ติดตาม'),
+          backgroundColor: const Color(0xFF1F497D),
+          elevation: 0,
+        ),
+        body: content,
+        bottomNavigationBar: SafeArea(
+          minimum: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          child: SizedBox(
+            height: 46,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AddFollowerScreen()),
+                );
+              },
+              icon: const Icon(Icons.person_add),
+              label: const Text('ส่งคำเชิญผู้ติดตาม +'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF1F497D),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
               ),
             ),
           ),

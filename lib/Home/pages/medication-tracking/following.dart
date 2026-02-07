@@ -8,7 +8,7 @@ class FollowingScreen extends StatefulWidget {
   @override
   State<FollowingScreen> createState() => _FollowingScreenState();
 }
-
+//
 class _FollowingScreenState extends State<FollowingScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
@@ -18,6 +18,11 @@ class _FollowingScreenState extends State<FollowingScreen>
   List<Map<String, dynamic>> _following = [];
   bool _isLoading = true;
   String? _errorMessage;
+
+  Future<void> _goHome() async {
+    if (!mounted) return;
+    Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+  }
 
   @override
   void initState() {
@@ -566,20 +571,30 @@ class _FollowingScreenState extends State<FollowingScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('กำลังติดตาม'),
-        backgroundColor: const Color(0xFF1F497D),
-        elevation: 0,
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(text: 'คำเชิญ'),
-            Tab(text: 'กำลังติดตาม'),
-          ],
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        _goHome();
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: _goHome,
+          ),
+          title: const Text('กำลังติดตาม'),
+          backgroundColor: const Color(0xFF1F497D),
+          elevation: 0,
+          bottom: TabBar(
+            controller: _tabController,
+            tabs: const [
+              Tab(text: 'คำเชิญ'),
+              Tab(text: 'กำลังติดตาม'),
+            ],
+          ),
         ),
-      ),
-      body: _isLoading
+        body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _errorMessage != null
               ? Center(
@@ -802,6 +817,7 @@ class _FollowingScreenState extends State<FollowingScreen>
                           ),
                   ],
                 ),
+      ),
     );
   }
 }
