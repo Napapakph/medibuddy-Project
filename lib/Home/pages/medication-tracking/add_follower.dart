@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:medibuddy/services/auth_session.dart';
 import 'package:medibuddy/services/follow_api.dart';
 import 'package:medibuddy/services/profile_api.dart';
@@ -7,6 +8,34 @@ const Color _primaryBlue = Color(0xFF1F497D);
 const Color _softSurface = Color(0xFFF1F4F7);
 const Color _softPill = Color(0xFFDCE2E8);
 const Color _accentBlue = Color(0xFF8FB6E5);
+
+String _resolveImageUrl(String? raw) {
+  final value = (raw ?? '').trim();
+  if (value.isEmpty) return '';
+
+  final uri = Uri.tryParse(value);
+  if (uri != null && uri.hasScheme) return value;
+
+  final baseUrl = (dotenv.env['API_BASE_URL'] ?? '').trim();
+  if (baseUrl.isEmpty) return value;
+
+  final baseUri = Uri.tryParse(baseUrl);
+  if (baseUri == null) return value;
+
+  final normalizedPath = value.startsWith('/') ? value : '/$value';
+  return baseUri.resolve(normalizedPath).toString();
+}
+
+String _readAvatarUrl(Map<String, dynamic> data) {
+  final raw = (data['profilePicture'] ??
+          data['profilePictureUrl'] ??
+          data['accountPicture'] ??
+          data['avatar'] ??
+          data['picture'] ??
+          data['imageUrl'])
+      ?.toString();
+  return _resolveImageUrl(raw);
+}
 
 class AddFollowerScreen extends StatefulWidget {
   const AddFollowerScreen({super.key});
@@ -181,9 +210,7 @@ class _AddFollowerScreenState extends State<AddFollowerScreen> {
         .toString();
     final name =
         rawName.trim().isNotEmpty ? rawName : (email.isNotEmpty ? email : 'ไม่ระบุชื่อ');
-    final avatarUrl =
-        (user['profilePicture'] ?? user['profilePictureUrl'] ?? user['avatar'])
-            as String?;
+    final avatarUrl = _readAvatarUrl(user);
     final normalizedEmail = email.toString().toLowerCase();
     final isInvited =
         (user['isInvited'] == true) || _sentInviteEmails.contains(normalizedEmail);
@@ -208,11 +235,10 @@ class _AddFollowerScreenState extends State<AddFollowerScreen> {
           children: [
             CircleAvatar(
               radius: 26,
-              backgroundImage:
-                  avatarUrl != null && avatarUrl.isNotEmpty
-                      ? NetworkImage(avatarUrl)
-                      : null,
-              child: avatarUrl == null || avatarUrl.isEmpty
+              backgroundImage: avatarUrl.isNotEmpty
+                  ? NetworkImage(avatarUrl)
+                  : null,
+              child: avatarUrl.isEmpty
                   ? const Icon(Icons.person)
                   : null,
             ),
@@ -463,7 +489,7 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
   Widget _buildProfileRow(Map<String, dynamic> profile) {
     final id = _readProfileId(profile);
     final name = profile['profileName'] ?? 'ไม่ระบุชื่อ';
-    final avatarUrl = profile['profilePicture'] as String?;
+    final avatarUrl = _readAvatarUrl(profile);
     final isSelectable = id > 0;
     final isSelected = isSelectable && _selectedProfileIds.contains(id);
 
@@ -483,10 +509,10 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
           ),
           CircleAvatar(
             radius: 22,
-            backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty
+            backgroundImage: avatarUrl.isNotEmpty
                 ? NetworkImage(avatarUrl)
                 : null,
-            child: avatarUrl == null || avatarUrl.isEmpty
+            child: avatarUrl.isEmpty
                 ? const Icon(Icons.person, size: 20)
                 : null,
           ),
@@ -523,9 +549,7 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
         .toString();
     final name =
         rawName.trim().isNotEmpty ? rawName : (email.isNotEmpty ? email : 'ไม่ระบุชื่อ');
-    final avatarUrl = (widget.user['profilePicture'] ??
-        widget.user['profilePictureUrl'] ??
-        widget.user['avatar']) as String?;
+    final avatarUrl = _readAvatarUrl(widget.user);
 
     return Scaffold(
       appBar: AppBar(
@@ -549,10 +573,10 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
                 children: [
                   CircleAvatar(
                     radius: 44,
-                    backgroundImage: avatarUrl != null && avatarUrl.isNotEmpty
+                    backgroundImage: avatarUrl.isNotEmpty
                         ? NetworkImage(avatarUrl)
                         : null,
-                    child: avatarUrl == null || avatarUrl.isEmpty
+                    child: avatarUrl.isEmpty
                         ? const Icon(Icons.person, size: 44)
                         : null,
                   ),

@@ -1,4 +1,5 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:medibuddy/services/follow_api.dart';
 import 'package:medibuddy/services/auth_session.dart';
 
@@ -61,13 +62,14 @@ class _FollowingScreenState extends State<FollowingScreen>
   }
 
   String _readAvatar(Map<String, dynamic> data) {
-    return (data['profilePicture'] ??
+    final raw = (data['profilePicture'] ??
             data['profilePictureUrl'] ??
             data['accountPicture'] ??
             data['avatar'] ??
             data['picture'] ??
             '')
         .toString();
+    return _resolveImageUrl(raw);
   }
 
   String _readFollowingName(Map<String, dynamic> data) {
@@ -80,7 +82,13 @@ class _FollowingScreenState extends State<FollowingScreen>
   }
 
   String _readFollowingAvatar(Map<String, dynamic> data) {
-    return (data['accountPicture'] ?? '').toString();
+    final raw = (data['accountPicture'] ??
+            data['profilePicture'] ??
+            data['profilePictureUrl'] ??
+            data['avatar'] ??
+            '')
+        .toString();
+    return _resolveImageUrl(raw);
   }
 
   int _readProfileId(Map<String, dynamic> profile) {
@@ -93,13 +101,31 @@ class _FollowingScreenState extends State<FollowingScreen>
   }
 
   String _readProfileAvatar(Map<String, dynamic> profile) {
-    return (profile['profilePicture'] ??
+    final raw = (profile['profilePicture'] ??
             profile['profilePictureUrl'] ??
             profile['accountPicture'] ??
             profile['avatar'] ??
             profile['picture'] ??
             '')
         .toString();
+    return _resolveImageUrl(raw);
+  }
+
+  String _resolveImageUrl(String raw) {
+    final value = raw.trim();
+    if (value.isEmpty) return '';
+
+    final uri = Uri.tryParse(value);
+    if (uri != null && uri.hasScheme) return value;
+
+    final baseUrl = (dotenv.env['API_BASE_URL'] ?? '').trim();
+    if (baseUrl.isEmpty) return value;
+
+    final baseUri = Uri.tryParse(baseUrl);
+    if (baseUri == null) return value;
+
+    final normalizedPath = value.startsWith('/') ? value : '/$value';
+    return baseUri.resolve(normalizedPath).toString();
   }
 
   String _initials(String value) {
