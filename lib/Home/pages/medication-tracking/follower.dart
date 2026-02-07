@@ -300,6 +300,7 @@ class _FollowerScreenState extends State<FollowerScreen> {
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF1F497D),
+              foregroundColor: Colors.white,
             ),
             child: const Text('บันทึก'),
           ),
@@ -414,10 +415,13 @@ class _FollowerScreenState extends State<FollowerScreen> {
       child: Scaffold(
         appBar: AppBar(
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
             onPressed: _goHome,
           ),
-          title: const Text('ผู้ติดตาม'),
+          title: const Text(
+            'ผู้ติดตาม',
+            style: TextStyle(color: Colors.white),
+          ),
           backgroundColor: const Color(0xFF1F497D),
           elevation: 0,
         ),
@@ -440,6 +444,7 @@ class _FollowerScreenState extends State<FollowerScreen> {
                   label: const Text('เพิ่มผู้ติดตาม'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF1F497D),
+                    foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(24),
                     ),
@@ -454,9 +459,6 @@ class _FollowerScreenState extends State<FollowerScreen> {
     );
   }
 }
-
-
-
 
 
 

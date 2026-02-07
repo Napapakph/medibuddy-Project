@@ -449,6 +449,7 @@ class _FollowingScreenState extends State<FollowingScreen>
                         onPressed: () => Navigator.pop(ctx),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF1F497D),
+                          foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
@@ -530,21 +531,27 @@ class _FollowingScreenState extends State<FollowingScreen>
   Widget build(BuildContext context) {
     return PopScope(
       canPop: false,
-      onPopInvoked: (didPop) {
+      onPopInvokedWithResult: (didPop, _) {
         if (didPop) return;
         _goHome();
       },
       child: Scaffold(
         appBar: AppBar(
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
             onPressed: _goHome,
           ),
-          title: const Text('กำลังติดตาม'),
+          title: const Text(
+            'กำลังติดตาม',
+            style: TextStyle(color: Colors.white),
+          ),
           backgroundColor: const Color(0xFF1F497D),
           elevation: 0,
           bottom: TabBar(
             controller: _tabController,
+            labelColor: Colors.white,
+            unselectedLabelColor: Colors.white,
+            indicatorColor: Colors.white,
             tabs: const [
               Tab(text: 'คำเชิญ'),
               Tab(text: 'กำลังติดตาม'),
