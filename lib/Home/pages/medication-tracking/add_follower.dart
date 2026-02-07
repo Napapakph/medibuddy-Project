@@ -302,6 +302,7 @@ class _AddFollowerScreenState extends State<AddFollowerScreen> {
       appBar: AppBar(
         title: const Text('เพิ่มผู้ติดตาม'),
         backgroundColor: _primaryBlue,
+        foregroundColor: Colors.white,
         elevation: 0,
       ),
       body: SafeArea(
@@ -555,6 +556,7 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
       appBar: AppBar(
         title: const Text('เพิ่มผู้ติดตาม'),
         backgroundColor: _primaryBlue,
+        foregroundColor: Colors.white,
         elevation: 0,
       ),
       body: SingleChildScrollView(
