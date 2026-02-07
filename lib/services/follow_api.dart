@@ -299,11 +299,11 @@ class FollowApi {
 
   Future<Map<String, dynamic>> fetchFollowingDetail({
     required String accessToken,
-    required int followingId,
+    required int relationshipId,
   }) async {
     final res = await _dio.get(
       _followingDetailPath,
-      queryParameters: {'followingId': followingId},
+      queryParameters: {'relationshipId': relationshipId},
       options: _authOptions(accessToken),
     );
     _ensureSuccess(res, 'Fetch following detail failed');
@@ -312,11 +312,15 @@ class FollowApi {
 
   Future<List<Map<String, dynamic>>> fetchFollowingLogs({
     required String accessToken,
-    required int followingId,
+    required int relationshipId,
+    required int profileId,
   }) async {
     final res = await _dio.get(
       _followingLogsPath,
-      queryParameters: {'followingId': followingId},
+      queryParameters: {
+        'relationshipId': relationshipId,
+        'profileId': profileId,
+      },
       options: _authOptions(accessToken),
     );
     _ensureSuccess(res, 'Fetch following logs failed');
@@ -325,11 +329,11 @@ class FollowApi {
 
   Future<void> removeFollowing({
     required String accessToken,
-    required int followingId,
+    required int relationshipId,
   }) async {
     final res = await _dio.delete(
       _followingRemovePath,
-      queryParameters: {'followingId': followingId},
+      queryParameters: {'relationshipId': relationshipId},
       options: _authOptions(accessToken),
     );
     _ensureSuccess(res, 'Remove following failed');
