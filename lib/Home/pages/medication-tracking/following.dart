@@ -8,7 +8,7 @@ class FollowingScreen extends StatefulWidget {
   @override
   State<FollowingScreen> createState() => _FollowingScreenState();
 }
-//
+
 class _FollowingScreenState extends State<FollowingScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
@@ -102,7 +102,6 @@ class _FollowingScreenState extends State<FollowingScreen>
         .toString();
   }
 
-
   String _initials(String value) {
     final parts = value.trim().split(RegExp(r'\s+')).where((e) => e.isNotEmpty);
     if (parts.isEmpty) return '?';
@@ -110,8 +109,7 @@ class _FollowingScreenState extends State<FollowingScreen>
     if (parts.length == 1) {
       return first.characters.take(2).toString().toUpperCase();
     }
-    return (first.characters.first +
-            parts.elementAt(1).characters.first)
+    return (first.characters.first + parts.elementAt(1).characters.first)
         .toUpperCase();
   }
 
@@ -163,26 +161,6 @@ class _FollowingScreenState extends State<FollowingScreen>
       if (list.isNotEmpty) return list;
     }
     return [];
-  }
-
-  Map<String, dynamic> _mergeUserWithProfile(
-    Map<String, dynamic> user,
-    Map<String, dynamic> profile,
-  ) {
-    final merged = Map<String, dynamic>.from(user);
-    final relationshipId = _readId(user);
-    if (relationshipId > 0) {
-      merged['relationshipId'] = relationshipId;
-    }
-    final profileId = _readProfileId(profile);
-    if (profileId > 0) {
-      merged['profileId'] = profileId;
-    }
-    final name = _readProfileName(profile);
-    if (name.isNotEmpty) {
-      merged['profileName'] = name;
-    }
-    return merged;
   }
 
   Future<void> _loadData() async {
@@ -253,13 +231,6 @@ class _FollowingScreenState extends State<FollowingScreen>
         );
       }
     }
-  }
-
-  void _showMonitoringDetail(Map<String, dynamic> user) {
-    showDialog(
-      context: context,
-      builder: (ctx) => _MonitoringDetailView(user: user),
-    );
   }
 
   void _showEditNameDialog(Map<String, dynamic> user) {
@@ -354,15 +325,10 @@ class _FollowingScreenState extends State<FollowingScreen>
       return;
     }
 
-    if (profiles.length == 1) {
-      _showMonitoringDetail(_mergeUserWithProfile(user, profiles.first));
-      return;
-    }
-
 //แสดงตัวเลือกโปรไฟล์
     if (!mounted) return;
     var selectedIndex = 0;
-    final selected = await showModalBottomSheet<Map<String, dynamic>>(
+    await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
@@ -403,9 +369,8 @@ class _FollowingScreenState extends State<FollowingScreen>
                             final name = _readProfileName(profile);
                             final profileId = _readProfileId(profile);
                             final avatarUrl = _readProfileAvatar(profile);
-                            final displayName = name.isNotEmpty
-                                ? name
-                                : 'โปรไฟล์ $profileId';
+                            final displayName =
+                                name.isNotEmpty ? name : 'โปรไฟล์ $profileId';
                             final isSelected = selectedIndex == index;
                             return Padding(
                               padding:
@@ -438,9 +403,8 @@ class _FollowingScreenState extends State<FollowingScreen>
                                               ? Image.network(
                                                   avatarUrl,
                                                   fit: BoxFit.cover,
-                                                  errorBuilder:
-                                                      (_, __, ___) =>
-                                                          const Icon(
+                                                  errorBuilder: (_, __, ___) =>
+                                                      const Icon(
                                                     Icons.person,
                                                     color: Colors.white70,
                                                   ),
@@ -482,10 +446,7 @@ class _FollowingScreenState extends State<FollowingScreen>
                       width: double.infinity,
                       height: 44,
                       child: ElevatedButton(
-                        onPressed: () => Navigator.pop(
-                          ctx,
-                          profiles[selectedIndex],
-                        ),
+                        onPressed: () => Navigator.pop(ctx),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF1F497D),
                           shape: RoundedRectangleBorder(
@@ -503,10 +464,6 @@ class _FollowingScreenState extends State<FollowingScreen>
         );
       },
     );
-
-    if (selected != null && mounted) {
-      _showMonitoringDetail(_mergeUserWithProfile(user, selected));
-    }
   }
 
   void _confirmRemoveFollowing(Map<String, dynamic> user) {
@@ -573,7 +530,7 @@ class _FollowingScreenState extends State<FollowingScreen>
   Widget build(BuildContext context) {
     return PopScope(
       canPop: false,
-      onPopInvokedWithResult: (didPop, _) {
+      onPopInvoked: (didPop) {
         if (didPop) return;
         _goHome();
       },
@@ -595,354 +552,6 @@ class _FollowingScreenState extends State<FollowingScreen>
           ),
         ),
         body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _errorMessage != null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(_errorMessage!),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: _loadData,
-                        child: const Text('ลองใหม่'),
-                      ),
-                    ],
-                  ),
-                )
-              : TabBarView(
-                  controller: _tabController,
-                  children: [
-                    // ======== TAB 1: ไม่มีคำเชิญ ========
-                    _invitations.isEmpty
-                        ? const Center(child: Text('ไม่มีคำเชิญ'))
-                        : ListView.builder(
-                            itemCount: _invitations.length,
-                            itemBuilder: (context, index) {
-                              final inv = _invitations[index];
-                              final name = _readName(inv);
-                              final id = _readId(inv);
-                              final avatarUrl = _readAvatar(inv);
-
-                              return Card(
-                                margin: const EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 8),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(12),
-                                  child: Row(
-                                    children: [
-                                      CircleAvatar(
-                                        radius: 30,
-                                        backgroundImage: avatarUrl.isNotEmpty
-                                            ? NetworkImage(avatarUrl)
-                                            : null,
-                                        child: avatarUrl.isEmpty
-                                            ? const Icon(Icons.person)
-                                            : null,
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Text(
-                                          name,
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                      ElevatedButton(
-                                        onPressed: () =>
-                                            _handleInvitation(id, true),
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor:
-                                              const Color(0xFF1F497D),
-                                        ),
-                                        child: const Text('ยอมรับ'),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      OutlinedButton(
-                                        onPressed: () =>
-                                            _handleInvitation(id, false),
-                                        child: const Text('ปฏิเสธ'),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-
-                    // ======== TAB 2: กำลังติดตาม ========
-                    _following.isEmpty
-                        ? const Center(child: Text('ยังไม่ติดตามใคร'))
-                        : ListView.builder(
-                            itemCount: _following.length,
-                            itemBuilder: (context, index) {
-                              final user = _following[index];
-                              final name = _readFollowingName(user);
-                              final avatarUrl = _readFollowingAvatar(user);
-                              final email = _readFollowingEmail(user);
-
-                              return Card(
-                                margin: const EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 8),
-                                color: const Color(0xFFD7DDE3),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(12),
-                                  child: Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      ClipOval(
-                                        child: Container(
-                                          width: 64,
-                                          height: 64,
-                                          color: const Color(0xFFE8EDF3),
-                                          child: avatarUrl.isNotEmpty
-                                              ? Image.network(
-                                                  avatarUrl,
-                                                  fit: BoxFit.cover,
-                                                  errorBuilder: (_, __, ___) =>
-                                                      const Icon(Icons.person),
-                                                )
-                                              : const Icon(Icons.person),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            const SizedBox(height: 6),
-                                            Text(
-                                              'ชื่อ :  $name',
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.w700,
-                                                fontSize: 18,
-                                                color: Color(0xFF1F497D),
-                                              ),
-                                            ),
-                                            const SizedBox(height: 10),
-                                            Text(
-                                              email.isNotEmpty ? email : '-',
-                                              maxLines: 2,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: const TextStyle(
-                                                fontSize: 16,
-                                                color: Color(0xFF2F5788),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.end,
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              IconButton(
-                                                constraints:
-                                                    const BoxConstraints.tightFor(
-                                                  width: 40,
-                                                  height: 40,
-                                                ),
-                                                padding: EdgeInsets.zero,
-                                                onPressed: () =>
-                                                    _confirmRemoveFollowing(user),
-                                                icon: const Icon(Icons.delete),
-                                                color: Colors.white,
-                                                style: IconButton.styleFrom(
-                                                  backgroundColor:
-                                                      const Color(0xFFE66C63),
-                                                  shape: const CircleBorder(),
-                                                ),
-                                              ),
-                                              const SizedBox(width: 4),
-                                              IconButton(
-                                                constraints:
-                                                    const BoxConstraints.tightFor(
-                                                  width: 40,
-                                                  height: 40,
-                                                ),
-                                                padding: EdgeInsets.zero,
-                                                onPressed: () =>
-                                                    _showEditNameDialog(user),
-                                                icon: const Icon(Icons.edit),
-                                                color: Colors.white,
-                                                style: IconButton.styleFrom(
-                                                  backgroundColor:
-                                                      const Color(0xFF2F5788),
-                                                  shape: const CircleBorder(),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          const SizedBox(height: 6),
-                                          IconButton(
-                                            constraints:
-                                                const BoxConstraints.tightFor(
-                                              width: 42,
-                                              height: 42,
-                                            ),
-                                            padding: EdgeInsets.zero,
-                                            onPressed: () =>
-                                                _selectProfileAndOpenDetail(
-                                                    user),
-                                            icon: const Icon(
-                                              Icons.arrow_forward_ios,
-                                              size: 18,
-                                            ),
-                                            color: Colors.white,
-                                            style: IconButton.styleFrom(
-                                              backgroundColor:
-                                                  const Color(0xFF8BC0F0),
-                                              shape: const CircleBorder(),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                  ],
-                ),
-      ),
-    );
-  }
-}
-
-// ===== DETAIL VIEW สำหรับดูตารางยา =====
-class _MonitoringDetailView extends StatefulWidget {
-  final Map<String, dynamic> user;
-
-  const _MonitoringDetailView({required this.user});
-
-  @override
-  State<_MonitoringDetailView> createState() => _MonitoringDetailViewState();
-}
-
-class _MonitoringDetailViewState extends State<_MonitoringDetailView> {
-  final _followApi = FollowApi();
-
-  bool _isLoading = true;
-  List<Map<String, dynamic>> _logs = [];
-  String? _errorMessage;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadLogs();
-  }
-
-  Future<void> _loadLogs() async {
-    try {
-      setState(() => _isLoading = true);
-
-      final rawRelationshipId =
-          widget.user['relationshipId'] ?? widget.user['followId'];
-      final relationshipId = int.tryParse(rawRelationshipId.toString()) ?? 0;
-      if (relationshipId == 0) {
-        throw Exception('Invalid relationship id');
-      }
-
-      final rawProfileId = widget.user['profileId'] ??
-          widget.user['id'] ??
-          widget.user['followedProfileId'];
-      final profileId = int.tryParse(rawProfileId.toString()) ?? 0;
-      if (profileId == 0) {
-        throw Exception('Invalid profile id');
-      }
-
-      final accessToken = AuthSession.accessToken;
-      if (accessToken == null) {
-        throw Exception('No access token');
-      }
-
-      final logs = await _followApi.fetchFollowingLogs(
-        accessToken: accessToken,
-        relationshipId: relationshipId,
-        profileId: profileId,
-      );
-
-      setState(() {
-        _isLoading = false;
-        _errorMessage = null;
-        _logs = logs;
-      });
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-        _errorMessage = 'โหลดข้อมูลยาไม่สำเร็จ: $e';
-      });
-    }
-  }
-
-  String _readLogTitle(Map<String, dynamic> log) {
-    return (log['medicineName'] ??
-            log['nickname'] ??
-            log['name'] ??
-            log['drugName'] ??
-            log['officialName'] ??
-            log['mediName'] ??
-            'รายการยา')
-        .toString();
-  }
-
-  String _readLogSubtitle(Map<String, dynamic> log) {
-    final amount = log['amount'] ??
-        log['dose'] ??
-        log['quantity'] ??
-        log['count'] ??
-        log['qty'];
-    final unit = log['unit'] ?? log['doseUnit'] ?? log['qtyUnit'];
-    if (amount != null && unit != null) {
-      return '$amount $unit';
-    }
-    if (amount != null) {
-      return amount.toString();
-    }
-    final note = log['note'] ?? log['remark'] ?? '';
-    return note.toString();
-  }
-
-  String _readLogTime(Map<String, dynamic> log) {
-    final raw = log['time'] ??
-        log['takenAt'] ??
-        log['createdAt'] ??
-        log['timestamp'] ??
-        log['logTime'];
-    return raw?.toString() ?? '';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final userName = (widget.user['profileName'] ??
-            widget.user['name'] ??
-            widget.user['displayName'] ??
-            widget.user['email'] ??
-            'ไม่มีชื่อ')
-        .toString();
-
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text('ตารางยา - $userName'),
-          backgroundColor: const Color(0xFF1F497D),
-          automaticallyImplyLeading: true,
-        ),
-        body: _isLoading
             ? const Center(child: CircularProgressIndicator())
             : _errorMessage != null
                 ? Center(
@@ -952,124 +561,224 @@ class _MonitoringDetailViewState extends State<_MonitoringDetailView> {
                         Text(_errorMessage!),
                         const SizedBox(height: 16),
                         ElevatedButton(
-                          onPressed: _loadLogs,
+                          onPressed: _loadData,
                           child: const Text('ลองใหม่'),
                         ),
                       ],
                     ),
                   )
-                : SingleChildScrollView(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            CircleAvatar(
-                              radius: 40,
-                              backgroundImage: widget.user['profilePicture'] !=
-                                          null &&
-                                      (widget.user['profilePicture'] as String)
-                                          .isNotEmpty
-                                  ? NetworkImage(widget.user['profilePicture'])
-                                  : null,
-                              child: widget.user['profilePicture'] == null
-                                  ? const Icon(Icons.person, size: 40)
-                                  : null,
-                            ),
-                            const SizedBox(width: 16),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  userName,
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                if (widget.user['email'] != null)
-                                  Text(
-                                    widget.user['email'],
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 24),
+                : TabBarView(
+                    controller: _tabController,
+                    children: [
+                      // ======== TAB 1: ไม่มีคำเชิญ ========
+                      _invitations.isEmpty
+                          ? const Center(child: Text('ไม่มีคำเชิญ'))
+                          : ListView.builder(
+                              itemCount: _invitations.length,
+                              itemBuilder: (context, index) {
+                                final inv = _invitations[index];
+                                final name = _readName(inv);
+                                final id = _readId(inv);
+                                final avatarUrl = _readAvatar(inv);
 
-                        const Text(
-                          'ประวัติการทานยา',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        if (_logs.isEmpty)
-                          const Text('ไม่มีข้อมูลยา')
-                        else
-                          Column(
-                            children: <Widget>[
-                              ..._logs.map((log) {
-                                final title = _readLogTitle(log);
-                                final subtitle = _readLogSubtitle(log);
-                                final time = _readLogTime(log);
                                 return Card(
-                                  margin:
-                                      const EdgeInsets.symmetric(vertical: 8),
+                                  margin: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 8),
                                   child: Padding(
                                     padding: const EdgeInsets.all(12),
                                     child: Row(
                                       children: [
-                                        if (time.isNotEmpty)
-                                          Padding(
-                                            padding:
-                                                const EdgeInsets.only(right: 12),
-                                            child: Text(
-                                              time,
-                                              style: const TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.black54,
-                                              ),
+                                        CircleAvatar(
+                                          radius: 30,
+                                          backgroundImage: avatarUrl.isNotEmpty
+                                              ? NetworkImage(avatarUrl)
+                                              : null,
+                                          child: avatarUrl.isEmpty
+                                              ? const Icon(Icons.person)
+                                              : null,
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Text(
+                                            name,
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
                                             ),
                                           ),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                title,
-                                                style: const TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 14,
-                                                ),
-                                              ),
-                                              if (subtitle.isNotEmpty)
-                                                Text(
-                                                  subtitle,
-                                                  style: const TextStyle(
-                                                    fontSize: 12,
-                                                    color: Colors.grey,
-                                                  ),
-                                                ),
-                                            ],
+                                        ),
+                                        ElevatedButton(
+                                          onPressed: () =>
+                                              _handleInvitation(id, true),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor:
+                                                const Color(0xFF1F497D),
                                           ),
+                                          child: const Text('ยอมรับ'),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        OutlinedButton(
+                                          onPressed: () =>
+                                              _handleInvitation(id, false),
+                                          child: const Text('ปฏิเสธ'),
                                         ),
                                       ],
                                     ),
                                   ),
                                 );
-                              }),
-                            ],
-                          ),
-                      ],
-                    ),
+                              },
+                            ),
+
+                      // ======== TAB 2: กำลังติดตาม ========
+                      _following.isEmpty
+                          ? const Center(child: Text('ยังไม่ติดตามใคร'))
+                          : ListView.builder(
+                              itemCount: _following.length,
+                              itemBuilder: (context, index) {
+                                final user = _following[index];
+                                final name = _readFollowingName(user);
+                                final avatarUrl = _readFollowingAvatar(user);
+                                final email = _readFollowingEmail(user);
+
+                                return Card(
+                                  margin: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 8),
+                                  color: const Color(0xFFD7DDE3),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(12),
+                                    child: Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        ClipOval(
+                                          child: Container(
+                                            width: 64,
+                                            height: 64,
+                                            color: const Color(0xFFE8EDF3),
+                                            child: avatarUrl.isNotEmpty
+                                                ? Image.network(
+                                                    avatarUrl,
+                                                    fit: BoxFit.cover,
+                                                    errorBuilder:
+                                                        (_, __, ___) =>
+                                                            const Icon(
+                                                                Icons.person),
+                                                  )
+                                                : const Icon(Icons.person),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              const SizedBox(height: 6),
+                                              Text(
+                                                'ชื่อ :  $name',
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.w700,
+                                                  fontSize: 18,
+                                                  color: Color(0xFF1F497D),
+                                                ),
+                                              ),
+                                              const SizedBox(height: 10),
+                                              Text(
+                                                email.isNotEmpty ? email : '-',
+                                                maxLines: 2,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: const TextStyle(
+                                                  fontSize: 16,
+                                                  color: Color(0xFF2F5788),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.end,
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                IconButton(
+                                                  constraints:
+                                                      const BoxConstraints
+                                                          .tightFor(
+                                                    width: 40,
+                                                    height: 40,
+                                                  ),
+                                                  padding: EdgeInsets.zero,
+                                                  onPressed: () =>
+                                                      _confirmRemoveFollowing(
+                                                          user),
+                                                  icon:
+                                                      const Icon(Icons.delete),
+                                                  color: Colors.white,
+                                                  style: IconButton.styleFrom(
+                                                    backgroundColor:
+                                                        const Color(0xFFE66C63),
+                                                    shape: const CircleBorder(),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 4),
+                                                IconButton(
+                                                  constraints:
+                                                      const BoxConstraints
+                                                          .tightFor(
+                                                    width: 40,
+                                                    height: 40,
+                                                  ),
+                                                  padding: EdgeInsets.zero,
+                                                  onPressed: () =>
+                                                      _showEditNameDialog(user),
+                                                  icon: const Icon(Icons.edit),
+                                                  color: Colors.white,
+                                                  style: IconButton.styleFrom(
+                                                    backgroundColor:
+                                                        const Color(0xFF2F5788),
+                                                    shape: const CircleBorder(),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 6),
+                                            IconButton(
+                                              constraints:
+                                                  const BoxConstraints.tightFor(
+                                                width: 42,
+                                                height: 42,
+                                              ),
+                                              padding: EdgeInsets.zero,
+                                              onPressed: () =>
+                                                  _selectProfileAndOpenDetail(
+                                                      user),
+                                              icon: const Icon(
+                                                Icons.arrow_forward_ios,
+                                                size: 18,
+                                              ),
+                                              color: Colors.white,
+                                              style: IconButton.styleFrom(
+                                                backgroundColor:
+                                                    const Color(0xFF8BC0F0),
+                                                shape: const CircleBorder(),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                    ],
                   ),
       ),
     );
