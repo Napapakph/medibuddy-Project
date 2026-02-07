@@ -2,6 +2,7 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:medibuddy/services/follow_api.dart';
 import 'package:medibuddy/services/auth_session.dart';
+import 'package:medibuddy/widgets/follow_user_card.dart';
 
 class FollowingScreen extends StatefulWidget {
   const FollowingScreen({super.key});
@@ -57,10 +58,6 @@ class _FollowingScreenState extends State<FollowingScreen>
         .toString();
   }
 
-  String _readEditableName(Map<String, dynamic> data) {
-    return _readFollowingName(data);
-  }
-
   String _readAvatar(Map<String, dynamic> data) {
     final raw = (data['profilePicture'] ??
             data['profilePictureUrl'] ??
@@ -82,13 +79,7 @@ class _FollowingScreenState extends State<FollowingScreen>
   }
 
   String _readFollowingAvatar(Map<String, dynamic> data) {
-    final raw = (data['accountPicture'] ??
-            data['profilePicture'] ??
-            data['profilePictureUrl'] ??
-            data['avatar'] ??
-            '')
-        .toString();
-    return _resolveImageUrl(raw);
+    return '';
   }
 
   int _readProfileId(Map<String, dynamic> profile) {
@@ -257,51 +248,6 @@ class _FollowingScreenState extends State<FollowingScreen>
         );
       }
     }
-  }
-
-  void _showEditNameDialog(Map<String, dynamic> user) {
-    final controller = TextEditingController(text: _readEditableName(user));
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('แก้ไขชื่อ'),
-        content: TextField(
-          controller: controller,
-          decoration: const InputDecoration(
-            labelText: 'ชื่อ',
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('ยกเลิก'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final newName = controller.text.trim();
-              if (newName.isEmpty) return;
-              setState(() {
-                final idx = _following.indexWhere(
-                  (item) => _readId(item) == _readId(user),
-                );
-                if (idx >= 0) {
-                  final updated = Map<String, dynamic>.from(_following[idx]);
-                  updated['displayName'] = newName;
-                  updated['profileName'] = newName;
-                  updated['name'] = newName;
-                  _following[idx] = updated;
-                }
-              });
-              Navigator.pop(ctx);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF1F497D),
-            ),
-            child: const Text('บันทึก'),
-          ),
-        ],
-      ),
-    );
   }
 
   Future<void> _selectProfileAndOpenDetail(
@@ -672,142 +618,14 @@ class _FollowingScreenState extends State<FollowingScreen>
                                 final avatarUrl = _readFollowingAvatar(user);
                                 final email = _readFollowingEmail(user);
 
-                                return Card(
-                                  margin: const EdgeInsets.symmetric(
-                                      horizontal: 12, vertical: 8),
-                                  color: const Color(0xFFD7DDE3),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(12),
-                                    child: Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        ClipOval(
-                                          child: Container(
-                                            width: 64,
-                                            height: 64,
-                                            color: const Color(0xFFE8EDF3),
-                                            child: avatarUrl.isNotEmpty
-                                                ? Image.network(
-                                                    avatarUrl,
-                                                    fit: BoxFit.cover,
-                                                    errorBuilder:
-                                                        (_, __, ___) =>
-                                                            const Icon(
-                                                                Icons.person),
-                                                  )
-                                                : const Icon(Icons.person),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              const SizedBox(height: 6),
-                                              Text(
-                                                'ชื่อ :  $name',
-                                                style: const TextStyle(
-                                                  fontWeight: FontWeight.w700,
-                                                  fontSize: 18,
-                                                  color: Color(0xFF1F497D),
-                                                ),
-                                              ),
-                                              const SizedBox(height: 10),
-                                              Text(
-                                                email.isNotEmpty ? email : '-',
-                                                maxLines: 2,
-                                                overflow: TextOverflow.ellipsis,
-                                                style: const TextStyle(
-                                                  fontSize: 16,
-                                                  color: Color(0xFF2F5788),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.end,
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                IconButton(
-                                                  constraints:
-                                                      const BoxConstraints
-                                                          .tightFor(
-                                                    width: 40,
-                                                    height: 40,
-                                                  ),
-                                                  padding: EdgeInsets.zero,
-                                                  onPressed: () =>
-                                                      _confirmRemoveFollowing(
-                                                          user),
-                                                  icon:
-                                                      const Icon(Icons.delete),
-                                                  color: Colors.white,
-                                                  style: IconButton.styleFrom(
-                                                    backgroundColor:
-                                                        const Color(0xFFE66C63),
-                                                    shape: const CircleBorder(),
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 4),
-                                                IconButton(
-                                                  constraints:
-                                                      const BoxConstraints
-                                                          .tightFor(
-                                                    width: 40,
-                                                    height: 40,
-                                                  ),
-                                                  padding: EdgeInsets.zero,
-                                                  onPressed: () =>
-                                                      _showEditNameDialog(user),
-                                                  icon: const Icon(Icons.edit),
-                                                  color: Colors.white,
-                                                  style: IconButton.styleFrom(
-                                                    backgroundColor:
-                                                        const Color(0xFF2F5788),
-                                                    shape: const CircleBorder(),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            const SizedBox(height: 6),
-                                            IconButton(
-                                              constraints:
-                                                  const BoxConstraints.tightFor(
-                                                width: 42,
-                                                height: 42,
-                                              ),
-                                              padding: EdgeInsets.zero,
-                                              onPressed: () =>
-                                                  _selectProfileAndOpenDetail(
-                                                      user),
-                                              icon: const Icon(
-                                                Icons.arrow_forward_ios,
-                                                size: 18,
-                                              ),
-                                              color: Colors.white,
-                                              style: IconButton.styleFrom(
-                                                backgroundColor:
-                                                    const Color(0xFF8BC0F0),
-                                                shape: const CircleBorder(),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
+                                return FollowUserCard(
+                                  name: name,
+                                  email: email,
+                                  avatarUrl: avatarUrl,
+                                  onDelete: () => _confirmRemoveFollowing(user),
+                                  onEdit: () {},
+                                  onDetail: () =>
+                                      _selectProfileAndOpenDetail(user),
                                 );
                               },
                             ),
