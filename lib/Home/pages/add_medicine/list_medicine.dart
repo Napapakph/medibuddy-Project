@@ -371,7 +371,7 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
                 ),
               );
             },
-            icon: const Icon(Icons.picture_as_pdf, color: Colors.redAccent),
+            icon: const Icon(Icons.picture_as_pdf, color: Color.fromARGB(255, 105, 82, 255),),
           ),
         ],
       ),

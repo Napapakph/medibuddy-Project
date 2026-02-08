@@ -28,6 +28,9 @@ import 'Home/pages/add_medicine/medicine_search_page.dart';
 import 'Home/pages/user_request/user_request_screen.dart';
 import 'Home/pages/alarm_screen.dart';
 import 'Home/pages/set_remind/setRemind_screen.dart';
+import 'Home/pages/medication-tracking/add_follower.dart';
+import 'Home/pages/medication-tracking/follower.dart';
+import 'Home/pages/medication-tracking/following.dart';
 
 const bool kDisableAuthGate =
     true; // เปลี่ยนเป็น false เมื่อต้องการเปิดใช้งาน AuthGate
@@ -370,7 +373,12 @@ class MyApp extends StatelessWidget {
             return MaterialPageRoute(
               builder: (_) => SetRemindScreen(medicines: medicines),
             );
-
+          case '/following':
+            return MaterialPageRoute(builder: (_) => const FollowingScreen());
+          case '/follower':
+            return MaterialPageRoute(builder: (_) => const FollowerScreen());
+          case '/add_follower':
+            return MaterialPageRoute(builder: (_) => const AddFollowerScreen());
           default:
             return MaterialPageRoute(builder: (_) => defaultPage());
         }

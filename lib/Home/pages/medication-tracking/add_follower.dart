@@ -203,17 +203,16 @@ class _AddFollowerScreenState extends State<AddFollowerScreen> {
 
   Widget _buildFoundAccount(Map<String, dynamic> user) {
     final email = (user['email'] ?? user['mail'] ?? '').toString();
-    final rawName = (user['profileName'] ??
-            user['name'] ??
-            user['displayName'] ??
-            '')
-        .toString();
-    final name =
-        rawName.trim().isNotEmpty ? rawName : (email.isNotEmpty ? email : 'ไม่ระบุชื่อ');
+    final rawName =
+        (user['profileName'] ?? user['name'] ?? user['displayName'] ?? '')
+            .toString();
+    final name = rawName.trim().isNotEmpty
+        ? rawName
+        : (email.isNotEmpty ? email : 'ไม่ระบุชื่อ');
     final avatarUrl = _readAvatarUrl(user);
     final normalizedEmail = email.toString().toLowerCase();
-    final isInvited =
-        (user['isInvited'] == true) || _sentInviteEmails.contains(normalizedEmail);
+    final isInvited = (user['isInvited'] == true) ||
+        _sentInviteEmails.contains(normalizedEmail);
 
     return InkWell(
       onTap: () => _openPermissionScreen(user),
@@ -235,12 +234,9 @@ class _AddFollowerScreenState extends State<AddFollowerScreen> {
           children: [
             CircleAvatar(
               radius: 26,
-              backgroundImage: avatarUrl.isNotEmpty
-                  ? NetworkImage(avatarUrl)
-                  : null,
-              child: avatarUrl.isEmpty
-                  ? const Icon(Icons.person)
-                  : null,
+              backgroundImage:
+                  avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
+              child: avatarUrl.isEmpty ? const Icon(Icons.person) : null,
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -253,7 +249,7 @@ class _AddFollowerScreenState extends State<AddFollowerScreen> {
                       fontWeight: FontWeight.w700,
                       fontSize: 14,
                     ),
-                    ),
+                  ),
                   if (email.isNotEmpty)
                     Text(
                       email,
@@ -365,6 +361,7 @@ class FollowerPermissionScreen extends StatefulWidget {
   State<FollowerPermissionScreen> createState() =>
       _FollowerPermissionScreenState();
 }
+
 // หน้าจอการอนุญาตผู้ติดตาม
 class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
   final _profileApi = ProfileApi();
@@ -390,6 +387,7 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
     final raw = profile['profileId'] ?? profile['id'] ?? profile['profile_id'];
     return _asProfileId(raw);
   }
+
 // โหลดโปรไฟล์ของผู้ใช้ปัจจุบัน
   Future<void> _loadMyProfiles() async {
     final accessToken = AuthSession.accessToken;
@@ -465,20 +463,20 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
         userId: userId > 0 ? userId : null,
         profileIds: profileIds,
       );
-      } catch (e) {
-        if (!mounted) return;
-        final raw = e.toString();
-        final lower = raw.toLowerCase();
-        final isPending = raw.contains('409') &&
-            (lower.contains('pending') || lower.contains('already exists'));
-        final message = isPending
-            ? 'ส่งคำเชิญไปแล้ว กำลังรอการตอบรับ'
-            : 'ส่งคำเชิญไม่สำเร็จ: $e';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
-        return;
-      }
+    } catch (e) {
+      if (!mounted) return;
+      final raw = e.toString();
+      final lower = raw.toLowerCase();
+      final isPending = raw.contains('409') &&
+          (lower.contains('pending') || lower.contains('already exists'));
+      final message = isPending
+          ? 'ส่งคำเชิญไปแล้ว กำลังรอการตอบรับ'
+          : 'ส่งคำเชิญไม่สำเร็จ: $e';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+      return;
+    }
 
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -505,17 +503,16 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
               borderRadius: BorderRadius.circular(4),
             ),
             side: const BorderSide(color: Color(0xFF7FA6D6), width: 1.4),
-            onChanged:
-                isSelectable ? (value) => _toggleProfile(id, value ?? false) : null,
+            onChanged: isSelectable
+                ? (value) => _toggleProfile(id, value ?? false)
+                : null,
           ),
           CircleAvatar(
             radius: 22,
-            backgroundImage: avatarUrl.isNotEmpty
-                ? NetworkImage(avatarUrl)
-                : null,
-            child: avatarUrl.isEmpty
-                ? const Icon(Icons.person, size: 20)
-                : null,
+            backgroundImage:
+                avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
+            child:
+                avatarUrl.isEmpty ? const Icon(Icons.person, size: 20) : null,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -542,14 +539,16 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final email = (widget.user['email'] ?? widget.user['mail'] ?? '').toString();
+    final email =
+        (widget.user['email'] ?? widget.user['mail'] ?? '').toString();
     final rawName = (widget.user['profileName'] ??
             widget.user['name'] ??
             widget.user['displayName'] ??
             '')
         .toString();
-    final name =
-        rawName.trim().isNotEmpty ? rawName : (email.isNotEmpty ? email : 'ไม่ระบุชื่อ');
+    final name = rawName.trim().isNotEmpty
+        ? rawName
+        : (email.isNotEmpty ? email : 'ไม่ระบุชื่อ');
     final avatarUrl = _readAvatarUrl(widget.user);
 
     return Scaffold(
@@ -575,9 +574,8 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
                 children: [
                   CircleAvatar(
                     radius: 44,
-                    backgroundImage: avatarUrl.isNotEmpty
-                        ? NetworkImage(avatarUrl)
-                        : null,
+                    backgroundImage:
+                        avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
                     child: avatarUrl.isEmpty
                         ? const Icon(Icons.person, size: 44)
                         : null,

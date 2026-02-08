@@ -68,6 +68,7 @@ dependencies:
   onnxruntime: ^1.4.1
   pdf: ^3.10.7
   printing: ^5.11.0
+  font_awesome_flutter: ^10.7.0
   
   
 
@@ -106,6 +107,7 @@ flutter:
      - assets/fonts/
      - assets/lottie/loader_cat.lottie
      - assets/lottie/loader_cat.json
+     - assets/cat_add_follower.png
 
   fonts:
      - family: Kodchasan

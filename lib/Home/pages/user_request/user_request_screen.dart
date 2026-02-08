@@ -154,21 +154,6 @@ class _UserRequestScreenState extends State<UserRequestScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: const [
-                  Icon(Icons.feedback_outlined, color: Color(0xFF1F497D)),
-                  SizedBox(width: 8),
-                  Text(
-                    'ข้อเสนอแนะ',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF1F497D),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -181,9 +166,9 @@ class _UserRequestScreenState extends State<UserRequestScreen> {
                     const Text(
                       'หมวดหมู่',
                       style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF1F497D),
-                      ),
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF1F497D),
+                          fontSize: 18),
                     ),
                     const SizedBox(height: 8),
                     DropdownButtonFormField<String>(
@@ -207,7 +192,8 @@ class _UserRequestScreenState extends State<UserRequestScreen> {
                           .map(
                             (label) => DropdownMenuItem<String>(
                               value: label,
-                              child: Text(label),
+                              child: Text(label,
+                                  style: const TextStyle(fontSize: 18)),
                             ),
                           )
                           .toList(),
@@ -228,17 +214,19 @@ class _UserRequestScreenState extends State<UserRequestScreen> {
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
                         color: Color(0xFF1F497D),
+                        fontSize: 18,
                       ),
                     ),
                     const SizedBox(height: 8),
                     TextField(
                       controller: _titleController,
+                      style: const TextStyle(fontSize: 18),
                       decoration: InputDecoration(
                         filled: true,
                         fillColor: Colors.white,
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 12,
-                          vertical: 10,
+                          vertical: 6,
                         ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -253,11 +241,13 @@ class _UserRequestScreenState extends State<UserRequestScreen> {
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
                         color: Color(0xFF1F497D),
+                        fontSize: 18,
                       ),
                     ),
                     const SizedBox(height: 8),
                     TextField(
                       controller: _detailsController,
+                      style: const TextStyle(fontSize: 18),
                       maxLines: 5,
                       decoration: InputDecoration(
                         filled: true,
@@ -279,6 +269,7 @@ class _UserRequestScreenState extends State<UserRequestScreen> {
                       style: TextStyle(
                         fontWeight: FontWeight.w600,
                         color: Color(0xFF1F497D),
+                        fontSize: 18,
                       ),
                     ),
                     const SizedBox(height: 8),

@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import '../pages/login.dart';
 import '../services/authen_login.dart';
@@ -39,7 +38,7 @@ class AppDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     final pid = AppState.instance.currentProfileId;
     return Drawer(
-      backgroundColor: const Color.fromARGB(255, 227, 242, 255),
+      backgroundColor: const Color.fromARGB(255, 245, 250, 255),
       child: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -199,4 +198,3 @@ class AppDrawer extends StatelessWidget {
     );
   }
 }
-

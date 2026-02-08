@@ -586,7 +586,7 @@ class _Home extends State<Home> {
                               Text(
                                 reminder.meal,
                                 style: const TextStyle(
-                                  fontSize: 12,
+                                  fontSize: 16,
                                   color: Color(0xFF6FA8DC),
                                 ),
                               ),
@@ -603,7 +603,7 @@ class _Home extends State<Home> {
                           Text(
                             reminder.pills,
                             style: const TextStyle(
-                              fontSize: 12,
+                              fontSize: 16,
                               color: Color(0xFF6FA8DC),
                             ),
                           ),

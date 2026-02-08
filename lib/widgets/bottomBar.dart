@@ -25,8 +25,10 @@ class BottomBar extends StatelessWidget {
         children: [
           IconButton(
             onPressed: () {
-              // TODO: ไปหน้าปฏิทิน (ถ้ามี route)
-              // Navigator.pushNamed(context, '/calendar', arguments: {'profileId': pid});
+              Navigator.pushNamed(
+                context,
+                '/following',
+              );
             },
             icon: const Icon(
               Icons.favorite,

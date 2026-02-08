@@ -485,18 +485,19 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
     final profileName = _profileName();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFB7DAFF),
+      backgroundColor: const Color.fromARGB(255, 217, 235, 255),
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF6F2EA),
+        backgroundColor: const Color(0xFF1F497D),
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Color(0xFF1F497D)),
+          icon: const Icon(Icons.arrow_back,
+              color: Color.fromARGB(255, 255, 255, 255)),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
           'รายการยาที่ต้องรับประทาน',
           style: TextStyle(
-            color: Color(0xFF1F497D),
+            color: Color.fromARGB(255, 255, 255, 255),
             fontWeight: FontWeight.w700,
           ),
         ),

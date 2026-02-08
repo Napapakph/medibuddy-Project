@@ -192,7 +192,7 @@ class CommentViewer extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color.fromARGB(255, 248, 255, 251),
+                color: const Color.fromARGB(255, 255, 255, 255),
                 borderRadius: BorderRadius.circular(12),
                 border:
                     Border.all(color: const Color.fromARGB(255, 133, 135, 176)),

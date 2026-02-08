@@ -30,11 +30,13 @@ class _FollowerScreenState extends State<FollowerScreen> {
     super.initState();
     _loadFollowers();
   }
+
 // โหลดรายชื่อผู้ติดตามเมื่อเปิดหน้าจอ
   @override
   void dispose() {
     super.dispose();
   }
+
 // โหลดรายชื่อผู้ติดตามจาก API
   int _readFollowerId(Map<String, dynamic> follower) {
     final raw = follower['relationshipId'];
@@ -242,7 +244,8 @@ class _FollowerScreenState extends State<FollowerScreen> {
                   onPressed: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (_) => const AddFollowerScreen()),
+                      MaterialPageRoute(
+                          builder: (_) => const AddFollowerScreen()),
                     );
                   },
                   icon: const Icon(Icons.person_add),
