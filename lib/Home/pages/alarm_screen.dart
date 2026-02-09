@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:medibuddy/Home/pages/confirm_action.dart';
 import 'package:medibuddy/services/regimen_api.dart';
@@ -13,6 +15,7 @@ class AlarmScreen extends StatefulWidget {
 
 class _AlarmScreenState extends State<AlarmScreen> {
   bool _submitting = false;
+  final Set<int> _completedLogIds = <int>{};
 
   @override
   void initState() {
@@ -41,6 +44,7 @@ class _AlarmScreenState extends State<AlarmScreen> {
 
   void _debugPayload() {
     final n = _normalizedPayload();
+    final items = _alarmItems();
     debugPrint('AlarmScreen raw payload = ${widget.payload}');
     debugPrint('AlarmScreen normalized keys = ${n.keys.toList()}');
     debugPrint('title=${n['title']} body=${n['body']}');
@@ -48,6 +52,35 @@ class _AlarmScreenState extends State<AlarmScreen> {
         'type=${n['type']} logId=${n['logId']} profileId=${n['profileId']} mediListId=${n['mediListId']} mediRegimenId=${n['mediRegimenId']}');
     debugPrint(
         'scheduleTime=${n['scheduleTime']} snoozedCount=${n['snoozedCount']} isSnoozeReminder=${n['isSnoozeReminder']}');
+    debugPrint('items=${items.isNotEmpty} count=${items.length}');
+    if (items.isNotEmpty) {
+      debugPrint('items first keys=${items.first.keys.toList()}');
+    }
+  }
+
+  List<Map<String, dynamic>> _parsePayloadItems(dynamic raw) {
+    if (raw == null) return [];
+    try {
+      final decoded = raw is String ? jsonDecode(raw) : raw;
+      if (decoded is! List) return [];
+      final items = <Map<String, dynamic>>[];
+      for (final item in decoded) {
+        if (item is Map) {
+          items.add(item.map((key, value) => MapEntry(key.toString(), value)));
+        }
+      }
+      return items;
+    } catch (e) {
+      debugPrint('❌ Failed to decode payload list: $e');
+      return [];
+    }
+  }
+
+  List<Map<String, dynamic>> _alarmItems() {
+    final normalized = _normalizedPayload();
+    final fromItems = _parsePayloadItems(normalized['items']);
+    if (fromItems.isNotEmpty) return fromItems;
+    return _parsePayloadItems(normalized['payload']);
   }
 
   int? _parseLogId(dynamic value) {
@@ -57,6 +90,11 @@ class _AlarmScreenState extends State<AlarmScreen> {
   }
 
   int? _extractLogId() {
+    final items = _alarmItems();
+    if (items.isNotEmpty) {
+      final fromItems = _parseLogId(items.first['logId']);
+      if (fromItems != null) return fromItems;
+    }
     final raw = widget.payload ?? <String, dynamic>{};
     if (raw['data'] is Map) {
       final data = Map<String, dynamic>.from(raw['data'] as Map);
@@ -68,12 +106,23 @@ class _AlarmScreenState extends State<AlarmScreen> {
   }
 
   List<int> _extractLogIds() {
+    final items = _alarmItems();
+    if (items.isNotEmpty) {
+      final ids = <int>[];
+      for (final item in items) {
+        final parsed = _parseLogId(item['logId']);
+        if (parsed != null && parsed > 0) {
+          ids.add(parsed);
+        }
+      }
+      if (ids.isNotEmpty) return ids;
+    }
     final raw = widget.payload ?? <String, dynamic>{};
     if (raw['data'] is Map) {
       final data = Map<String, dynamic>.from(raw['data'] as Map);
-      if (data['logIds'] is List) {
+      if (data['logId'] is List) {
         final ids = <int>[];
-        for (final item in data['logIds'] as List) {
+        for (final item in data['logId'] as List) {
           final parsed = _parseLogId(item);
           if (parsed != null && parsed > 0) {
             ids.add(parsed);
@@ -88,10 +137,13 @@ class _AlarmScreenState extends State<AlarmScreen> {
     return [];
   }
 
-  Future<void> _submitResponse(String responseStatus) async {
+  Future<void> _submitResponseForLogId({
+    required int logId,
+    required String responseStatus,
+    bool popOnSuccess = true,
+  }) async {
     if (_submitting) return;
-    final logId = _extractLogId();
-    if (logId == null || logId <= 0) {
+    if (logId <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Missing logId in notification payload')),
       );
@@ -106,7 +158,12 @@ class _AlarmScreenState extends State<AlarmScreen> {
         responseStatus: responseStatus,
       );
       if (!mounted) return;
-      Navigator.of(context).pop();
+      setState(() {
+        _completedLogIds.add(logId);
+      });
+      if (popOnSuccess) {
+        Navigator.of(context).pop();
+      }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -117,6 +174,20 @@ class _AlarmScreenState extends State<AlarmScreen> {
         setState(() => _submitting = false);
       }
     }
+  }
+
+  Future<void> _submitResponse(String responseStatus) async {
+    final logId = _extractLogId();
+    if (logId == null || logId <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Missing logId in notification payload')),
+      );
+      return;
+    }
+    await _submitResponseForLogId(
+      logId: logId,
+      responseStatus: responseStatus,
+    );
   }
 
   void _openConfirmAction({required List<int> logIds}) {
@@ -162,6 +233,14 @@ class _AlarmScreenState extends State<AlarmScreen> {
       return fromSchedule;
     }
 
+    final items = _alarmItems();
+    if (items.isNotEmpty) {
+      final fromItems = _timeFromScheduleTime(items.first['scheduleTime']);
+      if (fromItems.isNotEmpty) {
+        return fromItems;
+      }
+    }
+
     // 2) fallback ไปใช้ time (ถ้ามีและไม่ใช่ค่าเพี้ยน)
     final rawTime = payload['time']?.toString().trim();
     if (rawTime != null &&
@@ -177,6 +256,179 @@ class _AlarmScreenState extends State<AlarmScreen> {
 
   String _titleText() => _normalizedPayload()['title']?.toString() ?? '';
   String _bodyText() => _normalizedPayload()['body']?.toString() ?? '';
+
+  List<Widget> _headerWidgets(String title, String body) {
+    return [
+      Image.asset(
+        'assets/main_mascot.png',
+        width: 160,
+        height: 160,
+        fit: BoxFit.contain,
+      ),
+      const SizedBox(height: 5),
+      Text(
+        _timeText(),
+        style: const TextStyle(
+          fontSize: 56,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 1,
+        ),
+      ),
+      if (title.isNotEmpty) ...[
+        const SizedBox(height: 8),
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ],
+      if (body.isNotEmpty) ...[
+        const SizedBox(height: 4),
+        Text(
+          body,
+          style: const TextStyle(fontSize: 14, color: Colors.black54),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    ];
+  }
+
+  Widget _buildAlarmItemCard(Map<String, dynamic> item) {
+    final logId = _parseLogId(item['logId']);
+    final profileName = item['profileName']?.toString().trim() ?? '';
+    final scheduleText = _timeFromScheduleTime(item['scheduleTime']);
+    final isDone = logId != null && _completedLogIds.contains(logId);
+    final disabled = _submitting || isDone || logId == null || logId <= 0;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x12000000),
+            blurRadius: 10,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            profileName.isNotEmpty ? profileName : 'รายการยา',
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF1F497D),
+            ),
+          ),
+          if (scheduleText.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              'เวลา $scheduleText น.',
+              style: const TextStyle(
+                fontSize: 12,
+                color: Color(0xFF6E7C8B),
+              ),
+            ),
+          ],
+          if (logId != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              'logId: $logId',
+              style: const TextStyle(
+                fontSize: 11,
+                color: Color(0xFF9AA7B5),
+              ),
+            ),
+          ],
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: disabled
+                      ? null
+                      : () => _submitResponseForLogId(
+                            logId: logId!,
+                            responseStatus: 'SKIP',
+                            popOnSuccess: false,
+                          ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFFE35D5D),
+                    side: const BorderSide(color: Color(0xFFE35D5D)),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: const Text('ข้ามยา'),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: disabled
+                      ? null
+                      : () => _submitResponseForLogId(
+                            logId: logId!,
+                            responseStatus: 'TAKE',
+                            popOnSuccess: false,
+                          ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF1F497D),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: const Text('กินยา'),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: disabled
+                      ? null
+                      : () => _submitResponseForLogId(
+                            logId: logId!,
+                            responseStatus: 'SNOOZE',
+                            popOnSuccess: false,
+                          ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFFF0A24F),
+                    side: const BorderSide(color: Color(0xFFF0A24F)),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: const Text('เลื่อน'),
+                ),
+              ),
+            ],
+          ),
+          if (isDone) ...[
+            const SizedBox(height: 6),
+            const Text(
+              'ส่งผลแล้ว',
+              style: TextStyle(
+                fontSize: 12,
+                color: Color(0xFF6E7C8B),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
 
   // ✅ NEW: exit helper (return to previous screen safely)
   void _exitToApp({required String action, int? snoozeMinutes}) {
@@ -239,6 +491,8 @@ class _AlarmScreenState extends State<AlarmScreen> {
   Widget build(BuildContext context) {
     final title = _titleText();
     final body = _bodyText();
+    final items = _alarmItems();
+    final hasItems = items.isNotEmpty;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF6F2EA),
@@ -252,53 +506,34 @@ class _AlarmScreenState extends State<AlarmScreen> {
             ),
             const SizedBox(height: 8),
             Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Image.asset(
-                    'assets/main_mascot.png',
-                    width: 160,
-                    height: 160,
-                    fit: BoxFit.contain,
-                  ),
-                  const SizedBox(height: 5),
-                  Text(
-                    _timeText(), // ✅ now shows scheduleTime/time
-                    style: const TextStyle(
-                      fontSize: 56,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1,
+              child: hasItems
+                  ? Column(
+                      children: [
+                        ..._headerWidgets(title, body),
+                        const SizedBox(height: 12),
+                        Expanded(
+                          child: ListView.builder(
+                            padding: const EdgeInsets.symmetric(horizontal: 20),
+                            itemCount: items.length,
+                            itemBuilder: (context, index) {
+                              return _buildAlarmItemCard(items[index]);
+                            },
+                          ),
+                        ),
+                      ],
+                    )
+                  : Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: _headerWidgets(title, body),
                     ),
-                  ),
-                  if (title.isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                  if (body.isNotEmpty) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      body,
-                      style:
-                          const TextStyle(fontSize: 14, color: Colors.black54),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ],
-              ),
             ),
             const SizedBox(height: 24),
-            PillSlideAction(
-              onTake: _onGreen,
-              onSkip: _onRed,
-              onSnooze: () => _onSnooze(10),
-            ),
+            if (!hasItems)
+              PillSlideAction(
+                onTake: _onGreen,
+                onSkip: _onRed,
+                onSnooze: () => _onSnooze(10),
+              ),
             const SizedBox(height: 16),
           ],
         ),
@@ -597,15 +832,3 @@ class _PillThumb extends StatelessWidget {
     );
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-

@@ -34,27 +34,39 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
   String _errorMessage = '';
 
   bool _skipCatalogLink = false; // ✅ ไม่ผูกกับฐานข้อมูล
-  late final String _searchQuery;
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _searchQuery = widget.draft.searchQuery_medi.isNotEmpty
-        ? widget.draft.searchQuery_medi
-        : (widget.isEdit ? (widget.initialItem?.officialName_medi ?? '') : '');
-
     _skipCatalogLink = widget.isEdit && (widget.initialItem?.mediId ?? 0) <= 0;
-    _loadMedicines();
+    _loadInitialList();
   }
 
-  Future<void> _loadMedicines() async {
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadInitialList() async {
+    // ถ้า APIรองรับ search ว่าง = คืน list แรก ก็ใช้แบบนี้ได้เลย
+    await _fetchList(search: '');
+  }
+
+  Future<void> _onSearch() async {
+    final keyword = _searchController.text.trim();
+    await _fetchList(search: keyword);
+  }
+
+  Future<void> _fetchList({required String search}) async {
     setState(() {
       _loading = true;
       _errorMessage = '';
     });
 
     try {
-      final items = await _api.fetchMedicineCatalog(search: _searchQuery);
+      final items = await _api.fetchMedicineCatalog(search: search);
       if (!mounted) return;
 
       setState(() {
@@ -91,7 +103,7 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
   }
 
   List<MedicineCatalogItem> _filteredItems() {
-    final query = _searchQuery.trim().toLowerCase();
+    final query = _searchController.text.trim().toLowerCase();
     if (query.isEmpty) return List<MedicineCatalogItem>.from(_items);
 
     return _items.where((item) {
@@ -105,7 +117,7 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
   }
 
   bool _hasExactMatch(List<MedicineCatalogItem> filtered) {
-    final q = _searchQuery.trim().toLowerCase();
+    final q = _searchController.text.trim().toLowerCase();
     if (q.isEmpty) return true; // ไม่ search ก็ถือว่าไม่ต้องโชว์โหมด notfound
 
     for (final item in filtered) {
@@ -119,7 +131,7 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
   }
 
   void _goRequest() {
-    final query = _searchQuery.trim();
+    final query = _searchController.text.trim();
     if (query.isEmpty) return;
 
     Navigator.push(

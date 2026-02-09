@@ -53,6 +53,24 @@ void notificationTapBackground(NotificationResponse response) {
   debugPrint('🔔 LOCAL NOTI TAP (bg) payload=${response.payload}');
 }
 
+List<Map<String, dynamic>> _parsePayloadItems(dynamic raw) {
+  if (raw == null) return [];
+  try {
+    final decoded = raw is String ? jsonDecode(raw) : raw;
+    if (decoded is! List) return [];
+    final items = <Map<String, dynamic>>[];
+    for (final item in decoded) {
+      if (item is Map) {
+        items.add(item.map((key, value) => MapEntry(key.toString(), value)));
+      }
+    }
+    return items;
+  } catch (e) {
+    debugPrint('❌ Failed to decode payload list: $e');
+    return [];
+  }
+}
+
 Map<String, dynamic> _payloadFromRemoteMessage(RemoteMessage message) {
   final data = Map<String, dynamic>.from(message.data);
   final notification = message.notification;
@@ -80,10 +98,20 @@ Map<String, dynamic> _payloadFromRemoteMessage(RemoteMessage message) {
   payload['snoozedCount'] = data['snoozedCount']?.toString();
   payload['isSnoozeReminder'] = data['isSnoozeReminder']?.toString();
 
+  final items = _parsePayloadItems(data['payload']);
+  if (items.isNotEmpty) {
+    payload['items'] = items;
+  }
+
   debugPrint('🔔 onMessage payload to /alarm = $payload');
   debugPrint('🔔 onMessage raw data = ${message.data}');
   debugPrint(
       '🔔 onMessage notification title=${message.notification?.title} body=${message.notification?.body}');
+  debugPrint(
+      '🔔 onMessage payload items=${items.isNotEmpty} count=${items.length}');
+  if (items.isNotEmpty) {
+    debugPrint('🔔 onMessage payload first item keys=${items.first.keys.toList()}');
+  }
 
   return payload;
 }
@@ -206,7 +234,7 @@ Future<void> main() async {
 
     // 🔔 สร้าง banner เอง
     final payload = jsonEncode(_payloadFromRemoteMessage(msg));
-    debugPrint('🧪 showing local noti payload=$payload');
+
     await flnp.show(
       notification.hashCode,
       notification.title,

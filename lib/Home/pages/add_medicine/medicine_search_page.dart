@@ -37,7 +37,7 @@ class _MedicineSearchPageState extends State<MedicineSearchPage> {
   }
 
   Future<void> _loadInitialList() async {
-    // ถ้า API ของเดียร์รองรับ search ว่าง = คืน list แรก ก็ใช้แบบนี้ได้เลย
+    // ถ้า APIรองรับ search ว่าง = คืน list แรก ก็ใช้แบบนี้ได้เลย
     await _fetchList(search: '');
   }
 
