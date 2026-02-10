@@ -354,8 +354,19 @@ class _AddFollowerScreenState extends State<AddFollowerScreen> {
 
 class FollowerPermissionScreen extends StatefulWidget {
   final Map<String, dynamic> user;
+  final bool isEdit;
+  final int? followerId;
+  final String? initialNickname;
+  final List<int> initialProfileIds;
 
-  const FollowerPermissionScreen({super.key, required this.user});
+  const FollowerPermissionScreen({
+    super.key,
+    required this.user,
+    this.isEdit = false,
+    this.followerId,
+    this.initialNickname,
+    this.initialProfileIds = const [],
+  });
 
   @override
   State<FollowerPermissionScreen> createState() =>
@@ -407,7 +418,13 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
       );
       _myProfiles = profiles;
       _selectedProfileIds.clear();
-      if (_myProfiles.isNotEmpty) {
+      if (widget.isEdit) {
+        for (final id in widget.initialProfileIds) {
+          if (id > 0) {
+            _selectedProfileIds.add(id);
+          }
+        }
+      } else if (_myProfiles.isNotEmpty) {
         for (final profile in _myProfiles) {
           final id = _readProfileId(profile);
           if (id > 0) {
@@ -454,24 +471,38 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
         throw Exception('No access token');
       }
 
-      final email = widget.user['email']?.toString();
-      final userId = _asProfileId(widget.user['id']);
+      if (widget.isEdit) {
+        final followerId = widget.followerId ?? 0;
+        if (followerId <= 0) {
+          throw Exception('Missing followerId');
+        }
+        await _followApi.updateFollowerProfiles(
+          accessToken: accessToken,
+          followerId: followerId,
+          profileIds: profileIds,
+        );
+      } else {
+        final email = widget.user['email']?.toString();
+        final userId = _asProfileId(widget.user['id']);
 
-      await _followApi.sendInvite(
-        accessToken: accessToken,
-        email: email,
-        userId: userId > 0 ? userId : null,
-        profileIds: profileIds,
-      );
+        await _followApi.sendInvite(
+          accessToken: accessToken,
+          email: email,
+          userId: userId > 0 ? userId : null,
+          profileIds: profileIds,
+        );
+      }
     } catch (e) {
       if (!mounted) return;
       final raw = e.toString();
       final lower = raw.toLowerCase();
       final isPending = raw.contains('409') &&
           (lower.contains('pending') || lower.contains('already exists'));
-      final message = isPending
-          ? 'ส่งคำเชิญไปแล้ว กำลังรอการตอบรับ'
-          : 'ส่งคำเชิญไม่สำเร็จ: $e';
+      final message = widget.isEdit
+          ? 'บันทึกไม่สำเร็จ: $e'
+          : (isPending
+              ? 'ส่งคำเชิญไปแล้ว กำลังรอการตอบรับ'
+              : 'ส่งคำเชิญไม่สำเร็จ: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(message)),
       );
@@ -480,7 +511,9 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
 
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('เพิ่มผู้ติดตามแล้ว')),
+      SnackBar(
+        content: Text(widget.isEdit ? 'บันทึกสำเร็จ' : 'เพิ่มผู้ติดตามแล้ว'),
+      ),
     );
     Navigator.pop(context, true);
   }
@@ -541,7 +574,8 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
   Widget build(BuildContext context) {
     final email =
         (widget.user['email'] ?? widget.user['mail'] ?? '').toString();
-    final rawName = (widget.user['profileName'] ??
+    final rawName = (widget.initialNickname ??
+            widget.user['profileName'] ??
             widget.user['name'] ??
             widget.user['displayName'] ??
             '')
@@ -553,7 +587,7 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('เพิ่มผู้ติดตาม'),
+        title: Text(widget.isEdit ? 'แก้ไขผู้ติดตาม' : 'เพิ่มผู้ติดตาม'),
         backgroundColor: _primaryBlue,
         foregroundColor: Colors.white,
         elevation: 0,
@@ -649,9 +683,9 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
               ),
               elevation: 0,
             ),
-            child: const Text(
-              'เพิ่มผู้ติดตาม',
-              style: TextStyle(fontWeight: FontWeight.w600),
+            child: Text(
+              widget.isEdit ? 'บันทึกการแก้ไข' : 'เพิ่มผู้ติดตาม',
+              style: const TextStyle(fontWeight: FontWeight.w600),
             ),
           ),
         ),

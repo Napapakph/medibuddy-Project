@@ -163,7 +163,7 @@ class _LibraryProfileState extends State<LibraryProfile> {
                       width: containerWidth,
                       child: Padding(
                         padding: EdgeInsets.fromLTRB(
-                          maxWidth * 0.02,
+                          maxWidth * 0.01,
                           maxHeight * 0.00,
                           maxWidth * 0.02,
                           maxHeight * 0.126,
@@ -381,8 +381,8 @@ class _LibraryProfileState extends State<LibraryProfile> {
 
             return AlertDialog(
               insetPadding: EdgeInsets.symmetric(
-                horizontal: maxWidth * 0.05,
-                vertical: maxHeight * 0.05,
+                horizontal: maxWidth * 0.07,
+                vertical: maxHeight * 0.07,
               ),
               backgroundColor: const Color(0xFFF5F5F5),
               content: Column(
@@ -403,7 +403,7 @@ class _LibraryProfileState extends State<LibraryProfile> {
                       }
                     },
                   ),
-                  SizedBox(height: maxHeight * 0.02),
+                  SizedBox(height: maxHeight * 0.05),
                   TextField(
                     controller: editNameCtrl,
                     decoration: InputDecoration(
@@ -576,8 +576,8 @@ class _LibraryProfileState extends State<LibraryProfile> {
 
             return AlertDialog(
               insetPadding: EdgeInsets.symmetric(
-                horizontal: maxWidth * 0.05,
-                vertical: maxHeight * 0.05,
+                horizontal: maxWidth * 0.01,
+                vertical: maxHeight * 0.1,
               ),
               backgroundColor: const Color(0xFFF5F5F5),
               content: Column(

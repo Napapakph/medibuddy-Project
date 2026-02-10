@@ -136,7 +136,10 @@ class FollowUserCard extends StatelessWidget {
                   _buildActionButton(
                     icon: Icons.edit,
                     backgroundColor: const Color(0xFF2F5788),
-                    onPressed: onEdit ?? () {},
+                    onPressed: onEdit ??
+                        () {
+                          debugPrint('Edit pressed');
+                        },
                   ),
                 ],
               ),

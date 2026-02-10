@@ -3,6 +3,10 @@ import 'package:medibuddy/services/auth_session.dart';
 import 'package:medibuddy/services/follow_api.dart';
 import 'package:medibuddy/widgets/bottomBar.dart';
 import 'package:medibuddy/widgets/follow_user_card.dart';
+import 'dart:io';
+
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:image_picker/image_picker.dart';
 import 'add_follower.dart';
 
 // ===== หน้าจอจัดการผู้ติดตาม =====
@@ -40,7 +44,7 @@ class _FollowerScreenState extends State<FollowerScreen> {
 // โหลดรายชื่อผู้ติดตามจาก API
   int _readFollowerId(Map<String, dynamic> follower) {
     final raw = follower['relationshipId'];
-    return int.tryParse(raw.toString()) ?? 0;
+    return _asInt(raw);
   }
 
   String _readFollowerName(Map<String, dynamic> follower) {
@@ -59,14 +63,220 @@ class _FollowerScreenState extends State<FollowerScreen> {
     return email.contains('@') ? email : '';
   }
 
+  int _asInt(dynamic value) {
+    if (value == null) return 0;
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    return int.tryParse(value.toString()) ?? 0;
+  }
+
+  String _resolveImageUrl(String? raw) {
+    final value = (raw ?? '').trim();
+    if (value.isEmpty) return '';
+
+    final uri = Uri.tryParse(value);
+    if (uri != null && uri.hasScheme) return value;
+
+    final baseUrl = (dotenv.env['API_BASE_URL'] ?? '').trim();
+    if (baseUrl.isEmpty) return value;
+
+    final baseUri = Uri.tryParse(baseUrl);
+    if (baseUri == null) return value;
+
+    final normalizedPath = value.startsWith('/') ? value : '/$value';
+    return baseUri.resolve(normalizedPath).toString();
+  }
+
   String _readFollowerAvatar(Map<String, dynamic> follower) {
-    // JSON ล่าสุดยังไม่มีฟิลด์รูปของ follower
-    return '';
+    final raw = (follower['profilePicture'] ??
+            follower['profilePictureUrl'] ??
+            follower['accountPicture'] ??
+            follower['avatar'] ??
+            follower['picture'] ??
+            follower['imageUrl'])
+        ?.toString();
+    return _resolveImageUrl(raw);
+  }
+
+  List<int> _readFollowerProfileIds(Map<String, dynamic> follower) {
+    final candidates = [
+      follower['profileIds'],
+      follower['profiles'],
+      follower['allowedProfiles'],
+      follower['viewerProfileIds'],
+    ];
+    final ids = <int>{};
+
+    for (final candidate in candidates) {
+      if (candidate is List) {
+        for (final item in candidate) {
+          if (item is Map) {
+            final raw = item['profileId'] ?? item['id'] ?? item['profile_id'];
+            final id = _asInt(raw);
+            if (id > 0) ids.add(id);
+          } else {
+            final id = _asInt(item);
+            if (id > 0) ids.add(id);
+          }
+        }
+      }
+    }
+    return ids.toList();
   }
 
   bool _isAcceptedFollower(Map<String, dynamic> follower) {
     final status = (follower['status'] ?? '').toString().toUpperCase();
     return status == 'APPROVED';
+  }
+
+  Future<void> _openPermissionEdit(Map<String, dynamic> follower) async {
+    final followerId = _readFollowerId(follower);
+    if (followerId <= 0) return;
+    final initialProfiles = _readFollowerProfileIds(follower);
+    final initialNickname = _readFollowerName(follower);
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => FollowerPermissionScreen(
+          user: follower,
+          isEdit: true,
+          followerId: followerId,
+          initialNickname: initialNickname,
+          initialProfileIds: initialProfiles,
+        ),
+      ),
+    );
+    if (!mounted) return;
+    if (result == true) {
+      _loadFollowers();
+    }
+  }
+
+  Future<void> _openEditDialog(Map<String, dynamic> follower) async {
+    final followerId = _readFollowerId(follower);
+    if (followerId <= 0) return;
+
+    final controller = TextEditingController(
+      text: _readFollowerName(follower),
+    );
+    final picker = ImagePicker();
+    XFile? picked;
+    bool saving = false;
+
+    await showDialog<void>(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            ImageProvider? imageProvider;
+            if (picked != null) {
+              imageProvider = FileImage(File(picked!.path));
+            } else {
+              final avatarUrl = _readFollowerAvatar(follower);
+              if (avatarUrl.isNotEmpty) {
+                imageProvider = NetworkImage(avatarUrl);
+              }
+            }
+
+            return AlertDialog(
+              title: const Text('แก้ไขผู้ติดตาม'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircleAvatar(
+                      radius: 36,
+                      backgroundImage: imageProvider,
+                      child: imageProvider == null
+                          ? const Icon(Icons.person, size: 36)
+                          : null,
+                    ),
+                    const SizedBox(height: 8),
+                    TextButton.icon(
+                      onPressed: saving
+                          ? null
+                          : () async {
+                              final file = await picker.pickImage(
+                                source: ImageSource.gallery,
+                              );
+                              if (file == null) return;
+                              setState(() => picked = file);
+                            },
+                      icon: const Icon(Icons.photo_library),
+                      label: const Text('เลือกรูป'),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: controller,
+                      decoration: const InputDecoration(
+                        labelText: 'ชื่อผู้ติดตาม',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'อัปเดตรูปโปรไฟล์จะรองรับเมื่อระบบพร้อม',
+                      style: TextStyle(fontSize: 11, color: Colors.black45),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: saving ? null : () => Navigator.pop(context),
+                  child: const Text('ยกเลิก'),
+                ),
+                ElevatedButton(
+                  onPressed: saving
+                      ? null
+                      : () async {
+                          final nickname = controller.text.trim();
+                          if (nickname.isEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('กรุณากรอกชื่อ')),
+                            );
+                            return;
+                          }
+                          final accessToken = AuthSession.accessToken;
+                          if (accessToken == null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text('ไม่พบข้อมูลเข้าสู่ระบบ')),
+                            );
+                            return;
+                          }
+                          setState(() => saving = true);
+                          try {
+                            final profileIds = _readFollowerProfileIds(follower);
+                            await _followApi.updateFollowerNickname(
+                              accessToken: accessToken,
+                              followerId: followerId,
+                              nickname: nickname,
+                              profileIds: profileIds,
+                            );
+                            // TODO: upload avatar when backend supports it.
+                            if (!mounted) return;
+                            Navigator.pop(context);
+                            _loadFollowers();
+                          } catch (e) {
+                            if (!mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('บันทึกไม่สำเร็จ: $e')),
+                            );
+                          } finally {
+                            if (mounted) {
+                              setState(() => saving = false);
+                            }
+                          }
+                        },
+                  child: const Text('บันทึก'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   Future<void> _loadFollowers() async {
@@ -126,7 +336,8 @@ class _FollowerScreenState extends State<FollowerScreen> {
       email: email,
       avatarUrl: avatarUrl,
       onDelete: () => _showDeleteConfirmDialog(id, name),
-      onEdit: () {},
+      onEdit: () => _openEditDialog(follower),
+      onDetail: () => _openPermissionEdit(follower),
     );
   }
 
