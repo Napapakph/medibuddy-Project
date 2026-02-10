@@ -472,13 +472,13 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
       }
 
       if (widget.isEdit) {
-        final followerId = widget.followerId ?? 0;
-        if (followerId <= 0) {
-          throw Exception('Missing followerId');
+        final relationshipId = widget.followerId ?? 0;
+        if (relationshipId <= 0) {
+          throw Exception('Missing relationshipId');
         }
         await _followApi.updateFollowerProfiles(
           accessToken: accessToken,
-          followerId: followerId,
+          relationshipId: relationshipId,
           profileIds: profileIds,
         );
       } else {

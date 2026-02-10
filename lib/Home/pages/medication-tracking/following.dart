@@ -1,8 +1,11 @@
-﻿import 'package:flutter/material.dart';
+﻿import 'dart:io';
+import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:medibuddy/services/app_state.dart' show AppState;
 import 'package:medibuddy/services/follow_api.dart';
 import 'package:medibuddy/services/auth_session.dart';
 import 'package:medibuddy/widgets/follow_user_card.dart';
+import 'following_history.dart';
 
 class FollowingScreen extends StatefulWidget {
   const FollowingScreen({super.key});
@@ -23,7 +26,15 @@ class _FollowingScreenState extends State<FollowingScreen>
 
   Future<void> _goHome() async {
     if (!mounted) return;
-    Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+    Navigator.pushReplacementNamed(
+      context,
+      '/home',
+      arguments: {
+        'profileId': pid,
+        'profileName': AppState.instance.currentProfileName,
+        'profileImage': AppState.instance.currentProfileImagePath,
+      },
+    );
   }
 
   @override
@@ -79,7 +90,10 @@ class _FollowingScreenState extends State<FollowingScreen>
   }
 
   String _readFollowingAvatar(Map<String, dynamic> data) {
-    return '';
+    final raw =
+        (data['accountPicture'] ?? data['avatar'] ?? data['picture'] ?? '')
+            .toString();
+    return _resolveImageUrl(raw);
   }
 
   int _readProfileId(Map<String, dynamic> profile) {
@@ -274,12 +288,25 @@ class _FollowingScreenState extends State<FollowingScreen>
     }
 
     List<Map<String, dynamic>> profiles = _extractProfilesFromData(user);
+    String ownerName = _readFollowingName(user);
+    String accountPicture = '';
 
     try {
       final detail = await _followApi.fetchFollowingDetail(
         accessToken: accessToken,
         relationshipId: relationshipId,
       );
+
+      // Extract accountPicture from relationship object
+      final relationship = detail['relationship'];
+      if (relationship is Map) {
+        accountPicture =
+            (relationship['accountPicture'] ?? '').toString().trim();
+        final detailName = (relationship['name'] ?? '').toString().trim();
+        if (detailName.isNotEmpty) ownerName = detailName;
+      }
+
+      // Extract profiles
       final detailProfiles = _extractProfilesFromData(detail);
       if (detailProfiles.isNotEmpty) {
         profiles = detailProfiles;
@@ -418,7 +445,26 @@ class _FollowingScreenState extends State<FollowingScreen>
                       width: double.infinity,
                       height: 44,
                       child: ElevatedButton(
-                        onPressed: () => Navigator.pop(ctx),
+                        onPressed: () {
+                          Navigator.pop(ctx);
+                          // Navigate to Following History page
+                          final selected = profiles[selectedIndex];
+                          final selectedProfileId = _readProfileId(selected);
+                          final selectedProfileName =
+                              _readProfileName(selected);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => FollowingHistoryPage(
+                                relationshipId: relationshipId,
+                                profileId: selectedProfileId,
+                                profileName: selectedProfileName,
+                                ownerName: ownerName,
+                                ownerImage: accountPicture,
+                              ),
+                            ),
+                          );
+                        },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF1F497D),
                           foregroundColor: Colors.white,
@@ -501,6 +547,7 @@ class _FollowingScreenState extends State<FollowingScreen>
 
   @override
   Widget build(BuildContext context) {
+    final pid = AppState.instance.currentProfileId;
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
@@ -617,11 +664,15 @@ class _FollowingScreenState extends State<FollowingScreen>
                                 final name = _readFollowingName(user);
                                 final avatarUrl = _readFollowingAvatar(user);
                                 final email = _readFollowingEmail(user);
+                                final avatarImage = avatarUrl.isNotEmpty
+                                    ? NetworkImage(avatarUrl) as ImageProvider
+                                    : null;
 
                                 return FollowUserCard(
                                   name: name,
                                   email: email,
                                   avatarUrl: avatarUrl,
+                                  avatarImage: avatarImage,
                                   onDelete: () => _confirmRemoveFollowing(user),
                                   onEdit: () {},
                                   onDetail: () =>

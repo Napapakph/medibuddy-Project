@@ -6,6 +6,7 @@ class FollowUserCard extends StatelessWidget {
     required this.name,
     required this.email,
     required this.avatarUrl,
+    this.avatarImage,
     required this.onDelete,
     this.onEdit,
     this.onDetail,
@@ -14,6 +15,7 @@ class FollowUserCard extends StatelessWidget {
   final String name;
   final String email;
   final String avatarUrl;
+  final ImageProvider? avatarImage;
   final VoidCallback onDelete;
   final VoidCallback? onEdit;
   final VoidCallback? onDetail;
@@ -59,7 +61,16 @@ class FollowUserCard extends StatelessWidget {
                 width: 64,
                 height: 64,
                 color: const Color(0xFFE8EDF3),
-                child: const Icon(Icons.person),
+                child: avatarImage != null
+                    ? Image(
+                        image: avatarImage!,
+                        width: 64,
+                        height: 64,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) =>
+                            const Icon(Icons.person, size: 32),
+                      )
+                    : const Icon(Icons.person, size: 32),
               ),
             ),
             const SizedBox(width: 12),

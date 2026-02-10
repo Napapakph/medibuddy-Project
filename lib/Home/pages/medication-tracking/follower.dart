@@ -4,10 +4,10 @@ import 'package:medibuddy/services/follow_api.dart';
 import 'package:medibuddy/widgets/bottomBar.dart';
 import 'package:medibuddy/widgets/follow_user_card.dart';
 import 'dart:io';
-
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:image_picker/image_picker.dart';
 import 'add_follower.dart';
+import 'package:medibuddy/services/app_state.dart';
 
 // ===== หน้าจอจัดการผู้ติดตาม =====
 class FollowerScreen extends StatefulWidget {
@@ -20,18 +20,29 @@ class FollowerScreen extends StatefulWidget {
 // ===== หน้าจอหลักผู้ติดตาม =====
 class _FollowerScreenState extends State<FollowerScreen> {
   final _followApi = FollowApi();
+  String _imageBaseUrl = '';
   bool _isLoading = false;
   String? _errorMessage;
   List<Map<String, dynamic>> _followers = [];
 
   Future<void> _goHome() async {
     if (!mounted) return;
-    Navigator.pushNamedAndRemoveUntil(context, '/home', (route) => false);
+    final pid = AppState.instance.currentProfileId;
+    Navigator.pushReplacementNamed(
+      context,
+      '/home',
+      arguments: {
+        'profileId': pid,
+        'profileName': AppState.instance.currentProfileName,
+        'profileImage': AppState.instance.currentProfileImagePath,
+      },
+    );
   }
 
   @override
   void initState() {
     super.initState();
+    _imageBaseUrl = dotenv.env['API_BASE_URL'] ?? '';
     _loadFollowers();
   }
 
@@ -70,32 +81,25 @@ class _FollowerScreenState extends State<FollowerScreen> {
     return int.tryParse(value.toString()) ?? 0;
   }
 
-  String _resolveImageUrl(String? raw) {
-    final value = (raw ?? '').trim();
-    if (value.isEmpty) return '';
-
-    final uri = Uri.tryParse(value);
-    if (uri != null && uri.hasScheme) return value;
-
-    final baseUrl = (dotenv.env['API_BASE_URL'] ?? '').trim();
-    if (baseUrl.isEmpty) return value;
-
-    final baseUri = Uri.tryParse(baseUrl);
-    if (baseUri == null) return value;
-
-    final normalizedPath = value.startsWith('/') ? value : '/$value';
-    return baseUri.resolve(normalizedPath).toString();
+  String _readFollowerAvatarPath(Map<String, dynamic> follower) {
+    return (follower['accountPicture'] ?? '').toString().trim();
   }
 
-  String _readFollowerAvatar(Map<String, dynamic> follower) {
-    final raw = (follower['profilePicture'] ??
-            follower['profilePictureUrl'] ??
-            follower['accountPicture'] ??
-            follower['avatar'] ??
-            follower['picture'] ??
-            follower['imageUrl'])
-        ?.toString();
-    return _resolveImageUrl(raw);
+  ImageProvider? buildProfileImage(String imagePath) {
+    if (imagePath.isEmpty) return null;
+
+    // รูปจาก server (public)
+    if (imagePath.startsWith('/uploads')) {
+      return NetworkImage('$_imageBaseUrl$imagePath');
+    }
+
+    // เผื่อ backend ส่ง URL เต็มมา
+    if (imagePath.startsWith('http')) {
+      return NetworkImage(imagePath);
+    }
+
+    // รูปจากเครื่อง (local)
+    return FileImage(File(imagePath));
   }
 
   List<int> _readFollowerProfileIds(Map<String, dynamic> follower) {
@@ -172,10 +176,8 @@ class _FollowerScreenState extends State<FollowerScreen> {
             if (picked != null) {
               imageProvider = FileImage(File(picked!.path));
             } else {
-              final avatarUrl = _readFollowerAvatar(follower);
-              if (avatarUrl.isNotEmpty) {
-                imageProvider = NetworkImage(avatarUrl);
-              }
+              final avatarPath = _readFollowerAvatarPath(follower);
+              imageProvider = buildProfileImage(avatarPath);
             }
 
             return AlertDialog(
@@ -213,11 +215,6 @@ class _FollowerScreenState extends State<FollowerScreen> {
                         border: OutlineInputBorder(),
                       ),
                     ),
-                    const SizedBox(height: 6),
-                    const Text(
-                      'อัปเดตรูปโปรไฟล์จะรองรับเมื่อระบบพร้อม',
-                      style: TextStyle(fontSize: 11, color: Colors.black45),
-                    ),
                   ],
                 ),
               ),
@@ -247,14 +244,30 @@ class _FollowerScreenState extends State<FollowerScreen> {
                           }
                           setState(() => saving = true);
                           try {
-                            final profileIds = _readFollowerProfileIds(follower);
-                            await _followApi.updateFollowerNickname(
+                            final profileIds =
+                                _readFollowerProfileIds(follower);
+
+                            File? imageFile;
+                            if (picked != null) {
+                              imageFile = File(picked!.path);
+                              debugPrint(
+                                  'PICKED IMAGE PATH -> ${picked!.path}');
+                              debugPrint(
+                                  'FILE EXISTS -> ${imageFile.existsSync()}');
+                              debugPrint(
+                                  'FILE SIZE -> ${imageFile.lengthSync()} bytes');
+                            } else {
+                              debugPrint('NO IMAGE PICKED');
+                            }
+
+                            await _followApi.updateFollower(
                               accessToken: accessToken,
-                              followerId: followerId,
-                              nickname: nickname,
+                              relationshipId: followerId,
+                              name: nickname,
+                              imageFile: imageFile,
                               profileIds: profileIds,
                             );
-                            // TODO: upload avatar when backend supports it.
+
                             if (!mounted) return;
                             Navigator.pop(context);
                             _loadFollowers();
@@ -329,12 +342,14 @@ class _FollowerScreenState extends State<FollowerScreen> {
     final name = _readFollowerName(follower);
     final email = _readFollowerEmail(follower);
     final id = _readFollowerId(follower);
-    final avatarUrl = _readFollowerAvatar(follower);
+    final avatarPath = _readFollowerAvatarPath(follower);
+    final avatarImage = buildProfileImage(avatarPath);
 
     return FollowUserCard(
       name: name,
       email: email,
-      avatarUrl: avatarUrl,
+      avatarUrl: avatarPath,
+      avatarImage: avatarImage,
       onDelete: () => _showDeleteConfirmDialog(id, name),
       onEdit: () => _openEditDialog(follower),
       onDetail: () => _openPermissionEdit(follower),

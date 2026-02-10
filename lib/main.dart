@@ -26,7 +26,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'Home/pages/add_medicine/medicine_search_page.dart';
 import 'Home/pages/user_request/user_request_screen.dart';
-import 'Home/pages/alarm_screen.dart';
+import 'Home/pages/alarm_medicine/alarm_screen.dart';
 import 'Home/pages/set_remind/setRemind_screen.dart';
 import 'Home/pages/medication-tracking/add_follower.dart';
 import 'Home/pages/medication-tracking/follower.dart';

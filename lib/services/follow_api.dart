@@ -1,5 +1,9 @@
+import 'dart:io';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:http_parser/http_parser.dart';
+import 'package:mime/mime.dart';
 
 // สำหรับติดต่อกับ Follow API
 // DIO คือไลบรารี HTTP ที่ใช้ในการส่งคำขอไปยัง API
@@ -10,7 +14,8 @@ class FollowApi {
   FollowApi() {
     final baseUrl = dotenv.env['API_BASE_URL'];
     if (baseUrl == null || baseUrl.isEmpty) {
-      throw Exception('API_BASE_URL not found. Did you load .env in main.dart?');
+      throw Exception(
+          'API_BASE_URL not found. Did you load .env in main.dart?');
     }
 // กำหนดค่าเริ่มต้นของ Dio
     _dio.options = BaseOptions(
@@ -113,6 +118,7 @@ class FollowApi {
       throw Exception('$label: $status ${res.data}');
     }
   }
+
 // ค้นหาผู้ใช้ โดยใช้อีเมล เพื่อค้นหาผู้ติดตามหรือผู้ที่กำลังติดตาม
   Future<List<Map<String, dynamic>>> searchUsers({
     required String accessToken,
@@ -131,15 +137,18 @@ class FollowApi {
       final map = Map<String, dynamic>.from(res.data as Map);
       final users = map['users'];
       if (users is List) {
-        final mapped = users.map((item) {
-          if (item is Map) {
-            return Map<String, dynamic>.from(item);
-          }
-          if (item is String && item.trim().isNotEmpty) {
-            return {'email': item.trim()};
-          }
-          return <String, dynamic>{};
-        }).where((item) => item.isNotEmpty).toList();
+        final mapped = users
+            .map((item) {
+              if (item is Map) {
+                return Map<String, dynamic>.from(item);
+              }
+              if (item is String && item.trim().isNotEmpty) {
+                return {'email': item.trim()};
+              }
+              return <String, dynamic>{};
+            })
+            .where((item) => item.isNotEmpty)
+            .toList();
         if (mapped.isNotEmpty) return mapped;
       }
     }
@@ -185,13 +194,13 @@ class FollowApi {
 
   Future<void> updateFollowerProfiles({
     required String accessToken,
-    required int followerId,
+    required int relationshipId,
     required List<int> profileIds,
   }) async {
     final res = await _dio.patch(
       _followersUpdatePath,
       data: {
-        'followerId': followerId,
+        'relationshipId ': relationshipId,
         'profileIds': profileIds,
       },
       options: _authOptions(accessToken),
@@ -201,19 +210,16 @@ class FollowApi {
 
   Future<void> updateFollowerNickname({
     required String accessToken,
-    required int followerId,
+    required int relationshipId,
     required String nickname,
     List<int> profileIds = const [],
   }) async {
     final base = <String, dynamic>{
-      'followerId': followerId,
+      'relationshipId': relationshipId,
       if (profileIds.isNotEmpty) 'profileIds': profileIds,
     };
 
     final payloads = [
-      {...base, 'nickname': nickname},
-      {...base, 'profileName': nickname},
-      {...base, 'displayName': nickname},
       {...base, 'name': nickname},
     ];
 
@@ -237,6 +243,84 @@ class FollowApi {
 
     final status = lastRes?.statusCode ?? 0;
     throw Exception('Update follower failed: $status ${lastRes?.data}');
+  }
+
+  Future<void> updateFollower({
+    required String accessToken,
+    required int relationshipId,
+    required String name,
+    required List<int> profileIds,
+    File? imageFile,
+    String? accountPicture,
+  }) async {
+    if (imageFile != null && (accountPicture?.trim().isNotEmpty ?? false)) {
+      throw Exception('Send either imageFile OR accountPicture, not both.');
+    }
+
+    final body = <String, dynamic>{
+      'name': name.trim(),
+      'profileIds': profileIds,
+      if (accountPicture?.trim().isNotEmpty ?? false)
+        'accountPicture': accountPicture!.trim(),
+    };
+
+    if (imageFile != null) {
+      final mimeType = lookupMimeType(imageFile.path) ?? 'image/jpeg';
+
+      const allowed = {'image/jpeg', 'image/png', 'image/webp'};
+      if (!allowed.contains(mimeType)) {
+        throw Exception('รองรับเฉพาะ jpg, jpeg, png, webp');
+      }
+
+      body['file'] = await MultipartFile.fromFile(
+        imageFile.path,
+        filename: imageFile.uri.pathSegments.last,
+        contentType: MediaType.parse(mimeType),
+      );
+    }
+
+    debugPrint('UPDATE FOLLOWER Debug -----------------------------');
+    debugPrint(
+        'URL -> ${_dio.options.baseUrl}$_followersUpdatePath?relationshipId=$relationshipId');
+    debugPrint('TOKEN -> ${accessToken.substring(0, 20)}...');
+    debugPrint('NAME -> ${name.trim()}');
+    debugPrint('PROFILE_IDS -> $profileIds');
+    if (imageFile != null) {
+      debugPrint('IMAGE PATH -> ${imageFile.path}');
+      debugPrint('IMAGE SIZE -> ${await imageFile.length()} bytes');
+      debugPrint('IMAGE NAME -> ${imageFile.uri.pathSegments.last}');
+      debugPrint('IMAGE MIME -> ${lookupMimeType(imageFile.path)}');
+    } else {
+      debugPrint('IMAGE -> (no image)');
+    }
+
+    try {
+      final res = await _dio.patch(
+        _followersUpdatePath,
+        queryParameters: {'relationshipId': relationshipId},
+        data: FormData.fromMap(body),
+        options: Options(
+          headers: {'Authorization': 'Bearer $accessToken'},
+          contentType: 'multipart/form-data',
+          validateStatus: (_) => true,
+        ),
+      );
+
+      debugPrint('RESPONSE STATUS=${res.statusCode}');
+      debugPrint('RESPONSE DATA=${res.data}');
+
+      final status = res.statusCode ?? 0;
+      if (status < 200 || status >= 300) {
+        throw Exception('Update follower failed: $status ${res.data}');
+      }
+    } on DioException catch (e) {
+      debugPrint('❌ DIO ERROR');
+      debugPrint('type     = ${e.type}');
+      debugPrint('message  = ${e.message}');
+      debugPrint('status   = ${e.response?.statusCode}');
+      debugPrint('response = ${e.response?.data}');
+      rethrow;
+    }
   }
 
   Future<void> removeFollower({
@@ -314,13 +398,22 @@ class FollowApi {
     required String accessToken,
     required int relationshipId,
     required int profileId,
+    String? startDate,
+    String? endDate,
+    int? limit,
+    int? offset,
   }) async {
+    final params = <String, dynamic>{
+      'relationshipId': relationshipId,
+      'profileId': profileId,
+      if (startDate != null) 'startDate': startDate,
+      if (endDate != null) 'endDate': endDate,
+      if (limit != null) 'limit': limit,
+      if (offset != null) 'offset': offset,
+    };
     final res = await _dio.get(
       _followingLogsPath,
-      queryParameters: {
-        'relationshipId': relationshipId,
-        'profileId': profileId,
-      },
+      queryParameters: params,
       options: _authOptions(accessToken),
     );
     _ensureSuccess(res, 'Fetch following logs failed');
