@@ -150,7 +150,7 @@ class _UserRequestScreenState extends State<UserRequestScreen> {
       backgroundColor: const Color.fromARGB(255, 227, 242, 255),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -356,7 +356,7 @@ class _UserRequestScreenState extends State<UserRequestScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 10),
               Center(
                 child: SizedBox(
                   width: double.infinity,

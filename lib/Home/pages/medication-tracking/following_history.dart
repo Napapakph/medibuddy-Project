@@ -1,31 +1,53 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
+import 'package:intl/intl.dart';
 import 'package:medibuddy/services/auth_session.dart';
 import 'package:medibuddy/services/follow_api.dart';
+import 'package:medibuddy/services/log_api.dart';
+import 'package:medibuddy/widgets/comment.dart';
 
-// ===== Models =====
-enum _MedTakeStatus { take, skip, snooze, none }
+/// ===============================
+/// Models (Copied from HistoryPage)
+/// ===============================
+enum MedicineTakeStatus { take, skip, snooze, none }
 
-class _MedHistoryItem {
+class MedicineHistoryItem {
   final DateTime takenAt;
-  final String medicineName;
-  final int dose;
-  final String unit;
-  final _MedTakeStatus status;
+  final String titleTh;
+  final String titleEn;
+  final String detail;
+  final int amount;
+  final int? dose;
+  final String? unit;
+  final MedicineTakeStatus status;
+  final String? note;
+  final String nickname;
+  final String tradeName;
+  final String thName;
+  final String enName;
 
-  const _MedHistoryItem({
+  const MedicineHistoryItem({
     required this.takenAt,
-    required this.medicineName,
-    required this.dose,
-    required this.unit,
+    required this.titleTh,
+    required this.titleEn,
+    required this.detail,
+    required this.amount,
+    this.dose,
+    this.unit,
     required this.status,
+    this.note,
+    required this.nickname,
+    required this.tradeName,
+    required this.thName,
+    required this.enName,
   });
 }
 
-// ===== Page =====
+/// ===============================
+/// Page
+/// ===============================
 class FollowingHistoryPage extends StatefulWidget {
   final int relationshipId;
   final int profileId;
@@ -48,10 +70,15 @@ class FollowingHistoryPage extends StatefulWidget {
 
 class _FollowingHistoryPageState extends State<FollowingHistoryPage> {
   final _followApi = FollowApi();
+  final _logApi = LogApiService();
   final _searchCtrl = TextEditingController();
-  String _imageBaseUrl = '';
 
-  static const _searchTrade = 'ชื่อยา';
+  static const _searchTrade = 'ชื่อการค้า';
+  static const _searchTh = 'ชื่อสามัญไทย';
+  static const _searchEn = 'ชื่อสามัญอังกฤษ';
+  static const _searchNickname = 'ชื่อเล่นยา';
+
+  String _imageBaseUrl = '';
   String _searchMode = _searchTrade;
 
   DateTime _startDate = DateTime.now().subtract(const Duration(days: 7));
@@ -61,8 +88,8 @@ class _FollowingHistoryPageState extends State<FollowingHistoryPage> {
   bool _loading = false;
   String _errorMessage = '';
 
-  List<_MedHistoryItem> _allItems = [];
-  List<_MedHistoryItem> _filteredItems = [];
+  List<MedicineHistoryItem> _allItems = [];
+  List<MedicineHistoryItem> _filteredItems = [];
 
   @override
   void initState() {
@@ -78,53 +105,106 @@ class _FollowingHistoryPageState extends State<FollowingHistoryPage> {
     super.dispose();
   }
 
-  // ===== Image =====
-  ImageProvider? _buildProfileImage(String? imagePath) {
-    if (imagePath == null || imagePath.isEmpty) return null;
-    if (imagePath.startsWith('/uploads')) {
-      return NetworkImage('$_imageBaseUrl$imagePath');
-    }
-    if (imagePath.startsWith('http')) {
-      return NetworkImage(imagePath);
-    }
-    return FileImage(File(imagePath));
+  /// ===============================
+  /// Data + Mapping (Logic from HistoryPage)
+  /// ===============================
+  String _readString(dynamic value) {
+    if (value == null) return '';
+    final text = value.toString().trim();
+    if (text.isEmpty) return '';
+    if (text.toLowerCase() == 'null') return '';
+    return text;
   }
 
-  // ===== Data =====
-  _MedTakeStatus _statusFromResponse(String? status) {
+  int? _readInt(dynamic value) {
+    if (value == null) return null;
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    return int.tryParse(value.toString());
+  }
+
+  MedicineTakeStatus _statusFromResponse(String? status) {
     switch ((status ?? '').toUpperCase()) {
       case 'TAKE':
-        return _MedTakeStatus.take;
+        return MedicineTakeStatus.take;
       case 'SKIP':
-        return _MedTakeStatus.skip;
+        return MedicineTakeStatus.skip;
       case 'SNOOZE':
-        return _MedTakeStatus.snooze;
+        return MedicineTakeStatus.snooze;
       default:
-        return _MedTakeStatus.none;
+        return MedicineTakeStatus.none;
     }
   }
 
-  _MedHistoryItem _mapLogToItem(Map<String, dynamic> log) {
-    final scheduleRaw = (log['scheduleTime'] ?? '').toString();
-    final schedule = scheduleRaw.isEmpty
-        ? DateTime.now()
-        : (DateTime.tryParse(scheduleRaw)?.toLocal() ?? DateTime.now());
+  int _resolveAmount(Map<String, dynamic> log) {
+    const keys = [
+      'quantityPills',
+      'doseCount',
+      'quantity',
+      'pillsCount',
+      'amount',
+    ];
+    for (final key in keys) {
+      final value = _readInt(log[key]);
+      if (value != null && value > 0) return value;
+    }
+    return 1;
+  }
 
-    final medicineName = (log['medicineName'] ?? 'ไม่ทราบชื่อยา').toString();
-    final dose = (log['dose'] is int)
-        ? log['dose'] as int
-        : int.tryParse(log['dose'].toString()) ?? 1;
-    final unit = (log['unit'] ?? 'tablet').toString();
-    final status = _statusFromResponse(
-      (log['responseStatus'] ?? '').toString(),
-    );
+  int? _resolveDose(Map<String, dynamic> log) {
+    final value = _readInt(log['dose']);
+    if (value == null || value <= 0) return null;
+    return value;
+  }
 
-    return _MedHistoryItem(
-      takenAt: schedule,
-      medicineName: medicineName,
+  String? _resolveUnit(Map<String, dynamic> log) {
+    final value = _readString(log['unit']);
+    if (value.isEmpty) return null;
+    return value;
+  }
+
+  MedicineHistoryItem _mapLogToItem(Map<String, dynamic> log) {
+    final scheduleRaw = _readString(log['scheduleTime']);
+    final schedule =
+        scheduleRaw.isEmpty ? null : DateTime.tryParse(scheduleRaw)?.toLocal();
+    final takenAt = schedule ?? DateTime.now();
+
+    // Map list API data fields
+    final medicineName = _readString(log['medicineName']); // From list API
+    final note = _readString(log['note']);
+    final status = _statusFromResponse(_readString(log['responseStatus']));
+
+    // Dose & Unit from list API
+    final dose = _resolveDose(log);
+    final unit = _resolveUnit(log);
+
+    // Use medicineName as title if available
+    final titleTh = medicineName.isNotEmpty ? medicineName : 'ไม่ทราบชื่อยา';
+    final titleEn = '';
+    final detail = '';
+
+    // Calculate amount/dose fallback
+    int amount = 1;
+    if (dose != null && dose > 0) {
+      amount = dose;
+    } else {
+      amount = _resolveAmount(log);
+    }
+
+    return MedicineHistoryItem(
+      takenAt: takenAt,
+      titleTh: titleTh,
+      titleEn: titleEn,
+      detail: detail,
+      amount: amount,
       dose: dose,
       unit: unit,
       status: status,
+      note: note.isNotEmpty ? null : note,
+      nickname: '',
+      tradeName: '',
+      thName: '',
+      enName: '',
     );
   }
 
@@ -144,6 +224,8 @@ class _FollowingHistoryPageState extends State<FollowingHistoryPage> {
       final startStr = DateFormat('yyyy-MM-dd').format(_startDate);
       final endStr = DateFormat('yyyy-MM-dd').format(_endDate);
 
+      // 1. Fetch list of logs
+      debugPrint('Fetching logs for relationshipId=${widget.relationshipId}');
       final logs = await _followApi.fetchFollowingLogs(
         accessToken: accessToken,
         relationshipId: widget.relationshipId,
@@ -151,8 +233,12 @@ class _FollowingHistoryPageState extends State<FollowingHistoryPage> {
         startDate: startStr,
         endDate: endStr,
       );
-      final items = logs.map(_mapLogToItem).toList()
-        ..sort((a, b) => b.takenAt.compareTo(a.takenAt));
+
+      debugPrint('Logs received: ${logs.length}');
+
+      // Simply map directly from list for testing
+      final items = logs.map(_mapLogToItem).toList();
+      items.sort((a, b) => b.takenAt.compareTo(a.takenAt));
 
       if (!mounted) return;
       setState(() {
@@ -160,6 +246,7 @@ class _FollowingHistoryPageState extends State<FollowingHistoryPage> {
         _filteredItems = _filterItems(items);
       });
     } catch (e) {
+      debugPrint('Error loading history: $e');
       if (!mounted) return;
       setState(() {
         _errorMessage = e.toString();
@@ -169,6 +256,18 @@ class _FollowingHistoryPageState extends State<FollowingHistoryPage> {
     } finally {
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  // ===== Image =====
+  ImageProvider? _buildProfileImage(String? imagePath) {
+    if (imagePath == null || imagePath.isEmpty) return null;
+    if (imagePath.startsWith('/uploads')) {
+      return NetworkImage('$_imageBaseUrl$imagePath');
+    }
+    if (imagePath.startsWith('http')) {
+      return NetworkImage(imagePath);
+    }
+    return FileImage(File(imagePath));
   }
 
   // ===== Filter =====
@@ -184,7 +283,7 @@ class _FollowingHistoryPageState extends State<FollowingHistoryPage> {
     setState(() => _filteredItems = _filterItems(_allItems));
   }
 
-  List<_MedHistoryItem> _filterItems(List<_MedHistoryItem> items) {
+  List<MedicineHistoryItem> _filterItems(List<MedicineHistoryItem> items) {
     return items.where((item) {
       final inRange = _isInDateRange(item);
       final bySearch = _matchesKeyword(item);
@@ -193,7 +292,7 @@ class _FollowingHistoryPageState extends State<FollowingHistoryPage> {
       ..sort((a, b) => b.takenAt.compareTo(a.takenAt));
   }
 
-  bool _isInDateRange(_MedHistoryItem item) {
+  bool _isInDateRange(MedicineHistoryItem item) {
     final keyword = _searchCtrl.text.trim();
     if (keyword.isNotEmpty && !_isDateFilterUserSet) return true;
 
@@ -204,15 +303,31 @@ class _FollowingHistoryPageState extends State<FollowingHistoryPage> {
     return !day.isBefore(start) && !day.isAfter(end);
   }
 
-  bool _matchesKeyword(_MedHistoryItem item) {
+  bool _matchesKeyword(MedicineHistoryItem item) {
     final keyword = _searchCtrl.text.trim().toLowerCase();
     if (keyword.isEmpty) return true;
-    return item.medicineName.toLowerCase().contains(keyword);
+
+    switch (_searchMode) {
+      case _searchTrade:
+        if (item.tradeName.isEmpty) return false;
+        return item.tradeName.toLowerCase().contains(keyword);
+      case _searchTh:
+        if (item.thName.isEmpty) return false;
+        return item.thName.toLowerCase().contains(keyword);
+      case _searchEn:
+        if (item.enName.isEmpty) return false;
+        return item.enName.toLowerCase().contains(keyword);
+      case _searchNickname:
+        if (item.nickname.isEmpty) return false;
+        return item.nickname.toLowerCase().contains(keyword);
+      default:
+        return false;
+    }
   }
 
-  Map<DateTime, List<_MedHistoryItem>> _groupByDate(
-      List<_MedHistoryItem> items) {
-    final map = <DateTime, List<_MedHistoryItem>>{};
+  Map<DateTime, List<MedicineHistoryItem>> _groupByDate(
+      List<MedicineHistoryItem> items) {
+    final map = <DateTime, List<MedicineHistoryItem>>{};
     for (final it in items) {
       final key = DateTime(it.takenAt.year, it.takenAt.month, it.takenAt.day);
       map.putIfAbsent(key, () => []).add(it);
@@ -220,7 +335,6 @@ class _FollowingHistoryPageState extends State<FollowingHistoryPage> {
     return map;
   }
 
-  // ===== Helpers =====
   Future<void> _pickDate({required bool isStart}) async {
     final initial = isStart ? _startDate : _endDate;
     final picked = await showDatePicker(
@@ -251,8 +365,24 @@ class _FollowingHistoryPageState extends State<FollowingHistoryPage> {
   }
 
   String _weekdayTh(int weekday) {
-    const days = ['จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.', 'อา.'];
-    return days[(weekday - 1) % 7];
+    switch (weekday) {
+      case DateTime.monday:
+        return 'จ.';
+      case DateTime.tuesday:
+        return 'อ.';
+      case DateTime.wednesday:
+        return 'พ.';
+      case DateTime.thursday:
+        return 'พฤ.';
+      case DateTime.friday:
+        return 'ศ.';
+      case DateTime.saturday:
+        return 'ส.';
+      case DateTime.sunday:
+        return 'อา.';
+      default:
+        return '';
+    }
   }
 
   String _monthTh(int month) {
@@ -285,21 +415,23 @@ class _FollowingHistoryPageState extends State<FollowingHistoryPage> {
     return '$hh:$mm';
   }
 
-  String _mapUnitToThai(String unit) {
-    switch (unit.trim().toLowerCase()) {
-      case 'tablet':
-        return 'เม็ด';
-      case 'ml':
-        return 'มิลลิลิตร';
-      case 'mg':
-        return 'มิลลิกรัม';
-      case 'drop':
-        return 'ยาหยอด';
-      case 'injection':
-        return 'เข็ม';
-      default:
-        return unit.trim().isEmpty ? 'เม็ด' : unit;
+  void _showNoteViewer(MedicineHistoryItem item) {
+    final note = item.note?.trim() ?? '';
+    if (note.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('ไม่มีคอมเมนต์')),
+      );
+      return;
     }
+    final nickname = item.nickname.isNotEmpty ? item.nickname : item.titleTh;
+    showDialog<void>(
+      context: context,
+      builder: (_) => CommentViewer(
+        title: 'comment',
+        medicineNickname: nickname.isNotEmpty ? nickname : '-',
+        note: note,
+      ),
+    );
   }
 
   // ===== UI =====
@@ -378,12 +510,44 @@ class _FollowingHistoryPageState extends State<FollowingHistoryPage> {
                   ),
                 ),
 
-                // ===== Search bar =====
+                // ===== Search & Filter Toolbar =====
                 Container(
                   color: _primary,
                   padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
                   child: Row(
                     children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: _searchMode,
+                            items: const [
+                              DropdownMenuItem(
+                                  value: _searchTrade,
+                                  child: Text(_searchTrade)),
+                              DropdownMenuItem(
+                                  value: _searchTh, child: Text(_searchTh)),
+                              DropdownMenuItem(
+                                  value: _searchEn, child: Text(_searchEn)),
+                              DropdownMenuItem(
+                                  value: _searchNickname,
+                                  child: Text(_searchNickname)),
+                            ],
+                            onChanged: (v) {
+                              if (v == null) return;
+                              setState(() {
+                                _searchMode = v;
+                                _applyFilters();
+                              });
+                            },
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
                       Expanded(
                         child: Container(
                           height: 40,
@@ -395,7 +559,7 @@ class _FollowingHistoryPageState extends State<FollowingHistoryPage> {
                             controller: _searchCtrl,
                             onChanged: (_) => _applyFilters(),
                             decoration: const InputDecoration(
-                              hintText: 'ค้นหาชื่อยา...',
+                              hintText: 'ค้นหา...',
                               border: InputBorder.none,
                               contentPadding: EdgeInsets.symmetric(
                                   horizontal: 12, vertical: 10),
@@ -455,7 +619,7 @@ class _FollowingHistoryPageState extends State<FollowingHistoryPage> {
                                   ..sort(
                                       (a, b) => b.takenAt.compareTo(a.takenAt));
                                 final timeGroups =
-                                    <String, List<_MedHistoryItem>>{};
+                                    <String, List<MedicineHistoryItem>>{};
                                 for (final it in dayItems) {
                                   final key = _timeKey(it.takenAt);
                                   timeGroups.putIfAbsent(key, () => []).add(it);
@@ -487,7 +651,7 @@ class _FollowingHistoryPageState extends State<FollowingHistoryPage> {
                                       ),
                                     ),
                                     ...timeGroups.entries.map((entry) {
-                                      final tKey = entry.key;
+                                      final timeKey = entry.key;
                                       final groupItems = entry.value;
                                       return Column(
                                         crossAxisAlignment:
@@ -497,7 +661,7 @@ class _FollowingHistoryPageState extends State<FollowingHistoryPage> {
                                             padding: const EdgeInsets.only(
                                                 top: 8, bottom: 4),
                                             child: Text(
-                                              '$tKey น.',
+                                              '$timeKey น.',
                                               style: const TextStyle(
                                                 fontSize: 14,
                                                 color: _primary,
@@ -505,8 +669,15 @@ class _FollowingHistoryPageState extends State<FollowingHistoryPage> {
                                               ),
                                             ),
                                           ),
-                                          ...groupItems.map(
-                                              (it) => _buildHistoryRow(it)),
+                                          ...groupItems.map((it) => _HistoryRow(
+                                                timeText:
+                                                    _formatTime(it.takenAt),
+                                                item: it,
+                                                onTapComment: () {
+                                                  _showNoteViewer(it);
+                                                },
+                                                showTime: false,
+                                              )),
                                         ],
                                       );
                                     }),
@@ -548,140 +719,6 @@ class _FollowingHistoryPageState extends State<FollowingHistoryPage> {
             ),
         ],
       ),
-    );
-  }
-
-  Widget _buildHistoryRow(_MedHistoryItem item) {
-    Color statusBarColor;
-    switch (item.status) {
-      case _MedTakeStatus.take:
-        statusBarColor = const Color.fromARGB(255, 105, 188, 143);
-        break;
-      case _MedTakeStatus.skip:
-        statusBarColor = const Color(0xFFE35D5D);
-        break;
-      case _MedTakeStatus.snooze:
-        statusBarColor = const Color(0xFFF0A24F);
-        break;
-      case _MedTakeStatus.none:
-        statusBarColor = const Color(0xFFB0B6C2);
-        break;
-    }
-
-    final unitLabel = _mapUnitToThai(item.unit);
-    final quantityLabel = '${item.dose} $unitLabel';
-
-    String? statusLabel;
-    Color? statusLabelColor;
-    Color? statusBgColor;
-    switch (item.status) {
-      case _MedTakeStatus.take:
-        statusLabel = 'กินแล้ว';
-        statusLabelColor = const Color.fromARGB(255, 55, 159, 114);
-        statusBgColor = const Color.fromARGB(255, 230, 255, 245);
-        break;
-      case _MedTakeStatus.skip:
-        statusLabel = 'ข้าม';
-        statusLabelColor = const Color(0xFFC83C3C);
-        statusBgColor = const Color(0xFFFFE6E6);
-        break;
-      case _MedTakeStatus.snooze:
-        statusLabel = 'เลื่อนเตือน';
-        statusLabelColor = const Color(0xFFB26A1B);
-        statusBgColor = const Color(0xFFFFF3E0);
-        break;
-      case _MedTakeStatus.none:
-        statusLabel = null;
-        break;
-    }
-
-    return Row(
-      children: [
-        Expanded(
-          child: Container(
-            margin: const EdgeInsets.symmetric(vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(14),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x11000000),
-                  blurRadius: 10,
-                  offset: Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Stack(
-              children: [
-                Positioned(
-                  left: 0,
-                  top: 0,
-                  bottom: 0,
-                  child: Container(
-                    width: 6,
-                    decoration: BoxDecoration(
-                      color: statusBarColor,
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(14),
-                        bottomLeft: Radius.circular(14),
-                      ),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              item.medicineName,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w800,
-                                color: _primary,
-                              ),
-                            ),
-                          ),
-                          Text(
-                            quantityLabel,
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w800,
-                              color: _primary,
-                            ),
-                          ),
-                        ],
-                      ),
-                      if (statusLabel != null) ...[
-                        const SizedBox(height: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: statusBgColor,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Text(
-                            statusLabel,
-                            style: TextStyle(
-                              color: statusLabelColor,
-                              fontWeight: FontWeight.w800,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
     );
   }
 }
@@ -739,6 +776,253 @@ class _DateField extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _HistoryRow extends StatelessWidget {
+  final String timeText;
+  final MedicineHistoryItem item;
+  final VoidCallback onTapComment;
+  final bool showTime;
+
+  const _HistoryRow({
+    required this.timeText,
+    required this.item,
+    required this.onTapComment,
+    this.showTime = true,
+  });
+
+  static const _primary = Color(0xFF1F497D);
+
+  Color _statusBarColor() {
+    switch (item.status) {
+      case MedicineTakeStatus.take:
+        return const Color.fromARGB(255, 105, 188, 143);
+      case MedicineTakeStatus.skip:
+        return const Color(0xFFE35D5D);
+      case MedicineTakeStatus.snooze:
+        return const Color(0xFFF0A24F);
+      case MedicineTakeStatus.none:
+        return const Color(0xFFB0B6C2);
+    }
+  }
+
+  String _mapUnitToThai(String unit) {
+    final normalized = unit.trim().toLowerCase();
+    switch (normalized) {
+      case 'tablet':
+        return 'เม็ด';
+      case 'ml':
+        return 'มิลลิลิตร';
+      case 'mg':
+        return 'มิลลิกรัม';
+      case 'drop':
+        return 'ยาหยอด';
+      case 'injection':
+        return 'เข็ม';
+      default:
+        return unit.trim().isEmpty ? 'เม็ด' : unit;
+    }
+  }
+
+  String _quantityLabel() {
+    final dose = item.dose;
+    final unit = item.unit;
+    if (dose != null && dose > 0) {
+      final unitLabel = _mapUnitToThai(unit ?? '');
+      return '$dose $unitLabel';
+    }
+    return '${item.amount} เม็ด';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final row = Row(
+      children: [
+        Expanded(
+          child: Container(
+            margin: const EdgeInsets.symmetric(vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x11000000),
+                  blurRadius: 10,
+                  offset: Offset(0, 4),
+                )
+              ],
+            ),
+            child: Stack(
+              children: [
+                Positioned(
+                  left: 0,
+                  top: 0,
+                  bottom: 0,
+                  child: Container(
+                    width: 6,
+                    decoration: BoxDecoration(
+                      color: _statusBarColor(),
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(14),
+                        bottomLeft: Radius.circular(14),
+                      ),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              item.titleTh,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                                color: _primary,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            _quantityLabel(),
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w800,
+                              color: _primary,
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (item.titleEn.isNotEmpty) ...[
+                        const SizedBox(height: 6),
+                        Text(
+                          item.titleEn,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF6E7C8B),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                      if (item.detail.isNotEmpty) ...[
+                        const SizedBox(height: 6),
+                        Text(
+                          item.detail,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFF6E7C8B),
+                          ),
+                        ),
+                      ],
+                      if (item.status == MedicineTakeStatus.take) ...[
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: const Color.fromARGB(255, 230, 255, 245),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Text(
+                            'กินแล้ว',
+                            style: TextStyle(
+                              color: Color.fromARGB(255, 55, 159, 114),
+                              fontWeight: FontWeight.w800,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                      if (item.status == MedicineTakeStatus.skip) ...[
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFE6E6),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Text(
+                            'ข้าม',
+                            style: TextStyle(
+                              color: Color(0xFFC83C3C),
+                              fontWeight: FontWeight.w800,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                      if (item.status == MedicineTakeStatus.snooze) ...[
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFF3E0),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Text(
+                            'เลื่อนเตือน',
+                            style: TextStyle(
+                              color: Color(0xFFB26A1B),
+                              fontWeight: FontWeight.w800,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        InkWell(
+          onTap: onTapComment,
+          borderRadius: BorderRadius.circular(10),
+          child: Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color(0xFFB7DAFF)),
+              color: Colors.white,
+            ),
+            child: const Icon(Icons.chat_bubble_outline,
+                color: _primary, size: 18),
+          ),
+        ),
+      ],
+    );
+
+    if (!showTime) {
+      return row;
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Align(
+          alignment: Alignment.centerLeft,
+          child: Text(
+            timeText,
+            style: const TextStyle(
+              fontSize: 14,
+              color: _primary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+        const SizedBox(height: 4),
+        row,
+      ],
     );
   }
 }

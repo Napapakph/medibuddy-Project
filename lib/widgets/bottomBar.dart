@@ -15,7 +15,7 @@ class BottomBar extends StatelessWidget {
     final pid = AppState.instance.currentProfileId;
 
     return Container(
-      height: 72,
+      height: 80,
       padding: const EdgeInsets.symmetric(horizontal: 24),
       decoration: const BoxDecoration(
         color: Color(0xFF1F497D),
@@ -33,7 +33,7 @@ class BottomBar extends StatelessWidget {
             icon: const Icon(
               Icons.favorite,
               color: Colors.white,
-              size: 40,
+              size: 50,
             ),
           ),
 
@@ -88,7 +88,7 @@ class BottomBar extends StatelessWidget {
             icon: const Icon(
               IcoFontIcons.pills,
               color: Colors.white,
-              size: 40,
+              size: 50,
             ),
           ),
         ],

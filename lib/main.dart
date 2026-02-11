@@ -110,7 +110,8 @@ Map<String, dynamic> _payloadFromRemoteMessage(RemoteMessage message) {
   debugPrint(
       '🔔 onMessage payload items=${items.isNotEmpty} count=${items.length}');
   if (items.isNotEmpty) {
-    debugPrint('🔔 onMessage payload first item keys=${items.first.keys.toList()}');
+    debugPrint(
+        '🔔 onMessage payload first item keys=${items.first.keys.toList()}');
   }
 
   return payload;

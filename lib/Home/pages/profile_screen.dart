@@ -36,6 +36,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void initState() {
     super.initState();
     debugPrint('=== PROFILE SCREEN ===');
+    // ตรวจสอบว่ามีโปรไฟล์หรือยัง ถ้ามีแล้วให้ข้ามไปหน้า LibraryProfile
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkExistingProfile();
+    });
+  }
+
+  Future<void> _checkExistingProfile() async {
+    try {
+      final token = Supabase.instance.client.auth.currentSession?.accessToken;
+      if (token == null) return;
+
+      final api = ProfileApi();
+      final profiles = await api.fetchProfiles(accessToken: token);
+
+      if (profiles.isNotEmpty && mounted) {
+        // ถ้ามีโปรไฟล์แล้ว ให้ข้ามไปหน้า LibraryProfile เลย
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const LibraryProfile(),
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Check existing profile error: $e');
+    }
   }
 
   bool _isSupportedImage(File file) {

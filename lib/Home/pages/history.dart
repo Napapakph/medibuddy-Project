@@ -1,5 +1,6 @@
 ﻿// history.dart
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:lottie/lottie.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -670,10 +671,13 @@ class _HistoryPageState extends State<HistoryPage> {
         ),
         centerTitle: true,
         actions: [
-          IconButton(
-            tooltip: 'Export PDF',
-            onPressed: _exportPdf,
-            icon: const Icon(Icons.picture_as_pdf, color: Colors.white),
+          Padding(
+            padding: const EdgeInsets.only(right: 10),
+            child: IconButton(
+              tooltip: 'Export PDF',
+              onPressed: _exportPdf,
+              icon: const Icon(FontAwesomeIcons.filePdf, color: Colors.white),
+            ),
           ),
         ],
       ),

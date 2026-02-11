@@ -108,6 +108,7 @@ class _FollowerScreenState extends State<FollowerScreen> {
       follower['profiles'],
       follower['allowedProfiles'],
       follower['viewerProfileIds'],
+      follower['sharedProfiles'], // <--- Add checking this key
     ];
     final ids = <int>{};
 
@@ -353,6 +354,7 @@ class _FollowerScreenState extends State<FollowerScreen> {
       onDelete: () => _showDeleteConfirmDialog(id, name),
       onEdit: () => _openEditDialog(follower),
       onDetail: () => _openPermissionEdit(follower),
+      actionLabel: 'สิทธิ์การติดตาม',
     );
   }
 
@@ -446,6 +448,7 @@ class _FollowerScreenState extends State<FollowerScreen> {
         _goHome();
       },
       child: Scaffold(
+        backgroundColor: const Color(0xFFF5F5F5),
         appBar: AppBar(
           leading: IconButton(
             icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -475,7 +478,14 @@ class _FollowerScreenState extends State<FollowerScreen> {
                     );
                   },
                   icon: const Icon(Icons.person_add),
-                  label: const Text('เพิ่มผู้ติดตาม'),
+                  label: const Text(
+                    'เพิ่มผู้ติดตาม',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF1F497D),
                     foregroundColor: Colors.white,

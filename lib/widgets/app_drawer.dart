@@ -13,11 +13,27 @@ class AppDrawer extends StatelessWidget {
     String route, {
     Object? arguments,
   }) {
-    Navigator.pushReplacementNamed(
-      context,
-      route,
-      arguments: arguments,
-    );
+    // ถ้าไปหน้า LibraryProfile หรือ UserRequest ให้เคลียร์ Stack แล้วเอา Home รองไว้ข้างล่าง
+    // เพื่อให้กด Back แล้วกลับไปหน้า Home เสมอ และมีปุ่มย้อนกลับ
+    if (route == '/library_profile' || route == '/user_request') {
+      final pid = AppState.instance.currentProfileId;
+      Navigator.of(context).pushNamedAndRemoveUntil(
+        '/home',
+        (Route<dynamic> route) => false,
+        arguments: {
+          'profileId': pid,
+          'profileName': AppState.instance.currentProfileName,
+          'profileImage': AppState.instance.currentProfileImagePath,
+        },
+      );
+      Navigator.of(context).pushNamed(route, arguments: arguments);
+    } else {
+      Navigator.pushReplacementNamed(
+        context,
+        route,
+        arguments: arguments,
+      );
+    }
   }
 
   Future<void> logout(BuildContext context) async {
@@ -102,7 +118,7 @@ class AppDrawer extends StatelessWidget {
                           ),
                           ListTile(
                             leading: const Icon(
-                              Icons.medication_rounded,
+                              IcoFontIcons.pills,
                               color: Color.fromARGB(255, 69, 68, 87),
                               size: 30,
                             ),

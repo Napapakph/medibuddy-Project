@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:medibuddy/services/auth_session.dart';
 import 'package:medibuddy/services/follow_api.dart';
@@ -295,6 +297,7 @@ class _AddFollowerScreenState extends State<AddFollowerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
         title: const Text('เพิ่มผู้ติดตาม'),
         backgroundColor: _primaryBlue,
@@ -377,6 +380,19 @@ class FollowerPermissionScreen extends StatefulWidget {
 class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
   final _profileApi = ProfileApi();
   final _followApi = FollowApi();
+  final _formKey = GlobalKey<FormState>(); // Form Key for validation
+  TextEditingController _nicknameController = TextEditingController();
+  File? _pickedImage;
+
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _pickedImage = File(pickedFile.path);
+      });
+    }
+  }
 
   List<Map<String, dynamic>> _myProfiles = [];
   final Set<int> _selectedProfileIds = {};
@@ -386,7 +402,16 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
   @override
   void initState() {
     super.initState();
+    _nicknameController = TextEditingController(
+      text: widget.initialNickname ?? '',
+    );
     _loadMyProfiles();
+  }
+
+  @override
+  void dispose() {
+    _nicknameController.dispose();
+    super.dispose();
   }
 
   int _asProfileId(dynamic raw) {
@@ -456,6 +481,11 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
   }
 
   Future<void> _confirmInvite() async {
+    // Validate Form First
+    if (_formKey.currentState != null && !_formKey.currentState!.validate()) {
+      return; // Stop if invalid
+    }
+
     final profileIds =
         _selectedProfileIds.where((id) => id > 0).toList(growable: false);
     if (profileIds.isEmpty) {
@@ -476,37 +506,60 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
         if (relationshipId <= 0) {
           throw Exception('Missing relationshipId');
         }
+        final editedName = _nicknameController.text.trim();
         await _followApi.updateFollowerProfiles(
           accessToken: accessToken,
           relationshipId: relationshipId,
           profileIds: profileIds,
+          name: editedName.isNotEmpty ? editedName : null,
         );
       } else {
         final email = widget.user['email']?.toString();
         final userId = _asProfileId(widget.user['id']);
+
+        // Use custom name if provided, otherwise use original name
+        final customName = _nicknameController.text.trim();
 
         await _followApi.sendInvite(
           accessToken: accessToken,
           email: email,
           userId: userId > 0 ? userId : null,
           profileIds: profileIds,
+          name: customName.isNotEmpty ? customName : null,
+          imageFile: _pickedImage,
         );
       }
     } catch (e) {
       if (!mounted) return;
+
       final raw = e.toString();
       final lower = raw.toLowerCase();
+
+      // ดักจับ Error File Size (400) จากข้อความ Exception โดยตรง
+      if (lower.contains('file size must be less than 5mb') ||
+          (raw.contains('400') && lower.contains('file size'))) {
+        _showSizeErrorDialog();
+        return;
+      }
+
+      String errorMessage = 'เกิดข้อผิดพลาด: $e';
+
+      // ตัดคำว่า "Exception: " ออกเพื่อให้ข้อความสวยงามขึ้น
+      if (raw.contains('Exception: ')) {
+        errorMessage = raw.replaceFirst('Exception: ', '').trim();
+      }
+
+      // กรณี 409 Pending
       final isPending = raw.contains('409') &&
           (lower.contains('pending') || lower.contains('already exists'));
-      final message = widget.isEdit
-          ? 'บันทึกไม่สำเร็จ: $e'
-          : (isPending
-              ? 'ส่งคำเชิญไปแล้ว กำลังรอการตอบรับ'
-              : 'ส่งคำเชิญไม่สำเร็จ: $e');
+
+      if (isPending) {
+        errorMessage = 'ส่งคำเชิญไปแล้ว กำลังรอการตอบรับ';
+      }
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
+        SnackBar(content: Text(errorMessage)),
       );
-      return;
     }
 
     if (!mounted) return;
@@ -541,7 +594,7 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
                 : null,
           ),
           CircleAvatar(
-            radius: 22,
+            radius: 30,
             backgroundImage:
                 avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
             child:
@@ -550,7 +603,7 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
           const SizedBox(width: 12),
           Expanded(
             child: Container(
-              height: 34,
+              height: 40,
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: _softPill,
@@ -559,11 +612,27 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
               child: Text(
                 name,
                 style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 13,
+                  fontWeight: FontWeight.w400,
+                  fontSize: 18,
                 ),
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSizeErrorDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('ขนาดไฟล์ใหญ่เกินไป'),
+        content: const Text('รูปภาพต้องมีขนาดไม่เกิน 5 MB\nกรุณาเลือกรูปใหม่'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('ตกลง'),
           ),
         ],
       ),
@@ -574,18 +643,11 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
   Widget build(BuildContext context) {
     final email =
         (widget.user['email'] ?? widget.user['mail'] ?? '').toString();
-    final rawName = (widget.initialNickname ??
-            widget.user['profileName'] ??
-            widget.user['name'] ??
-            widget.user['displayName'] ??
-            '')
-        .toString();
-    final name = rawName.trim().isNotEmpty
-        ? rawName
-        : (email.isNotEmpty ? email : 'ไม่ระบุชื่อ');
+    // Removed unused 'name' variable here to fix lint
     final avatarUrl = _readAvatarUrl(widget.user);
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
         title: Text(widget.isEdit ? 'แก้ไขผู้ติดตาม' : 'เพิ่มผู้ติดตาม'),
         backgroundColor: _primaryBlue,
@@ -593,52 +655,118 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
         elevation: 0,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+        padding: const EdgeInsets.fromLTRB(16, 5, 16, 5),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-              decoration: BoxDecoration(
-                color: _softSurface,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                children: [
-                  CircleAvatar(
-                    radius: 44,
-                    backgroundImage:
-                        avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
-                    child: avatarUrl.isEmpty
-                        ? const Icon(Icons.person, size: 44)
-                        : null,
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    name,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  if (email.toString().isNotEmpty)
-                    Text(
-                      email,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Colors.black54,
+            Form(
+              key: _formKey,
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 5),
+                decoration: BoxDecoration(
+                  color: _softSurface,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Column(
+                  children: [
+                    GestureDetector(
+                      onTap: _pickImage,
+                      child: Stack(
+                        children: [
+                          CircleAvatar(
+                            radius: 44,
+                            backgroundColor: Colors.grey.shade300,
+                            backgroundImage: _pickedImage != null
+                                ? FileImage(_pickedImage!)
+                                : (avatarUrl.isNotEmpty
+                                    ? NetworkImage(avatarUrl) as ImageProvider
+                                    : null),
+                            child: (_pickedImage == null && avatarUrl.isEmpty)
+                                ? const Icon(Icons.person,
+                                    size: 44, color: Colors.white)
+                                : null,
+                          ),
+                          Positioned(
+                            bottom: 0,
+                            right: 0,
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: const BoxDecoration(
+                                color: _primaryBlue,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.camera_alt,
+                                color: Colors.white,
+                                size: 16,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                ],
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      width: 240,
+                      height: 45,
+                      child: TextFormField(
+                        controller: _nicknameController,
+                        textAlign: TextAlign.center,
+                        decoration: InputDecoration(
+                          hintText: 'ตั้งชื่อที่นี่...',
+                          hintStyle: TextStyle(color: Colors.grey.shade400),
+                          filled: true,
+                          fillColor: Colors.white,
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 10),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(24),
+                            borderSide: BorderSide(color: Colors.grey.shade300),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(24),
+                            borderSide: BorderSide(color: Colors.grey.shade300),
+                          ),
+                          suffixIcon: const Icon(Icons.edit,
+                              size: 16, color: Colors.grey),
+                          errorStyle: const TextStyle(
+                              color: Colors.redAccent,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500),
+                        ),
+                        validator: (value) {
+                          if (value != null && value.length > 100) {
+                            return 'ชื่อต้องมีความยาวไม่เกิน 100 ตัวอักษร';
+                          }
+                          return null;
+                        },
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: _primaryBlue,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 7),
+                    if (email.isNotEmpty)
+                      Text(
+                        email,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.black54,
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 10),
             const Text(
               'อนุญาตให้ดูประวัติการทานยา',
               style: TextStyle(
                 fontWeight: FontWeight.w700,
-                fontSize: 14,
+                fontSize: 16,
               ),
             ),
             const SizedBox(height: 6),
@@ -677,7 +805,7 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
           child: ElevatedButton(
             onPressed: _confirmInvite,
             style: ElevatedButton.styleFrom(
-              backgroundColor: _accentBlue,
+              backgroundColor: const Color(0xFF1F497D),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(22),
               ),
@@ -685,7 +813,10 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
             ),
             child: Text(
               widget.isEdit ? 'บันทึกการแก้ไข' : 'เพิ่มผู้ติดตาม',
-              style: const TextStyle(fontWeight: FontWeight.w600),
+              style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: Color.fromARGB(255, 255, 255, 255),
+                  fontSize: 16),
             ),
           ),
         ),

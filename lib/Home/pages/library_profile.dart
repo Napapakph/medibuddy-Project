@@ -369,6 +369,7 @@ class _LibraryProfileState extends State<LibraryProfile> {
     showDialog(
       context: context,
       builder: (dialogContext) {
+        String? errorMessage; // เพิ่มตัวแปรเก็บ error message
         bool saving = false;
 
         return StatefulBuilder(
@@ -380,43 +381,56 @@ class _LibraryProfileState extends State<LibraryProfile> {
             }
 
             return AlertDialog(
-              insetPadding: EdgeInsets.symmetric(
-                horizontal: maxWidth * 0.07,
-                vertical: maxHeight * 0.07,
+              insetPadding: const EdgeInsets.symmetric(
+                horizontal: 30.0,
+                vertical: 24.0,
               ),
               backgroundColor: const Color(0xFFF5F5F5),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ProfileWidget(
-                    size: avatarSize,
-                    image: currentImage,
-                    onCameraTap: () async {
-                      final picker = ImagePicker();
-                      final img =
-                          await picker.pickImage(source: ImageSource.gallery);
+              content: SingleChildScrollView(
+                child: SizedBox(
+                  width: double.maxFinite,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ProfileWidget(
+                        size: avatarSize,
+                        image: currentImage,
+                        onCameraTap: () async {
+                          final picker = ImagePicker();
+                          final img = await picker.pickImage(
+                              source: ImageSource.gallery);
 
-                      if (img != null) {
-                        setStateDialog(() {
-                          tempImagePath = img.path;
-                        });
-                      }
-                    },
-                  ),
-                  SizedBox(height: maxHeight * 0.05),
-                  TextField(
-                    controller: editNameCtrl,
-                    decoration: InputDecoration(
-                      labelText: 'ชื่อโปรไฟล์',
-                      fillColor: const Color.fromARGB(255, 237, 237, 237),
-                      filled: true,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        borderSide: BorderSide.none,
+                          if (img != null) {
+                            setStateDialog(() {
+                              tempImagePath = img.path;
+                            });
+                          }
+                        },
                       ),
-                    ),
+                      SizedBox(height: maxHeight * 0.03), // เพิ่มระยะห่าง
+                      TextField(
+                        controller: editNameCtrl,
+                        decoration: InputDecoration(
+                          labelText: 'ชื่อโปรไฟล์',
+                          fillColor: const Color.fromARGB(255, 237, 237, 237),
+                          filled: true,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(20),
+                            borderSide: BorderSide.none,
+                          ),
+                          errorText: errorMessage, // แสดง error message
+                        ),
+                        onChanged: (value) {
+                          if (errorMessage != null) {
+                            setStateDialog(() {
+                              errorMessage = null;
+                            });
+                          }
+                        },
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
               actions: [
                 TextButton(
@@ -430,10 +444,21 @@ class _LibraryProfileState extends State<LibraryProfile> {
                       : () async {
                           final newName = editNameCtrl.text.trim();
                           if (newName.isEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text('กรุณากรอกชื่อโปรไฟล์')),
-                            );
+                            setStateDialog(() {
+                              errorMessage = 'กรุณากรอกชื่อโปรไฟล์';
+                            });
+                            return;
+                          }
+
+                          // เช็คชื่อซ้ำ (ยกเว้นชื่อตัวเอง)
+                          final isDuplicate = profiles.any((p) =>
+                              p.username == newName &&
+                              p.profileId != profile.profileId);
+                          if (isDuplicate) {
+                            setStateDialog(() {
+                              errorMessage =
+                                  'ชื่อโปรไฟล์นี้มีอยู่แล้ว กรุณาตั้งชื่อใหม่';
+                            });
                             return;
                           }
 
@@ -465,13 +490,10 @@ class _LibraryProfileState extends State<LibraryProfile> {
                             Navigator.of(dialogContext).pop();
                           } catch (e) {
                             if (!mounted) return;
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('แก้ไขไม่สำเร็จ: $e')),
-                            );
-                          } finally {
-                            if (Navigator.of(dialogContext).canPop()) {
-                              setStateDialog(() => saving = false);
-                            }
+                            setStateDialog(() {
+                              errorMessage = 'แก้ไขไม่สำเร็จ: $e';
+                              saving = false;
+                            });
                           }
                         },
                   child: saving
@@ -551,7 +573,7 @@ class _LibraryProfileState extends State<LibraryProfile> {
   }
 //--------------------------------------------------------------------
 
-// เพิ่มโปรไฟล์ ---------------------------------------------------------
+  // เพิ่มโปรไฟล์ ---------------------------------------------------------
   void _addProfile() {
     final TextEditingController nameCtrl = TextEditingController();
 
@@ -566,6 +588,9 @@ class _LibraryProfileState extends State<LibraryProfile> {
     showDialog(
       context: context,
       builder: (dialogContext) {
+        String? errorMessage; // เพิ่มตัวแปรเก็บ error message
+        bool isLoading = false; // ตัวแปร loading เฉพาะ dialog นี้
+
         return StatefulBuilder(
           builder: (dialogContext, setStateDialog) {
             // แปลง path → ImageProvider เพื่อส่งเข้า ProfileWidget
@@ -575,47 +600,60 @@ class _LibraryProfileState extends State<LibraryProfile> {
             }
 
             return AlertDialog(
-              insetPadding: EdgeInsets.symmetric(
-                horizontal: maxWidth * 0.01,
-                vertical: maxHeight * 0.1,
+              insetPadding: const EdgeInsets.symmetric(
+                horizontal: 30,
+                vertical: 24.0,
               ),
               backgroundColor: const Color(0xFFF5F5F5),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // วงกลมโปรไฟล์ + ปุ่มกล้อง (ใช้ widget เดิมเลย)
-                  ProfileWidget(
-                    size: avatarSize,
-                    image: currentImage,
-                    onCameraTap: () async {
-                      final picker = ImagePicker();
-                      final img =
-                          await picker.pickImage(source: ImageSource.gallery);
-                      if (img == null) return;
+              content: SingleChildScrollView(
+                child: SizedBox(
+                  width: double.maxFinite,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // วงกลมโปรไฟล์ + ปุ่มกล้อง (ใช้ widget เดิมเลย)
+                      ProfileWidget(
+                        size: avatarSize,
+                        image: currentImage,
+                        onCameraTap: () async {
+                          final picker = ImagePicker();
+                          final img = await picker.pickImage(
+                              source: ImageSource.gallery);
+                          if (img == null) return;
 
-                      // อัปเดตรูปใน popup
-                      setStateDialog(() {
-                        tempImagePath = img.path;
-                      });
-                    },
-                  ),
-
-                  SizedBox(height: maxHeight * 0.02),
-
-                  // 🔹 ช่องกรอกชื่อโปรไฟล์
-                  TextField(
-                    controller: nameCtrl,
-                    decoration: InputDecoration(
-                      labelText: 'ชื่อโปรไฟล์',
-                      fillColor: const Color.fromARGB(255, 237, 237, 237),
-                      filled: true,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        borderSide: BorderSide.none,
+                          // อัปเดตรูปใน popup
+                          setStateDialog(() {
+                            tempImagePath = img.path;
+                          });
+                        },
                       ),
-                    ),
+
+                      SizedBox(height: maxHeight * 0.03), // เพิ่มระยะห่าง
+
+                      // 🔹 ช่องกรอกชื่อโปรไฟล์
+                      TextField(
+                        controller: nameCtrl,
+                        decoration: InputDecoration(
+                          labelText: 'ชื่อโปรไฟล์',
+                          fillColor: const Color.fromARGB(255, 237, 237, 237),
+                          filled: true,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(20),
+                            borderSide: BorderSide.none,
+                          ),
+                          errorText: errorMessage, // แสดง error message
+                        ),
+                        onChanged: (value) {
+                          if (errorMessage != null) {
+                            setStateDialog(() {
+                              errorMessage = null;
+                            });
+                          }
+                        },
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
               actions: [
                 TextButton(
@@ -623,32 +661,54 @@ class _LibraryProfileState extends State<LibraryProfile> {
                   child: const Text('ยกเลิก'),
                 ),
                 TextButton(
-                  onPressed: () async {
-                    final newName = nameCtrl.text.trim();
-                    if (newName.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('กรุณากรอกชื่อโปรไฟล์')),
-                      );
-                      return;
-                    }
+                  onPressed: isLoading
+                      ? null
+                      : () async {
+                          final newName = nameCtrl.text.trim();
+                          if (newName.isEmpty) {
+                            setStateDialog(() {
+                              errorMessage = 'กรุณากรอกชื่อโปรไฟล์';
+                            });
+                            return;
+                          }
 
-                    Navigator.of(dialogContext).pop(); // ปิด dialog ก่อน
+                          // เช็คชื่อซ้ำ
+                          final isDuplicate =
+                              profiles.any((p) => p.username == newName);
+                          if (isDuplicate) {
+                            setStateDialog(() {
+                              errorMessage =
+                                  'ชื่อโปรไฟล์นี้มีอยู่แล้ว กรุณาตั้งชื่อใหม่';
+                            });
+                            return;
+                          }
 
-                    try {
-                      await create_profile(
-                        profileName: newName,
-                        tempImagePath: tempImagePath, // อาจเป็น null ได้
-                      );
+                          setStateDialog(() => isLoading = true);
 
-                      if (!mounted) return;
-                    } catch (e) {
-                      if (!mounted) return;
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('เพิ่มโปรไฟล์ไม่สำเร็จ: $e')),
-                      );
-                    }
-                  },
-                  child: const Text('บันทึก'),
+                          try {
+                            await create_profile(
+                              profileName: newName,
+                              tempImagePath: tempImagePath, // อาจเป็น null ได้
+                            );
+
+                            if (!mounted) return;
+                            Navigator.of(dialogContext)
+                                .pop(); // ปิด dialog ก่อน
+                          } catch (e) {
+                            if (!mounted) return;
+                            setStateDialog(() {
+                              errorMessage = 'เพิ่มโปรไฟล์ไม่สำเร็จ: $e';
+                              isLoading = false;
+                            });
+                          }
+                        },
+                  child: isLoading
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('บันทึก'),
                 ),
               ],
             );

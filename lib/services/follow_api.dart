@@ -160,22 +160,42 @@ class FollowApi {
     required List<int> profileIds,
     String? email,
     int? userId,
+    String? name,
+    File? imageFile,
   }) async {
     if ((email == null || email.trim().isEmpty) &&
         (userId == null || userId <= 0)) {
       throw Exception('Missing invite target');
     }
 
-    final body = <String, dynamic>{
+    final Map<String, dynamic> body = {
       if (email != null && email.trim().isNotEmpty) 'email': email.trim(),
       if (userId != null && userId > 0) 'userId': userId,
       'profileIds': profileIds,
+      if (name != null && name.trim().isNotEmpty) 'name': name.trim(),
     };
+
+    dynamic data = body;
+    Options options = _authOptions(accessToken);
+
+    if (imageFile != null) {
+      final mimeType = lookupMimeType(imageFile.path) ?? 'image/jpeg';
+      body['accountPicture'] = await MultipartFile.fromFile(
+        imageFile.path,
+        contentType: MediaType.parse(mimeType),
+      );
+      data = FormData.fromMap(body);
+      options = Options(
+        headers: {'Authorization': 'Bearer $accessToken'},
+        contentType: 'multipart/form-data',
+        validateStatus: (_) => true,
+      );
+    }
 
     final res = await _dio.post(
       _invitePath,
-      data: body,
-      options: _authOptions(accessToken),
+      data: data,
+      options: options,
     );
     _ensureSuccess(res, 'Send invite failed');
     return _extractMap(res.data);
@@ -196,13 +216,16 @@ class FollowApi {
     required String accessToken,
     required int relationshipId,
     required List<int> profileIds,
+    String? name,
   }) async {
+    final body = <String, dynamic>{
+      'profileIds': profileIds,
+      if (name != null && name.trim().isNotEmpty) 'name': name.trim(),
+    };
     final res = await _dio.patch(
       _followersUpdatePath,
-      data: {
-        'relationshipId ': relationshipId,
-        'profileIds': profileIds,
-      },
+      queryParameters: {'relationshipId': relationshipId},
+      data: body,
       options: _authOptions(accessToken),
     );
     _ensureSuccess(res, 'Update follower failed');
@@ -251,17 +274,13 @@ class FollowApi {
     required String name,
     required List<int> profileIds,
     File? imageFile,
-    String? accountPicture,
+    String?
+        accountPicture, // เก็บไว้เผื่อกรณีไม่ได้อัปรูปใหม่ แต่ต้องการส่ง path เดิม (ถ้า API รองรับ)
   }) async {
-    if (imageFile != null && (accountPicture?.trim().isNotEmpty ?? false)) {
-      throw Exception('Send either imageFile OR accountPicture, not both.');
-    }
-
     final body = <String, dynamic>{
       'name': name.trim(),
-      'profileIds': profileIds,
-      if (accountPicture?.trim().isNotEmpty ?? false)
-        'accountPicture': accountPicture!.trim(),
+      'profileIds':
+          profileIds.toString(), // แปลง List<int> เป็น String "[1, 2]"
     };
 
     if (imageFile != null) {
@@ -272,27 +291,22 @@ class FollowApi {
         throw Exception('รองรับเฉพาะ jpg, jpeg, png, webp');
       }
 
-      body['file'] = await MultipartFile.fromFile(
+      body['accountPicture'] = await MultipartFile.fromFile(
         imageFile.path,
         filename: imageFile.uri.pathSegments.last,
         contentType: MediaType.parse(mimeType),
       );
+    } else if (accountPicture?.trim().isNotEmpty ?? false) {
+      // กรณีไม่ได้อัปรูปใหม่ แต่ backend ต้องการค่าเดิม หรือ format อื่น
+      // body['accountPicture'] = accountPicture!.trim();
+      // คอมเมนต์ไว้ก่อน เพราะ User เน้นเรื่อง multipart file upload
     }
 
     debugPrint('UPDATE FOLLOWER Debug -----------------------------');
     debugPrint(
         'URL -> ${_dio.options.baseUrl}$_followersUpdatePath?relationshipId=$relationshipId');
-    debugPrint('TOKEN -> ${accessToken.substring(0, 20)}...');
     debugPrint('NAME -> ${name.trim()}');
-    debugPrint('PROFILE_IDS -> $profileIds');
-    if (imageFile != null) {
-      debugPrint('IMAGE PATH -> ${imageFile.path}');
-      debugPrint('IMAGE SIZE -> ${await imageFile.length()} bytes');
-      debugPrint('IMAGE NAME -> ${imageFile.uri.pathSegments.last}');
-      debugPrint('IMAGE MIME -> ${lookupMimeType(imageFile.path)}');
-    } else {
-      debugPrint('IMAGE -> (no image)');
-    }
+    debugPrint('PROFILE_IDS (String) -> ${body['profileIds']}');
 
     try {
       final res = await _dio.patch(
@@ -314,11 +328,7 @@ class FollowApi {
         throw Exception('Update follower failed: $status ${res.data}');
       }
     } on DioException catch (e) {
-      debugPrint('❌ DIO ERROR');
-      debugPrint('type     = ${e.type}');
-      debugPrint('message  = ${e.message}');
-      debugPrint('status   = ${e.response?.statusCode}');
-      debugPrint('response = ${e.response?.data}');
+      debugPrint('❌ DIO ERROR: ${e.message}');
       rethrow;
     }
   }
@@ -417,7 +427,11 @@ class FollowApi {
       options: _authOptions(accessToken),
     );
     _ensureSuccess(res, 'Fetch following logs failed');
-    return _extractList(res.data);
+
+    if (res.data is Map && res.data['logs'] is List) {
+      return (res.data['logs'] as List).cast<Map<String, dynamic>>();
+    }
+    return [];
   }
 
   Future<void> removeFollowing({

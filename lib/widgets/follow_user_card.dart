@@ -10,6 +10,8 @@ class FollowUserCard extends StatelessWidget {
     required this.onDelete,
     this.onEdit,
     this.onDetail,
+    this.actionLabel = 'ดูประวัติการทานยา',
+    this.actionIcon = Icons.history,
   });
 
   final String name;
@@ -19,141 +21,119 @@ class FollowUserCard extends StatelessWidget {
   final VoidCallback onDelete;
   final VoidCallback? onEdit;
   final VoidCallback? onDetail;
-
-  Widget _buildActionButton({
-    required IconData icon,
-    required Color backgroundColor,
-    required VoidCallback onPressed,
-    double width = 40,
-    double height = 40,
-    double iconSize = 24,
-  }) {
-    return IconButton(
-      constraints: BoxConstraints.tightFor(width: width, height: height),
-      padding: EdgeInsets.zero,
-      onPressed: onPressed,
-      icon: Icon(icon, size: iconSize),
-      color: Colors.white,
-      style: IconButton.styleFrom(
-        backgroundColor: backgroundColor,
-        shape: const CircleBorder(),
-      ),
-    );
-  }
+  final String actionLabel;
+  final IconData actionIcon;
 
   @override
   Widget build(BuildContext context) {
-    final hasDetail = onDetail != null;
-
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      color: const Color(0xFFD7DDE3),
+      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      elevation: 2,
+      color: const Color.fromARGB(255, 232, 236, 241),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: Color(0xFFE0E6EF)),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        padding: const EdgeInsets.all(10),
+        child: Column(
           children: [
-            ClipOval(
-              child: Container(
-                width: 64,
-                height: 64,
-                color: const Color(0xFFE8EDF3),
-                child: avatarImage != null
-                    ? Image(
-                        image: avatarImage!,
-                        width: 64,
-                        height: 64,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) =>
-                            const Icon(Icons.person, size: 32),
-                      )
-                    : const Icon(Icons.person, size: 32),
-              ),
+            // === Top Section: Name (Left) | Edit, Delete (Right) ===
+            Row(
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 15),
+                    child: Text(
+                      name,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF1F497D),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  onPressed: onEdit,
+                  icon:
+                      const Icon(Icons.edit_outlined, color: Color(0xFF1F497D)),
+                  tooltip: 'แก้ไข',
+                  constraints: const BoxConstraints(),
+                  padding: const EdgeInsets.all(2),
+                ),
+                IconButton(
+                  onPressed: onDelete,
+                  icon: const Icon(Icons.delete_outline, color: Colors.red),
+                  tooltip: 'ลบ',
+                  constraints: const BoxConstraints(),
+                  padding: const EdgeInsets.all(2),
+                ),
+              ],
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const SizedBox(height: 6),
-                  Text(
-                    'ชื่อ :  $name',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w700,
+
+            // === Middle Section: Avatar + Email ===
+            Row(
+              children: [
+                Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                        color: const Color.fromARGB(255, 255, 255, 255)),
+                  ),
+                  child: ClipOval(
+                    child: avatarImage != null
+                        ? Image(
+                            image: avatarImage!,
+                            width: 50,
+                            height: 50,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => const Icon(
+                                Icons.person,
+                                color: Color.fromARGB(255, 119, 123, 162)),
+                          )
+                        : const Icon(Icons.person,
+                            color: Color.fromARGB(255, 138, 139, 171)),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    email.isNotEmpty ? email : 'ไม่มีอีเมล',
+                    style: TextStyle(
                       fontSize: 18,
-                      color: Color(0xFF1F497D),
+                      color: Colors.grey[700],
                     ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    email.isNotEmpty ? email : '-',
-                    maxLines: 2,
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Color(0xFF2F5788),
-                    ),
                   ),
-                ],
+                ),
+              ],
+            ),
+
+            // === Bottom Section: View History Button (Right) ===
+            Align(
+              alignment: Alignment.centerRight,
+              child: ElevatedButton.icon(
+                onPressed: onDetail,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF1F497D),
+                  foregroundColor: Colors.white,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  elevation: 0,
+                ),
+                label: Text(actionLabel),
               ),
             ),
-            const SizedBox(width: 8),
-            if (hasDetail)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _buildActionButton(
-                        icon: Icons.delete,
-                        backgroundColor: const Color(0xFFE66C63),
-                        onPressed: onDelete,
-                      ),
-                      const SizedBox(width: 4),
-                      _buildActionButton(
-                        icon: Icons.edit,
-                        backgroundColor: const Color(0xFF2F5788),
-                        onPressed: onEdit ?? () {},
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  _buildActionButton(
-                    icon: Icons.arrow_forward_ios,
-                    backgroundColor: const Color(0xFF8BC0F0),
-                    onPressed: onDetail!,
-                    width: 42,
-                    height: 42,
-                    iconSize: 18,
-                  ),
-                ],
-              )
-            else
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildActionButton(
-                    icon: Icons.delete,
-                    backgroundColor: const Color(0xFFE66C63),
-                    onPressed: onDelete,
-                  ),
-                  const SizedBox(width: 4),
-                  _buildActionButton(
-                    icon: Icons.edit,
-                    backgroundColor: const Color(0xFF2F5788),
-                    onPressed: onEdit ??
-                        () {
-                          debugPrint('Edit pressed');
-                        },
-                  ),
-                ],
-              ),
           ],
         ),
       ),

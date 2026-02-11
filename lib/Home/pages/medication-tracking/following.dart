@@ -26,9 +26,11 @@ class _FollowingScreenState extends State<FollowingScreen>
 
   Future<void> _goHome() async {
     if (!mounted) return;
-    Navigator.pushReplacementNamed(
+    final pid = AppState.instance.currentProfileId;
+    Navigator.pushNamedAndRemoveUntil(
       context,
       '/home',
+      (route) => false,
       arguments: {
         'profileId': pid,
         'profileName': AppState.instance.currentProfileName,
@@ -357,7 +359,7 @@ class _FollowingScreenState extends State<FollowingScreen>
                         vertical: 12,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF101215),
+                        color: const Color.fromARGB(255, 219, 231, 252),
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: SingleChildScrollView(
@@ -386,8 +388,10 @@ class _FollowingScreenState extends State<FollowingScreen>
                                   ),
                                   decoration: BoxDecoration(
                                     color: isSelected
-                                        ? const Color(0xFF1F497D)
-                                        : Colors.transparent,
+                                        ? const Color.fromARGB(
+                                            84, 154, 200, 255)
+                                        : const Color.fromARGB(
+                                            0, 231, 244, 255),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Column(
@@ -397,7 +401,8 @@ class _FollowingScreenState extends State<FollowingScreen>
                                         child: Container(
                                           width: 46,
                                           height: 46,
-                                          color: const Color(0xFF2C3137),
+                                          color: const Color.fromARGB(
+                                              255, 134, 164, 202),
                                           child: avatarUrl.isNotEmpty
                                               ? Image.network(
                                                   avatarUrl,
@@ -412,7 +417,8 @@ class _FollowingScreenState extends State<FollowingScreen>
                                                   child: Text(
                                                     _initials(displayName),
                                                     style: const TextStyle(
-                                                      color: Colors.white70,
+                                                      color: Color.fromARGB(
+                                                          179, 255, 255, 255),
                                                       fontWeight:
                                                           FontWeight.w700,
                                                     ),
@@ -427,7 +433,8 @@ class _FollowingScreenState extends State<FollowingScreen>
                                         overflow: TextOverflow.ellipsis,
                                         textAlign: TextAlign.center,
                                         style: const TextStyle(
-                                          color: Colors.white,
+                                          color:
+                                              Color.fromARGB(255, 41, 55, 124),
                                           fontSize: 11,
                                         ),
                                       ),
@@ -555,6 +562,7 @@ class _FollowingScreenState extends State<FollowingScreen>
         _goHome();
       },
       child: Scaffold(
+        backgroundColor: const Color(0xFFF5F5F5),
         appBar: AppBar(
           leading: IconButton(
             icon: const Icon(Icons.arrow_back, color: Colors.white),
@@ -569,8 +577,16 @@ class _FollowingScreenState extends State<FollowingScreen>
           bottom: TabBar(
             controller: _tabController,
             labelColor: Colors.white,
-            unselectedLabelColor: Colors.white,
+            unselectedLabelColor: Colors.white70,
             indicatorColor: Colors.white,
+            labelStyle: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+            unselectedLabelStyle: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.normal,
+            ),
             tabs: const [
               Tab(text: 'คำเชิญ'),
               Tab(text: 'กำลังติดตาม'),
@@ -602,50 +618,94 @@ class _FollowingScreenState extends State<FollowingScreen>
                           : ListView.builder(
                               itemCount: _invitations.length,
                               itemBuilder: (context, index) {
+                                String _readEmail(Map<String, dynamic> data) {
+                                  final raw = data['email'] ??
+                                      data['ownerEmail'] ??
+                                      data['inviterEmail'] ??
+                                      data['senderEmail'] ??
+                                      '';
+                                  final val = raw.toString().trim();
+                                  return val.contains('@') ? val : '';
+                                }
+
                                 final inv = _invitations[index];
                                 final name = _readName(inv);
                                 final id = _readId(inv);
                                 final avatarUrl = _readAvatar(inv);
+                                final email = _readEmail(inv);
 
                                 return Card(
                                   margin: const EdgeInsets.symmetric(
-                                      horizontal: 12, vertical: 8),
+                                      horizontal: 5, vertical: 5),
                                   child: Padding(
-                                    padding: const EdgeInsets.all(12),
-                                    child: Row(
+                                    padding: const EdgeInsets.all(5),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
-                                        CircleAvatar(
-                                          radius: 30,
-                                          backgroundImage: avatarUrl.isNotEmpty
-                                              ? NetworkImage(avatarUrl)
-                                              : null,
-                                          child: avatarUrl.isEmpty
-                                              ? const Icon(Icons.person)
-                                              : null,
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Expanded(
-                                          child: Text(
-                                            name,
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.bold,
+                                        // ส่วนบน: Avatar + Email
+                                        Row(
+                                          children: [
+                                            CircleAvatar(
+                                              radius: 30,
+                                              backgroundImage:
+                                                  avatarUrl.isNotEmpty
+                                                      ? NetworkImage(avatarUrl)
+                                                      : null,
+                                              child: avatarUrl.isEmpty
+                                                  ? const Icon(Icons.person,
+                                                      size: 20)
+                                                  : null,
                                             ),
-                                          ),
+                                            const SizedBox(width: 12),
+                                            Expanded(
+                                              child: Text(
+                                                email.isNotEmpty ? email : name,
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 16,
+                                                  color: Colors.black,
+                                                ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                        ElevatedButton(
-                                          onPressed: () =>
-                                              _handleInvitation(id, true),
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor:
-                                                const Color(0xFF1F497D),
-                                          ),
-                                          child: const Text('ยอมรับ'),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        OutlinedButton(
-                                          onPressed: () =>
-                                              _handleInvitation(id, false),
-                                          child: const Text('ปฏิเสธ'),
+
+                                        // ส่วนล่าง: ปุ่ม (Reject ซ้าย, Accept ขวา) ชิดขวา
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.end,
+                                          children: [
+                                            OutlinedButton(
+                                              onPressed: () =>
+                                                  _handleInvitation(id, false),
+                                              style: OutlinedButton.styleFrom(
+                                                foregroundColor: Colors.red,
+                                                side: const BorderSide(
+                                                    color: Colors.red),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        horizontal: 16),
+                                              ),
+                                              child: const Text('ปฏิเสธ'),
+                                            ),
+                                            const SizedBox(width: 12),
+                                            ElevatedButton(
+                                              onPressed: () =>
+                                                  _handleInvitation(id, true),
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor:
+                                                    const Color(0xFF1F497D),
+                                                foregroundColor: Colors.white,
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        horizontal: 16),
+                                              ),
+                                              child: const Text('ยอมรับ'),
+                                            ),
+                                          ],
                                         ),
                                       ],
                                     ),

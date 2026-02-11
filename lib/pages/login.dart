@@ -4,6 +4,8 @@ import '../widgets/login_button.dart';
 import '../services/authen_login.dart';
 import 'forget_password.dart';
 import '../Home/pages/profile_screen.dart';
+import '../Home/pages/library_profile.dart';
+import '../services/profile_api.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:async';
 import '../services/sync_user.dart';
@@ -46,12 +48,21 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
       setState(() => _isLoading = false);
 
+      /* OLD LOGIC
       Navigator.push(
         context,
         MaterialPageRoute(
           builder: (_) => ProfileScreen(),
         ),
       );
+      */
+
+      // NEW LOGIC: Check profile first
+      // NEW LOGIC: Check profile first
+      if (!mounted) return;
+      // if (_navigated) return; // ยอมให้ทำงานทับกันได้ แต่ปกติ _handleLogin จะมี token ที่ชัวร์กว่า
+      _navigated = true;
+      await _checkAndNavigate(token: accessToken);
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
@@ -122,10 +133,9 @@ class _LoginScreenState extends State<LoginScreen> {
       if (event == AuthChangeEvent.signedIn && session != null) {
         _navigated = true;
         if (!mounted) return;
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => ProfileScreen()),
-        );
+
+        // NEW LOGIC: Check profile first
+        _checkAndNavigate(token: session.accessToken);
         return;
       }
     });
@@ -137,6 +147,49 @@ class _LoginScreenState extends State<LoginScreen> {
     _emailCtrl.dispose();
     _passwordCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _checkAndNavigate({String? token}) async {
+    try {
+      token ??= Supabase.instance.client.auth.currentSession?.accessToken;
+
+      if (token == null) {
+        // Should not happen if logged in, but safe fallback
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()), // or stay
+        );
+        return;
+      }
+
+      final api = ProfileApi();
+      final profiles = await api.fetchProfiles(accessToken: token);
+
+      if (!mounted) return;
+
+      if (profiles.isNotEmpty) {
+        // มีโปรไฟล์แล้ว -> ไปหน้า Library
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const LibraryProfile()),
+          (route) => false, // Clear Login screen from stack
+        );
+      } else {
+        // ยังไม่มี -> ไปหน้าสร้าง Profile
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const ProfileScreen()),
+        );
+      }
+    } catch (e) {
+      debugPrint('Check profile error: $e');
+      if (!mounted) return;
+      // Fallback
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const ProfileScreen()),
+      );
+    }
   }
 
   @override

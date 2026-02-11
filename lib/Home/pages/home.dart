@@ -659,6 +659,9 @@ class _Home extends State<Home> {
       ),
       drawer: const AppDrawer(),
       backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+      bottomNavigationBar: const BottomBar(
+        currentRoute: '/home',
+      ),
       body: Stack(
         children: [
           SafeArea(
@@ -711,7 +714,7 @@ class _Home extends State<Home> {
                             width: containerWidth,
                             child: Padding(
                               padding: EdgeInsets.symmetric(
-                                horizontal: maxWidth * 0.05,
+                                horizontal: maxWidth * 0.03,
                                 vertical: maxHeight * 0.02,
                               ),
                               child: Column(
@@ -769,7 +772,7 @@ class _Home extends State<Home> {
                                             _loadingPageIndex == pageIndex;
 
                                         return Container(
-                                          padding: const EdgeInsets.all(12),
+                                          padding: const EdgeInsets.all(8),
                                           decoration: BoxDecoration(
                                             color: const Color(0xFFE8F2FF),
                                             borderRadius:
@@ -812,9 +815,6 @@ class _Home extends State<Home> {
                             ),
                           ),
                         ),
-                      ),
-                      BottomBar(
-                        currentRoute: '/home',
                       ),
                     ],
                   ),

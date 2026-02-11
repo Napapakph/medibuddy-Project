@@ -1,4 +1,5 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:medibuddy/Home/pages/set_remind/remind_list_screen.dart';
 import 'package:medibuddy/Model/medicine_model.dart';
 import 'package:medibuddy/widgets/app_drawer.dart';
@@ -252,89 +253,198 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
     );
   }
 
-  Widget _buildMedicineCard(BuildContext context, int index) {
-    final item = _items[index];
-    final imageProvider = _buildMedicineImage(item.imagePath);
-    debugPrint('🧪 MED item imagePath = "${item.imagePath}"');
-
-    return InkWell(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => RemindListScreen(
-              medicines: _items,
-              initialMedicine: item,
+  void _showImagePopup(ImageProvider? imageProvider) {
+    if (imageProvider == null) return;
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (_) => Stack(
+        children: [
+          // Background dismiss
+          Positioned.fill(
+            child: GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Container(color: Colors.black.withOpacity(0.7)),
             ),
           ),
-        );
-      },
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(5),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF4F7FB),
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 80,
-              height: 80,
+          // Content
+          Center(
+            child: Container(
+              margin: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: const Color(0xFFDDE7F5),
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
-                image: imageProvider != null
-                    ? DecorationImage(image: imageProvider, fit: BoxFit.cover)
-                    : null,
               ),
-              child: imageProvider == null
-                  ? const Icon(Icons.medication, color: Color(0xFF1F497D))
-                  : null,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    item.nickname_medi,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF1F497D),
+                  // Close button bar
+                  Align(
+                    alignment: Alignment.topRight,
+                    child: IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.close, color: Colors.black),
                     ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'กดเพื่อดูรายการแจ้งเตือนการรับประทานยา',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: const Color.fromARGB(255, 85, 85, 85),
+                  // Image
+                  Flexible(
+                    child: InteractiveViewer(
+                      child: Image(
+                        image: imageProvider,
+                        fit: BoxFit.contain,
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
-            Column(
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMedicineCard(BuildContext context, int index) {
+    final item = _items[index];
+    final imageProvider = _buildMedicineImage(item.imagePath);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(7),
+      decoration: BoxDecoration(
+        color: const Color.fromARGB(255, 237, 242, 248),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            offset: const Offset(0, 2),
+            blurRadius: 4,
+          ),
+        ],
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // ฝั่งซ้าย: รูปภาพ
+          GestureDetector(
+            onTap: () => _showImagePopup(imageProvider),
+            child: Container(
+              width: 130,
+              height:
+                  100, // ปรับความสูงตามต้องการ อาจจะต้องเพิ่มถ้า children ฝั่งขวาเยอะ
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              child: imageProvider != null
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image(
+                        image: imageProvider,
+                        fit: BoxFit.contain,
+                      ),
+                    )
+                  : const Icon(Icons.medication,
+                      size: 48, color: Color(0xFF1F497D)),
+            ),
+          ),
+
+          const SizedBox(width: 8),
+
+          // ฝั่งขวา: Column 3 ส่วน
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                IconButton(
-                  onPressed: () => _editMedicine(index),
-                  icon: const Icon(Icons.edit, color: Color(0xFF1F497D)),
+                // 1. บนสุด: 3 ปุ่ม (Delete, Edit, Info)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    IconButton(
+                      onPressed: () => _confirmDelete(index),
+                      icon: const Icon(Icons.delete,
+                          color: Color.fromARGB(255, 210, 83, 83)),
+                      tooltip: 'ลบ',
+                      constraints: const BoxConstraints(), // ลดระยะห่าง
+                      padding: const EdgeInsets.all(8),
+                    ),
+                    IconButton(
+                      onPressed: () => _editMedicine(index),
+                      icon: const Icon(Icons.edit, color: Color(0xFF1F497D)),
+                      tooltip: 'แก้ไข',
+                      constraints: const BoxConstraints(),
+                      padding: const EdgeInsets.all(8),
+                    ),
+                    IconButton(
+                      onPressed: () => _showDetails(item),
+                      icon: const Icon(Icons.info, color: Color(0xFF1F497D)),
+                      tooltip: 'ข้อมูลยา',
+                      constraints: const BoxConstraints(),
+                      padding: const EdgeInsets.all(8),
+                    ),
+                  ],
                 ),
-                IconButton(
-                  onPressed: () => _showDetails(item),
-                  icon: const Icon(Icons.info, color: Color(0xFF1F497D)),
+
+                // 2. กลาง: ชื่อยา
+                Text(
+                  item.nickname_medi,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1F497D),
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                IconButton(
-                  onPressed: () => _confirmDelete(index),
-                  icon: const Icon(Icons.delete, color: Colors.redAccent),
+
+                const SizedBox(height: 12),
+
+                // 3. ล่างสุด: ปุ่มตั้งแจ้งเตือน
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: InkWell(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => RemindListScreen(
+                            medicines: _items,
+                            initialMedicine: item,
+                          ),
+                        ),
+                      );
+                    },
+                    borderRadius: BorderRadius.circular(24),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFB7DAFF),
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: const [
+                          Icon(Icons.alarm, color: Color(0xFF1F497D), size: 18),
+                          SizedBox(width: 5),
+                          Text(
+                            'ตั้งแจ้งเตือน',
+                            style: TextStyle(
+                              color: Color(0xFF1F497D),
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -361,22 +471,30 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
           },
         ),
         actions: [
-          IconButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) =>
-                      MedicationPlanScreen(profileId: widget.profileId),
-                ),
-              );
-            },
-            icon: const Icon(Icons.picture_as_pdf, color: Color.fromARGB(255, 105, 82, 255),),
+          Padding(
+            padding: const EdgeInsets.only(right: 10),
+            child: IconButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) =>
+                        MedicationPlanScreen(profileId: widget.profileId),
+                  ),
+                );
+              },
+              icon: const FaIcon(
+                FontAwesomeIcons.filePdf,
+                color: Color(0xFF1F497D),
+              ),
+            ),
           ),
         ],
       ),
       drawer: const AppDrawer(),
-      backgroundColor: const Color(0xFFEFF6FF),
+      bottomNavigationBar: const BottomBar(
+        currentRoute: '/list_medicine',
+      ),
       body: SafeArea(
         child: Stack(
           children: [
@@ -394,14 +512,14 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
                           width: containerWidth,
                           child: Padding(
                             padding: EdgeInsets.symmetric(
-                              horizontal: maxWidth * 0.04,
-                              vertical: maxWidth * 0.03,
+                              horizontal: maxWidth * 0.02,
+                              vertical: maxWidth * 0.02,
                             ),
                             child: Column(
                               children: [
                                 Expanded(
                                   child: Container(
-                                    padding: const EdgeInsets.all(12),
+                                    padding: const EdgeInsets.all(8),
                                     decoration: BoxDecoration(
                                       color: Colors.white,
                                       borderRadius: BorderRadius.circular(16),
@@ -477,7 +595,6 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
                     },
                   ),
                 ),
-                BottomBar(currentRoute: '/list_medicine'),
               ],
             ),
             if (_isLoading)
