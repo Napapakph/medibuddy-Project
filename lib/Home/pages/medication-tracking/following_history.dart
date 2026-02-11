@@ -70,7 +70,6 @@ class FollowingHistoryPage extends StatefulWidget {
 
 class _FollowingHistoryPageState extends State<FollowingHistoryPage> {
   final _followApi = FollowApi();
-  final _logApi = LogApiService();
   final _searchCtrl = TextEditingController();
 
   static const _searchTrade = 'ชื่อการค้า';
@@ -91,10 +90,20 @@ class _FollowingHistoryPageState extends State<FollowingHistoryPage> {
   List<MedicineHistoryItem> _allItems = [];
   List<MedicineHistoryItem> _filteredItems = [];
 
+  // State for header info
+  String _ownerName = '';
+  String _ownerImage = '';
+  String _profileLabel = '';
+
   @override
   void initState() {
     super.initState();
     _imageBaseUrl = dotenv.env['API_BASE_URL'] ?? '';
+    // Init from widget first
+    _ownerName = widget.ownerName;
+    _ownerImage = widget.ownerImage ?? '';
+    _profileLabel = widget.profileName;
+
     _setDefaultDateRange();
     _loadHistory();
   }
@@ -169,42 +178,58 @@ class _FollowingHistoryPageState extends State<FollowingHistoryPage> {
         scheduleRaw.isEmpty ? null : DateTime.tryParse(scheduleRaw)?.toLocal();
     final takenAt = schedule ?? DateTime.now();
 
-    // Map list API data fields
-    final medicineName = _readString(log['medicineName']); // From list API
-    final note = _readString(log['note']);
     final status = _statusFromResponse(_readString(log['responseStatus']));
-
-    // Dose & Unit from list API
+    final note = _readString(log['note']);
     final dose = _resolveDose(log);
     final unit = _resolveUnit(log);
+    final amount = (dose != null && dose > 0) ? dose : _resolveAmount(log);
 
-    // Use medicineName as title if available
-    final titleTh = medicineName.isNotEmpty ? medicineName : 'ไม่ทราบชื่อยา';
-    final titleEn = '';
-    final detail = '';
+    // Schema:
+    // medicineName = Display name (nickname or fallback)
+    // mediThName = Thai medicine name
+    // mediEnName = English medicine name
+    // mediTradeName = Trade/brand medicine name
 
-    // Calculate amount/dose fallback
-    int amount = 1;
-    if (dose != null && dose > 0) {
-      amount = dose;
-    } else {
-      amount = _resolveAmount(log);
-    }
+    final nickname = _readString(log['medicineName']);
+    final tradeName = _readString(log['mediTradeName']);
+    final thName = _readString(log['mediThName']);
+    final enName = _readString(log['mediEnName']);
+
+    final safeNickname = nickname.isNotEmpty ? nickname : '';
+    final safeTrade = tradeName.isNotEmpty ? tradeName : '';
+    final safeTh = thName.isNotEmpty ? thName : '';
+    final safeEn = enName.isNotEmpty ? enName : '';
+
+    // Log logic: if nickname exists, show it. Otherwise trade > th > en
+    final mainTitle = safeNickname.isNotEmpty
+        ? safeNickname
+        : (safeTrade.isNotEmpty
+            ? safeTrade
+            : (safeTh.isNotEmpty
+                ? safeTh
+                : (safeEn.isNotEmpty ? safeEn : 'ไม่ทราบชื่อยา')));
+
+    final subtitle = safeTrade;
+
+    final detailParts = <String>[];
+    if (safeTh.isNotEmpty) detailParts.add(safeTh);
+    if (safeEn.isNotEmpty) detailParts.add(safeEn);
+    final detail = detailParts.isEmpty ? '' : detailParts.join('\n');
 
     return MedicineHistoryItem(
       takenAt: takenAt,
-      titleTh: titleTh,
-      titleEn: titleEn,
+      titleTh: mainTitle,
+      titleEn: subtitle,
       detail: detail,
       amount: amount,
       dose: dose,
       unit: unit,
       status: status,
       note: note.isNotEmpty ? null : note,
-      nickname: '',
-      tradeName: '',
-      thName: '',
-      enName: '',
+      nickname: safeNickname,
+      tradeName: safeTrade,
+      thName: safeTh,
+      enName: safeEn,
     );
   }
 
@@ -221,10 +246,45 @@ class _FollowingHistoryPageState extends State<FollowingHistoryPage> {
     });
 
     try {
+      // 1. Fetch Follow Detail to get up-to-date owner info & profile name
+      try {
+        final detail = await _followApi.fetchFollowingDetail(
+          accessToken: accessToken,
+          relationshipId: widget.relationshipId,
+        );
+
+        if (detail['relationship'] is Map) {
+          final rel = detail['relationship'] as Map;
+          final nick = _readString(rel['ownerNickname']);
+          if (nick.isNotEmpty) _ownerName = nick;
+
+          final pic = _readString(rel['ownerPicture']);
+          if (pic.isNotEmpty) _ownerImage = pic;
+        }
+
+        if (detail['profiles'] is List) {
+          final list = detail['profiles'] as List;
+          final found = list.firstWhere(
+            (p) => _readInt(p['profileId']) == widget.profileId,
+            orElse: () => null,
+          );
+          if (found != null && found is Map) {
+            final pName = _readString(found['profileName']);
+            if (pName.isNotEmpty) _profileLabel = pName;
+
+            final pPic = _readString(found['profilePicture']);
+            if (pPic.isNotEmpty) _ownerImage = pPic;
+          }
+        }
+      } catch (e) {
+        debugPrint('Error fetching detail: $e');
+        // Ignore error, use widget data
+      }
+
       final startStr = DateFormat('yyyy-MM-dd').format(_startDate);
       final endStr = DateFormat('yyyy-MM-dd').format(_endDate);
 
-      // 1. Fetch list of logs
+      // 2. Fetch list of logs
       debugPrint('Fetching logs for relationshipId=${widget.relationshipId}');
       final logs = await _followApi.fetchFollowingLogs(
         accessToken: accessToken,
@@ -236,7 +296,6 @@ class _FollowingHistoryPageState extends State<FollowingHistoryPage> {
 
       debugPrint('Logs received: ${logs.length}');
 
-      // Simply map directly from list for testing
       final items = logs.map(_mapLogToItem).toList();
       items.sort((a, b) => b.takenAt.compareTo(a.takenAt));
 
@@ -442,7 +501,7 @@ class _FollowingHistoryPageState extends State<FollowingHistoryPage> {
     final items = _filteredItems;
     final grouped = _groupByDate(items);
     final dateKeys = grouped.keys.toList()..sort((a, b) => b.compareTo(a));
-    final ownerAvatar = _buildProfileImage(widget.ownerImage);
+    final ownerAvatar = _buildProfileImage(_ownerImage);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -488,7 +547,7 @@ class _FollowingHistoryPageState extends State<FollowingHistoryPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              widget.ownerName,
+                              _ownerName,
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 16,
@@ -497,7 +556,7 @@ class _FollowingHistoryPageState extends State<FollowingHistoryPage> {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              'โปรไฟล์: ${widget.profileName}',
+                              'โปรไฟล์: $_profileLabel',
                               style: const TextStyle(
                                 color: Colors.white70,
                                 fontSize: 13,

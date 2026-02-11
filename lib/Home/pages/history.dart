@@ -439,13 +439,7 @@ class _HistoryPageState extends State<HistoryPage> {
   }
 
   List<MedicineHistoryItem> _filterItems(List<MedicineHistoryItem> items) {
-    // final q = _searchCtrl.text.trim().toLowerCase();
-    // final start = DateTime(_startDate.year, _startDate.month, _startDate.day);
-    // final end = DateTime(_endDate.year, _endDate.month, _endDate.day);
-
     final filtered = items.where((item) {
-      // final byFilter = _matchesStatus(item.status);
-      // TODO: Status filtering disabled (search dropdown only).
       final inRange = _isInDateRange(item);
       final bySearch = _matchesKeyword(item);
 
@@ -484,12 +478,6 @@ class _HistoryPageState extends State<HistoryPage> {
     final dateRangeText = _formatDateRangeForPdf(_startDate, _endDate);
 
     try {
-      final fontData =
-          await rootBundle.load('assets/fonts/Kodchasan-Regular.ttf');
-      final boldData = await rootBundle.load('assets/fonts/Kodchasan-Bold.ttf');
-      final baseFont = pw.Font.ttf(fontData);
-      final boldFont = pw.Font.ttf(boldData);
-
       final pdf = pw.Document();
       pdf.addPage(
         pw.MultiPage(
@@ -499,12 +487,12 @@ class _HistoryPageState extends State<HistoryPage> {
             final widgets = <pw.Widget>[
               pw.Text(
                 'ประวัติการรับประทานยา',
-                style: pw.TextStyle(font: boldFont, fontSize: 20),
+                style: pw.TextStyle(fontSize: 20),
               ),
               pw.SizedBox(height: 8),
               pw.Text(
                 dateRangeText,
-                style: pw.TextStyle(font: baseFont, fontSize: 12),
+                style: pw.TextStyle(fontSize: 12),
               ),
               pw.SizedBox(height: 16),
             ];
@@ -516,7 +504,7 @@ class _HistoryPageState extends State<HistoryPage> {
               widgets.addAll([
                 pw.Text(
                   _formatThaiDate(day),
-                  style: pw.TextStyle(font: boldFont, fontSize: 14),
+                  style: pw.TextStyle(fontSize: 14),
                 ),
                 pw.SizedBox(height: 6),
                 ...dayItems.expand((item) {
@@ -528,11 +516,11 @@ class _HistoryPageState extends State<HistoryPage> {
                   final rows = <pw.Widget>[
                     pw.Text(
                       '$timeText - ${item.titleTh}',
-                      style: pw.TextStyle(font: baseFont, fontSize: 12),
+                      style: pw.TextStyle(fontSize: 12),
                     ),
                     pw.Text(
                       quantity,
-                      style: pw.TextStyle(font: baseFont, fontSize: 12),
+                      style: pw.TextStyle(fontSize: 12),
                     ),
                   ];
 
@@ -540,7 +528,7 @@ class _HistoryPageState extends State<HistoryPage> {
                     rows.add(
                       pw.Text(
                         status,
-                        style: pw.TextStyle(font: baseFont, fontSize: 12),
+                        style: pw.TextStyle(fontSize: 12),
                       ),
                     );
                   }
@@ -549,7 +537,7 @@ class _HistoryPageState extends State<HistoryPage> {
                     rows.add(
                       pw.Text(
                         note,
-                        style: pw.TextStyle(font: baseFont, fontSize: 12),
+                        style: pw.TextStyle(fontSize: 12),
                       ),
                     );
                   }
@@ -692,41 +680,6 @@ class _HistoryPageState extends State<HistoryPage> {
                   padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
                   child: Row(
                     children: [
-                      // TODO: Removed list icon per requirement (can re-enable later)
-                      // const Icon(Icons.format_list_bulleted, color: Colors.white),
-                      // const SizedBox(width: 8),
-                      // TODO: Action/status filter dropdown disabled (will re-enable later).
-                      // Container(
-                      //   padding: const EdgeInsets.symmetric(horizontal: 10),
-                      //   decoration: BoxDecoration(
-                      //     color: Colors.white,
-                      //     borderRadius: BorderRadius.circular(12),
-                      //   ),
-                      //   child: DropdownButtonHideUnderline(
-                      //     child: DropdownButton<String>(
-                      //       value: _filterValue,
-                      //       items: const [
-                      //         DropdownMenuItem(
-                      //             value: _filterAll, child: Text(_filterAll)),
-                      //         DropdownMenuItem(
-                      //             value: _filterTaken, child: Text(_filterTaken)),
-                      //         DropdownMenuItem(
-                      //             value: _filterSkip, child: Text(_filterSkip)),
-                      //         DropdownMenuItem(
-                      //             value: _filterSnooze, child: Text(_filterSnooze)),
-                      //         DropdownMenuItem(
-                      //             value: _filterPending,
-                      //             child: Text(_filterPending)),
-                      //       ],
-                      //       onChanged: (v) {
-                      //         if (v == null) return;
-                      //         _filterValue = v;
-                      //         _applyFilters();
-                      //       },
-                      //     ),
-                      //   ),
-                      // ),
-                      // const SizedBox(width: 10),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10),
                         decoration: BoxDecoration(
@@ -859,18 +812,6 @@ class _HistoryPageState extends State<HistoryPage> {
                                         ),
                                       ),
                                     ),
-                                    // ...dayItems.map((it) => _HistoryRow(
-                                    //       timeText: _formatTime(it.takenAt),
-                                    //       item: it,
-                                    //       onTapComment: () {
-                                    //         ScaffoldMessenger.of(context)
-                                    //             .showSnackBar(
-                                    //           const SnackBar(
-                                    //               content:
-                                    //                   Text('TODO: เพิ่มคอมเมนต์')),
-                                    //         );
-                                    //       },
-                                    //     )),
                                     ...timeGroups.entries.map((entry) {
                                       final timeKey = entry.key;
                                       final groupItems = entry.value;

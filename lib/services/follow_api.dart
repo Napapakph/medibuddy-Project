@@ -46,11 +46,12 @@ class FollowApi {
   static const _invitesPath = '/api/mobile/v1/follow/invites';
   static const _invitesAcceptPath = '/api/mobile/v1/follow/invites/accept';
   static const _invitesRejectPath = '/api/mobile/v1/follow/invites/reject';
-  static const _followingPath = '/api/mobile/v1/follow/following';
-  static const _followingDetailPath = '/api/mobile/v1/follow/following/detail';
-  static const _followingLogsPath = '/api/mobile/v1/follow/following/logs';
+  static const _followingPath = '/api/mobile/v2/follow/list-following';
+  static const _followingDetailPath = '/api/mobile/v2/follow/following/detail';
+  static const _followingLogsPath = '/api/mobile/v2/follow/following/logs';
   static const _followingRemovePath = '/api/mobile/v1/follow/following/remove';
   static const _searchUserPath = '/api/mobile/v1/follow/search-user';
+  static const _followingUpdatePath = '/api/mobile/v2/follow/update-following';
 
   Options _authOptions(String accessToken) => Options(
         headers: {'Authorization': 'Bearer $accessToken'},
@@ -444,5 +445,61 @@ class FollowApi {
       options: _authOptions(accessToken),
     );
     _ensureSuccess(res, 'Remove following failed');
+  }
+
+  Future<void> updateFollowing({
+    required String accessToken,
+    required int relationshipId,
+    required String ownerNickname,
+    File? ownerPicture,
+  }) async {
+    // Validate constraint from client side as requested
+    if (ownerNickname.length > 100) {
+      throw Exception('ชื่อเล่นห้ามเกิน 100 ตัวอักษร');
+    }
+
+    final body = <String, dynamic>{
+      'ownerNickname': ownerNickname.trim(),
+    };
+
+    if (ownerPicture != null) {
+      // Validate file size (5MB = 5 * 1024 * 1024 bytes)
+      final size = await ownerPicture.length();
+      if (size > 5 * 1024 * 1024) {
+        throw Exception('ขนาดรูปภาพต้องไม่เกิน 5MB');
+      }
+
+      final mimeType = lookupMimeType(ownerPicture.path) ?? 'image/jpeg';
+      const allowed = {'image/jpeg', 'image/png', 'image/webp'};
+      if (!allowed.contains(mimeType)) {
+        throw Exception('รองรับเฉพาะ jpg, jpeg, png, webp');
+      }
+
+      body['ownerPicture'] = await MultipartFile.fromFile(
+        ownerPicture.path,
+        contentType: MediaType.parse(mimeType),
+      );
+    }
+
+    try {
+      final res = await _dio.patch(
+        _followingUpdatePath, // Using the new path
+        queryParameters: {'relationshipId': relationshipId},
+        data: FormData.fromMap(body),
+        options: Options(
+          headers: {'Authorization': 'Bearer $accessToken'},
+          contentType: 'multipart/form-data',
+          validateStatus: (_) => true,
+        ),
+      );
+
+      final status = res.statusCode ?? 0;
+      if (status < 200 || status >= 300) {
+        throw Exception('Update following failed: $status ${res.data}');
+      }
+    } on DioException catch (e) {
+      debugPrint('❌ DIO ERROR: ${e.message}');
+      rethrow;
+    }
   }
 }

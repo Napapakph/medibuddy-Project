@@ -5,7 +5,9 @@ import 'package:medibuddy/services/app_state.dart' show AppState;
 import 'package:medibuddy/services/follow_api.dart';
 import 'package:medibuddy/services/auth_session.dart';
 import 'package:medibuddy/widgets/follow_user_card.dart';
+import 'package:image_picker/image_picker.dart';
 import 'following_history.dart';
+import 'package:lottie/lottie.dart';
 
 class FollowingScreen extends StatefulWidget {
   const FollowingScreen({super.key});
@@ -83,7 +85,7 @@ class _FollowingScreenState extends State<FollowingScreen>
   }
 
   String _readFollowingName(Map<String, dynamic> data) {
-    return (data['name'] ?? 'ไม่มีชื่อ').toString();
+    return (data['ownerNickname'] ?? data['name'] ?? 'ไม่มีชื่อ').toString();
   }
 
   String _readFollowingEmail(Map<String, dynamic> data) {
@@ -92,9 +94,12 @@ class _FollowingScreenState extends State<FollowingScreen>
   }
 
   String _readFollowingAvatar(Map<String, dynamic> data) {
-    final raw =
-        (data['accountPicture'] ?? data['avatar'] ?? data['picture'] ?? '')
-            .toString();
+    final raw = (data['ownerPicture'] ??
+            data['accountPicture'] ??
+            data['avatar'] ??
+            data['picture'] ??
+            '')
+        .toString();
     return _resolveImageUrl(raw);
   }
 
@@ -187,6 +192,7 @@ class _FollowingScreenState extends State<FollowingScreen>
 
     const keys = [
       'sharedProfiles',
+      'profiles',
     ];
     for (final key in keys) {
       final value = data[key];
@@ -293,6 +299,7 @@ class _FollowingScreenState extends State<FollowingScreen>
     String ownerName = _readFollowingName(user);
     String accountPicture = '';
 
+    setState(() => _isLoading = true);
     try {
       final detail = await _followApi.fetchFollowingDetail(
         accessToken: accessToken,
@@ -315,6 +322,8 @@ class _FollowingScreenState extends State<FollowingScreen>
       }
     } catch (_) {
       // ignore and fallback to profiles from list
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
 
     if (profiles.isEmpty) {
@@ -348,7 +357,7 @@ class _FollowingScreenState extends State<FollowingScreen>
                       'เลือกโปรไฟล์ที่ต้องการดู',
                       style: TextStyle(
                         fontWeight: FontWeight.w700,
-                        fontSize: 16,
+                        fontSize: 18,
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -433,10 +442,10 @@ class _FollowingScreenState extends State<FollowingScreen>
                                         overflow: TextOverflow.ellipsis,
                                         textAlign: TextAlign.center,
                                         style: const TextStyle(
-                                          color:
-                                              Color.fromARGB(255, 41, 55, 124),
-                                          fontSize: 11,
-                                        ),
+                                            color: Color.fromARGB(
+                                                255, 41, 55, 124),
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w600),
                                       ),
                                     ],
                                   ),
@@ -459,6 +468,12 @@ class _FollowingScreenState extends State<FollowingScreen>
                           final selectedProfileId = _readProfileId(selected);
                           final selectedProfileName =
                               _readProfileName(selected);
+
+                          String finalImage = _readProfileAvatar(selected);
+                          if (finalImage.isEmpty) {
+                            finalImage = accountPicture;
+                          }
+
                           Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -467,7 +482,7 @@ class _FollowingScreenState extends State<FollowingScreen>
                                 profileId: selectedProfileId,
                                 profileName: selectedProfileName,
                                 ownerName: ownerName,
-                                ownerImage: accountPicture,
+                                ownerImage: finalImage,
                               ),
                             ),
                           );
@@ -479,12 +494,189 @@ class _FollowingScreenState extends State<FollowingScreen>
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                        child: const Text('ดูประวัติการทานยา'),
+                        child: const Text(
+                          'ดูประวัติการทานยา',
+                          style: TextStyle(fontSize: 16),
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _openEditDialog(Map<String, dynamic> user) async {
+    final relationshipId = _readId(user);
+    if (relationshipId == 0) return;
+
+    final initialName = _readFollowingName(user);
+    final controller = TextEditingController(text: initialName);
+    final picker = ImagePicker();
+    XFile? picked;
+    bool saving = false;
+    String? nameError;
+
+    // Validate initial name
+    if (initialName.length > 100) {
+      nameError = 'ชื่อเล่นห้ามเกิน 100 ตัวอักษร';
+    }
+
+    await showDialog<void>(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            ImageProvider? imageProvider;
+            if (picked != null) {
+              imageProvider = FileImage(File(picked!.path));
+            } else {
+              final avatarPath = _readFollowingAvatar(user);
+              if (avatarPath.isNotEmpty) {
+                imageProvider = NetworkImage(avatarPath);
+              }
+            }
+
+            return AlertDialog(
+              title: const Text('แก้ไขคนที่กำลังติดตาม'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircleAvatar(
+                      radius: 36,
+                      backgroundImage: imageProvider,
+                      child: imageProvider == null
+                          ? const Icon(Icons.person, size: 36)
+                          : null,
+                    ),
+                    const SizedBox(height: 8),
+                    TextButton.icon(
+                      onPressed: saving
+                          ? null
+                          : () async {
+                              final file = await picker.pickImage(
+                                source: ImageSource.gallery,
+                              );
+                              if (file == null) return;
+
+                              // Check file size (5MB limit)
+                              final len = await file.length();
+                              if (len > 5 * 1024 * 1024) {
+                                if (!mounted) return;
+                                showDialog(
+                                  context: context,
+                                  builder: (ctx) => AlertDialog(
+                                    title: const Text('แจ้งเตือน'),
+                                    content:
+                                        const Text('ขนาดรูปภาพต้องไม่เกิน 5MB'),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(ctx),
+                                        child: const Text('ตกลง'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                                return;
+                              }
+
+                              setState(() => picked = file);
+                            },
+                      icon: const Icon(Icons.photo_library),
+                      label: const Text('เลือกรูป'),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: controller,
+                      onChanged: (val) {
+                        setState(() {
+                          if (val.length > 100) {
+                            nameError = 'ชื่อเล่นห้ามเกิน 100 ตัวอักษร';
+                          } else {
+                            nameError = null;
+                          }
+                        });
+                      },
+                      decoration: InputDecoration(
+                        labelText: 'ชื่อเล่น (Nickname)',
+                        border: const OutlineInputBorder(),
+                        errorText: nameError,
+                        errorStyle: const TextStyle(color: Colors.red),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: saving ? null : () => Navigator.pop(context),
+                  child: const Text('ยกเลิก'),
+                ),
+                ElevatedButton(
+                  onPressed: (saving || nameError != null)
+                      ? null
+                      : () async {
+                          final nickname = controller.text.trim();
+                          final accessToken = AuthSession.accessToken;
+                          if (accessToken == null) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text('ไม่พบข้อมูลเข้าสู่ระบบ')),
+                            );
+                            return;
+                          }
+
+                          if (nickname.length > 100) {
+                            setState(() =>
+                                nameError = 'ชื่อเล่นห้ามเกิน 100 ตัวอักษร');
+                            return;
+                          }
+
+                          setState(() => saving = true);
+                          try {
+                            File? imageFile;
+                            if (picked != null) {
+                              imageFile = File(picked!.path);
+                            }
+
+                            await _followApi.updateFollowing(
+                              accessToken: accessToken,
+                              relationshipId: relationshipId,
+                              ownerNickname: nickname,
+                              ownerPicture: imageFile,
+                            );
+
+                            if (!mounted) return;
+                            Navigator.pop(context);
+                            _loadData();
+                          } catch (e) {
+                            if (!mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('บันทึกไม่สำเร็จ: $e')),
+                            );
+                          } finally {
+                            if (mounted) {
+                              setState(() => saving = false);
+                            }
+                          }
+                        },
+                  child: saving
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text('บันทึก'),
+                ),
+              ],
             );
           },
         );
@@ -588,14 +780,14 @@ class _FollowingScreenState extends State<FollowingScreen>
               fontWeight: FontWeight.normal,
             ),
             tabs: const [
-              Tab(text: 'คำเชิญ'),
               Tab(text: 'กำลังติดตาม'),
+              Tab(text: 'คำเชิญ'),
             ],
           ),
         ),
-        body: _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : _errorMessage != null
+        body: Stack(
+          children: [
+            _errorMessage != null
                 ? Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -612,7 +804,34 @@ class _FollowingScreenState extends State<FollowingScreen>
                 : TabBarView(
                     controller: _tabController,
                     children: [
-                      // ======== TAB 1: ไม่มีคำเชิญ ========
+                      // ======== TAB 1: กำลังติดตาม ========
+                      _following.isEmpty
+                          ? const Center(child: Text('ยังไม่ติดตามใคร'))
+                          : ListView.builder(
+                              itemCount: _following.length,
+                              itemBuilder: (context, index) {
+                                final user = _following[index];
+                                final name = _readFollowingName(user);
+                                final avatarUrl = _readFollowingAvatar(user);
+                                final email = _readFollowingEmail(user);
+                                final avatarImage = avatarUrl.isNotEmpty
+                                    ? NetworkImage(avatarUrl) as ImageProvider
+                                    : null;
+
+                                return FollowUserCard(
+                                  name: name,
+                                  email: email,
+                                  avatarUrl: avatarUrl,
+                                  avatarImage: avatarImage,
+                                  onDelete: () => _confirmRemoveFollowing(user),
+                                  onEdit: () => _openEditDialog(user),
+                                  onDetail: () =>
+                                      _selectProfileAndOpenDetail(user),
+                                );
+                              },
+                            ),
+
+                      // ======== TAB 2: คำเชิญ ========
                       _invitations.isEmpty
                           ? const Center(child: Text('ไม่มีคำเชิญ'))
                           : ListView.builder(
@@ -713,35 +932,38 @@ class _FollowingScreenState extends State<FollowingScreen>
                                 );
                               },
                             ),
-
-                      // ======== TAB 2: กำลังติดตาม ========
-                      _following.isEmpty
-                          ? const Center(child: Text('ยังไม่ติดตามใคร'))
-                          : ListView.builder(
-                              itemCount: _following.length,
-                              itemBuilder: (context, index) {
-                                final user = _following[index];
-                                final name = _readFollowingName(user);
-                                final avatarUrl = _readFollowingAvatar(user);
-                                final email = _readFollowingEmail(user);
-                                final avatarImage = avatarUrl.isNotEmpty
-                                    ? NetworkImage(avatarUrl) as ImageProvider
-                                    : null;
-
-                                return FollowUserCard(
-                                  name: name,
-                                  email: email,
-                                  avatarUrl: avatarUrl,
-                                  avatarImage: avatarImage,
-                                  onDelete: () => _confirmRemoveFollowing(user),
-                                  onEdit: () {},
-                                  onDetail: () =>
-                                      _selectProfileAndOpenDetail(user),
-                                );
-                              },
-                            ),
                     ],
                   ),
+            if (_isLoading)
+              Positioned.fill(
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    const ModalBarrier(
+                      dismissible: false,
+                      color: Colors.black26,
+                    ),
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Lottie.asset(
+                          'assets/lottie/loader_cat.json',
+                          width: 180,
+                          height: 180,
+                          repeat: true,
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'กำลังโหลด…',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
