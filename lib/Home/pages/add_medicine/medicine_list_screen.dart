@@ -4,7 +4,7 @@ import 'package:medibuddy/Home/pages/set_remind/remind_list_screen.dart';
 import 'package:medibuddy/Model/medicine_model.dart';
 import 'package:medibuddy/widgets/app_drawer.dart';
 import 'package:medibuddy/services/medicine_api.dart';
-import 'createName_medicine.dart';
+import 'create_medicine_profile.dart';
 import 'detail_medicine.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../../widgets/bottomBar.dart';

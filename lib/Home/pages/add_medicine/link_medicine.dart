@@ -4,8 +4,9 @@ import 'package:medibuddy/widgets/medicine_step_timeline.dart';
 import 'package:medibuddy/services/medicine_api.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'summary_medicine.dart';
-import 'request_medicine.dart';
+import 'request_medicine_screen.dart';
 import 'package:lottie/lottie.dart';
+import 'create_medicine_profile.dart';
 
 class AddMedicinePage extends StatefulWidget {
   final MedicineDraft draft;
@@ -27,6 +28,7 @@ class AddMedicinePage extends StatefulWidget {
 
 class _AddMedicinePageState extends State<AddMedicinePage> {
   final MedicineApi _api = MedicineApi();
+  List<MedicineItem> _existingMedicines = [];
   final List<MedicineCatalogItem> _items = [];
   MedicineCatalogItem? _selectedItem;
 
@@ -40,18 +42,34 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
   void initState() {
     super.initState();
     _skipCatalogLink = widget.isEdit && (widget.initialItem?.mediId ?? 0) <= 0;
-    _loadInitialList();
+
+    // ✅ ถ้ามีคำค้นหาจากหน้าก่อนหน้า ให้ค้นหาทันที
+    final initialSearch = widget.draft.searchQuery_medi;
+    _searchController.text = initialSearch;
+    _fetchList(search: initialSearch);
+
+    // ✅ โหลดรายการยาที่มีอยู่มารอไว้เลย (ป้องกัน Delay/Hang ตอนกดปุ่ม)
+    _loadExistingList();
+  }
+
+  Future<void> _loadExistingList() async {
+    try {
+      final list =
+          await _api.fetchProfileMedicineList(profileId: widget.profileId);
+      if (mounted) {
+        setState(() {
+          _existingMedicines = list;
+        });
+      }
+    } catch (e) {
+      debugPrint('⚠️ Pre-load existing medicines failed: $e');
+    }
   }
 
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
-  }
-
-  Future<void> _loadInitialList() async {
-    // ถ้า APIรองรับ search ว่าง = คืน list แรก ก็ใช้แบบนี้ได้เลย
-    await _fetchList(search: '');
   }
 
   Future<void> _onSearch() async {
@@ -145,38 +163,126 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
   }
 
   Future<void> _goNext() async {
-    // ✅ ถ้าไม่ skip ต้องเลือกยา
-    if (!_skipCatalogLink && _selectedItem == null) return;
+    try {
+      // 1. ตรวจสอบการเลือกยา
+      if (_selectedItem == null && !_skipCatalogLink) return;
 
-    final MedicineDraft draft;
-    if (_skipCatalogLink) {
-      // ✅ ไม่ผูกกับฐานข้อมูล → ส่ง catalogItem = null
-      draft = widget.draft.copyWith(
-        catalogItem: null,
-      );
-    } else {
-      final selected = _selectedItem!;
-      draft = widget.draft.copyWith(
-        officialName_medi: selected.displayOfficialName,
-        catalogItem: selected,
-      );
-    }
+      // 2. ถ้าเลือกยา -> ตรวจสอบว่ามีรายการยานี้อยู่แล้วหรือไม่ (ป้องกันซ้ำ)
+      if (_selectedItem != null) {
+        final selected = _selectedItem!;
+        MedicineItem? duplicate;
 
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => SummaryMedicinePage(
-          draft: draft,
-          profileId: widget.profileId,
-          isEdit: widget.isEdit,
-          initialItem: widget.initialItem,
+        // ✅ ใช้ข้อมูลที่โหลดมารอแล้ว
+        try {
+          final currentListId = widget.initialItem?.mediListId ?? 0;
+
+          duplicate = _existingMedicines.firstWhere(
+            (item) =>
+                item.mediId == selected.mediId &&
+                item.mediListId != currentListId,
+            orElse: () => const MedicineItem(
+              mediListId: 0,
+              id: '',
+              nickname_medi: '',
+              officialName_medi: '',
+              imagePath: '',
+            ),
+          );
+        } catch (e) {
+          debugPrint('❌ Check duplicate failed: $e');
+        }
+
+        // ถ้าเจอซ้ำ -> แจ้งเตือน + ถามว่าจะแก้ไขรายการเดิมไหม
+        if (duplicate != null && duplicate.mediListId != 0 && mounted) {
+          final action = await showDialog<int>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: const Text('มีรายการยานี้อยู่แล้ว'),
+              content: Text(
+                  'ยา "${selected.displayOfficialName}" มีชื่อเล่นว่า "${duplicate!.nickname_medi}" อยู่ในรายการยาของคุณแล้ว\n\nต้องการทำอย่างไร?'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, 0), // เลือกใหม่
+                  child: const Text('เลือกใหม่',
+                      style: TextStyle(color: Colors.grey)),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, 1), // แก้ไขรายการเดิม
+                  child: const Text('แก้ไขอันเดิม'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, 2), // เพิ่มซ้ำ
+                  child: const Text(
+                    'เพิ่มซ้ำ',
+                    style: TextStyle(color: Colors.redAccent),
+                  ),
+                ),
+              ],
+            ),
+          );
+
+          if (action == null || action == 0) {
+            // เลือกใหม่ -> อยู่หน้าเดิม
+            return;
+          }
+
+          if (action == 1) {
+            if (!mounted) return;
+            // ไปหน้าแก้ไขรายการเดิม (CreateNameMedicinePage)
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => CreateNameMedicinePage(
+                  profileId: widget.profileId,
+                  isEditing: true,
+                  initialItem: duplicate,
+                ),
+              ),
+            );
+
+            // ✅ ถ้าแก้ไขเสร็จแล้ว (ได้ result กลับมา) ให้จบงานหน้านี้ด้วย
+            if (result is MedicineItem && mounted) {
+              Navigator.pop(context, result);
+            }
+            return;
+          }
+          // action == 2 -> ไปต่อ (เพิ่มซ้ำ)
+        }
+      }
+
+      // 3. สร้าง Draft และไปหน้าสรุป (Summary)
+      if (!mounted) return;
+      final MedicineDraft draft;
+      if (_selectedItem != null) {
+        final selected = _selectedItem!;
+        draft = widget.draft.copyWith(
+          officialName_medi: selected.displayOfficialName,
+          catalogItem: selected,
+        );
+      } else {
+        draft = widget.draft.copyWith(
+          catalogItem: null,
+        );
+      }
+
+      final result = await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => SummaryMedicinePage(
+            draft: draft,
+            profileId: widget.profileId,
+            isEdit: widget.isEdit,
+            initialItem: widget.initialItem,
+          ),
         ),
-      ),
-    );
+      );
 
-    if (!mounted) return;
-    if (result is MedicineItem) {
-      Navigator.pop(context, result);
+      if (!mounted) return;
+      if (result is MedicineItem) {
+        Navigator.pop(context, result);
+      }
+    } catch (e, stack) {
+      debugPrint('❌ _goNext error: $e\n$stack');
     }
   }
 

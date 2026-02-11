@@ -345,9 +345,9 @@ class MedicineApi {
     // ✅ สร้าง FormData ชุดเดียว
     final formMap = <String, dynamic>{
       'mediListId': mediListId,
-      if (mediId != null && mediId > 0) 'mediId': mediId, // ✅ เพิ่มบรรทัดนี้
-      if (mediNickname != null && mediNickname.trim().isNotEmpty)
-        'mediNickname': mediNickname.trim(),
+      'mediId':
+          mediId, // ✅ ส่ง mediId เสมอ (ถ้า null คือ unlink, ถ้ามีค่าคือ link ใหม่)
+      if (mediNickname != null) 'mediNickname': mediNickname.trim(),
     };
 
     if (pictureFile != null) {

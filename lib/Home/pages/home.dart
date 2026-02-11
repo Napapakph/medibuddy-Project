@@ -10,6 +10,7 @@ import 'select_profile.dart';
 import '../../services/app_state.dart';
 import '../../widgets/bottomBar.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'add_medicine/create_medicine_profile.dart';
 
 class Home extends StatefulWidget {
   final ProfileModel? selectedProfile;
@@ -40,6 +41,7 @@ class _Home extends State<Home> {
   int _currentPageIndex = 0;
   int? _loadingPageIndex;
   final Map<int, List<_MedicineReminder>> _remindersByIndex = {};
+  bool _hasAnyRegimen = false;
 
   @override
   void initState() {
@@ -248,6 +250,7 @@ class _Home extends State<Home> {
       );
       if (!mounted) return;
       setState(() {
+        _hasAnyRegimen = items.isNotEmpty;
         _remindersByIndex[pageIndex] = reminders;
         if (pageIndex == _currentPageIndex) {
           _homeReminders = reminders;
@@ -771,6 +774,21 @@ class _Home extends State<Home> {
                                         final isLoading = _loading &&
                                             _loadingPageIndex == pageIndex;
 
+                                        // Only show "Add Medicine" placeholder if:
+                                        // 1. We are sure there are NO regimens at all for this profile (_hasAnyRegimen is false)
+                                        //    AND we are not loading.
+                                        // 2. OR if it's a specific day with no reminders (reminders.isEmpty),
+                                        //    but we might want to keep the day-specific empty state different?
+                                        //    The user asked: "If checked database and NO items at all, show Add button".
+                                        //    So if _hasAnyRegimen is false, we show the Add button.
+                                        //    If _hasAnyRegimen is true but reminders.isEmpty (just no meds this day),
+                                        //    we probably just show "No reminders" or similar?
+                                        //    Actually the user said "Add condition... if no items in DB... show button".
+                                        //    let's prioritize the "No items in DB" case.
+
+                                        final showAddMedicine =
+                                            !_hasAnyRegimen && !isLoading;
+
                                         return Container(
                                           padding: const EdgeInsets.all(8),
                                           decoration: BoxDecoration(
@@ -778,10 +796,111 @@ class _Home extends State<Home> {
                                             borderRadius:
                                                 BorderRadius.circular(20),
                                           ),
-                                          child: reminders.isEmpty
-                                              ? const Center(
-                                                  child:
-                                                      Text('No reminders yet'),
+                                          child: (showAddMedicine ||
+                                                  reminders.isEmpty)
+                                              ? Stack(
+                                                  children: [
+                                                    // Background Overlay
+                                                    Container(
+                                                      decoration: BoxDecoration(
+                                                        color: Colors.black
+                                                            .withOpacity(0.05),
+                                                        borderRadius:
+                                                            BorderRadius
+                                                                .circular(20),
+                                                      ),
+                                                    ),
+                                                    // Centered Content
+                                                    Center(
+                                                      child: Column(
+                                                        mainAxisAlignment:
+                                                            MainAxisAlignment
+                                                                .center,
+                                                        children: [
+                                                          Icon(
+                                                            Icons
+                                                                .medication_liquid_rounded,
+                                                            size: 80,
+                                                            color: const Color(
+                                                                    0xFF1F497D)
+                                                                .withOpacity(
+                                                                    0.5),
+                                                          ),
+                                                          const SizedBox(
+                                                              height: 16),
+                                                          Text(
+                                                            'เพิ่มรายการยาที่ต้องกินก่อน',
+                                                            style: TextStyle(
+                                                              fontSize: 18,
+                                                              color: const Color(
+                                                                      0xFF1F497D)
+                                                                  .withOpacity(
+                                                                      0.7),
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                            ),
+                                                          ),
+                                                          const SizedBox(
+                                                              height: 24),
+                                                          ElevatedButton.icon(
+                                                            onPressed: () {
+                                                              Navigator.push(
+                                                                context,
+                                                                MaterialPageRoute(
+                                                                  builder: (_) =>
+                                                                      CreateNameMedicinePage(
+                                                                    profileId:
+                                                                        _resolveProfileId(),
+                                                                  ),
+                                                                ),
+                                                              ).then((_) {
+                                                                _fetchHomeReminders(
+                                                                  date:
+                                                                      pageDate,
+                                                                  pageIndex:
+                                                                      pageIndex,
+                                                                );
+                                                              });
+                                                            },
+                                                            icon: const Icon(
+                                                                Icons.add),
+                                                            label: const Text(
+                                                                'เพิ่มยา'),
+                                                            style:
+                                                                ElevatedButton
+                                                                    .styleFrom(
+                                                              backgroundColor:
+                                                                  const Color(
+                                                                      0xFF1F497D),
+                                                              foregroundColor:
+                                                                  Colors.white,
+                                                              padding:
+                                                                  const EdgeInsets
+                                                                      .symmetric(
+                                                                horizontal: 32,
+                                                                vertical: 12,
+                                                              ),
+                                                              textStyle:
+                                                                  const TextStyle(
+                                                                fontSize: 16,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                              ),
+                                                              shape:
+                                                                  RoundedRectangleBorder(
+                                                                borderRadius:
+                                                                    BorderRadius
+                                                                        .circular(
+                                                                            30),
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ],
                                                 )
                                               : ListView.separated(
                                                   itemCount:

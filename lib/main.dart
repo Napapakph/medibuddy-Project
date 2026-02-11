@@ -17,7 +17,7 @@ import 'Home/pages/select_profile.dart';
 import 'services/auth_gate.dart';
 import 'Home/pages/home.dart';
 import 'Home/pages/library_profile.dart';
-import 'Home/pages/add_medicine/list_medicine.dart';
+import 'Home/pages/add_medicine/medicine_list_screen.dart';
 import 'Home/pages/history.dart';
 import 'OCR/camera_ocr.dart';
 import 'services/sync_user.dart';
@@ -260,6 +260,7 @@ Future<void> main() async {
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFvaXVyZHdpYmd1ZHN4aG94Y25pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQxNjY3OTcsImV4cCI6MjA3OTc0Mjc5N30.3aPHErdnVMHVmjcOk55KCLhUw6rPCzu4Ke5DWqQNsyg',
     authOptions: const FlutterAuthClientOptions(
       autoRefreshToken: true,
+      
     ),
   );
 
