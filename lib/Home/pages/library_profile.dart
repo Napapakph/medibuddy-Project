@@ -7,6 +7,7 @@ import 'buddy.dart';
 import '../../services/profile_api.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'dart:math';
 
 class LibraryProfile extends StatefulWidget {
   const LibraryProfile({
@@ -513,32 +514,223 @@ class _LibraryProfileState extends State<LibraryProfile> {
   }
   //--------------------------------------------------------------------
 
-// Menu Item: Delete Profile -------------------------------------------
+  // Menu Item: Delete Profile -------------------------------------------
   // ฟังก์ชันแจ้งเตือนถามยืนยันก่อนลบโปรไฟล์
-  void _confirmDeleteProfile(int index) {
+  void _confirmDeleteProfile(int index) async {
     final profile = profiles[index];
-    showDialog(
+
+    // 1. ถามยืนยันครั้งแรก
+    final shouldDelete = await showDialog<bool>(
       context: context,
       builder: (context) {
         return AlertDialog(
           title: const Text('ลบโปรไฟล์'),
-          content: Text('ต้องการลบโปรไฟล์ "${profile.username}" หรือไม่?'),
+          content: Text(
+              'ต้องการลบโปรไฟล์ "${profile.username}" หรือไม่?\n\nถ้าลบ รายการยาที่สร้าง รวมถึงประวัติการทายาทั้งหมดที่ผ่านมาจะหายทั้งหมด ยืนยันการลบหรือไม่'),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('ยกเลิก'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                _deleteProfile(index); // ลบจริงเมื่อกดยืนยัน
-              },
+              onPressed: () => Navigator.of(context).pop(true),
               child: const Text(
-                'ลบ',
-                style: TextStyle(color: Colors.red),
+                'ใช่',
+                style: TextStyle(color: Colors.redAccent),
               ),
             ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('ยกเลิก'),
+            ),
           ],
+        );
+      },
+    );
+
+    if (shouldDelete != true) return;
+    if (!mounted) return;
+
+    // 2. สุ่มเลข 4 หลัก
+    final randomCode = (1000 + Random().nextInt(9000)).toString();
+
+    await showDialog(
+      context: context,
+      builder: (context) {
+        String enteredCode = '';
+
+        // Customization variables
+        const double buttonSize = 70.0;
+        const double buttonFontSize = 26.0;
+        const Color numButtonColor = Colors.white;
+        const Color numTextColor = Color(0xFF1F497D);
+        const Color delButtonColor = Color(0xFFFFEBEE);
+        const Color delIconColor = Colors.red;
+
+        return StatefulBuilder(
+          builder: (context, setState) {
+            void onKeyTap(String value) {
+              if (value == 'DEL') {
+                if (enteredCode.isNotEmpty) {
+                  setState(() {
+                    enteredCode =
+                        enteredCode.substring(0, enteredCode.length - 1);
+                  });
+                }
+              } else {
+                if (enteredCode.length < 4) {
+                  setState(() {
+                    enteredCode += value;
+                  });
+                }
+              }
+            }
+
+            return AlertDialog(
+              backgroundColor: const Color(0xFFF5F5F5),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20)),
+              title: const Text('ยืนยันรหัสลบโปรไฟล์'),
+              content: SizedBox(
+                width: double.maxFinite,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    RichText(
+                      text: TextSpan(
+                        style: const TextStyle(
+                            fontSize: 16, color: Colors.black87),
+                        children: [
+                          const TextSpan(text: 'กรุณากดรหัส '),
+                          TextSpan(
+                            text: randomCode,
+                            style: const TextStyle(
+                              color: Color(0xFFD32F2F),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 22,
+                            ),
+                          ),
+                          const TextSpan(text: ' เพื่อยืนยัน'),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    // Display Entered Code
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: enteredCode == randomCode
+                                ? Colors.green
+                                : Colors.grey.shade300,
+                            width: 2,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.1),
+                              spreadRadius: 1,
+                              blurRadius: 3,
+                            )
+                          ]),
+                      child: Text(
+                        enteredCode.isEmpty ? '____' : enteredCode,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 36,
+                          letterSpacing: 12,
+                          fontWeight: FontWeight.bold,
+                          color: enteredCode == randomCode
+                              ? Colors.green
+                              : const Color(0xFF1F497D),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    // Numpad
+                    Column(
+                      children: [
+                        for (var row in [
+                          ['1', '2', '3'],
+                          ['4', '5', '6'],
+                          ['7', '8', '9'],
+                          ['', '0', 'DEL']
+                        ])
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: row.map((key) {
+                                if (key.isEmpty) {
+                                  return SizedBox(
+                                      width: buttonSize, height: buttonSize);
+                                }
+                                return SizedBox(
+                                  width: buttonSize,
+                                  height: buttonSize,
+                                  child: ElevatedButton(
+                                    onPressed: () => onKeyTap(key),
+                                    style: ElevatedButton.styleFrom(
+                                      padding: EdgeInsets.zero,
+                                      backgroundColor: key == 'DEL'
+                                          ? delButtonColor
+                                          : numButtonColor,
+                                      foregroundColor: key == 'DEL'
+                                          ? delIconColor
+                                          : numTextColor,
+                                      elevation: 3,
+                                      shadowColor: Colors.black26,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(
+                                            buttonSize / 2),
+                                      ),
+                                    ),
+                                    child: key == 'DEL'
+                                        ? const Icon(Icons.backspace_rounded,
+                                            size: 28)
+                                        : Text(
+                                            key,
+                                            style: TextStyle(
+                                              fontSize: buttonFontSize,
+                                              fontWeight: FontWeight.bold,
+                                              color: numTextColor,
+                                            ),
+                                          ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('ยกเลิก', style: TextStyle(fontSize: 16)),
+                ),
+                ElevatedButton(
+                  onPressed: enteredCode == randomCode
+                      ? () {
+                          Navigator.of(context).pop();
+                          _deleteProfile(index);
+                        }
+                      : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFD32F2F),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 24, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8)),
+                  ),
+                  child: const Text('ยืนยันลบ',
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                ),
+              ],
+            );
+          },
         );
       },
     );

@@ -40,7 +40,7 @@ class ProfileApi {
   static const _createPath = '/api/mobile/v1/profile/create';
   static const _updatePath = '/api/mobile/v1/profile/update';
   static const _listPath = '/api/mobile/v1/profile/list';
-  static const _deletePath = '/api/mobile/v1/profile/delete';
+  static const _deletePath = '/api/mobile/v2/profile/delete';
 // ----------------------------------------------------------------------
 
 // Methods Create Profile -----------------------------------------------
