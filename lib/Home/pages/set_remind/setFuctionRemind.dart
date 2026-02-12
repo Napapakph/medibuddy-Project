@@ -78,6 +78,8 @@ class ReminderPlan {
     required this.startTime,
     required this.doses,
     this.mediRegimenId,
+    this.regimenStartDate,
+    this.regimenEndDate,
   });
 
   ReminderPlan copyWith({
@@ -113,8 +115,13 @@ class ReminderPlan {
       durationUnit: durationUnit ?? this.durationUnit,
       startTime: startTime ?? this.startTime,
       doses: doses ?? this.doses,
+      regimenStartDate: regimenStartDate ?? this.regimenStartDate,
+      regimenEndDate: regimenEndDate ?? this.regimenEndDate,
     );
   }
+
+  final DateTime? regimenStartDate;
+  final DateTime? regimenEndDate;
 
   String get frequencyLabel {
     if (frequencyMode == FrequencyMode.timesPerDay) {
@@ -209,6 +216,10 @@ Widget type_frequency({
   required String durationUnit,
   required ValueChanged<String?> onDurationUnitChanged,
   VoidCallback? onAddMedicine,
+  required DateTime regimenStartDate,
+  required ValueChanged<DateTime> onRegimenStartDateChanged,
+  DateTime? regimenEndDate,
+  ValueChanged<DateTime?>? onRegimenEndDateChanged,
 }) {
   final hasMedicines = medicines.isNotEmpty;
   final image = buildMedicineImage(selectedMedicine?.imagePath ?? '');
@@ -290,6 +301,160 @@ Widget type_frequency({
                     )
                     .toList(),
                 onChanged: hasMedicines ? onMedicineChanged : null,
+              ),
+            ),
+          ],
+        ),
+      ),
+      const SizedBox(height: 16),
+
+      // ===== วันเริ่มรับประทานยา =====
+      Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF2F4F8),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'วันเริ่มรับประทานยา',
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+            ),
+            const SizedBox(height: 8),
+            InkWell(
+              onTap: () async {
+                final selected = await showDatePicker(
+                  context: context,
+                  initialDate: regimenStartDate,
+                  firstDate: DateTime(2000),
+                  lastDate: DateTime(2100),
+                  builder: (context, child) {
+                    return Theme(
+                      data: Theme.of(context).copyWith(
+                        colorScheme: const ColorScheme.light(
+                          primary: Color(0xFF1F497D),
+                          onPrimary: Colors.white,
+                          onSurface: Color(0xFF1F497D),
+                        ),
+                      ),
+                      child: child!,
+                    );
+                  },
+                );
+                if (selected != null) {
+                  onRegimenStartDateChanged(selected);
+                }
+              },
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.calendar_today,
+                        color: Color(0xFF1F497D), size: 20),
+                    const SizedBox(width: 10),
+                    Text(
+                      '${regimenStartDate.day}/${regimenStartDate.month}/${regimenStartDate.year}',
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                    const Spacer(),
+                    const Icon(Icons.arrow_drop_down, color: Colors.grey),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+      const SizedBox(height: 16),
+
+      // ===== วันสิ้นสุดการรับประทานยา =====
+      Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF2F4F8),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'วันสิ้นสุดการรับประทานยา',
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+            ),
+            const SizedBox(height: 8),
+            InkWell(
+              onTap: () async {
+                final initialDate = regimenEndDate ?? regimenStartDate;
+                final selected = await showDatePicker(
+                  context: context,
+                  initialDate: initialDate.isBefore(DateTime(2000))
+                      ? DateTime.now()
+                      : initialDate,
+                  firstDate: DateTime(2000),
+                  lastDate: DateTime(2100),
+                  builder: (context, child) {
+                    return Theme(
+                      data: Theme.of(context).copyWith(
+                        colorScheme: const ColorScheme.light(
+                          primary: Color(0xFF1F497D),
+                          onPrimary: Colors.white,
+                          onSurface: Color(0xFF1F497D),
+                        ),
+                      ),
+                      child: child!,
+                    );
+                  },
+                );
+                // Allow clearing? Maybe not via date picker.
+                // Date picker always returns a date or null (cancel).
+                // If user wants to clear, we might need a "Clear" button.
+                // For now, if picked, update.
+                if (selected != null && onRegimenEndDateChanged != null) {
+                  onRegimenEndDateChanged(selected);
+                }
+              },
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.calendar_today,
+                        color: Color(0xFF1F497D), size: 20),
+                    const SizedBox(width: 10),
+                    Text(
+                      regimenEndDate != null
+                          ? '${regimenEndDate.day}/${regimenEndDate.month}/${regimenEndDate.year + 543}'
+                          : 'ตลอดไป',
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                    const Spacer(),
+                    if (regimenEndDate != null)
+                      IconButton(
+                        icon: const Icon(Icons.close, color: Colors.grey),
+                        onPressed: () {
+                          if (onRegimenEndDateChanged != null) {
+                            onRegimenEndDateChanged(null);
+                          }
+                        },
+                        constraints: const BoxConstraints(),
+                        padding: EdgeInsets.zero,
+                        splashRadius: 20,
+                      )
+                    else
+                      const Icon(Icons.arrow_drop_down, color: Colors.grey),
+                  ],
+                ),
               ),
             ),
           ],
@@ -1261,11 +1426,28 @@ ReminderPlan fromRegimenDetail({
   final durationMode = hasEndDate ? DurationMode.custom : DurationMode.forever;
   var durationValue = 1;
   var durationUnit = 'วัน';
+  DateTime? endDate;
+
   if (hasEndDate) {
     final start = DateTime.tryParse(detail.startDate) ?? DateTime.now();
-    final end = DateTime.tryParse(detail.endDate!) ?? start;
-    final diffDays = end.difference(start).inDays;
-    durationValue = diffDays < 1 ? 1 : diffDays;
+    endDate = DateTime.tryParse(detail.endDate!) ?? start;
+
+    var diffDays = endDate.difference(start).inDays;
+    if (diffDays < 1) diffDays = 1;
+
+    if (diffDays >= 365 && diffDays % 365 == 0) {
+      durationValue = diffDays ~/ 365;
+      durationUnit = 'ปี';
+    } else if (diffDays >= 30 && diffDays % 30 == 0) {
+      durationValue = diffDays ~/ 30;
+      durationUnit = 'เดือน';
+    } else if (diffDays >= 7 && diffDays % 7 == 0) {
+      durationValue = diffDays ~/ 7;
+      durationUnit = 'สัปดาห์';
+    } else {
+      durationValue = diffDays;
+      durationUnit = 'วัน';
+    }
   }
 
   return ReminderPlan(
@@ -1287,6 +1469,8 @@ ReminderPlan fromRegimenDetail({
     durationUnit: durationUnit,
     startTime: startTime,
     doses: effectiveDoses,
+    regimenStartDate: DateTime.tryParse(detail.startDate) ?? DateTime.now(),
+    regimenEndDate: endDate,
   );
 }
 
@@ -1423,18 +1607,26 @@ RegimenCreateInput buildRegimenCreateInput(
   int defaultMealOffsetMin = 30,
 }) {
   final scheduleType = mapRegimenScheduleType(plan.frequencyPattern);
-  final start = startDateUtc ?? regimenStartDateUtc();
+  final start = startDateUtc ??
+      (plan.regimenStartDate != null
+          ? regimenStartDateUtc(now: plan.regimenStartDate!)
+          : regimenStartDateUtc());
   final times =
       buildRegimenTimes(plan, defaultMealOffsetMin: defaultMealOffsetMin);
 
+  final explicitEnd = plan.regimenEndDate != null
+      ? regimenStartDateUtc(now: plan.regimenEndDate!)
+      : null;
+
   switch (scheduleType) {
     case 'DAILY':
-      final endDateUtc = computeDailyEndDateUtc(
-        durationMode: plan.durationMode,
-        durationValue: plan.durationValue,
-        durationUnit: plan.durationUnit,
-        startDateUtc: start,
-      );
+      final endDateUtc = explicitEnd ??
+          computeDailyEndDateUtc(
+            durationMode: plan.durationMode,
+            durationValue: plan.durationValue,
+            durationUnit: plan.durationUnit,
+            startDateUtc: start,
+          );
       return RegimenCreateInput(
         scheduleType: scheduleType,
         startDateUtc: start,
@@ -1449,6 +1641,7 @@ RegimenCreateInput buildRegimenCreateInput(
       return RegimenCreateInput(
         scheduleType: scheduleType,
         startDateUtc: start,
+        endDateUtc: explicitEnd,
         daysOfWeek: days,
         times: times,
       );
@@ -1460,6 +1653,7 @@ RegimenCreateInput buildRegimenCreateInput(
       return RegimenCreateInput(
         scheduleType: scheduleType,
         startDateUtc: start,
+        endDateUtc: explicitEnd,
         intervalDays: interval,
         times: times,
       );

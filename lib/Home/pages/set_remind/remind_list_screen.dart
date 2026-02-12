@@ -271,11 +271,28 @@ class _RemindListScreenState extends State<RemindListScreen> {
         hasEndDate ? DurationMode.custom : DurationMode.forever;
     var durationValue = 1;
     var durationUnit = 'วัน';
+    DateTime? endDate;
+
     if (hasEndDate) {
       final start = DateTime.tryParse(item.startDate) ?? DateTime.now();
-      final end = DateTime.tryParse(item.endDate!) ?? start;
-      final diffDays = end.difference(start).inDays;
-      durationValue = diffDays < 1 ? 1 : diffDays;
+      endDate = DateTime.tryParse(item.endDate!) ?? start;
+
+      var diffDays = endDate.difference(start).inDays;
+      if (diffDays < 1) diffDays = 1;
+
+      if (diffDays >= 365 && diffDays % 365 == 0) {
+        durationValue = diffDays ~/ 365;
+        durationUnit = 'ปี';
+      } else if (diffDays >= 30 && diffDays % 30 == 0) {
+        durationValue = diffDays ~/ 30;
+        durationUnit = 'เดือน';
+      } else if (diffDays >= 7 && diffDays % 7 == 0) {
+        durationValue = diffDays ~/ 7;
+        durationUnit = 'สัปดาห์';
+      } else {
+        durationValue = diffDays;
+        durationUnit = 'วัน';
+      }
     }
 
     final resolved = _resolveMedicineByMediListId(item.mediListId) ??
@@ -298,6 +315,8 @@ class _RemindListScreenState extends State<RemindListScreen> {
       durationUnit: durationUnit,
       startTime: effectiveDoses.first.time,
       doses: effectiveDoses,
+      regimenStartDate: DateTime.tryParse(item.startDate) ?? DateTime.now(),
+      regimenEndDate: endDate,
     );
   }
 
@@ -629,6 +648,34 @@ class _RemindListScreenState extends State<RemindListScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (plan.regimenStartDate != null)
+            Align(
+              alignment: Alignment.centerRight,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF2F4F8),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '${plan.regimenStartDate!.day}/${plan.regimenStartDate!.month}/${plan.regimenStartDate!.year + 543} - ${plan.regimenEndDate != null ? "${plan.regimenEndDate!.day}/${plan.regimenEndDate!.month}/${plan.regimenEndDate!.year + 543}" : "ตลอดไป"}',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF1F497D),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

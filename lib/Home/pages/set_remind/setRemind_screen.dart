@@ -42,6 +42,8 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
   String _durationUnit = 'สัปดาห์';
 
   TimeOfDay _startTime = const TimeOfDay(hour: 8, minute: 0);
+  DateTime _regimenStartDate = DateTime.now();
+  DateTime? _regimenEndDate;
   List<ReminderDose> _doses = [];
 
   late TextEditingController _timesPerDayController;
@@ -101,6 +103,8 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
     _durationValue = plan.durationValue;
     _durationUnit = plan.durationUnit;
     _startTime = plan.startTime;
+    _regimenStartDate = plan.regimenStartDate ?? DateTime.now();
+    _regimenEndDate = plan.regimenEndDate;
 
     _selectedWeekdays
       ..clear()
@@ -277,6 +281,8 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
       durationUnit: _durationUnit,
       startTime: _startTime,
       doses: _doses,
+      regimenStartDate: _regimenStartDate,
+      regimenEndDate: _regimenEndDate,
     );
 
     setState(() => _saving = true);
@@ -379,6 +385,26 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('ฟีเจอร์เพิ่มยากำลังพัฒนา')),
           );
+        },
+        regimenStartDate: _regimenStartDate,
+        onRegimenStartDateChanged: (date) =>
+            setState(() => _regimenStartDate = date),
+        regimenEndDate: _regimenEndDate,
+        onRegimenEndDateChanged: (date) {
+          setState(() {
+            _regimenEndDate = date;
+            if (date != null) {
+              _durationMode = DurationMode.custom;
+              // Calculate duration in days, update UI
+              final diff = date.difference(_regimenStartDate).inDays;
+              final v = diff < 1 ? 1 : diff;
+              _durationValue = v;
+              _durationUnit = 'วัน';
+              _durationValueController.text = v.toString();
+            } else {
+              _durationMode = DurationMode.forever;
+            }
+          });
         },
       ),
       detail_time(
