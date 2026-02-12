@@ -239,15 +239,15 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
               'ข้อมูลประวัติการทานยาทั้งหมดที่เกี่ยวข้องจะหายไป ต้องการลบจริงๆใช่มั้ย'),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('ไม่ใช่'),
-            ),
-            TextButton(
               onPressed: () => Navigator.pop(context, true),
               child: const Text(
                 'ใช่',
                 style: TextStyle(color: Colors.redAccent),
               ),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('ไม่ใช่'),
             ),
           ],
         );
