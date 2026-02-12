@@ -42,6 +42,7 @@ class _Home extends State<Home> {
   int? _loadingPageIndex;
   final Map<int, List<_MedicineReminder>> _remindersByIndex = {};
   bool _hasAnyRegimen = false;
+  bool _isRegimenLoaded = false;
 
   @override
   void initState() {
@@ -251,6 +252,7 @@ class _Home extends State<Home> {
       if (!mounted) return;
       setState(() {
         _hasAnyRegimen = items.isNotEmpty;
+        _isRegimenLoaded = true;
         _remindersByIndex[pageIndex] = reminders;
         if (pageIndex == _currentPageIndex) {
           _homeReminders = reminders;
@@ -812,8 +814,27 @@ class _Home extends State<Home> {
                                         final isLoading = _loading &&
                                             _loadingPageIndex == pageIndex;
 
-                                        final showAddMedicine =
-                                            !_hasAnyRegimen && !isLoading;
+                                        // ⚠️ USER REQUEST: Handle loading & empty states correctly across page swipes.
+                                        // 1) ระหว่างโหลด (หรือยังไม่เคยโหลดหน้านี้มาก่อน): ให้มีแค่ loading overlay
+                                        // เพิ่ม !_remindersByIndex.containsKey(pageIndex) เพื่อกันกรณีเลื่อนไปหน้าใหม่ที่ data ยังไม่พร้อม
+                                        if (isLoading ||
+                                            !_isRegimenLoaded ||
+                                            !_remindersByIndex
+                                                .containsKey(pageIndex)) {
+                                          return Container(
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFFE8F2FF),
+                                              borderRadius:
+                                                  BorderRadius.circular(20),
+                                            ),
+                                          );
+                                        }
+
+                                        // 2) โหลดเสร็จแล้ว (มีใน cache แล้ว) ค่อยตัดสินใจ empty state
+                                        // User request: รวม reminders.isEmpty กลับเข้ามา (ว่าง = แสดง Guide)
+                                        final bool showGuide =
+                                            !_hasAnyRegimen ||
+                                                reminders.isEmpty;
 
                                         return Container(
                                           padding: const EdgeInsets.all(8),
@@ -822,8 +843,7 @@ class _Home extends State<Home> {
                                             borderRadius:
                                                 BorderRadius.circular(20),
                                           ),
-                                          child: (showAddMedicine ||
-                                                  reminders.isEmpty)
+                                          child: showGuide
                                               ? Stack(
                                                   children: [
                                                     // Background Overlay

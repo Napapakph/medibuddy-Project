@@ -605,9 +605,7 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
                                       ],
                                     ),
                                     child: _isLoading
-                                        ? const Center(
-                                            child: CircularProgressIndicator(),
-                                          )
+                                        ? const Center()
                                         : _items.isNotEmpty
                                             ? ListView.builder(
                                                 itemCount: _items.length,
