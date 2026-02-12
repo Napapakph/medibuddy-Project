@@ -11,6 +11,7 @@ import '../../../widgets/bottomBar.dart';
 import 'medication_plan_screen.dart';
 import 'package:lottie/lottie.dart';
 import 'detail_medicine.dart';
+import 'dart:math';
 
 class ListMedicinePage extends StatefulWidget {
   final int profileId;
@@ -256,72 +257,190 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
     if (shouldDelete != true) return;
     if (!mounted) return;
 
-    // 2. ให้พิมพ์ CONFIRM เพื่อยืนยัน
-    final confirmCtrl = TextEditingController();
-    final formKey = GlobalKey<FormState>();
+    // 2. สุ่มเลข 4 หลัก
+    final randomCode = (1000 + Random().nextInt(9000)).toString();
 
     await showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: const Text('ยืนยันการลบรายการยา'),
-          content: Form(
-            key: formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                RichText(
-                  text: const TextSpan(
-                    style: TextStyle(
-                        fontSize: 14, color: Color.fromARGB(255, 0, 0, 0)),
-                    children: [
-                      TextSpan(text: 'พิมพ์คำว่า '),
-                      TextSpan(
-                        text: 'CONFIRM',
+        String enteredCode = '';
+
+        // Customization variables
+        const double buttonSize = 70.0;
+        const double buttonFontSize = 26.0;
+        const Color numButtonColor = Colors.white;
+        const Color numTextColor = Color(0xFF1F497D);
+        const Color delButtonColor = Color(0xFFFFEBEE);
+        const Color delIconColor = Colors.red;
+
+        return StatefulBuilder(
+          builder: (context, setState) {
+            void onKeyTap(String value) {
+              if (value == 'DEL') {
+                if (enteredCode.isNotEmpty) {
+                  setState(() {
+                    enteredCode =
+                        enteredCode.substring(0, enteredCode.length - 1);
+                  });
+                }
+              } else {
+                if (enteredCode.length < 4) {
+                  setState(() {
+                    enteredCode += value;
+                  });
+                }
+              }
+            }
+
+            return AlertDialog(
+              backgroundColor: const Color(0xFFF5F5F5),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20)),
+              title: const Text('ยืนยันลบรายการยา'),
+              content: SizedBox(
+                width: double.maxFinite,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    RichText(
+                      text: TextSpan(
+                        style: const TextStyle(
+                            fontSize: 16, color: Colors.black87),
+                        children: [
+                          const TextSpan(text: 'กรุณากดรหัส '),
+                          TextSpan(
+                            text: randomCode,
+                            style: const TextStyle(
+                              color: Color(0xFFD32F2F),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 22,
+                            ),
+                          ),
+                          const TextSpan(text: ' เพื่อยืนยัน'),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    // Display Entered Code
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: enteredCode == randomCode
+                                ? Colors.green
+                                : Colors.grey.shade300,
+                            width: 2,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.1),
+                              spreadRadius: 1,
+                              blurRadius: 3,
+                            )
+                          ]),
+                      child: Text(
+                        enteredCode.isEmpty ? '____' : enteredCode,
+                        textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: Colors.red,
+                          fontSize: 36,
+                          letterSpacing: 12,
                           fontWeight: FontWeight.bold,
+                          color: enteredCode == randomCode
+                              ? Colors.green
+                              : const Color(0xFF1F497D),
                         ),
                       ),
-                      TextSpan(text: ' (ตัวพิมพ์ใหญ่) เพื่อยืนยันการลบ'),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 24),
+                    // Numpad
+                    Column(
+                      children: [
+                        for (var row in [
+                          ['1', '2', '3'],
+                          ['4', '5', '6'],
+                          ['7', '8', '9'],
+                          ['', '0', 'DEL']
+                        ])
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: row.map((key) {
+                                if (key.isEmpty) {
+                                  return SizedBox(
+                                      width: buttonSize, height: buttonSize);
+                                }
+                                return SizedBox(
+                                  width: buttonSize,
+                                  height: buttonSize,
+                                  child: ElevatedButton(
+                                    onPressed: () => onKeyTap(key),
+                                    style: ElevatedButton.styleFrom(
+                                      padding: EdgeInsets.zero,
+                                      backgroundColor: key == 'DEL'
+                                          ? delButtonColor
+                                          : numButtonColor,
+                                      foregroundColor: key == 'DEL'
+                                          ? delIconColor
+                                          : numTextColor,
+                                      elevation: 3,
+                                      shadowColor: Colors.black26,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(
+                                            buttonSize / 2),
+                                      ),
+                                    ),
+                                    child: key == 'DEL'
+                                        ? const Icon(Icons.backspace_rounded,
+                                            size: 28)
+                                        : Text(
+                                            key,
+                                            style: TextStyle(
+                                              fontSize: buttonFontSize,
+                                              fontWeight: FontWeight.bold,
+                                              color: numTextColor,
+                                            ),
+                                          ),
+                                  ),
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: confirmCtrl,
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(),
-                    hintText: 'CONFIRM',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('ยกเลิก', style: TextStyle(fontSize: 16)),
+                ),
+                ElevatedButton(
+                  onPressed: enteredCode == randomCode
+                      ? () {
+                          Navigator.pop(context);
+                          _deleteMedicine(index);
+                        }
+                      : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFD32F2F),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 24, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8)),
                   ),
-                  validator: (value) {
-                    if (value != 'CONFIRM') {
-                      return 'กรุณาพิมพ์ CONFIRM ให้ถูกต้อง';
-                    }
-                    return null;
-                  },
+                  child: const Text('ยืนยันลบ',
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                 ),
               ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('ยกเลิก'),
-            ),
-            TextButton(
-              onPressed: () {
-                if (formKey.currentState!.validate()) {
-                  Navigator.pop(context);
-                  _deleteMedicine(index);
-                }
-              },
-              child: const Text(
-                'ยืนยันลบ',
-                style: TextStyle(color: Colors.red),
-              ),
-            ),
-          ],
+            );
+          },
         );
       },
     );

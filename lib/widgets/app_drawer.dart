@@ -101,8 +101,8 @@ class AppDrawer extends StatelessWidget {
                           ListTile(
                             leading: Image.asset(
                               'assets/cat_home_drawer.png',
-                              width: 30,
-                              height: 30,
+                              width: 35,
+                              height: 35,
                               // color: Color.fromARGB(255, 69, 68, 87), // Optional: tint if needed, but usually images are full color
                             ),
                             title: const Text('หน้าหลัก'),
@@ -121,7 +121,7 @@ class AppDrawer extends StatelessWidget {
                           ListTile(
                             leading: const Icon(
                               IcoFontIcons.pills,
-                              color: Color.fromARGB(255, 69, 68, 87),
+                              color: Color.fromARGB(255, 45, 40, 101),
                               size: 30,
                             ),
                             title: const Text('รายการยาของฉัน'),

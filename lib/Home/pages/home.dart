@@ -811,6 +811,13 @@ class _Home extends State<Home> {
                                         final now = DateTime.now();
                                         final nowMinutes =
                                             (now.hour * 60) + now.minute;
+
+                                        // Filter out past due reminders
+                                        final activeReminders = orderedReminders
+                                            .where((r) => !_isPastDueForDate(
+                                                r.time, pageDate, nowMinutes))
+                                            .toList();
+
                                         final isLoading = _loading &&
                                             _loadingPageIndex == pageIndex;
 
@@ -950,24 +957,19 @@ class _Home extends State<Home> {
                                                 )
                                               : ListView.separated(
                                                   itemCount:
-                                                      orderedReminders.length,
+                                                      activeReminders.length,
                                                   separatorBuilder: (_, __) =>
                                                       const SizedBox(
                                                           height: 12),
                                                   itemBuilder:
                                                       (context, index) {
                                                     final reminder =
-                                                        orderedReminders[index];
-                                                    final pastDue =
-                                                        _isPastDueForDate(
-                                                      reminder.time,
-                                                      pageDate,
-                                                      nowMinutes,
-                                                    );
+                                                        activeReminders[index];
+                                                    // Filtered out past due, so always false
                                                     return _buildReminderCard(
                                                       context,
                                                       reminder,
-                                                      pastDue: pastDue,
+                                                      pastDue: false,
                                                     );
                                                   },
                                                 ),
