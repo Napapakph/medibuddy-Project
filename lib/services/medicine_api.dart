@@ -286,12 +286,17 @@ class MedicineApi {
                 : null),
       );
 
+      final type = _readString(
+        item['mediType'] ?? (med is Map ? med['mediType'] : null),
+      );
+
       return MedicineItem(
         mediListId: mediListId,
         id: id.isNotEmpty ? id : mediId.toString(),
         nickname_medi: nickname.isNotEmpty ? nickname : official,
         officialName_medi: official,
         imagePath: imagePath,
+        mediType: type.isNotEmpty ? type : null,
       );
     }).toList();
   }

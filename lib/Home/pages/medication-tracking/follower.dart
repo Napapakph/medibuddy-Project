@@ -466,7 +466,7 @@ class _FollowerScreenState extends State<FollowerScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             SafeArea(
-              minimum: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+              minimum: const EdgeInsets.fromLTRB(16, 8, 16, 40),
               child: SizedBox(
                 height: 46,
                 child: ElevatedButton.icon(
@@ -496,7 +496,6 @@ class _FollowerScreenState extends State<FollowerScreen> {
                 ),
               ),
             ),
-            const BottomBar(currentRoute: '/follower'),
           ],
         ),
       ),

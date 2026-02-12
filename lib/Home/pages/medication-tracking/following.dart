@@ -9,6 +9,9 @@ import 'package:image_picker/image_picker.dart';
 import 'following_history.dart';
 import 'package:lottie/lottie.dart';
 
+import 'package:medibuddy/widgets/app_drawer.dart';
+import 'package:medibuddy/widgets/bottomBar.dart';
+
 class FollowingScreen extends StatefulWidget {
   const FollowingScreen({super.key});
 
@@ -755,17 +758,16 @@ class _FollowingScreenState extends State<FollowingScreen>
       },
       child: Scaffold(
         backgroundColor: const Color(0xFFF5F5F5),
+        drawer: const AppDrawer(),
+        bottomNavigationBar: const BottomBar(currentRoute: '/following'),
         appBar: AppBar(
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white),
-            onPressed: _goHome,
-          ),
           title: const Text(
             'กำลังติดตาม',
             style: TextStyle(color: Colors.white),
           ),
           backgroundColor: const Color(0xFF1F497D),
           elevation: 0,
+          foregroundColor: Colors.white, // To make drawer icon white
           bottom: TabBar(
             controller: _tabController,
             labelColor: Colors.white,

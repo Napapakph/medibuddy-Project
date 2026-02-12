@@ -10,6 +10,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../../widgets/bottomBar.dart';
 import 'medication_plan_screen.dart';
 import 'package:lottie/lottie.dart';
+import 'detail_medicine.dart';
 
 class ListMedicinePage extends StatefulWidget {
   final int profileId;
@@ -38,8 +39,9 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
   /// สร้าง full url จาก path ที่ backend ส่งมา
   /// - รองรับทั้ง full url, /uploads/..., uploads/...
   /// - กัน crash ถ้า API_BASE_URL ไม่ใช่ url ถูกต้อง
-  String _toFullImageUrl(String raw) {
+  String _toFullImageUrl(String? raw) {
     final base = (dotenv.env['API_BASE_URL'] ?? '').trim();
+    if (raw == null) return '';
     final p = raw.trim();
 
     if (p.isEmpty || p.toLowerCase() == 'null') return '';
@@ -60,7 +62,8 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
 
   /// คืน ImageProvider สำหรับใช้กับ DecorationImage / Image widget
   /// ✅ ต้อง return ครบทุกกรณี เพื่อเลี่ยงพฤติกรรมแปลก ๆ ใน release
-  ImageProvider? _buildMedicineImage(String path) {
+  ImageProvider? _buildMedicineImage(String? path) {
+    if (path == null) return null;
     final p = path.trim();
     if (p.isEmpty || p.toLowerCase() == 'null') return null;
 
@@ -380,11 +383,11 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
     final imageProvider = _buildMedicineImage(item.imagePath);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(7),
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(5),
       decoration: BoxDecoration(
         color: const Color.fromARGB(255, 255, 255, 255),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
@@ -400,79 +403,156 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
           GestureDetector(
             onTap: () => _showImagePopup(imageProvider),
             child: Container(
-              width: 130,
-              height:
-                  100, // ปรับความสูงตามต้องการ อาจจะต้องเพิ่มถ้า children ฝั่งขวาเยอะ
+              width: 80,
+              height: 110,
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
+                shape: BoxShape.rectangle,
                 border: Border.all(color: Colors.grey.shade300),
+                borderRadius: BorderRadius.circular(20),
               ),
-              child: imageProvider != null
-                  ? ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: imageProvider != null
+                    ? Image(
                         image: imageProvider,
-                        fit: BoxFit.contain,
-                      ),
-                    )
-                  : const Icon(Icons.medication,
-                      size: 48, color: Color(0xFF1F497D)),
+                        fit: BoxFit.cover,
+                      )
+                    : const Icon(Icons.medication,
+                        size: 48, color: Color(0xFF1F497D)),
+              ),
             ),
           ),
 
-          const SizedBox(width: 8),
+          const SizedBox(width: 10),
 
-          // ฝั่งขวา: Column 3 ส่วน
+          // ฝั่งขวา: Column
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // 1. บนสุด: 3 ปุ่ม (Delete, Edit, Info)
+                // 1. แถวบน: ชื่อยา + เมนู
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    IconButton(
-                      onPressed: () => _confirmDelete(index),
-                      icon: const Icon(Icons.delete,
-                          color: Color.fromARGB(255, 210, 83, 83)),
-                      tooltip: 'ลบ',
-                      constraints: const BoxConstraints(), // ลดระยะห่าง
-                      padding: const EdgeInsets.all(8),
+                    Expanded(
+                      child: Text(
+                        item.nickname_medi,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1F497D),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                    IconButton(
-                      onPressed: () => _editMedicine(index),
-                      icon: const Icon(Icons.edit, color: Color(0xFF1F497D)),
-                      tooltip: 'แก้ไข',
+                    PopupMenuButton<String>(
+                      padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
-                      padding: const EdgeInsets.all(8),
-                    ),
-                    IconButton(
-                      onPressed: () => _showDetails(item),
-                      icon: const Icon(Icons.info, color: Color(0xFF1F497D)),
-                      tooltip: 'ข้อมูลยา',
-                      constraints: const BoxConstraints(),
-                      padding: const EdgeInsets.all(8),
+                      splashRadius: 20,
+                      color: Colors.white,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16)),
+                      icon: const Icon(
+                        Icons.more_horiz,
+                        color: Color(0xFF1F497D),
+                      ),
+                      onSelected: (value) {
+                        if (value == 'edit') {
+                          _editMedicine(index);
+                        } else if (value == 'delete') {
+                          _confirmDelete(index);
+                        } else if (value == 'info') {
+                          _showDetails(item);
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        const PopupMenuItem(
+                          value: 'info',
+                          child: Row(
+                            children: [
+                              Icon(Icons.info_outline,
+                                  color: Color(0xFF1F497D), size: 20),
+                              SizedBox(width: 8),
+                              Text('ข้อมูลยา'),
+                            ],
+                          ),
+                        ),
+                        const PopupMenuItem(
+                          value: 'edit',
+                          child: Row(
+                            children: [
+                              Icon(Icons.edit,
+                                  color: Color(0xFF1F497D), size: 20),
+                              SizedBox(width: 8),
+                              Text('แก้ไข'),
+                            ],
+                          ),
+                        ),
+                        const PopupMenuItem(
+                          value: 'delete',
+                          child: Row(
+                            children: [
+                              Icon(Icons.delete,
+                                  color: Color.fromARGB(255, 210, 83, 83),
+                                  size: 20),
+                              SizedBox(width: 8),
+                              Text(
+                                'ลบ',
+                                style: TextStyle(
+                                    color: Color.fromARGB(255, 210, 83, 83)),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
 
-                // 2. กลาง: ชื่อยา
-                Text(
-                  item.nickname_medi,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF1F497D),
+                // 2. Type (ย้ายมาไว้ใต้ชื่อ)
+                if (item.mediType != null && item.mediType!.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: const Color.fromARGB(255, 230, 239, 253),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      () {
+                        final t = item.mediType!.trim().toUpperCase();
+                        if (t == 'ORAL') return 'ยารับประทาน';
+                        if (t == 'TOPICAL') return 'ยาทาภายนอก';
+                        return item.mediType!;
+                      }(),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF1F497D),
+                      ),
+                    ),
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
+                ],
+
+                // 3. ชื่อทางการ / รายละเอียด (Subtitle)
+                if (item.officialName_medi.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    item.officialName_medi,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey.shade600,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
 
                 const SizedBox(height: 12),
 
-                // 3. ล่างสุด: ปุ่มตั้งแจ้งเตือน
+                // 4. ปุ่มตั้งแจ้งเตือน (ขวาล่าง)
                 Align(
                   alignment: Alignment.centerRight,
                   child: InkWell(
@@ -492,18 +572,19 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFB7DAFF),
+                        // สีเขียวอมฟ้าตามรูป (Teal-ish)
+                        color: const Color.fromARGB(255, 168, 200, 241),
                         borderRadius: BorderRadius.circular(24),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: const [
-                          Icon(Icons.alarm, color: Color(0xFF1F497D), size: 18),
-                          SizedBox(width: 5),
+                          Icon(Icons.alarm, color: Colors.white, size: 18),
+                          SizedBox(width: 6),
                           Text(
                             'ตั้งแจ้งเตือน',
                             style: TextStyle(
-                              color: Color(0xFF1F497D),
+                              color: Colors.white,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -591,7 +672,7 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
                               children: [
                                 Expanded(
                                   child: Container(
-                                    padding: const EdgeInsets.all(8),
+                                    padding: const EdgeInsets.all(2),
                                     decoration: BoxDecoration(
                                       color: const Color.fromARGB(
                                           0, 255, 255, 255),

@@ -67,7 +67,16 @@ class DetailMedicineSheet extends StatelessWidget {
     final th = _safe(detail.mediThName);
     final en = _safe(detail.mediEnName);
     final trade = _safe(detail.mediTradeName);
-    final type = _safe(detail.mediType);
+    // แปลง type เป็นภาษาไทย
+    String rawType = (detail.mediType ?? '').trim().toUpperCase();
+    String type;
+    if (rawType == 'ORAL') {
+      type = 'ยารับประทาน';
+    } else if (rawType == 'TOPICAL') {
+      type = 'ยาทาภายนอก';
+    } else {
+      type = _safe(detail.mediType);
+    }
     final use = _safe(detail.mediUse);
     final guide = _safe(detail.mediGuide);
     final effect = _safe(detail.mediEffects);

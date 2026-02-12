@@ -781,6 +781,8 @@ class _RemindListScreenState extends State<RemindListScreen> {
                           value: _selectedMedicine,
                           isExpanded: true,
                           hint: const Text('เลือกรายการยา'),
+                          dropdownColor: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
                           decoration: InputDecoration(
                             filled: true,
                             fillColor: Colors.white,

@@ -4,6 +4,7 @@ import '../pages/login.dart';
 import '../services/authen_login.dart';
 import '../services/app_state.dart';
 import 'package:icofont_flutter/icofont_flutter.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -146,7 +147,7 @@ class AppDrawer extends StatelessWidget {
                             onTap: () => _go(context, '/history'),
                           ),
                           ListTile(
-                            leading: const Icon(Icons.favorite,
+                            leading: Icon(MdiIcons.heartCircle,
                                 size: 30,
                                 color: Color.fromARGB(255, 69, 68, 87)),
                             title: const Text('กำลังติดตาม'),

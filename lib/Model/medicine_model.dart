@@ -124,6 +124,7 @@ class MedicineItem {
   final String nickname_medi;
   final String officialName_medi;
   final String imagePath;
+  final String? mediType; // เพิ่ม field นี้
 
   const MedicineItem({
     required this.mediListId,
@@ -131,6 +132,7 @@ class MedicineItem {
     required this.nickname_medi,
     required this.officialName_medi,
     required this.imagePath,
+    this.mediType,
   });
 
   MedicineItem copyWith({
@@ -139,6 +141,7 @@ class MedicineItem {
     String? nickname_medi,
     String? officialName_medi,
     String? imagePath,
+    String? mediType,
   }) {
     return MedicineItem(
       mediListId: mediListId ?? this.mediListId,
@@ -146,6 +149,7 @@ class MedicineItem {
       nickname_medi: nickname_medi ?? this.nickname_medi,
       officialName_medi: officialName_medi ?? this.officialName_medi,
       imagePath: imagePath ?? this.imagePath,
+      mediType: mediType ?? this.mediType,
     );
   }
 
