@@ -213,10 +213,9 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
     try {
       await _api.deleteMedicineListItem(mediListId: item.mediListId);
       if (!mounted) return;
-      setState(() {
-        _items.removeAt(index);
-        _errorMessage = '';
-      });
+
+      // ✅ รีเฟรชข้อมูลใหม่ทันที
+      await _loadMedicines();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -225,13 +224,83 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
     }
   }
 
-  void _confirmDelete(int index) {
-    showDialog(
+  void _confirmDelete(int index) async {
+    // 1. ถามยืนยันครั้งแรก
+    final shouldDelete = await showDialog<bool>(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('ลบรายการยา'),
-          content: const Text('ต้องการลบรายการยานี้หรือไม่'),
+          title: const Text('ยืนยันที่จะลบรายการยาใช่มั้ย'),
+          content: const Text(
+              'ข้อมูลประวัติการทานยาทั้งหมดที่เกี่ยวข้องจะหายไป ต้องการลบจริงๆใช่มั้ย'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('ไม่ใช่'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text(
+                'ใช่',
+                style: TextStyle(color: Colors.redAccent),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldDelete != true) return;
+    if (!mounted) return;
+
+    // 2. ให้พิมพ์ CONFIRM เพื่อยืนยัน
+    final confirmCtrl = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('ยืนยันการลบรายการยา'),
+          content: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                RichText(
+                  text: const TextSpan(
+                    style: TextStyle(
+                        fontSize: 14, color: Color.fromARGB(255, 0, 0, 0)),
+                    children: [
+                      TextSpan(text: 'พิมพ์คำว่า '),
+                      TextSpan(
+                        text: 'CONFIRM',
+                        style: TextStyle(
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      TextSpan(text: ' (ตัวพิมพ์ใหญ่) เพื่อยืนยันการลบ'),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: confirmCtrl,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    hintText: 'CONFIRM',
+                  ),
+                  validator: (value) {
+                    if (value != 'CONFIRM') {
+                      return 'กรุณาพิมพ์ CONFIRM ให้ถูกต้อง';
+                    }
+                    return null;
+                  },
+                ),
+              ],
+            ),
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
@@ -239,12 +308,14 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
             ),
             TextButton(
               onPressed: () {
-                Navigator.pop(context);
-                _deleteMedicine(index);
+                if (formKey.currentState!.validate()) {
+                  Navigator.pop(context);
+                  _deleteMedicine(index);
+                }
               },
               child: const Text(
-                'ลบ',
-                style: TextStyle(color: Colors.redAccent),
+                'ยืนยันลบ',
+                style: TextStyle(color: Colors.red),
               ),
             ),
           ],
@@ -312,7 +383,7 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(7),
       decoration: BoxDecoration(
-        color: const Color.fromARGB(255, 237, 242, 248),
+        color: const Color.fromARGB(255, 255, 255, 255),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -452,8 +523,9 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color.fromARGB(255, 222, 237, 255),
       appBar: AppBar(
-        backgroundColor: const Color(0xFFB7DAFF),
+        backgroundColor: const Color.fromARGB(255, 179, 216, 255),
         centerTitle: true,
         title: const Text(
           'รายการยาของฉัน',
@@ -521,7 +593,8 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
                                   child: Container(
                                     padding: const EdgeInsets.all(8),
                                     decoration: BoxDecoration(
-                                      color: Colors.white,
+                                      color: const Color.fromARGB(
+                                          0, 255, 255, 255),
                                       borderRadius: BorderRadius.circular(16),
                                       boxShadow: [
                                         BoxShadow(

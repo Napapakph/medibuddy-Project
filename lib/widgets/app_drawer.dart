@@ -98,10 +98,11 @@ class AppDrawer extends StatelessWidget {
                         padding: EdgeInsets.zero,
                         children: [
                           ListTile(
-                            leading: const Icon(
-                              IcoFontIcons.home,
-                              color: Color.fromARGB(255, 69, 68, 87),
-                              size: 30,
+                            leading: Image.asset(
+                              'assets/cat_home_drawer.png',
+                              width: 30,
+                              height: 30,
+                              // color: Color.fromARGB(255, 69, 68, 87), // Optional: tint if needed, but usually images are full color
                             ),
                             title: const Text('หน้าหลัก'),
                             onTap: () => _go(

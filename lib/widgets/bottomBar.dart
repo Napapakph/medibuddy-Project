@@ -41,7 +41,7 @@ class BottomBar extends StatelessWidget {
           GestureDetector(
             onTap: () {
               // ✅ ไม่สร้าง Home เปล่า ๆ / ไม่พึ่ง args
-              if (currentRoute == '/home') return;
+              // if (currentRoute == '/home') return;
 
               Navigator.pushReplacementNamed(
                 context,
@@ -60,7 +60,7 @@ class BottomBar extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               child: Image.asset(
-                'assets/main_mascot.png',
+                'assets/cat_home.png',
                 width: 100,
                 height: 100,
               ),

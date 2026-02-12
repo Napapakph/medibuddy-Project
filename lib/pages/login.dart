@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 import 'signup.dart';
 import '../widgets/login_button.dart';
 import '../services/authen_login.dart';
 import 'forget_password.dart';
 import '../Home/pages/profile_screen.dart';
-import '../Home/pages/library_profile.dart';
+import '../Home/pages/select_profile.dart';
 import '../services/profile_api.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:async';
@@ -48,17 +49,8 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
       setState(() => _isLoading = false);
 
-      /* OLD LOGIC
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => ProfileScreen(),
-        ),
-      );
-      */
+      // NEW LOGIC: Check profile first
 
-      // NEW LOGIC: Check profile first
-      // NEW LOGIC: Check profile first
       if (!mounted) return;
       // if (_navigated) return; // ยอมให้ทำงานทับกันได้ แต่ปกติ _handleLogin จะมี token ที่ชัวร์กว่า
       _navigated = true;
@@ -131,8 +123,11 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
       if (event == AuthChangeEvent.signedIn && session != null) {
-        _navigated = true;
         if (!mounted) return;
+        setState(() {
+          _isGoogleLoading = true; // ✅ Show loading during callback processing
+          _navigated = true;
+        });
 
         // NEW LOGIC: Check profile first
         _checkAndNavigate(token: session.accessToken);
@@ -171,7 +166,7 @@ class _LoginScreenState extends State<LoginScreen> {
         // มีโปรไฟล์แล้ว -> ไปหน้า Library
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (_) => const LibraryProfile()),
+          MaterialPageRoute(builder: (_) => const SelectProfile()),
           (route) => false, // Clear Login screen from stack
         );
       } else {
@@ -400,6 +395,34 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                   ),
+                  if (_isLoading || _isGoogleLoading)
+                    Positioned.fill(
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          const ModalBarrier(
+                            dismissible: false,
+                            color: Colors.black26,
+                          ),
+                          Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Lottie.asset(
+                                'assets/lottie/loader_cat.json',
+                                width: 180,
+                                height: 180,
+                                repeat: true,
+                              ),
+                              const SizedBox(height: 8),
+                              const Text(
+                                'กำลังโหลด…',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
                 ],
               ),
             ),

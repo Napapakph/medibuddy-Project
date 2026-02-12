@@ -697,15 +697,53 @@ class _Home extends State<Home> {
                         color: const Color(0xFFB7DAFF), // สีฟ้าของเดียร์
                         child: Column(
                           children: [
-                            InkWell(
-                              onTap: () => _pickDisplayedDate(displayedDate),
-                              child: Text(
-                                thaiBuddhistDate,
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  color: Color(0xFF1F497D),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                if (_currentPageIndex > 0)
+                                  IconButton(
+                                    icon: const Icon(
+                                        Icons.arrow_back_ios_rounded,
+                                        size: 18),
+                                    color: const Color(0xFF1F497D),
+                                    onPressed: () {
+                                      _pageController.previousPage(
+                                        duration:
+                                            const Duration(milliseconds: 300),
+                                        curve: Curves.easeOut,
+                                      );
+                                    },
+                                  )
+                                else
+                                  const SizedBox(width: 48, height: 48),
+                                // Date Text
+                                InkWell(
+                                  onTap: () =>
+                                      _pickDisplayedDate(displayedDate),
+                                  child: Text(
+                                    thaiBuddhistDate,
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      color: Color(0xFF1F497D),
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                                 ),
-                              ),
+                                // Right Arrow (Next Day)
+                                IconButton(
+                                  icon: const Icon(
+                                      Icons.arrow_forward_ios_rounded,
+                                      size: 18),
+                                  color: const Color(0xFF1F497D),
+                                  onPressed: () {
+                                    _pageController.nextPage(
+                                      duration:
+                                          const Duration(milliseconds: 300),
+                                      curve: Curves.easeOut,
+                                    );
+                                  },
+                                ),
+                              ],
                             ),
                           ],
                         ),
@@ -773,18 +811,6 @@ class _Home extends State<Home> {
                                             (now.hour * 60) + now.minute;
                                         final isLoading = _loading &&
                                             _loadingPageIndex == pageIndex;
-
-                                        // Only show "Add Medicine" placeholder if:
-                                        // 1. We are sure there are NO regimens at all for this profile (_hasAnyRegimen is false)
-                                        //    AND we are not loading.
-                                        // 2. OR if it's a specific day with no reminders (reminders.isEmpty),
-                                        //    but we might want to keep the day-specific empty state different?
-                                        //    The user asked: "If checked database and NO items at all, show Add button".
-                                        //    So if _hasAnyRegimen is false, we show the Add button.
-                                        //    If _hasAnyRegimen is true but reminders.isEmpty (just no meds this day),
-                                        //    we probably just show "No reminders" or similar?
-                                        //    Actually the user said "Add condition... if no items in DB... show button".
-                                        //    let's prioritize the "No items in DB" case.
 
                                         final showAddMedicine =
                                             !_hasAnyRegimen && !isLoading;

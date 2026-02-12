@@ -109,6 +109,8 @@ flutter:
      - assets/lottie/loader_cat.lottie
      - assets/lottie/loader_cat.json
      - assets/cat_add_follower.png
+     - assets/cat_home.png
+     - assets/cat_home_drawer.png
 
   fonts:
      - family: Kodchasan

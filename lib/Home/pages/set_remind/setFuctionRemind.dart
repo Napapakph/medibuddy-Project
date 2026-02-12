@@ -1122,7 +1122,7 @@ class MealTimingIcon extends StatelessWidget {
         icon = Icons.restaurant;
         break;
       case MealTiming.betweenMeals:
-        icon = Icons.restaurant_menu;
+        icon = Icons.check_circle_outline;
         break;
       case MealTiming.afterMeal:
         icon = Icons.local_dining;

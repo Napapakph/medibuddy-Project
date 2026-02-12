@@ -404,7 +404,7 @@ class MedicineApi {
     final accessToken = await _getAccessToken();
 
     try {
-      final url = '$_baseUrl/api/mobile/v1/medicine-list/delete';
+      final url = '$_baseUrl/api/mobile/v2/medicine-list/delete';
 
       debugPrint('🗑️ DELETE(MED) -> $url?mediListId=$mediListId');
       debugPrint('🔑 TOKEN -> ${accessToken.substring(0, 20)}...');
@@ -413,6 +413,7 @@ class MedicineApi {
         url,
         data: {
           'mediListId': mediListId,
+          'confirmation': 'CONFIRM', // ✅ ตาม Requirement ใหม่
         },
         options: dio.Options(
           headers: {
