@@ -1,7 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:medibuddy/services/log_api.dart';
-import 'package:medibuddy/services/regimen_api.dart';
+
 import 'package:medibuddy/services/app_state.dart';
 import 'package:medibuddy/widgets/comment.dart';
 
@@ -30,6 +30,11 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
   final Map<int, String> _notesByLogId = <int, String>{};
   // int? _activeCommentLogId;
   int? _expandedCommentLogId;
+  Map<int, List<Map<String, dynamic>>> _groupedLogs = {};
+  int? _selectedProfileId;
+  List<Map<String, dynamic>> _profiles =
+      []; // To store profile info for dropdown separate from logs if needed
+
   final pid = AppState.instance.currentProfileId;
 
   @override
@@ -60,14 +65,36 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
           ids.map((id) => api.getMedicationLogDetail(logId: id)).toList();
       final results = await Future.wait(futures);
       if (!mounted) return;
+
+      // Group logs by profile
+      final grouped = <int, List<Map<String, dynamic>>>{};
+      final profilesMap = <int, Map<String, dynamic>>{};
+
+      for (final log in results) {
+        final p = _readMap(log['profile']);
+        final pId = _readInt(p['profileId']) ?? 0;
+        if (pId > 0) {
+          grouped.putIfAbsent(pId, () => []).add(log);
+          profilesMap[pId] = p;
+        }
+      }
+
       setState(() {
         _logs = results;
+        _groupedLogs = grouped;
+        _profiles = profilesMap.values.toList();
+
+        // Select first profile if not selected
+        if (_selectedProfileId == null && _groupedLogs.isNotEmpty) {
+          _selectedProfileId = _groupedLogs.keys.first;
+        }
       });
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _errorMessage = 'โหลดรายการยาไม่สำเร็จ: $e';
         _logs = [];
+        _groupedLogs = {};
       });
     } finally {
       if (!mounted) return;
@@ -116,10 +143,22 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
     return _formatTime(_logs.first['scheduleTime']);
   }
 
-  String _profileName() {
-    if (_logs.isEmpty) return '';
-    final profile = _readMap(_logs.first['profile']);
+  String _profileName(int profileId) {
+    if (_profiles.isEmpty) return '';
+    final profile = _profiles.firstWhere(
+        (p) => _readInt(p['profileId']) == profileId,
+        orElse: () => {});
     return _readString(profile['profileName']);
+  }
+
+  String _profileImage(int profileId) {
+    if (_profiles.isEmpty) return '';
+    final profile = _profiles.firstWhere(
+        (p) => _readInt(p['profileId']) == profileId,
+        orElse: () => {});
+    final img = _readString(profile['profileImage']);
+    if (img.isNotEmpty) return img;
+    return _readString(profile['profilePicture']);
   }
 
   String _mapUnitToThai(String unit) {
@@ -291,8 +330,6 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
     final imagePath = pictureOption.isNotEmpty ? pictureOption : mediPicture;
     final imageProvider = _buildImageProvider(imagePath);
 
-    // final isActive = _activeCommentLogId == logId;
-    // final hasNote = (_notesByLogId[logId]?.trim().isNotEmpty ?? false);
     final isSubmitting = _submittingIds.contains(logId);
     final status = _responses[logId];
     final disabled = status != null || isSubmitting;
@@ -303,10 +340,6 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        // border: Border.all(
-        //   color: isActive ? const Color(0xFF1F497D) : Colors.transparent,
-        //   width: 2,
-        // ),
         boxShadow: const [
           BoxShadow(
             color: Color(0x12000000),
@@ -396,9 +429,9 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
                     ),
                     color: Colors.white,
                   ),
-                  child: Icon(
+                  child: const Icon(
                     Icons.chat_bubble_outline,
-                    color: const Color(0xFF1F497D),
+                    color: Color(0xFF1F497D),
                     size: 18,
                   ),
                 ),
@@ -462,12 +495,34 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
                       : const Text('กินยา'),
                 ),
               ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: disabled
+                      ? null
+                      : () => _submitResponse(
+                            logId: logId,
+                            responseStatus: 'SNOOZE',
+                          ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFFF0A24F),
+                    side: const BorderSide(color: Color(0xFFF0A24F)),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: const Text('เลื่อน'),
+                ),
+              ),
             ],
           ),
           if (status != null) ...[
             const SizedBox(height: 6),
             Text(
-              status == 'TAKE' ? 'บันทึก: กินยา' : 'บันทึก: ข้ามยา',
+              status == 'TAKE'
+                  ? 'บันทึก: กินยา'
+                  : (status == 'SKIP' ? 'บันทึก: ข้ามยา' : 'บันทึก: เลื่อน'),
               style: const TextStyle(
                 fontSize: 12,
                 color: Color(0xFF6E7C8B),
@@ -482,7 +537,15 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
   @override
   Widget build(BuildContext context) {
     final timeText = _headerTimeText();
-    final profileName = _profileName();
+    // Use selected profile or fall back
+    final currentProfileId = _selectedProfileId ?? 0;
+    final displayLogs = _groupedLogs[currentProfileId] ?? _logs;
+
+    final profileName = _profileName(currentProfileId);
+    final profileImg = _profileImage(currentProfileId);
+    final profileImgProvider = _buildImageProvider(profileImg);
+
+    final hasMultipleProfiles = _groupedLogs.keys.length > 1;
 
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 217, 235, 255),
@@ -513,46 +576,129 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
                     ),
                   )
                 : Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                      Container(
+                        color: const Color.fromARGB(0, 255, 255, 255),
+                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            if (profileName.isNotEmpty)
-                              Text(
-                                'โปรไฟล์: $profileName',
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFF1F497D),
+                            if (hasMultipleProfiles)
+                              Container(
+                                margin: const EdgeInsets.only(bottom: 16),
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 12),
+                                decoration: BoxDecoration(
+                                  border:
+                                      Border.all(color: Colors.grey.shade300),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton<int>(
+                                    value: _selectedProfileId,
+                                    isExpanded: true,
+                                    items: _profiles.map((p) {
+                                      final pid = _readInt(p['profileId']) ?? 0;
+                                      final name =
+                                          _readString(p['profileName']);
+                                      final img = _readString(p['profileImage'])
+                                              .isNotEmpty
+                                          ? _readString(p['profileImage'])
+                                          : _readString(p['profilePicture']);
+                                      final provider = _buildImageProvider(img);
+
+                                      return DropdownMenuItem<int>(
+                                        value: pid,
+                                        child: Row(
+                                          children: [
+                                            Container(
+                                              width: 30,
+                                              height: 30,
+                                              margin: const EdgeInsets.only(
+                                                  right: 8),
+                                              decoration: BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                color: Colors.grey.shade200,
+                                                image: provider != null
+                                                    ? DecorationImage(
+                                                        image: provider,
+                                                        fit: BoxFit.cover)
+                                                    : null,
+                                              ),
+                                              child: provider == null
+                                                  ? const Icon(Icons.person,
+                                                      size: 20,
+                                                      color: Colors.grey)
+                                                  : null,
+                                            ),
+                                            Text(name),
+                                          ],
+                                        ),
+                                      );
+                                    }).toList(),
+                                    onChanged: (val) {
+                                      if (val != null) {
+                                        setState(() {
+                                          _selectedProfileId = val;
+                                        });
+                                      }
+                                    },
+                                  ),
                                 ),
                               ),
-                            if (timeText.isNotEmpty) ...[
-                              const SizedBox(height: 4),
-                              Text(
-                                'เวลา $timeText น.',
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  color: Color(0xFF6E7C8B),
-                                ),
+
+                            // Profile Image & Name (Centered)
+                            if (currentProfileId > 0)
+                              Column(
+                                children: [
+                                  Container(
+                                    width: 80,
+                                    height: 80,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Colors.grey.shade200,
+                                      image: profileImgProvider != null
+                                          ? DecorationImage(
+                                              image: profileImgProvider,
+                                              fit: BoxFit.cover)
+                                          : null,
+                                    ),
+                                    child: profileImgProvider == null
+                                        ? const Icon(Icons.person,
+                                            size: 40, color: Colors.grey)
+                                        : null,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    profileName,
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF1F497D),
+                                    ),
+                                  ),
+                                  if (timeText.isNotEmpty)
+                                    Text(
+                                      'เวลา $timeText น.',
+                                      style: const TextStyle(
+                                          fontSize: 14, color: Colors.grey),
+                                    ),
+                                ],
                               ),
-                            ],
                           ],
                         ),
                       ),
                       Expanded(
-                        child: _logs.isEmpty
+                        child: displayLogs.isEmpty
                             ? const Center(
-                                child: Text('ไม่พบรายการยา'),
+                                child: Text('ไม่พบรายการยาสำหรับโปรไฟล์นี้'),
                               )
                             : ListView.builder(
                                 padding:
-                                    const EdgeInsets.fromLTRB(16, 4, 16, 16),
-                                itemCount: _logs.length,
+                                    const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                                itemCount: displayLogs.length,
                                 itemBuilder: (context, index) {
-                                  final log = _logs[index];
+                                  final log = displayLogs[index];
                                   final logId = _readInt(log['logId']) ?? 0;
                                   final medicineList =
                                       _readMap(log['medicineList']);

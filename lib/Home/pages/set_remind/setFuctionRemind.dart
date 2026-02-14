@@ -372,8 +372,8 @@ Widget type_frequency({
           ],
         ),
       ),
-      const SizedBox(height: 16),
-
+      //  const SizedBox(height: 16),
+/*
       // ===== วันสิ้นสุดการรับประทานยา =====
       Container(
         padding: const EdgeInsets.all(10),
@@ -460,6 +460,7 @@ Widget type_frequency({
           ],
         ),
       ),
+      */
       const SizedBox(height: 16),
 
       // ===== รูปแบบการรับประทานยา =====

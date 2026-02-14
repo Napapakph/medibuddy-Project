@@ -223,35 +223,130 @@ Future<void> main() async {
     openAlarmFromNoti(data: _payloadFromRemoteMessage(initialMessage));
   }
 
-  // ✅ 3. LISTENER สำหรับ FOREGROUND (จุดสำคัญที่สุด)
+// 🔔 Notification Grouping State
+  final Map<String, List<Map<String, dynamic>>> _notificationBuffer = {};
+  Timer? _debounceTimer;
+
+  void _scheduleGroupedNotification() {
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 1000), () async {
+      if (_notificationBuffer.isEmpty) return;
+
+      for (final scheduleTimeKey in _notificationBuffer.keys) {
+        final payloads = _notificationBuffer[scheduleTimeKey]!;
+        if (payloads.isEmpty) continue;
+
+        // Ensure unique logs using a Set to prevent duplicates
+        final uniqueLogs = <String, Map<String, dynamic>>{};
+        for (final p in payloads) {
+          final logId = p['logId']?.toString();
+          if (logId != null && logId.isNotEmpty) {
+            uniqueLogs[logId] = p;
+          } else {
+            // Fallback for logs without ID (should not happen normally)
+            uniqueLogs[DateTime.now().microsecondsSinceEpoch.toString()] = p;
+          }
+        }
+
+        final mergedList = uniqueLogs.values.toList();
+        if (mergedList.isEmpty) continue;
+
+        // Create merged payload
+        final first = mergedList.first;
+        final mergedPayload = Map<String, dynamic>.from(first);
+
+        // Override 'items' with list of all individual payloads
+        // The alarm screen is already built to handle list of items in 'payload' or 'items'
+        mergedPayload['items'] = mergedList;
+
+        // Construct Body Text
+        String bodyText;
+        String titleText = first['title'] ?? 'MediBuddy Reminder';
+
+        // Extract a pretty time string from key or payload for display
+        final displayTime = first['time'] ?? scheduleTimeKey;
+
+        if (mergedList.length == 1) {
+          bodyText = first['body'] ?? 'Time to take your medication';
+        } else {
+          final names = <String>{};
+          for (final p in mergedList) {
+            final b = p['body']?.toString() ?? '';
+            // Simple extraction if body is "Take Paracetamol" -> "Paracetamol"
+            // Or just use the body as is if complex.
+            // Ideally backend sends medicine name properly.
+            // For now, let's try to extract or use a generic summary.
+
+            // If we have profileName/medicineName in data, use it.
+            // checking payload keys from _payloadFromRemoteMessage
+            // The payload has just flat keys.
+
+            // Fallback: Use body directly if it's short, or generic "X medications"
+            if (b.isNotEmpty)
+              names.add(b.replaceAll('ได้เวลาทานยา ', '').trim());
+          }
+
+          if (names.isNotEmpty) {
+            final nameList = names.take(3).join(', ');
+            final more =
+                names.length > 3 ? ' and ${names.length - 3} more' : '';
+            bodyText = 'ถึงเวลาทานยา: $nameList$more';
+          } else {
+            bodyText = 'ถึงเวลาทานยา ${mergedList.length} รายการ';
+          }
+
+          titleText = 'แจ้งเตือนยา ($displayTime)';
+        }
+
+        final jsonPayload = jsonEncode(mergedPayload);
+
+        await flnp.show(
+          scheduleTimeKey.hashCode,
+          titleText,
+          bodyText,
+          NotificationDetails(
+            android: AndroidNotificationDetails(
+              channel.id,
+              channel.name,
+              channelDescription: 'MediBuddy Notifications',
+              importance: Importance.max,
+              priority: Priority.high,
+              icon: '@mipmap/ic_launcher',
+              styleInformation: BigTextStyleInformation(bodyText),
+            ),
+          ),
+          payload: jsonPayload,
+        );
+      }
+      _notificationBuffer.clear();
+    });
+  }
+
+  // ✅ 3. LISTENER สำหรับ FOREGROUND
   FirebaseMessaging.onMessage.listen((RemoteMessage msg) async {
-    debugPrint('📩 FCM onMessage (foreground)');
-    debugPrint('📌 title=${msg.notification?.title}');
-    debugPrint('📝 body=${msg.notification?.body}');
-    debugPrint('📦 data=${msg.data}');
+    debugPrint('📩 FCM onMessage (foreground) - Buffering');
 
-    final notification = msg.notification;
-    if (notification == null) return;
+    final formattedPayload = _payloadFromRemoteMessage(msg);
+    // Parse key to HH:mm to group slight variations
+    String scheduleKey = formattedPayload['time'] ?? '??:??';
+    final rawSchedule = formattedPayload['scheduleTime'];
+    if (rawSchedule != null) {
+      final dt = DateTime.tryParse(rawSchedule.toString());
+      if (dt != null) {
+        final local = dt.toLocal();
+        final hh = local.hour.toString().padLeft(2, '0');
+        final mm = local.minute.toString().padLeft(2, '0');
+        scheduleKey = '$hh:$mm';
+      }
+    }
 
-    // 🔔 สร้าง banner เอง
-    final payload = jsonEncode(_payloadFromRemoteMessage(msg));
+    if (_notificationBuffer.containsKey(scheduleKey)) {
+      _notificationBuffer[scheduleKey]!.add(formattedPayload);
+    } else {
+      _notificationBuffer[scheduleKey] = [formattedPayload];
+    }
 
-    await flnp.show(
-      notification.hashCode,
-      notification.title,
-      notification.body,
-      NotificationDetails(
-        android: AndroidNotificationDetails(
-          channel.id,
-          channel.name,
-          channelDescription: channel.description,
-          importance: Importance.high,
-          priority: Priority.high,
-          icon: '@mipmap/ic_launcher',
-        ),
-      ),
-      payload: payload,
-    );
+    _scheduleGroupedNotification();
   });
 
   await Supabase.initialize(

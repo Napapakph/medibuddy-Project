@@ -78,8 +78,25 @@ class _AlarmScreenState extends State<AlarmScreen> {
 
   List<Map<String, dynamic>> _alarmItems() {
     final normalized = _normalizedPayload();
+
+    // Check for "payload" field which might contain a JSON string of items
+    if (normalized['payload'] is String) {
+      try {
+        final decoded = jsonDecode(normalized['payload']);
+        if (decoded is List) {
+          return decoded
+              .map((e) => Map<String, dynamic>.from(e as Map))
+              .toList();
+        }
+      } catch (e) {
+        debugPrint('Error parsing payload string: $e');
+      }
+    }
+
     final fromItems = _parsePayloadItems(normalized['items']);
     if (fromItems.isNotEmpty) return fromItems;
+
+    // Fallback: Check if payload is directly a list (rare)
     return _parsePayloadItems(normalized['payload']);
   }
 
@@ -89,52 +106,41 @@ class _AlarmScreenState extends State<AlarmScreen> {
     return int.tryParse(value.toString());
   }
 
-  int? _extractLogId() {
-    final items = _alarmItems();
-    if (items.isNotEmpty) {
-      final fromItems = _parseLogId(items.first['logId']);
-      if (fromItems != null) return fromItems;
-    }
-    final raw = widget.payload ?? <String, dynamic>{};
-    if (raw['data'] is Map) {
-      final data = Map<String, dynamic>.from(raw['data'] as Map);
-      final fromData = _parseLogId(data['logId']);
-      if (fromData != null) return fromData;
-    }
-    final normalized = _normalizedPayload();
-    return _parseLogId(normalized['logId']);
-  }
-
   List<int> _extractLogIds() {
     final items = _alarmItems();
+    final ids = <int>[];
+
     if (items.isNotEmpty) {
-      final ids = <int>[];
       for (final item in items) {
         final parsed = _parseLogId(item['logId']);
         if (parsed != null && parsed > 0) {
           ids.add(parsed);
         }
       }
-      if (ids.isNotEmpty) return ids;
-    }
-    final raw = widget.payload ?? <String, dynamic>{};
-    if (raw['data'] is Map) {
-      final data = Map<String, dynamic>.from(raw['data'] as Map);
-      if (data['logId'] is List) {
-        final ids = <int>[];
-        for (final item in data['logId'] as List) {
-          final parsed = _parseLogId(item);
-          if (parsed != null && parsed > 0) {
-            ids.add(parsed);
+    } else {
+      // Fallback for single item structure
+      final raw = widget.payload ?? <String, dynamic>{};
+      if (raw['data'] is Map) {
+        final data = Map<String, dynamic>.from(raw['data'] as Map);
+        if (data['logId'] is List) {
+          for (final item in data['logId'] as List) {
+            final parsed = _parseLogId(item);
+            if (parsed != null && parsed > 0) ids.add(parsed);
           }
+        } else {
+          final single = _parseLogId(data['logId']);
+          if (single != null && single > 0) ids.add(single);
         }
-        if (ids.isNotEmpty) return ids;
+      }
+
+      final normalized = _normalizedPayload();
+      final rootSingle = _parseLogId(normalized['logId']);
+      if (rootSingle != null && rootSingle > 0 && !ids.contains(rootSingle)) {
+        ids.add(rootSingle);
       }
     }
 
-    final single = _extractLogId();
-    if (single != null && single > 0) return [single];
-    return [];
+    return ids;
   }
 
   Future<void> _submitResponseForLogId({
@@ -177,17 +183,48 @@ class _AlarmScreenState extends State<AlarmScreen> {
   }
 
   Future<void> _submitResponse(String responseStatus) async {
-    final logId = _extractLogId();
-    if (logId == null || logId <= 0) {
+    final logIds = _extractLogIds();
+    if (logIds.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Missing logId in notification payload')),
       );
       return;
     }
-    await _submitResponseForLogId(
-      logId: logId,
-      responseStatus: responseStatus,
-    );
+
+    setState(() => _submitting = true);
+
+    // Process all IDs
+    int successCount = 0;
+    String? lastError;
+
+    for (final id in logIds) {
+      if (_completedLogIds.contains(id)) continue;
+      try {
+        await _submitResponseForLogId(
+            logId: id,
+            responseStatus: responseStatus,
+            popOnSuccess: false // Handle pop manually after loop
+            );
+        successCount++;
+      } catch (e) {
+        lastError = e.toString();
+      }
+    }
+
+    setState(() => _submitting = false);
+
+    if (successCount > 0) {
+      // All or some succeeded
+      if (mounted) {
+        _exitToApp(action: responseStatus);
+      }
+    } else if (lastError != null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to submit: $lastError')),
+        );
+      }
+    }
   }
 
   void _openConfirmAction({required List<int> logIds}) {
