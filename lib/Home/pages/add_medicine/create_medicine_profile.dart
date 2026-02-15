@@ -5,7 +5,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:medibuddy/Model/medicine_model.dart';
 import 'package:medibuddy/widgets/medicine_step_timeline.dart';
-import 'package:medibuddy/services/medicine_api.dart';
 
 import 'search_system_medicine.dart';
 
@@ -119,11 +118,42 @@ class _CreateNameMedicinePageState extends State<CreateNameMedicinePage> {
     final pageTitle = widget.isEditing ? 'แก้ไขรายการยา' : 'เพิ่มรายการยา';
     return Scaffold(
       appBar: AppBar(
+        centerTitle: true,
         backgroundColor: const Color(0xFF1F497D),
         iconTheme: const IconThemeData(color: Colors.white),
-        title: Text(
-          pageTitle,
-          style: const TextStyle(color: Colors.white),
+        title: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(
+              pageTitle,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            SizedBox(height: 4),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                Icon(
+                  Icons.arrow_right_rounded,
+                  size: 20,
+                  color: Colors.white,
+                ),
+                Text(
+                  'กำหนดชื่อและรูปภาพยา',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
       backgroundColor: const Color.fromARGB(255, 227, 242, 255),
@@ -157,7 +187,7 @@ class _CreateNameMedicinePageState extends State<CreateNameMedicinePage> {
                     decoration: InputDecoration(
                       hintText: 'ชื่อยา',
                       filled: true,
-                      fillColor: const Color(0xFFF2F4F8),
+                      fillColor: const Color.fromARGB(255, 255, 255, 255),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(14),
                         borderSide: BorderSide.none,
@@ -177,7 +207,7 @@ class _CreateNameMedicinePageState extends State<CreateNameMedicinePage> {
                   Expanded(
                     child: Container(
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF3F5F8),
+                        color: const Color.fromARGB(255, 255, 255, 255),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Stack(

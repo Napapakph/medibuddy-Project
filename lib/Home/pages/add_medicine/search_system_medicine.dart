@@ -81,11 +81,42 @@ class _FindMedicinePageState extends State<FindMedicinePage> {
     return Scaffold(
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
+        centerTitle: true,
         backgroundColor: const Color(0xFF1F497D),
         iconTheme: const IconThemeData(color: Colors.white),
-        title: const Text(
-          'เพิ่มยา',
-          style: TextStyle(color: Colors.white),
+        title: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(
+              pageTitle,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            SizedBox(height: 4),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                Icon(
+                  Icons.arrow_right_rounded,
+                  size: 20,
+                  color: Colors.white,
+                ),
+                Text(
+                  'ค้นหาข้อมูลยาที่เกี่ยวข้อง',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
       backgroundColor: const Color.fromARGB(255, 227, 242, 255),
@@ -100,7 +131,7 @@ class _FindMedicinePageState extends State<FindMedicinePage> {
               const Text(
                 'ค้นหารายการยาที่เกี่ยวข้อง',
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: 18,
                   fontWeight: FontWeight.w600,
                   color: Color(0xFF1F497D),
                 ),
@@ -116,13 +147,11 @@ class _FindMedicinePageState extends State<FindMedicinePage> {
                     borderRadius: BorderRadius.circular(14),
                     borderSide: BorderSide.none,
                   ),
-                  suffixIcon: IconButton(
-                    icon: const Icon(Icons.search, color: Color(0xFF1F497D)),
-                    onPressed: _goNextBySerch,
-                  ),
+                  suffixIcon:
+                      const Icon(Icons.search, color: Color(0xFF1F497D)),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 10),
               Row(
                 children: [
                   ElevatedButton.icon(
@@ -135,7 +164,7 @@ class _FindMedicinePageState extends State<FindMedicinePage> {
                     ),
                     icon: const Icon(Icons.search, color: Colors.white),
                     label: const Text('ค้นหา',
-                        style: TextStyle(color: Colors.white)),
+                        style: TextStyle(color: Colors.white, fontSize: 16)),
                   ),
                   const SizedBox(width: 12),
                   OutlinedButton.icon(
@@ -148,11 +177,12 @@ class _FindMedicinePageState extends State<FindMedicinePage> {
                       ),
                     ),
                     icon: const Icon(Icons.camera_alt),
-                    label: const Text('สแกนฉลาก'),
+                    label:
+                        const Text('สแกนฉลาก', style: TextStyle(fontSize: 16)),
                   ),
                 ],
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 10),
               SizedBox(
                 height: 350,
                 child: Container(
@@ -187,7 +217,7 @@ class _FindMedicinePageState extends State<FindMedicinePage> {
                   ),
                   child: const Text(
                     'ข้ามการค้นหา',
-                    style: TextStyle(color: Colors.white),
+                    style: TextStyle(color: Colors.white, fontSize: 16),
                   ),
                 ),
               ),

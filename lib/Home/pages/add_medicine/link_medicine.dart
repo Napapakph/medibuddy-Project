@@ -6,7 +6,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'summary_medicine.dart';
 import 'request_medicine_screen.dart';
 import 'package:lottie/lottie.dart';
-import 'create_medicine_profile.dart';
+import '../set_remind/remind_list_screen.dart';
 
 class AddMedicinePage extends StatefulWidget {
   final MedicineDraft draft;
@@ -172,24 +172,34 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
         final selected = _selectedItem!;
         MedicineItem? duplicate;
 
-        // ✅ ใช้ข้อมูลที่โหลดมารอแล้ว
+        // ✅ ใช้ข้อมูลที่โหลดมารอเพื่อให้แน่ใจ
+        if (_existingMedicines.isEmpty) {
+          try {
+            debugPrint('⚠️ _existingMedicines is empty, re-fetching...');
+            _existingMedicines = await _api.fetchProfileMedicineList(
+                profileId: widget.profileId);
+          } catch (e) {
+            debugPrint('❌ Re-fetch existing medicines failed: $e');
+          }
+        }
+
         try {
           final currentListId = widget.initialItem?.mediListId ?? 0;
+          debugPrint('Checking duplicates for mediId: ${selected.mediId}');
 
-          duplicate = _existingMedicines.firstWhere(
-            (item) =>
-                item.mediId == selected.mediId &&
-                item.mediListId != currentListId,
-            orElse: () => const MedicineItem(
-              mediListId: 0,
-              id: '',
-              nickname_medi: '',
-              officialName_medi: '',
-              imagePath: '',
-            ),
-          );
+          final duplicates = _existingMedicines.where((item) {
+            final existingMediId = item.mediId; // int getter
+            return existingMediId == selected.mediId &&
+                item.mediListId != currentListId;
+          }).toList();
+
+          if (duplicates.isNotEmpty) {
+            duplicate = duplicates.first;
+            debugPrint(
+                'Found duplicate! mediListId: ${duplicate.mediListId}, nickname: ${duplicate.nickname_medi}');
+          }
         } catch (e) {
-          debugPrint('❌ Check duplicate failed: $e');
+          debugPrint('❌ Check duplicate logic error: $e');
         }
 
         // ถ้าเจอซ้ำ -> แจ้งเตือน + ถามว่าจะแก้ไขรายการเดิมไหม
@@ -197,56 +207,49 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
           final action = await showDialog<int>(
             context: context,
             builder: (ctx) => AlertDialog(
-              title: const Text('มีรายการยานี้อยู่แล้ว'),
+              title: const Text('มีการเชื่อมกับรายการในระบบตัวนี้แล้ว'),
               content: Text(
-                  'ยา "${selected.displayOfficialName}" มีชื่อเล่นว่า "${duplicate!.nickname_medi}" อยู่ในรายการยาของคุณแล้ว\n\nต้องการทำอย่างไร?'),
+                  'ยา "${selected.displayOfficialName}"\n มีการเชื่อมกับรายการในระบบตัวนี้แล้ว\n\nคุณต้องการตั้งเวลาการทายาใหม่มั้ย?'),
               actions: [
                 TextButton(
-                  onPressed: () => Navigator.pop(ctx, 0), // เลือกใหม่
-                  child: const Text('เลือกใหม่',
+                  onPressed: () => Navigator.pop(ctx, 0), // ยกเลิก
+                  child: const Text('ยกเลิก',
                       style: TextStyle(color: Colors.grey)),
                 ),
                 TextButton(
-                  onPressed: () => Navigator.pop(ctx, 1), // แก้ไขรายการเดิม
-                  child: const Text('แก้ไขอันเดิม'),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx, 2), // เพิ่มซ้ำ
+                  onPressed: () => Navigator.pop(ctx, 1), // ตั้งเวลาใหม่
                   child: const Text(
-                    'เพิ่มซ้ำ',
-                    style: TextStyle(color: Colors.redAccent),
+                    'ตั้งเวลาใหม่',
+                    style: TextStyle(color: Color(0xFF1F497D)),
                   ),
                 ),
               ],
             ),
           );
 
-          if (action == null || action == 0) {
-            // เลือกใหม่ -> อยู่หน้าเดิม
-            return;
-          }
-
           if (action == 1) {
             if (!mounted) return;
-            // ไปหน้าแก้ไขรายการเดิม (CreateNameMedicinePage)
-            final result = await Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => CreateNameMedicinePage(
-                  profileId: widget.profileId,
-                  isEditing: true,
-                  initialItem: duplicate,
+            // ลิงค์ไปหน้าตั้งเวลาเตือน (RemindListScreen) โดยใช้ mediListId เดิม
+            // เพื่อใช้ id เดิมในการสร้าง Regimen ใหม่
+            try {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => RemindListScreen(
+                    medicines: [duplicate!],
+                    initialMedicine: duplicate!,
+                  ),
                 ),
-              ),
-            );
-
-            // ✅ ถ้าแก้ไขเสร็จแล้ว (ได้ result กลับมา) ให้จบงานหน้านี้ด้วย
-            if (result is MedicineItem && mounted) {
-              Navigator.pop(context, result);
+              );
+            } catch (e) {
+              debugPrint('❌ Navigation to RemindListScreen failed: $e');
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('เกิดข้อผิดพลาดในการเปิดหน้า: $e')),
+              );
             }
-            return;
           }
-          // action == 2 -> ไปต่อ (เพิ่มซ้ำ)
+          // ไม่ว่าจะเลือกอะไร ก็หยุดการทำงาน ไม่ไปต่อ (เพราะซ้ำ)
+          return;
         }
       }
 
@@ -395,11 +398,42 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
 
     return Scaffold(
       appBar: AppBar(
+        centerTitle: true,
         backgroundColor: const Color(0xFF1F497D),
         iconTheme: const IconThemeData(color: Colors.white),
-        title: Text(
-          pageTitle,
-          style: const TextStyle(color: Colors.white),
+        title: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Text(
+              pageTitle,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            SizedBox(height: 4),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                Icon(
+                  Icons.arrow_right_rounded,
+                  size: 20,
+                  color: Colors.white,
+                ),
+                Text(
+                  'ตัวเลือกจากผลการค้นหา',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
       backgroundColor: const Color.fromARGB(255, 227, 242, 255),
@@ -458,7 +492,55 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
                                         setState(() {
                                           _selectedItem = item;
                                           debugPrint(
+                                              "=========== ตรวจสอบยาในระบบที่ถูกใช้แล้ว =============");
+                                          debugPrint(
                                               'Medi ID: ${item.mediId}, Name: ${item.displayOfficialName}');
+
+                                          // Check duplicate immediately for debug
+                                          try {
+                                            final currentListId = widget
+                                                    .initialItem?.mediListId ??
+                                                0;
+                                            debugPrint(
+                                                'DEBUG: currentListId=$currentListId (Edit Mode: ${widget.isEdit})');
+
+                                            // Check against existing items
+                                            for (final ex
+                                                in _existingMedicines) {
+                                              if (ex.mediId == item.mediId) {
+                                                debugPrint(
+                                                    '  - Found Match: ID=${ex.mediId}, ListID=${ex.mediListId}');
+                                                if (ex.mediListId ==
+                                                    currentListId) {
+                                                  debugPrint(
+                                                      '    -> This is SELF (Ignored)');
+                                                } else {
+                                                  debugPrint(
+                                                      '    -> This is DUPLICATE');
+                                                }
+                                              }
+                                            }
+
+                                            final isDuplicate =
+                                                _existingMedicines.any((ex) {
+                                              if (ex.mediId != item.mediId)
+                                                return false;
+                                              // Self check: same ListID
+                                              if (ex.mediListId ==
+                                                  currentListId) return false;
+                                              return true;
+                                            });
+
+                                            if (isDuplicate) {
+                                              debugPrint(
+                                                  "=========== ตรวจสอบยาในระบบที่ถูกใช้แล้ว =============");
+                                              debugPrint(
+                                                  '⚠️ ยาตัวนี้ถูกใช้ไปแล้วใน Profile นี้ (${item.displayOfficialName})');
+                                            }
+                                          } catch (e) {
+                                            debugPrint(
+                                                '❌ Error checking duplicate in onTap: $e');
+                                          }
                                         });
                                       },
                                       child: Container(

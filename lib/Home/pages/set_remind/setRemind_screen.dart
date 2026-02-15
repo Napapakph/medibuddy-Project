@@ -289,6 +289,12 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
 
     try {
       final input = buildRegimenCreateInput(plan);
+
+      debugPrint('===== DATE DEBUG =====');
+      debugPrint('Local Start Date: ${_regimenStartDate.toIso8601String()}');
+      debugPrint('Sent startDateUtc: ${input.startDateUtc}');
+      debugPrint('Schedule Type: ${input.scheduleType}');
+      debugPrint('======================');
       final api = RegimenApiService();
       final hasRegimenId = plan.mediRegimenId != null;
 
@@ -337,6 +343,101 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
     } finally {
       if (mounted) setState(() => _saving = false);
     }
+  }
+
+  Future<bool> _confirmExit() async {
+    if (_saving) return false;
+    final isEditing = widget.initialPlan != null;
+    final message = isEditing
+        ? 'ข้อมูลยังไม่ถูกบันทึก\nยืนยันที่จะออกจากการแก้ไขเวลาการรับประทานยาหรือไม่?'
+        : 'ข้อมูลยังไม่ถูกบันทึก\nยืนยันที่จะออกจากการตั้งเวลาการรับประทานยาหรือไม่?';
+
+    final shouldPop = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: const Color.fromARGB(255, 232, 232, 241),
+          elevation: 0,
+          child: Padding(
+            padding: const EdgeInsets.all(10),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 1. White Box for Text
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: const Color.fromARGB(255, 255, 255, 255),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    message,
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Colors.black, // or Color(0xFF1F497D)
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                // 2. Row of Buttons
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Exit Button
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.of(context).pop(true),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF1F497D),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: const Text(
+                          'ออก',
+                          style: TextStyle(
+                              fontSize: 18, decorationColor: Colors.white),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 20),
+                    // Stay Button
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.of(context).pop(false),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF1F497D),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: const Text(
+                          'อยู่ต่อ',
+                          style: TextStyle(
+                              fontSize: 18, decorationColor: Colors.white),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+    return shouldPop ?? false;
   }
 
   @override
@@ -433,11 +534,20 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
     ];
 
     return WillPopScope(
-      onWillPop: () async => !_saving,
+      onWillPop: _confirmExit,
       child: Scaffold(
         appBar: AppBar(
           backgroundColor: const Color(0xFF1F497D),
           iconTheme: const IconThemeData(color: Colors.white),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () async {
+              final confirm = await _confirmExit();
+              if (confirm && mounted) {
+                Navigator.of(context).pop();
+              }
+            },
+          ),
           title: Text(pageTitle, style: const TextStyle(color: Colors.white)),
         ),
         backgroundColor: const Color.fromARGB(255, 255, 255, 255),

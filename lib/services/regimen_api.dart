@@ -294,6 +294,12 @@ class RegimenApiService {
         ? Map<String, dynamic>.from(decoded['data'] as Map)
         : Map<String, dynamic>.from(decoded as Map);
 
+    debugPrint('===== GET REGIMEN DETAIL DEBUG =====');
+    debugPrint('Raw startDate: ${data['startDate']}');
+    debugPrint('Raw endDate: ${data['endDate']}');
+    debugPrint('Raw scheduleType: ${data['scheduleType']}');
+    debugPrint('====================================');
+
     return MedicineRegimenDetailResponse.fromJson(data);
   }
 
