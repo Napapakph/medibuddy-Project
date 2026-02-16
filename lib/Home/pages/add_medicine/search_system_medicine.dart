@@ -229,6 +229,22 @@ class _FindMedicinePageState extends State<FindMedicinePage> {
   }
 
   Future<void> _skipSearch() async {
+    MedicineCatalogItem? catalogToKeep;
+    String preservedOfficialName = '';
+
+    // ✅ ถ้าเป็นการแก้ไข และมีข้อมูลยาเดิม -> ดึงชื่อเดิมมาใช้ต่อ
+    if (widget.isEdit && widget.initialItem != null) {
+      if (widget.initialItem!.mediId > 0) {
+        preservedOfficialName = widget.initialItem!.officialName_medi;
+        catalogToKeep = MedicineCatalogItem(
+          mediId: widget.initialItem!.mediId,
+          mediThName: preservedOfficialName,
+          mediTradeName: preservedOfficialName, // ใส่ทั้งคู่เพื่อความชัวร์
+          mediPicture: widget.initialItem!.imagePath,
+        );
+      }
+    }
+
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
@@ -236,7 +252,11 @@ class _FindMedicinePageState extends State<FindMedicinePage> {
           profileId: widget.profileId,
           draft: widget.draft.copyWith(
             searchQuery_medi: '',
-            catalogItem: null, // ✅ เพิ่มบรรทัดนี้ (ไม่ผูก DB)
+            //✅ ส่งชื่อเป็น trade name ไปด้วยใน draft เพื่อให้หน้า Summary แสดงผลถูก
+            officialName_medi: preservedOfficialName.isNotEmpty
+                ? preservedOfficialName
+                : widget.draft.officialName_medi,
+            catalogItem: catalogToKeep,
           ),
           isEdit: widget.isEdit,
           initialItem: widget.initialItem,

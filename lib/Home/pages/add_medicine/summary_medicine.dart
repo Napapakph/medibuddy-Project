@@ -26,14 +26,95 @@ class SummaryMedicinePage extends StatefulWidget {
 
 class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
   bool _saving = false;
+  MedicineCatalogItem? _fetchedCatalogItem;
+  bool _fetchingInfo = false;
+
+  @override
+  void initState() {
+    super.initState();
+    debugPrint('🏁 SummaryMedicinePage: initState called');
+    debugPrint('   - Draft OfficialName: ${widget.draft.officialName_medi}');
+    debugPrint('   - Catalog ID: ${widget.draft.catalogItem?.mediId}');
+
+    // ✅ Check if we need to fetch medicine details (if we have ID but missing name)
+    _checkAndFetchMedicineInfo();
+  }
+
+  Future<void> _checkAndFetchMedicineInfo() async {
+    final draftCatalog = widget.draft.catalogItem;
+    // Determine the MediID to use (from draft or initial item)
+    final mediId = draftCatalog?.mediId ??
+        (widget.isEdit ? widget.initialItem?.mediId : 0) ??
+        0;
+
+    if (mediId <= 0) return;
+
+    // Check if we already have a good name
+    final currentName = _resolveOfficialName(draftCatalog);
+    if (currentName.isNotEmpty && currentName != '-' && currentName != 'null') {
+      // If we generally have a name, we might skip.
+      // But if user reported missing name, let's force fetch just in case
+      // logic issues elsewhere.
+      // However, to avoid excessive calls, let's verify if detailed info is missing.
+    }
+
+    setState(() => _fetchingInfo = true);
+
+    try {
+      final api = MedicineApi();
+      final detail = await api.getMedicineDetail(mediId: mediId);
+
+      if (mounted) {
+        setState(() {
+          // Convert MedicineDetail to MedicineCatalogItem
+          _fetchedCatalogItem = MedicineCatalogItem(
+            mediId: detail.mediId,
+            mediThName: detail.mediThName,
+            mediEnName: detail.mediEnName,
+            mediTradeName: detail.mediTradeName,
+            mediPicture: detail.mediPicture,
+            // Map other fields if needed, but these are main ones for display
+          );
+        });
+      }
+    } catch (e) {
+      debugPrint('⚠️ Failed to fetch medicine info for ID $mediId: $e');
+    } finally {
+      if (mounted) setState(() => _fetchingInfo = false);
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    debugPrint('🏁 SummaryMedicinePage: didChangeDependencies');
+  }
 
   String _resolveOfficialName(MedicineCatalogItem? catalog) {
+    // 1. Prefer fetched item if available
+    if (_fetchedCatalogItem != null) {
+      return _fetchedCatalogItem!.displayOfficialName;
+    }
+
+    // 2. Draft's explicit name
     if (widget.draft.officialName_medi.isNotEmpty) {
       return widget.draft.officialName_medi;
     }
-    if (catalog != null && catalog.displayOfficialName.isNotEmpty) {
+
+    // 3. Catalog from draft
+    if (catalog != null &&
+        catalog.displayOfficialName.isNotEmpty &&
+        catalog.displayOfficialName != '-') {
       return catalog.displayOfficialName;
     }
+
+    // 4. Fallback to initialItem if editing (last resort)
+    if (widget.isEdit && widget.initialItem != null) {
+      if (widget.initialItem!.officialName_medi.isNotEmpty) {
+        return widget.initialItem!.officialName_medi;
+      }
+    }
+
     return widget.draft.searchQuery_medi;
   }
 
@@ -49,25 +130,35 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
     return int.tryParse(value.toString()) ?? 0;
   }
 
+  bool _isRemotePath(String path) {
+    final trimmed = path.trim();
+    return trimmed.startsWith('https://') ||
+        trimmed.startsWith('/uploads') ||
+        trimmed.startsWith('uploads/');
+  }
+
   Future<void> _saveMedicine() async {
     if (_saving) return;
 
-    final catalog = widget.draft.catalogItem;
+    // Prefer fetched item logic if available for final connection?
+    // Actually we just need ID.
+    final catalog = _fetchedCatalogItem ?? widget.draft.catalogItem;
     final hasCatalog = catalog != null && catalog.mediId > 0;
 
     setState(() => _saving = true);
     final isEditMode = widget.isEdit && widget.initialItem != null;
-// Debugging output ----------------------------------------------------------
-    debugPrint(
-        '================= check ProfileID & MedicineID  ==================');
-    debugPrint('Profile ID: ${widget.profileId}');
-    debugPrint('Medicine ID: ${catalog?.mediId}');
-// ---------------------------------------------------------------------------
 
     final officialName = _resolveOfficialName(catalog);
     final nickname = _resolveNickname(officialName);
     final localImagePath = widget.draft.imagePath;
-    final localImage = localImagePath.isEmpty ? null : File(localImagePath);
+
+    // ✅ FIX: Only create File if it is a local path.
+    // If it's a remote path (existing image), we send null to API (meaning no change/use existing).
+    File? localImage;
+    if (localImagePath.isNotEmpty && !_isRemotePath(localImagePath)) {
+      localImage = File(localImagePath);
+    }
+
     final displayImage = localImagePath.isNotEmpty
         ? localImagePath
         : (catalog?.mediPicture ?? '').trim();
@@ -81,7 +172,6 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
     );
 
     if (nickname.trim().isEmpty && officialName.trim().isEmpty) {
-      // ต้องมีชื่ออย่างน้อย 1 อย่าง
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('กรุณาระบุชื่อยาหรือชื่อเล่นยา')),
@@ -97,18 +187,16 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
           ? await api.updateMedicineListItem(
               mediListId: widget.initialItem!.mediListId,
               mediNickname: nickname,
-              pictureFile: localImage,
-              mediId: hasCatalog ? catalog!.mediId : null, // ✅ PASS_MEDI_ID
+              pictureFile: localImage, // Pass null if path is remote
+              mediId: hasCatalog ? catalog!.mediId : null,
             )
           : await api.addMedicineToProfile(
               profileId: widget.profileId,
-              mediId: hasCatalog ? catalog!.mediId : null, // ✅ PASS_MEDI_ID
+              mediId: hasCatalog ? catalog!.mediId : null,
               mediNickname: nickname,
               pictureFile: localImage,
             );
 
-// 🔥 FIX: try to read server image path (backend key may differ)
-// ✅ NOTE: ปรับ key ให้ตรงกับ backend ของเดียร์ ถ้าไม่ตรงให้ดู log res แล้วแก้ key
       final serverPath =
           (res['picture'] ?? res['data']?['imagePath'])?.toString().trim();
       final serverMediListId = _readInt(
@@ -118,17 +206,10 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
             res['data']?['id'],
       );
 
-// ✅ DEBUG: show what backend returned
-
-      debugPrint('===========================================================');
-      debugPrint('🧾 MED_CREATE response = $res');
-      debugPrint('🖼️ serverPath = $serverPath');
-
-// ✅ PROFILE_ID + MEDI_ID: keep local item but prefer server path if exists
       final savedItem = localItem.copyWith(
         imagePath: (serverPath != null && serverPath.isNotEmpty)
-            ? serverPath // ✅ USE_SERVER_PATH
-            : localItem.imagePath, // fallback
+            ? serverPath
+            : localItem.imagePath,
         mediListId:
             serverMediListId > 0 ? serverMediListId : localItem.mediListId,
       );
@@ -138,14 +219,12 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
         const SnackBar(content: Text('บันทึกยาสำเร็จ')),
       );
 
-// ✅ RETURN: send updated item back to list
       Navigator.pop(context, savedItem);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('บันทึกยาลง Database ไม่สำเร็จ: $e')),
+        SnackBar(content: Text('บันทึกไม่สำเร็จ: $e')),
       );
-      // ⚠️ GUARD: do NOT pop on failure (prevent ghost items)
     } finally {
       if (!mounted) return;
       setState(() => _saving = false);
@@ -153,29 +232,48 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
   }
 
   String toFullImageUrl(String raw) {
-    final base = (dotenv.env['API_BASE_URL'] ?? '').trim();
-    final p = raw.trim();
+    try {
+      final base = (dotenv.env['API_BASE_URL'] ?? '').trim();
+      final p = raw.trim();
 
-    if (p.isEmpty || p.toLowerCase() == 'null') return '';
+      if (p.isEmpty || p.toLowerCase() == 'null') return '';
 
-    // ถ้าเป็น URL เต็มอยู่แล้ว
-    if (p.startsWith('http://') || p.startsWith('https://')) return p;
+      if (p.startsWith('http://') || p.startsWith('https://')) return p;
 
-    if (base.isEmpty) return '';
+      if (base.isEmpty) return '';
 
-    final baseUri = Uri.parse(base);
-    final path = p.startsWith('/') ? p : '/$p';
-    return baseUri.resolve(path).toString();
+      final baseUri = Uri.parse(base);
+      final path = p.startsWith('/') ? p : '/$p';
+      return baseUri.resolve(path).toString();
+    } catch (e) {
+      debugPrint('Error in toFullImageUrl: $e');
+      return '';
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final pageTitle = widget.isEdit ? 'แก้ไขรายการยา' : 'เพิ่มรายการยา';
-    final catalog = widget.draft.catalogItem;
+    // Determine catalog item to use (prefer fetched)
+    final catalog = _fetchedCatalogItem ?? widget.draft.catalogItem;
+
     final officialName = _resolveOfficialName(catalog);
     final nickname = _resolveNickname(officialName);
     final localImagePath = widget.draft.imagePath;
-    final catalogImage = toFullImageUrl((catalog?.mediPicture ?? '').trim());
+
+    // Use fetched picture if local/manual one is empty
+    String catalogImage = '';
+    try {
+      final pic = (catalog?.mediPicture ?? '').trim();
+      if (pic.isNotEmpty) {
+        catalogImage = toFullImageUrl(pic);
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    // Determine if localImagePath is actually remote
+    final isLocalImageRemote = _isRemotePath(localImagePath);
 
     return Scaffold(
       appBar: AppBar(
@@ -188,7 +286,6 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
         actions: [
           IconButton(
             onPressed: () {
-              final catalog = widget.draft.catalogItem;
               final mediId = catalog?.mediId ?? 0;
 
               if (mediId <= 0) {
@@ -251,7 +348,22 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
                   color: const Color.fromARGB(255, 255, 255, 255),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Text(officialName),
+                child: Stack(
+                  children: [
+                    Text(officialName),
+                    if (_fetchingInfo)
+                      const Positioned(
+                        right: 0,
+                        top: 0,
+                        bottom: 0,
+                        child: SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      )
+                  ],
+                ),
               ),
               const SizedBox(height: 10),
               const Text(
@@ -272,10 +384,34 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
                 child: localImagePath.isNotEmpty
                     ? ClipRRect(
                         borderRadius: BorderRadius.circular(16),
-                        child: Image.file(
-                          File(localImagePath),
-                          fit: BoxFit.cover,
-                        ),
+                        child: isLocalImageRemote
+                            ? Image.network(
+                                toFullImageUrl(localImagePath),
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return const Center(
+                                    child: Icon(
+                                      Icons.photo,
+                                      size: 64,
+                                      color: Color(0xFF9AA7B8),
+                                    ),
+                                  );
+                                },
+                              )
+                            : Image.file(
+                                File(localImagePath),
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return const Center(
+                                    child: Icon(
+                                      Icons
+                                          .broken_image, // Show different icon for local file error
+                                      size: 64,
+                                      color: Color(0xFF9AA7B8),
+                                    ),
+                                  );
+                                },
+                              ),
                       )
                     : catalogImage.isNotEmpty
                         ? ClipRRect(

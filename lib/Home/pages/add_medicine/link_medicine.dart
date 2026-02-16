@@ -164,46 +164,72 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
 
   Future<void> _goNext() async {
     try {
+      debugPrint('🚀 _goNext started');
       // 1. ตรวจสอบการเลือกยา
-      if (_selectedItem == null && !_skipCatalogLink) return;
+      if (_selectedItem == null && !_skipCatalogLink) {
+        debugPrint('⚠️ No item selected');
+        return;
+      }
 
       // 2. ถ้าเลือกยา -> ตรวจสอบว่ามีรายการยานี้อยู่แล้วหรือไม่ (ป้องกันซ้ำ)
       if (_selectedItem != null) {
         final selected = _selectedItem!;
-        MedicineItem? duplicate;
+        MedicineItem? duplicateItem;
+        bool isDuplicate = false;
 
-        // ✅ ใช้ข้อมูลที่โหลดมารอเพื่อให้แน่ใจ
+        debugPrint(
+            '🔍 Checking duplicate for: ${selected.mediId} (${selected.displayOfficialName})');
+
+        // ✅ ใช้ข้อมูลที่โหลดมารอเพื่อให้แน่ใจ (Safety Check)
         if (_existingMedicines.isEmpty) {
+          debugPrint('⚠️ _existingMedicines is empty, trying to re-fetch...');
           try {
-            debugPrint('⚠️ _existingMedicines is empty, re-fetching...');
             _existingMedicines = await _api.fetchProfileMedicineList(
                 profileId: widget.profileId);
+            debugPrint('✅ Re-fetch done. Count: ${_existingMedicines.length}');
           } catch (e) {
-            debugPrint('❌ Re-fetch existing medicines failed: $e');
+            debugPrint('❌ Re-fetch failed: $e');
           }
         }
 
         try {
           final currentListId = widget.initialItem?.mediListId ?? 0;
-          debugPrint('Checking duplicates for mediId: ${selected.mediId}');
+          debugPrint(
+              'ℹ️ Current List ID: $currentListId (EditMode: ${widget.isEdit})');
 
-          final duplicates = _existingMedicines.where((item) {
-            final existingMediId = item.mediId; // int getter
-            return existingMediId == selected.mediId &&
-                item.mediListId != currentListId;
+          // ใช้ Logic เดียวกับ onTap เพื่อความแม่นยำ
+          // หาตัวที่ซ้ำ (ID ตรงกัน) และไม่ใช่ตัวเดิม (ListID ต่างกัน)
+          final duplicates = _existingMedicines.where((ex) {
+            // 1. Must match Catalog ID (Logic: Same Medicine)
+            if (ex.mediId != selected.mediId) return false;
+
+            // 2. Extra check for Edit Mode (Self Link)
+            // ถ้าเป็นยาตัวเดิมที่กำลังแก้ไขอยู่ (ListID ตรงกัน) -> ถือว่าไม่ใช่ซ้ำ (อนุญาตให้เลือกตัวเองได้)
+            if (ex.mediListId == currentListId) {
+              debugPrint(
+                  '   -> Ignoring Self (ListID: $currentListId) - Allowed to update self.');
+              return false;
+            }
+
+            // 3. If match ID but diff ListID -> Real Duplicate
+            return true;
           }).toList();
 
           if (duplicates.isNotEmpty) {
-            duplicate = duplicates.first;
+            isDuplicate = true;
+            duplicateItem = duplicates.first;
             debugPrint(
-                'Found duplicate! mediListId: ${duplicate.mediListId}, nickname: ${duplicate.nickname_medi}');
+                '🚨 Duplicate found: ${duplicateItem.nickname_medi} (ListID: ${duplicateItem.mediListId})');
+          } else {
+            debugPrint('✅ No duplicate found (or Self-Link allowed).');
           }
         } catch (e) {
-          debugPrint('❌ Check duplicate logic error: $e');
+          debugPrint('❌ Duplicate check error: $e');
         }
 
         // ถ้าเจอซ้ำ -> แจ้งเตือน + ถามว่าจะแก้ไขรายการเดิมไหม
-        if (duplicate != null && duplicate.mediListId != 0 && mounted) {
+        if (isDuplicate && duplicateItem != null && mounted) {
+          debugPrint('🛑 Showing Duplicate Dialog');
           final action = await showDialog<int>(
             context: context,
             builder: (ctx) => AlertDialog(
@@ -229,15 +255,14 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
 
           if (action == 1) {
             if (!mounted) return;
-            // ลิงค์ไปหน้าตั้งเวลาเตือน (RemindListScreen) โดยใช้ mediListId เดิม
-            // เพื่อใช้ id เดิมในการสร้าง Regimen ใหม่
+            debugPrint('👉 Action: Set New Reminder for Duplicate');
             try {
               await Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (_) => RemindListScreen(
-                    medicines: [duplicate!],
-                    initialMedicine: duplicate!,
+                    medicines: [duplicateItem!],
+                    initialMedicine: duplicateItem!,
                   ),
                 ),
               );
@@ -255,6 +280,7 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
 
       // 3. สร้าง Draft และไปหน้าสรุป (Summary)
       if (!mounted) return;
+      debugPrint('📝 Preparing Draft...');
       final MedicineDraft draft;
       if (_selectedItem != null) {
         final selected = _selectedItem!;
@@ -267,25 +293,41 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
           catalogItem: null,
         );
       }
+      debugPrint('📦 Draft prepared. OfficialName: ${draft.officialName_medi}');
 
+      debugPrint('🚀 Pushing SummaryMedicinePage...');
       final result = await Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => SummaryMedicinePage(
-            draft: draft,
-            profileId: widget.profileId,
-            isEdit: widget.isEdit,
-            initialItem: widget.initialItem,
-          ),
+          builder: (_) {
+            debugPrint(
+                '🏗️ ADD_MED_PAGE: Building SummaryMedicinePage widget...');
+            try {
+              return SummaryMedicinePage(
+                draft: draft,
+                profileId: widget.profileId,
+                isEdit: widget.isEdit,
+                initialItem: widget.initialItem,
+              );
+            } catch (e) {
+              debugPrint(
+                  '❌ ADD_MED_PAGE: Error building SummaryMedicinePage: $e');
+              rethrow;
+            }
+          },
         ),
       );
 
+      debugPrint('🔙 Returned from Summary. Result: $result');
       if (!mounted) return;
       if (result is MedicineItem) {
         Navigator.pop(context, result);
       }
     } catch (e, stack) {
-      debugPrint('❌ _goNext error: $e\n$stack');
+      debugPrint('❌ _goNext CRITICAL error: $e\n$stack');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('เกิดข้อผิดพลาด: $e')),
+      );
     }
   }
 
@@ -535,7 +577,7 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
                                               debugPrint(
                                                   "=========== ตรวจสอบยาในระบบที่ถูกใช้แล้ว =============");
                                               debugPrint(
-                                                  '⚠️ ยาตัวนี้ถูกใช้ไปแล้วใน Profile นี้ (${item.displayOfficialName})');
+                                                  '✅ ยาตัวนี้ถูกใช้ไปแล้วใน Profile นี้ (${item.displayOfficialName})');
                                             }
                                           } catch (e) {
                                             debugPrint(

@@ -2,31 +2,115 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:medibuddy/Model/medicine_model.dart';
 import 'package:medibuddy/services/medicine_api.dart';
+import 'package:lottie/lottie.dart';
 
 Future<void> showMedicineDetailDialog({
   required BuildContext context,
   required int mediId,
 }) async {
-  try {
-    final api = MedicineApi();
-    final detail = await api.getMedicineDetail(mediId: mediId);
-    if (!context.mounted) return;
+  await showDialog<void>(
+    context: context,
+    barrierDismissible: true,
+    builder: (_) => _MedicineDetailLoader(mediId: mediId),
+  );
+}
 
-    final imageUrl = _toFullImageUrl(detail.mediPicture ?? '');
+class _MedicineDetailLoader extends StatefulWidget {
+  final int mediId;
+  const _MedicineDetailLoader({required this.mediId});
 
-    await showDialog<void>(
-      context: context,
-      barrierDismissible: true,
-      builder: (_) => DetailMedicineSheet(
-        detail: detail,
-        imageUrl: imageUrl,
-      ),
-    );
-  } catch (e) {
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('? ???????????????????????: $e')),
-    );
+  @override
+  State<_MedicineDetailLoader> createState() => _MedicineDetailLoaderState();
+}
+
+class _MedicineDetailLoaderState extends State<_MedicineDetailLoader> {
+  bool _loading = true;
+  MedicineDetail? _detail;
+  String _imageUrl = '';
+  String _error = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _fetch();
+  }
+
+  Future<void> _fetch() async {
+    try {
+      final api = MedicineApi();
+      final detail = await api.getMedicineDetail(mediId: widget.mediId);
+      final url = _toFullImageUrl(detail.mediPicture ?? '');
+      if (mounted) {
+        setState(() {
+          _detail = detail;
+          _imageUrl = url;
+          _loading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+          _loading = false;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_loading) {
+      // ✅ Custom Loading UI requested by user
+      return Stack(
+        alignment: Alignment.center,
+        children: [
+          // Invisible box to center the loader
+          const SizedBox(width: 200, height: 200),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Lottie.asset(
+                'assets/lottie/loader_cat.json',
+                width: 180,
+                height: 180,
+                repeat: true,
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'กำลังโหลด…',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  decoration: TextDecoration.none,
+                ),
+              ),
+            ],
+          ),
+        ],
+      );
+    }
+
+    if (_error.isNotEmpty) {
+      return AlertDialog(
+        title: const Text('เกิดข้อผิดพลาด'),
+        content: Text(_error),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('ปิด'),
+          ),
+        ],
+      );
+    }
+
+    if (_detail != null) {
+      return DetailMedicineSheet(
+        detail: _detail!,
+        imageUrl: _imageUrl,
+      );
+    }
+
+    return const SizedBox.shrink();
   }
 }
 

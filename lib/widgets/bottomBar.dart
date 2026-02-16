@@ -28,7 +28,9 @@ class BottomBar extends StatelessWidget {
           // Background Bar
           Container(
             height: 70,
-            padding: const EdgeInsets.symmetric(horizontal: 24),
+
+            padding: const EdgeInsets.only(
+                bottom: 24, left: 24, right: 24, top: 5), // ⭐ เพิ่มตรงนี้
             decoration: const BoxDecoration(
               color: Color(0xFF1F497D),
             ),
@@ -43,7 +45,7 @@ class BottomBar extends StatelessWidget {
                     );
                   },
                   icon: AnimatedScale(
-                    scale: isFollowing ? 1.3 : 1.0,
+                    scale: isFollowing ? 1.1 : 1.0,
                     duration: const Duration(milliseconds: 200),
                     child: AnimatedOpacity(
                       opacity: isFollowing ? 1.0 : 0.6,
@@ -80,7 +82,7 @@ class BottomBar extends StatelessWidget {
                     debugPrint('💊 MainBottomBar: open list_medicine pid=$pid');
                   },
                   icon: AnimatedScale(
-                    scale: isMedicine ? 1.3 : 1.0,
+                    scale: isMedicine ? 1.1 : 1.0,
                     duration: const Duration(milliseconds: 200),
                     child: AnimatedOpacity(
                       opacity: isMedicine ? 1.0 : 0.6,
@@ -113,11 +115,11 @@ class BottomBar extends StatelessWidget {
                 );
               },
               child: AnimatedScale(
-                scale: isHome ? 1.15 : 1.0,
+                scale: isHome ? 1.1 : 1.0,
                 duration: const Duration(milliseconds: 200),
                 child: Container(
-                  width: 70,
-                  height: 70,
+                  width: 60,
+                  height: 60,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     boxShadow: isHome
@@ -130,13 +132,18 @@ class BottomBar extends StatelessWidget {
                           ]
                         : null,
                   ),
-                  child: Image.asset(
-                    'assets/cat_home.png',
+                  child: AnimatedOpacity(
+                    opacity: isHome ? 1.0 : 0.6,
+                    duration: const Duration(milliseconds: 200),
+                    child: Image.asset(
+                      'assets/cat_home.png',
+                    ),
                   ),
                 ),
               ),
             ),
           ),
+          const SizedBox(height: 30),
         ],
       ),
     );

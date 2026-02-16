@@ -372,8 +372,8 @@ Widget type_frequency({
           ],
         ),
       ),
-      //  const SizedBox(height: 16),
-/*
+      const SizedBox(height: 16),
+
       // ===== วันสิ้นสุดการรับประทานยา =====
       Container(
         padding: const EdgeInsets.all(10),
@@ -441,12 +441,20 @@ Widget type_frequency({
                     const Spacer(),
                     if (regimenEndDate != null)
                       IconButton(
-                        icon: const Icon(Icons.close, color: Colors.grey),
+                        icon: const Icon(
+                          Icons.close,
+                          color: Colors.grey,
+                        ),
                         onPressed: () {
                           if (onRegimenEndDateChanged != null) {
                             onRegimenEndDateChanged(null);
                           }
                         },
+                        style: IconButton.styleFrom(
+                          padding: EdgeInsets.zero,
+                          minimumSize: Size.zero, // ⭐ สำคัญ
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
                         constraints: const BoxConstraints(),
                         padding: EdgeInsets.zero,
                         splashRadius: 20,
@@ -460,7 +468,7 @@ Widget type_frequency({
           ],
         ),
       ),
-      */
+
       const SizedBox(height: 16),
 
       // ===== รูปแบบการรับประทานยา =====
