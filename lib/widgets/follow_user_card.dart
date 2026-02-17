@@ -58,15 +58,14 @@ class FollowUserCard extends StatelessWidget {
                 ),
                 IconButton(
                   onPressed: onEdit,
-                  icon:
-                      const Icon(Icons.edit_outlined, color: Color(0xFF1F497D)),
+                  icon: const Icon(Icons.edit, color: Color(0xFF1F497D)),
                   tooltip: 'แก้ไข',
                   constraints: const BoxConstraints(),
                   padding: const EdgeInsets.all(2),
                 ),
                 IconButton(
                   onPressed: onDelete,
-                  icon: const Icon(Icons.delete_outline, color: Colors.red),
+                  icon: const Icon(Icons.delete, color: Colors.red),
                   tooltip: 'ลบ',
                   constraints: const BoxConstraints(),
                   padding: const EdgeInsets.all(2),

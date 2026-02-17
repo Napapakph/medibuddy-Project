@@ -142,7 +142,7 @@ class _FindMedicinePageState extends State<FindMedicinePage> {
                 decoration: InputDecoration(
                   hintText: 'ชื่อสามัญ / ชื่อการค้า',
                   filled: true,
-                  fillColor: const Color(0xFFF2F4F8),
+                  fillColor: const Color.fromARGB(255, 255, 255, 255),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
                     borderSide: BorderSide.none,
@@ -188,7 +188,7 @@ class _FindMedicinePageState extends State<FindMedicinePage> {
                 child: Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF7FAFF),
+                    color: const Color.fromARGB(255, 255, 255, 255),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: const Center(

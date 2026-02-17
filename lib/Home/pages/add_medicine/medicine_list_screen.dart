@@ -12,6 +12,7 @@ import 'medication_plan_screen.dart';
 import 'package:lottie/lottie.dart';
 import 'detail_medicine.dart';
 import 'dart:math';
+import 'package:icofont_flutter/icofont_flutter.dart';
 
 class ListMedicinePage extends StatefulWidget {
   final int profileId;
@@ -698,12 +699,12 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: const [
-                          Icon(Icons.alarm, color: Colors.white, size: 18),
+                          Icon(Icons.alarm, color: Color(0xFF1F497D), size: 18),
                           SizedBox(width: 6),
                           Text(
                             'ตั้งแจ้งเตือน',
                             style: TextStyle(
-                              color: Colors.white,
+                              color: Color(0xFF1F497D),
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -836,7 +837,7 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
                                 ),
                                 SizedBox(height: maxWidth * 0.05),
                                 SizedBox(
-                                  width: double.infinity,
+                                  width: 150,
                                   child: ElevatedButton.icon(
                                     onPressed: _addMedicine,
                                     style: ElevatedButton.styleFrom(
@@ -847,13 +848,13 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
                                         borderRadius: BorderRadius.circular(24),
                                       ),
                                     ),
-                                    icon: Icon(Icons.add_circle_outline_rounded,
+                                    icon: Icon(IcoFontIcons.uiAdd,
                                         color: Colors.white),
                                     label: const Text(
-                                      'เพิ่มยา',
+                                      ' เพิ่มยา',
                                       style: TextStyle(
                                         color: Colors.white,
-                                        fontSize: 16,
+                                        fontSize: 18,
                                       ),
                                     ),
                                   ),

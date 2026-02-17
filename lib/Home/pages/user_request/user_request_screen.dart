@@ -155,9 +155,8 @@ class _UserRequestScreenState extends State<UserRequestScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(5),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF2F4F8),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Column(
@@ -174,6 +173,7 @@ class _UserRequestScreenState extends State<UserRequestScreen> {
                     DropdownButtonFormField<String>(
                       value: _selectedLabel,
                       isExpanded: true,
+                      borderRadius: BorderRadius.circular(12),
                       decoration: InputDecoration(
                         filled: true,
                         fillColor: Colors.white,
@@ -187,6 +187,7 @@ class _UserRequestScreenState extends State<UserRequestScreen> {
                         ),
                         errorText: _typeError,
                       ),
+                      dropdownColor: Colors.white,
                       hint: const Text('เลือกหมวดหมู่'),
                       items: _requestTypeMap.keys
                           .map(

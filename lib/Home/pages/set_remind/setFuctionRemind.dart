@@ -237,16 +237,14 @@ Widget type_frequency({
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      const SizedBox(height: 4),
       Text(
         subtitle,
         style: const TextStyle(
-          fontSize: 14,
+          fontSize: 16,
           fontWeight: FontWeight.w600,
           color: Color(0xFF1F497D),
         ),
       ),
-      const SizedBox(height: 16),
       const SizedBox(height: 8),
       Container(
         padding: const EdgeInsets.all(10),
@@ -275,6 +273,7 @@ Widget type_frequency({
               child: DropdownButtonFormField<MedicineItem>(
                 value: selectedMedicine,
                 isExpanded: true,
+                borderRadius: BorderRadius.circular(12),
                 hint: const Text(
                   'เลือกรายการยา',
                   style: TextStyle(fontSize: 16),
@@ -289,6 +288,7 @@ Widget type_frequency({
                     borderSide: BorderSide.none,
                   ),
                 ),
+                dropdownColor: Colors.white,
                 items: medicines
                     .map(
                       (item) => DropdownMenuItem(
@@ -306,7 +306,7 @@ Widget type_frequency({
           ],
         ),
       ),
-      const SizedBox(height: 16),
+      const SizedBox(height: 8),
 
       // ===== วันเริ่มรับประทานยา =====
       Container(
@@ -372,7 +372,7 @@ Widget type_frequency({
           ],
         ),
       ),
-      const SizedBox(height: 16),
+      const SizedBox(height: 8),
 
       // ===== วันสิ้นสุดการรับประทานยา =====
       Container(
@@ -469,7 +469,7 @@ Widget type_frequency({
         ),
       ),
 
-      const SizedBox(height: 16),
+      const SizedBox(height: 8),
 
       // ===== รูปแบบการรับประทานยา =====
       Container(
@@ -572,7 +572,7 @@ Widget type_frequency({
         ),
       ),
 
-      const SizedBox(height: 16),
+      const SizedBox(height: 8),
 
       // ===== ความถี่ในการรับประทานยา =====
       Container(
@@ -586,7 +586,7 @@ Widget type_frequency({
           children: [
             const Text(
               'ความถี่ในการรับประทานยา',
-              style: TextStyle(fontWeight: FontWeight.w600),
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
             ),
             const SizedBox(height: 8),
 
@@ -657,19 +657,33 @@ Widget type_frequency({
                     label: Text(
                       weekDayLabels[index],
                       style: TextStyle(
-                        color:
-                            isSelected ? Colors.white : const Color(0xFF1F497D),
+                        color: !isEnabled
+                            ? Colors.grey // 🚫 disabled
+                            : isSelected
+                                ? Colors.white // ✅ selected
+                                : const Color(0xFF1F497D), // ⬜ unselected
                         fontWeight: FontWeight.w600,
                       ),
                     ),
+
                     selected: isSelected,
-                    selectedColor: const Color.fromARGB(255, 142, 182, 231),
-                    backgroundColor: Colors.white,
+                    disabledColor: Colors.white, // ⭐ กันชมพูอ่อนตอน disabled
+                    selectedColor: const Color(0xFF1F497D), // สีตอนเลือก
+
+                    backgroundColor: !isEnabled
+                        ? const Color.fromARGB(
+                            255, 255, 255, 255) // 🚫 disabled
+                        : const Color(0xFFEAF2FB), // ⬜ ยังไม่เลือก
+
                     side: BorderSide(
-                      color: isSelected
-                          ? const Color.fromARGB(255, 248, 251, 255)
-                          : const Color.fromARGB(255, 174, 209, 255),
+                      width: 1,
+                      color: !isEnabled
+                          ? const Color(0xFFE0E0E0) // 🚫 disabled
+                          : isSelected
+                              ? const Color(0xFF1F497D) // ✅ selected
+                              : const Color(0xFFBBD3F5), // ⬜ unselected
                     ),
+
                     onSelected: isEnabled
                         ? (value) {
                             final updated = Set<int>.from(selectedWeekdays);
@@ -729,6 +743,7 @@ Widget type_frequency({
                   DropdownButton<String>(
                     value: everyUnit,
                     underline: const SizedBox.shrink(),
+                    borderRadius: BorderRadius.circular(12),
                     items: const [
                       DropdownMenuItem(
                           value: 'วัน',
@@ -740,6 +755,7 @@ Widget type_frequency({
                           value: 'ปี',
                           child: Text('ปี', style: TextStyle(fontSize: 16))),
                     ],
+                    dropdownColor: Colors.white,
                     onChanged:
                         frequencyPattern == FrequencyPattern.everyInterval
                             ? onEveryUnitChanged
@@ -752,11 +768,6 @@ Widget type_frequency({
         ),
       ),
 
-      const SizedBox(height: 16),
-      const Text(
-        'ระยะเวลา',
-        style: TextStyle(fontWeight: FontWeight.w600),
-      ),
       const SizedBox(height: 8),
 
       // ===== ระยะเวลา =====
@@ -767,7 +778,12 @@ Widget type_frequency({
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Text(
+              'ระยะเวลา',
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+            ),
             // ตลอดไป (เปลี่ยนจาก RadioListTile -> Row ให้เริ่มตรงกัน)
             InkWell(
               onTap: () => onDurationModeChanged(DurationMode.forever),
@@ -827,11 +843,13 @@ Widget type_frequency({
                 DropdownButton<String>(
                   value: durationUnit,
                   underline: const SizedBox.shrink(),
+                  borderRadius: BorderRadius.circular(12),
                   items: const [
                     DropdownMenuItem(value: 'วัน', child: Text('วัน')),
                     DropdownMenuItem(value: 'สัปดาห์', child: Text('สัปดาห์')),
                     DropdownMenuItem(value: 'ปี', child: Text('ปี')),
                   ],
+                  dropdownColor: Colors.white,
                   onChanged: durationMode == DurationMode.custom
                       ? onDurationUnitChanged
                       : null,
@@ -933,7 +951,7 @@ Widget detail_time({
           ],
         ),
       ),
-      const SizedBox(height: 12),
+      const SizedBox(height: 8),
       Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
@@ -973,7 +991,7 @@ Widget detail_time({
           ),
         ),
       ],
-      const SizedBox(height: 16),
+      const SizedBox(height: 8),
       Column(
         children: List.generate(doses.length, (index) {
           final dose = doses[index];
@@ -1041,6 +1059,7 @@ Widget detail_time({
                     DropdownButton<String>(
                       value: dose.unit,
                       underline: const SizedBox.shrink(),
+                      borderRadius: BorderRadius.circular(12),
                       items: const [
                         DropdownMenuItem(value: 'เม็ด', child: Text('เม็ด')),
                         DropdownMenuItem(
@@ -1051,6 +1070,7 @@ Widget detail_time({
                         DropdownMenuItem(
                             value: 'ยาหยอด', child: Text('ยาหยอด')),
                       ],
+                      dropdownColor: Colors.white,
                       onChanged: (value) {
                         if (value == null) return;
                         onDoseChanged(index, dose.copyWith(unit: value));

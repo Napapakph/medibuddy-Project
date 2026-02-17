@@ -150,7 +150,7 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
 
   void _goRequest() {
     final query = _searchController.text.trim();
-    if (query.isEmpty) return;
+    //  if (query.isEmpty) return;
 
     Navigator.push(
       context,
@@ -359,7 +359,7 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
     // โซน “แมวผู้ช่วยนำทาง” (เดียร์จะเปลี่ยนไอคอนเป็นรูปเองทีหลังได้)
     // - ไอคอนอยู่ชิดขอบขวา
     // - บอลลูนเป็นปุ่มกด ส่งคำร้อง
-    final bubbleText = 'หายาไม่เจอใช่มัย!?\nกดตรงนี้สิ';
+    final bubbleText = 'หายาไม่เจอหรอ? กดตรงนี้สิ';
 
     return Padding(
       padding: EdgeInsets.only(
@@ -383,6 +383,15 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
                     color: const Color.fromARGB(255, 255, 255, 255),
                     borderRadius: BorderRadius.circular(22),
                     border: Border.all(color: const Color(0xFFD2E6FF)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF1F497D)
+                            .withOpacity(0.12), // ⭐ สีเงา
+                        blurRadius: 5, // ความฟุ้ง
+                        spreadRadius: 1, // การกระจาย
+                        offset: const Offset(0, 6), // ทิศทางเงา (ลงล่าง)
+                      ),
+                    ],
                   ),
                   child: Row(
                     children: [
@@ -390,7 +399,7 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
                         child: Text(
                           bubbleText,
                           style: const TextStyle(
-                            fontSize: 14,
+                            fontSize: 16,
                             height: 1.25,
                             color: Color(0xFF1F497D),
                             fontWeight: FontWeight.w600,
@@ -398,9 +407,22 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
                         ),
                       ),
                       const SizedBox(width: 10),
-                      const Icon(
-                        Icons.touch_app,
-                        color: Color(0xFF1F497D),
+                      InkWell(
+                        onTap: _goRequest,
+                        borderRadius: BorderRadius.circular(20),
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF1F497D),
+                            borderRadius: BorderRadius.circular(28),
+                          ),
+                          child: const Icon(
+                            Icons.pets,
+                            color: Colors.white,
+                            size: 28,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -409,26 +431,6 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
             ),
           ),
           const SizedBox(width: 12),
-
-          // ไอคอนชิดขอบขวา (placeholder)
-          // เดียร์เปลี่ยนเป็นรูป/asset ภายหลังได้
-          InkWell(
-            onTap: _goRequest,
-            borderRadius: BorderRadius.circular(28),
-            child: Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: const Color(0xFF1F497D),
-                borderRadius: BorderRadius.circular(28),
-              ),
-              child: const Icon(
-                Icons.pets,
-                color: Colors.white,
-                size: 28,
-              ),
-            ),
-          ),
         ],
       ),
     );

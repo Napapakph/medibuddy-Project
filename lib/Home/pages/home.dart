@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:icofont_flutter/icofont_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
 import 'package:medibuddy/widgets/app_drawer.dart';
@@ -917,7 +918,8 @@ class _Home extends State<Home> {
                                                               });
                                                             },
                                                             icon: const Icon(
-                                                                Icons.add),
+                                                                IcoFontIcons
+                                                                    .uiAdd),
                                                             label: const Text(
                                                                 'เพิ่มยา'),
                                                             style:

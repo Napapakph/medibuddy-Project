@@ -778,7 +778,10 @@ class _RemindListScreenState extends State<RemindListScreen> {
                         height: 16,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Icon(Icons.delete, size: 18),
+                    : const Icon(
+                        Icons.delete,
+                        size: 18,
+                      ),
                 label: Text(isDeleting ? 'กำลังลบ...' : 'ลบแจ้งเตือน'),
               ),
               const SizedBox(width: 12),

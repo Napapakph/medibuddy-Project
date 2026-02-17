@@ -120,18 +120,6 @@ class BottomBar extends StatelessWidget {
                 child: Container(
                   width: 60,
                   height: 60,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    boxShadow: isHome
-                        ? [
-                            BoxShadow(
-                              color: Colors.white.withOpacity(0.3),
-                              blurRadius: 30,
-                              spreadRadius: 2,
-                            )
-                          ]
-                        : null,
-                  ),
                   child: AnimatedOpacity(
                     opacity: isHome ? 1.0 : 0.6,
                     duration: const Duration(milliseconds: 200),

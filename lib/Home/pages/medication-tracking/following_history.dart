@@ -584,6 +584,7 @@ class _FollowingHistoryPageState extends State<FollowingHistoryPage> {
                         child: DropdownButtonHideUnderline(
                           child: DropdownButton<String>(
                             value: _searchMode,
+                            borderRadius: BorderRadius.circular(12),
                             items: const [
                               DropdownMenuItem(
                                   value: _searchTrade,
@@ -596,6 +597,7 @@ class _FollowingHistoryPageState extends State<FollowingHistoryPage> {
                                   value: _searchNickname,
                                   child: Text(_searchNickname)),
                             ],
+                            dropdownColor: Colors.white,
                             onChanged: (v) {
                               if (v == null) return;
                               setState(() {

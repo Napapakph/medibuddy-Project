@@ -84,7 +84,7 @@ class _RequestMedicinePageState extends State<RequestMedicinePage> {
               const Text(
                 'ชื่อยา',
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 16,
                   fontWeight: FontWeight.w600,
                   color: Color(0xFF1F497D),
                 ),
@@ -94,7 +94,7 @@ class _RequestMedicinePageState extends State<RequestMedicinePage> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF2F4F8),
+                  color: const Color.fromARGB(255, 255, 255, 255),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(widget.medicineName),
@@ -103,7 +103,7 @@ class _RequestMedicinePageState extends State<RequestMedicinePage> {
               const Text(
                 'รูปยา',
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 16,
                   fontWeight: FontWeight.w600,
                   color: Color(0xFF1F497D),
                 ),
@@ -113,7 +113,7 @@ class _RequestMedicinePageState extends State<RequestMedicinePage> {
                 child: Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF2F4F8),
+                    color: const Color.fromARGB(255, 255, 255, 255),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Stack(

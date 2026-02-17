@@ -689,6 +689,7 @@ class _HistoryPageState extends State<HistoryPage> {
                         child: DropdownButtonHideUnderline(
                           child: DropdownButton<String>(
                             value: _searchMode,
+                            borderRadius: BorderRadius.circular(12),
                             items: const [
                               DropdownMenuItem(
                                   value: _searchTrade,
@@ -701,6 +702,7 @@ class _HistoryPageState extends State<HistoryPage> {
                                   value: _searchNickname,
                                   child: Text(_searchNickname)),
                             ],
+                            dropdownColor: Colors.white,
                             onChanged: (v) {
                               if (v == null) return;
                               _searchMode = v;
