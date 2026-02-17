@@ -284,8 +284,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                 suffixIcon: IconButton(
                                   icon: Icon(
                                     _obscurePassword
-                                        ? Icons.visibility
-                                        : Icons.visibility_off,
+                                        ? Icons.visibility_off
+                                        : Icons.visibility,
                                   ),
                                   onPressed: () {
                                     setState(() {
@@ -439,84 +439,107 @@ class _LoginScreenState extends State<LoginScreen> {
       context: context,
       builder: (dialogContext) {
         return Dialog(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 400),
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Stack(
-                    children: [
-                      Positioned(
-                        right: 0,
-                        child: IconButton(
-                          icon: const Icon(Icons.close),
-                          onPressed: () => Navigator.pop(dialogContext),
-                        ),
-                      ),
-                      const Center(
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(vertical: 8),
-                          child: Text(
-                            'ลืมรหัสผ่าน',
-                            style: TextStyle(
-                                fontSize: 20, fontWeight: FontWeight.bold),
+          child: Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFFEAF2FB), // ⭐ สีพื้นหลัง
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.15),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 400),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Stack(
+                      children: [
+                        Positioned(
+                          right: 0,
+                          child: IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: () => Navigator.pop(dialogContext),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 30),
-                  TextField(
-                    controller: _resetEmailCtrl,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: InputDecoration(
-                      labelText: 'Email',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        const Center(
+                          child: Padding(
+                            padding: EdgeInsets.symmetric(vertical: 8),
+                            child: Text(
+                              'ลืมรหัสผ่าน',
+                              style: TextStyle(
+                                  fontSize: 20, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _resetEmailCtrl,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: const Color.fromARGB(255, 255, 255, 255),
+                        labelText: 'Email',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 24),
-                  ElevatedButton(
-                    onPressed: () async {
-                      final email = _resetEmailCtrl.text.trim();
-                      if (email.isEmpty) return;
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () async {
+                        final email = _resetEmailCtrl.text.trim();
+                        if (email.isEmpty) return;
 
-                      try {
-                        await Supabase.instance.client.auth
-                            .resetPasswordForEmail(
-                          email,
-                          // ✅ ต้องเป็น deep link ของแอป (อันเดียวกับที่ใส่ใน Supabase Redirect URLs)
-                          redirectTo: 'com.example.medibuddy://login-callback',
-                        );
+                        try {
+                          await Supabase.instance.client.auth
+                              .resetPasswordForEmail(
+                            email,
+                            // ✅ ต้องเป็น deep link ของแอป (อันเดียวกับที่ใส่ใน Supabase Redirect URLs)
+                            redirectTo:
+                                'com.example.medibuddy://login-callback',
+                          );
 
-                        if (!context.mounted) return;
-                        Navigator.pop(dialogContext);
+                          if (!context.mounted) return;
+                          Navigator.pop(dialogContext);
 
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                              content: Text(
-                                  'ส่งอีเมลสำหรับรีเซ็ตรหัสผ่านแล้ว กรุณาตรวจสอบอีเมล')),
-                        );
-                      } on AuthException catch (e) {
-                        if (!context.mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(e.message)),
-                        );
-                      } catch (e) {
-                        if (!context.mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                              content:
-                                  Text('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง')),
-                        );
-                      }
-                    },
-                    child: const Text('ส่งอีเมลรีเซ็ต'),
-                  ),
-                ],
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text(
+                                    'ส่งอีเมลสำหรับรีเซ็ตรหัสผ่านแล้ว กรุณาตรวจสอบอีเมล')),
+                          );
+                        } on AuthException catch (e) {
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(e.message)),
+                          );
+                        } catch (e) {
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text(
+                                    'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง')),
+                          );
+                        }
+                      },
+                      child: const Text('ส่งอีเมลรีเซ็ต'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF1F497D),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

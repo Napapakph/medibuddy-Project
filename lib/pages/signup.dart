@@ -61,6 +61,7 @@ class _SignupScreenState extends State<SignupScreen> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
+          backgroundColor: Colors.white,
           child: SizedBox(
             width: 360,
             child: Stack(
@@ -71,7 +72,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   right: 8,
                   child: IconButton(
                     icon: const Icon(Icons.close),
-                    color: Colors.grey,
+                    color: Colors.black,
                     onPressed: () {
                       Navigator.of(dialogContext).pop();
                     },
@@ -120,7 +121,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         ),
                       ),
 
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 16),
 
                       // 🔘 ปุ่มด้านล่าง
                       Row(
@@ -369,7 +370,8 @@ class _SignupScreenState extends State<SignupScreen> {
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                SizedBox(height: maxHeight * 0.01),
+                                SizedBox(height: maxHeight * 0.03),
+
                                 TextFormField(
                                   controller: _email,
                                   decoration: InputDecoration(
@@ -394,7 +396,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                     return null;
                                   },
                                 ),
-                                SizedBox(height: maxHeight * 0.01),
+                                SizedBox(height: maxHeight * 0.02),
 
                                 TextFormField(
                                   controller: _password,
@@ -414,8 +416,8 @@ class _SignupScreenState extends State<SignupScreen> {
                                     suffixIcon: IconButton(
                                       icon: Icon(
                                         _obscurePassword
-                                            ? Icons.visibility
-                                            : Icons.visibility_off,
+                                            ? Icons.visibility_off
+                                            : Icons.visibility,
                                       ),
                                       onPressed: () {
                                         setState(() {
@@ -436,7 +438,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                   },
                                 ),
                                 SizedBox(height: maxHeight * 0.01),
-
+                                /*
                                 Align(
                                   alignment: Alignment.centerLeft,
                                   child: Text(
@@ -451,6 +453,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                     ),
                                   ),
                                 ),
+                                */
                                 SizedBox(height: maxHeight * 0.01),
 
                                 TextFormField(
@@ -471,8 +474,8 @@ class _SignupScreenState extends State<SignupScreen> {
                                     suffixIcon: IconButton(
                                       icon: Icon(
                                         _obscureConfirmPassword
-                                            ? Icons.visibility
-                                            : Icons.visibility_off,
+                                            ? Icons.visibility_off
+                                            : Icons.visibility,
                                       ),
                                       onPressed: () {
                                         setState(() {

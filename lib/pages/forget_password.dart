@@ -119,9 +119,22 @@ class _ForgetPassword extends State<ForgetPassword> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF1F497D),
+        title: const Text(
+          'ลืมรหัสผ่าน',
+          style: TextStyle(color: Colors.white),
+        ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          color: Colors.white,
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
+      ),
       resizeToAvoidBottomInset: false,
-      backgroundColor: Colors.white,
+      backgroundColor: const Color.fromARGB(255, 229, 242, 255),
       body: SafeArea(child: LayoutBuilder(
         builder: (context, constraints) {
           final maxWidth = constraints.maxWidth;
@@ -142,122 +155,142 @@ class _ForgetPassword extends State<ForgetPassword> {
                       horizontal: maxWidth * 0.06, vertical: maxHeight * 0.02),
                   child: Form(
                     key: _formKey,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min, // 👈 อันนี้แหละตัวช่วย
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(
-                          child: Text(
-                            'ตั้งค่ารหัสผ่านใหม่',
-                            style: TextStyle(
-                                fontSize: 24, fontWeight: FontWeight.bold),
-                          ),
+                    child: Container(
+                      padding: const EdgeInsets.all(20), // ⭐ ระยะห่างข้างใน
+                      decoration: BoxDecoration(
+                        color: Colors.white, // ⭐ พื้นหลัง
+                        borderRadius: BorderRadius.circular(20), // ⭐ ขอบมน
+                        border: Border.all(
+                          color: const Color(0xFFD2E6FF), // ⭐ สีกรอบ
+                          width: 1.2,
                         ),
-                        SizedBox(height: maxHeight * 0.02),
-                        // รหัสผ่าน
-                        TextFormField(
-                          controller: _password,
-                          obscureText: _obscurePassword,
-                          decoration: InputDecoration(
-                            labelText: 'รหัสผ่าน',
-                            filled: true,
-                            fillColor: const Color(0xFFE9EEF3),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.06),
+                            blurRadius: 16,
+                            offset: const Offset(0, 6),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min, // 👈 อันนี้แหละตัวช่วย
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(
+                            child: Text(
+                              'ตั้งค่ารหัสผ่านใหม่',
+                              style: TextStyle(
+                                  fontSize: 24, fontWeight: FontWeight.bold),
                             ),
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: maxWidth * 0.04,
-                              vertical: maxHeight * 0.01,
-                            ),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _obscurePassword
-                                    ? Icons.visibility
-                                    : Icons.visibility_off,
+                          ),
+                          SizedBox(height: maxHeight * 0.02),
+                          // รหัสผ่าน
+                          TextFormField(
+                            controller: _password,
+                            obscureText: _obscurePassword,
+                            decoration: InputDecoration(
+                              labelText: 'รหัสผ่าน',
+                              filled: true,
+                              fillColor: const Color(0xFFE9EEF3),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none,
                               ),
-                              onPressed: () {
-                                setState(() {
-                                  _obscurePassword = !_obscurePassword;
-                                });
-                              },
-                            ),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'กรุณากรอกรหัสผ่าน';
-                            }
-                            final error = validatePassword(value);
-                            return error;
-                          },
-                        ),
-                        SizedBox(height: maxHeight * 0.02),
-
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            [
-                              '- ความยาวอย่างน้อย 6 ตัวอักษร',
-                              '- ตัวอักษรพิมพ์ใหญ่และพิมพ์เล็ก',
-                              '- ตัวเลขหรือสัญลักษณ์พิเศษ',
-                            ].join('\n'),
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                        ),
-                        SizedBox(height: maxHeight * 0.02),
-
-                        // ยืนยันรหัสผ่าน
-                        TextFormField(
-                          controller: _confirmPasswordCtrl,
-                          obscureText: _obscurePassword,
-                          decoration: InputDecoration(
-                            labelText: 'ยืนยันรหัสผ่าน',
-                            filled: true,
-                            fillColor: const Color(0xFFE9EEF3),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
-                            ),
-                            contentPadding: EdgeInsets.symmetric(
-                              horizontal: maxWidth * 0.04,
-                              vertical: maxHeight * 0.01,
-                            ),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _obscurePassword
-                                    ? Icons.visibility
-                                    : Icons.visibility_off,
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: maxWidth * 0.04,
+                                vertical: maxHeight * 0.01,
                               ),
-                              onPressed: () {
-                                setState(() {
-                                  _obscurePassword = !_obscurePassword;
-                                });
-                              },
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscurePassword
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _obscurePassword = !_obscurePassword;
+                                  });
+                                },
+                              ),
+                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'กรุณากรอกรหัสผ่าน';
+                              }
+                              final error = validatePassword(value);
+                              return error;
+                            },
+                          ),
+                          SizedBox(height: maxHeight * 0.02),
+
+                          /*
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              [
+                                '- ความยาวอย่างน้อย 6 ตัวอักษร',
+                                '- ตัวอักษรพิมพ์ใหญ่และพิมพ์เล็ก',
+                                '- ตัวเลขหรือสัญลักษณ์พิเศษ',
+                              ].join('\n'),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[600],
+                              ),
                             ),
                           ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'กรุณายืนยันรหัสผ่าน';
-                            }
-                            if (value != _password.text) {
-                              return 'รหัสผ่านไม่ตรงกัน';
-                            }
-                            return null;
-                          },
-                        ),
-                        SizedBox(height: maxHeight * 0.04),
-                        // ปุ่มตั้งรหัสผ่านใหม่
-                        SizedBox(
-                          width: double.infinity,
-                          child: resetPassword(
-                            text: 'สร้างรหัสผ่านใหม่',
-                            onPressed: _handleResetPassword,
+                          */
+                          SizedBox(height: maxHeight * 0.001),
+
+                          // ยืนยันรหัสผ่าน
+                          TextFormField(
+                            controller: _confirmPasswordCtrl,
+                            obscureText: _obscurePassword,
+                            decoration: InputDecoration(
+                              labelText: 'ยืนยันรหัสผ่าน',
+                              filled: true,
+                              fillColor: const Color(0xFFE9EEF3),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none,
+                              ),
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: maxWidth * 0.04,
+                                vertical: maxHeight * 0.01,
+                              ),
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscurePassword
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
+                                ),
+                                onPressed: () {
+                                  setState(() {
+                                    _obscurePassword = !_obscurePassword;
+                                  });
+                                },
+                              ),
+                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'กรุณายืนยันรหัสผ่าน';
+                              }
+                              if (value != _password.text) {
+                                return 'รหัสผ่านไม่ตรงกัน';
+                              }
+                              return null;
+                            },
                           ),
-                        ),
-                      ],
+                          SizedBox(height: maxHeight * 0.02),
+                          // ปุ่มตั้งรหัสผ่านใหม่
+                          SizedBox(
+                            width: double.infinity,
+                            child: resetPassword(
+                              text: 'สร้างรหัสผ่านใหม่',
+                              onPressed: _handleResetPassword,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
