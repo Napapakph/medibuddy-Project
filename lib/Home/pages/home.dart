@@ -12,6 +12,7 @@ import '../../services/app_state.dart';
 import '../../widgets/bottomBar.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'add_medicine/create_medicine_profile.dart';
+import '../../services/auth_manager.dart'; // Import
 
 class Home extends StatefulWidget {
   final ProfileModel? selectedProfile;
@@ -241,8 +242,10 @@ class _Home extends State<Home> {
     }
 
     try {
+      final token = await AuthManager.service.getAccessToken();
       final response = await _regimenApi.getRegimensByProfileId(
         profileId: profileId,
+        accessToken: token,
       );
       final items = response.items;
       debugPrint('\u{1F3E0} fetched items=${items.length}');

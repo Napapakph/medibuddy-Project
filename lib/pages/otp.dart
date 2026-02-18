@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_otp_text_field/flutter_otp_text_field.dart';
 import 'login.dart';
-import 'authen_api.dart';
+import '../services/auth_manager.dart';
 
 class OTPScreen extends StatefulWidget {
   const OTPScreen({super.key, required this.email});
@@ -13,7 +13,7 @@ class OTPScreen extends StatefulWidget {
 
 class _OTPScreenState extends State<OTPScreen> {
   final _otp = TextEditingController();
-  final AuthenApi _authenApi = AuthenApi();
+  // final AuthenApi _authenApi = AuthenApi(); // DEPRECATED
   bool _isLoading = false;
 
   @override
@@ -35,10 +35,15 @@ class _OTPScreenState extends State<OTPScreen> {
     setState(() => _isLoading = true);
 
     try {
-      await _authenApi.confirmOtpAndSync(
+      final response = await AuthManager.service.verifyOtp(
         email: widget.email,
         token: verificationCode,
       );
+
+      // ✅ Sync with AuthManager explicitly (though service does it)
+      if (response.accessToken.isNotEmpty) {
+        AuthManager.accessToken = response.accessToken;
+      }
 
       Navigator.pushReplacement(
           context,
@@ -120,16 +125,15 @@ class _OTPScreenState extends State<OTPScreen> {
                       child: TextButton(
                         onPressed: () async {
                           try {
-                            await _authenApi.resendOtp(email: widget.email);
+                            await AuthManager.service.resendOtp(widget.email);
                             if (!mounted) return;
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(content: Text("ส่ง OTP ใหม่แล้ว")),
                             );
                           } catch (e) {
                             if (!mounted) return;
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Resend OTP failed: $e'))
-                            );
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                content: Text('Resend OTP failed: $e')));
                           }
                         },
                         child: const Text("ส่ง OTP อีกครั้ง"),

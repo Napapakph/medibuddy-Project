@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:medibuddy/Home/pages/alarm_medicine/confirm_action.dart';
 import 'package:medibuddy/services/regimen_api.dart';
+import 'package:medibuddy/services/auth_manager.dart'; // Import AuthManager
 
 class AlarmScreen extends StatefulWidget {
   final Map<String, dynamic>? payload;
@@ -158,10 +159,12 @@ class _AlarmScreenState extends State<AlarmScreen> {
 
     setState(() => _submitting = true);
     try {
+      final token = await AuthManager.service.getAccessToken(); // Get token
       final api = RegimenApiService();
       await api.submitMedicationLogResponse(
         logId: logId,
         responseStatus: responseStatus,
+        accessToken: token, // Pass token
       );
       if (!mounted) return;
       setState(() {

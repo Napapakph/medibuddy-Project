@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:mime/mime.dart';
+import 'auth_manager.dart'; // Import
 
 // สำหรับติดต่อกับ Follow API
 // DIO คือไลบรารี HTTP ที่ใช้ในการส่งคำขอไปยัง API
@@ -122,9 +123,12 @@ class FollowApi {
 
 // ค้นหาผู้ใช้ โดยใช้อีเมล เพื่อค้นหาผู้ติดตามหรือผู้ที่กำลังติดตาม
   Future<List<Map<String, dynamic>>> searchUsers({
-    required String accessToken,
+    String? accessToken,
     required String email,
   }) async {
+    accessToken ??= await AuthManager.service.getAccessToken();
+    if (accessToken == null) throw Exception('No access token');
+
     final trimmed = email.trim();
     if (trimmed.isEmpty) return [];
 
@@ -157,7 +161,7 @@ class FollowApi {
   }
 
   Future<Map<String, dynamic>> sendInvite({
-    required String accessToken,
+    String? accessToken,
     required List<int> profileIds,
     String? email,
     int? userId,
@@ -168,6 +172,9 @@ class FollowApi {
         (userId == null || userId <= 0)) {
       throw Exception('Missing invite target');
     }
+
+    accessToken ??= await AuthManager.service.getAccessToken();
+    if (accessToken == null) throw Exception('No access token');
 
     final Map<String, dynamic> body = {
       if (email != null && email.trim().isNotEmpty) 'email': email.trim(),
@@ -196,15 +203,19 @@ class FollowApi {
     final res = await _dio.post(
       _invitePath,
       data: data,
-      options: options,
+      options:
+          options, // options already has accessToken if manually built, or check if _authOptions used
     );
     _ensureSuccess(res, 'Send invite failed');
     return _extractMap(res.data);
   }
 
   Future<List<Map<String, dynamic>>> fetchFollowers({
-    required String accessToken,
+    String? accessToken,
   }) async {
+    accessToken ??= await AuthManager.service.getAccessToken();
+    if (accessToken == null) throw Exception('No access token');
+
     final res = await _dio.get(
       _followersPath,
       options: _authOptions(accessToken),
@@ -214,11 +225,14 @@ class FollowApi {
   }
 
   Future<void> updateFollowerProfiles({
-    required String accessToken,
+    String? accessToken,
     required int relationshipId,
     required List<int> profileIds,
     String? name,
   }) async {
+    accessToken ??= await AuthManager.service.getAccessToken();
+    if (accessToken == null) throw Exception('No access token');
+
     final body = <String, dynamic>{
       'profileIds': profileIds,
       if (name != null && name.trim().isNotEmpty) 'name': name.trim(),
@@ -233,11 +247,14 @@ class FollowApi {
   }
 
   Future<void> updateFollowerNickname({
-    required String accessToken,
+    String? accessToken,
     required int relationshipId,
     required String nickname,
     List<int> profileIds = const [],
   }) async {
+    accessToken ??= await AuthManager.service.getAccessToken();
+    if (accessToken == null) throw Exception('No access token');
+
     final base = <String, dynamic>{
       'relationshipId': relationshipId,
       if (profileIds.isNotEmpty) 'profileIds': profileIds,
@@ -270,7 +287,7 @@ class FollowApi {
   }
 
   Future<void> updateFollower({
-    required String accessToken,
+    String? accessToken,
     required int relationshipId,
     required String name,
     required List<int> profileIds,
@@ -278,6 +295,9 @@ class FollowApi {
     String?
         accountPicture, // เก็บไว้เผื่อกรณีไม่ได้อัปรูปใหม่ แต่ต้องการส่ง path เดิม (ถ้า API รองรับ)
   }) async {
+    accessToken ??= await AuthManager.service.getAccessToken();
+    if (accessToken == null) throw Exception('No access token');
+
     final body = <String, dynamic>{
       'name': name.trim(),
       'profileIds':
@@ -335,9 +355,12 @@ class FollowApi {
   }
 
   Future<void> removeFollower({
-    required String accessToken,
+    String? accessToken,
     required int followerId,
   }) async {
+    accessToken ??= await AuthManager.service.getAccessToken();
+    if (accessToken == null) throw Exception('No access token');
+
     final res = await _dio.delete(
       _followersRemovePath,
       queryParameters: {'followerId': followerId},
@@ -347,8 +370,11 @@ class FollowApi {
   }
 
   Future<List<Map<String, dynamic>>> fetchInvites({
-    required String accessToken,
+    String? accessToken,
   }) async {
+    accessToken ??= await AuthManager.service.getAccessToken();
+    if (accessToken == null) throw Exception('No access token');
+
     final res = await _dio.get(
       _invitesPath,
       options: _authOptions(accessToken),
@@ -358,9 +384,12 @@ class FollowApi {
   }
 
   Future<void> acceptInvite({
-    required String accessToken,
+    String? accessToken,
     required int relationshipId,
   }) async {
+    accessToken ??= await AuthManager.service.getAccessToken();
+    if (accessToken == null) throw Exception('No access token');
+
     final res = await _dio.post(
       _invitesAcceptPath,
       queryParameters: {'relationshipId': relationshipId},
@@ -370,9 +399,12 @@ class FollowApi {
   }
 
   Future<void> rejectInvite({
-    required String accessToken,
+    String? accessToken,
     required int relationshipId,
   }) async {
+    accessToken ??= await AuthManager.service.getAccessToken();
+    if (accessToken == null) throw Exception('No access token');
+
     final res = await _dio.post(
       _invitesRejectPath,
       queryParameters: {'relationshipId': relationshipId},
@@ -382,8 +414,11 @@ class FollowApi {
   }
 
   Future<List<Map<String, dynamic>>> fetchFollowing({
-    required String accessToken,
+    String? accessToken,
   }) async {
+    accessToken ??= await AuthManager.service.getAccessToken();
+    if (accessToken == null) throw Exception('No access token');
+
     final res = await _dio.get(
       _followingPath,
       options: _authOptions(accessToken),
@@ -393,9 +428,12 @@ class FollowApi {
   }
 
   Future<Map<String, dynamic>> fetchFollowingDetail({
-    required String accessToken,
+    String? accessToken,
     required int relationshipId,
   }) async {
+    accessToken ??= await AuthManager.service.getAccessToken();
+    if (accessToken == null) throw Exception('No access token');
+
     final res = await _dio.get(
       _followingDetailPath,
       queryParameters: {'relationshipId': relationshipId},
@@ -406,7 +444,7 @@ class FollowApi {
   }
 
   Future<List<Map<String, dynamic>>> fetchFollowingLogs({
-    required String accessToken,
+    String? accessToken,
     required int relationshipId,
     required int profileId,
     String? startDate,
@@ -414,6 +452,9 @@ class FollowApi {
     int? limit,
     int? offset,
   }) async {
+    accessToken ??= await AuthManager.service.getAccessToken();
+    if (accessToken == null) throw Exception('No access token');
+
     final params = <String, dynamic>{
       'relationshipId': relationshipId,
       'profileId': profileId,
@@ -436,9 +477,12 @@ class FollowApi {
   }
 
   Future<void> removeFollowing({
-    required String accessToken,
+    String? accessToken,
     required int relationshipId,
   }) async {
+    accessToken ??= await AuthManager.service.getAccessToken();
+    if (accessToken == null) throw Exception('No access token');
+
     final res = await _dio.delete(
       _followingRemovePath,
       queryParameters: {'relationshipId': relationshipId},
@@ -448,11 +492,14 @@ class FollowApi {
   }
 
   Future<void> updateFollowing({
-    required String accessToken,
+    String? accessToken,
     required int relationshipId,
     required String ownerNickname,
     File? ownerPicture,
   }) async {
+    accessToken ??= await AuthManager.service.getAccessToken();
+    if (accessToken == null) throw Exception('No access token');
+
     // Validate constraint from client side as requested
     if (ownerNickname.length > 100) {
       throw Exception('ชื่อเล่นห้ามเกิน 100 ตัวอักษร');

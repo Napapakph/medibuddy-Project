@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:medibuddy/Model/medicine_model.dart';
 import 'package:medibuddy/services/medicine_api.dart';
+import 'package:medibuddy/services/auth_manager.dart'; // Import AuthManager
 import 'package:lottie/lottie.dart';
 
 Future<void> showMedicineDetailDialog({
@@ -38,7 +39,11 @@ class _MedicineDetailLoaderState extends State<_MedicineDetailLoader> {
   Future<void> _fetch() async {
     try {
       final api = MedicineApi();
-      final detail = await api.getMedicineDetail(mediId: widget.mediId);
+      final token = await AuthManager.service.getAccessToken(); // Get token
+      final detail = await api.getMedicineDetail(
+        mediId: widget.mediId,
+        accessToken: token, // Pass token
+      );
       final url = _toFullImageUrl(detail.mediPicture ?? '');
       if (mounted) {
         setState(() {

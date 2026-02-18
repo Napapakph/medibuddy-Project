@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:medibuddy/services/app_state.dart' show AppState;
 import 'package:medibuddy/services/follow_api.dart';
-import 'package:medibuddy/services/auth_session.dart';
+import 'package:medibuddy/services/auth_manager.dart'; // Import
 import 'package:medibuddy/widgets/follow_user_card.dart';
 import 'package:image_picker/image_picker.dart';
 import 'following_history.dart';
@@ -209,7 +209,7 @@ class _FollowingScreenState extends State<FollowingScreen>
     try {
       setState(() => _isLoading = true);
 
-      final accessToken = AuthSession.accessToken;
+      final accessToken = await AuthManager.service.getAccessToken();
       if (accessToken == null) {
         throw Exception('No access token');
       }
@@ -240,7 +240,7 @@ class _FollowingScreenState extends State<FollowingScreen>
     bool accept,
   ) async {
     try {
-      final accessToken = AuthSession.accessToken;
+      final accessToken = await AuthManager.service.getAccessToken();
       if (accessToken == null) {
         throw Exception('No access token');
       }
@@ -278,7 +278,7 @@ class _FollowingScreenState extends State<FollowingScreen>
   Future<void> _selectProfileAndOpenDetail(
     Map<String, dynamic> user,
   ) async {
-    final accessToken = AuthSession.accessToken;
+    final accessToken = await AuthManager.service.getAccessToken();
     if (accessToken == null) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -625,7 +625,8 @@ class _FollowingScreenState extends State<FollowingScreen>
                       ? null
                       : () async {
                           final nickname = controller.text.trim();
-                          final accessToken = AuthSession.accessToken;
+                          final accessToken =
+                              await AuthManager.service.getAccessToken();
                           if (accessToken == null) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
@@ -721,7 +722,7 @@ class _FollowingScreenState extends State<FollowingScreen>
 
   Future<void> _removeFollowing(int relationshipId) async {
     try {
-      final accessToken = AuthSession.accessToken;
+      final accessToken = await AuthManager.service.getAccessToken();
       if (accessToken == null) throw Exception('No access token');
 
       await _followApi.removeFollowing(

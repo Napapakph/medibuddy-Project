@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'otp.dart';
-import 'authen_api.dart';
 import 'forget_password.dart';
 import 'login.dart';
-import '../services/authen_login.dart';
-import '../services/sync_user.dart';
+import '../services/authen_login.dart'; // Restored for LoginWithGoogle
+import '../services/sync_user.dart'; // Restored for SyncUserService
+import '../services/auth_manager.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 final supabase = Supabase.instance.client;
@@ -21,8 +21,8 @@ class _SignupScreenState extends State<SignupScreen> {
   final _email = TextEditingController();
   final _password = TextEditingController();
   final _confirmPasswordCtrl = TextEditingController();
-  final _authAPI = AuthenSignUpEmail();
-  final AuthenApi _authenApi = AuthenApi(); // ใช้ class จากไฟล์ API
+  // final _authAPI = AuthenSignUpEmail(); // DEPRECATED
+  // final AuthenApi _authenApi = AuthenApi(); // DEPRECATED
   bool _obscurePassword = true; //ดู password
   bool _obscureConfirmPassword = true;
   bool _isGoogleLoading = false;
@@ -204,7 +204,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
     setState(() => _isLoading = true); // เริ่มหมุนโหลด
     try {
-      final status = await _authenApi.checkEmailStatus(email: email);
+      final status = await AuthManager.service.checkEmailStatus(email);
       if (!mounted) return;
       if (status == 'existing') {
         setState(() => _isLoading = false);
@@ -220,7 +220,7 @@ class _SignupScreenState extends State<SignupScreen> {
       return;
     }
     // เรียกไปหา Supabase ผ่าน AuthAPI
-    final error = await _authAPI.signUpWithEmail(
+    final error = await AuthManager.service.register(
       email: email,
       password: password,
     );

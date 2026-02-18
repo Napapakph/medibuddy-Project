@@ -1,6 +1,7 @@
 ﻿// history.dart
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import '../../services/auth_manager.dart'; // Import
 import 'package:lottie/lottie.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -235,7 +236,9 @@ class _HistoryPageState extends State<HistoryPage> {
 
     try {
       final api = LogApiService();
-      final logs = await api.getMedicationLogs(profileId: profileId);
+      final token = await AuthManager.service.getAccessToken(); // Fetch Token
+      final logs =
+          await api.getMedicationLogs(profileId: profileId, accessToken: token);
       final items = logs.map(_mapLogToItem).toList();
       items.sort((a, b) => b.takenAt.compareTo(a.takenAt));
 

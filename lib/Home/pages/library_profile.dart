@@ -6,8 +6,8 @@ import 'package:image_picker/image_picker.dart';
 import 'buddy.dart';
 import '../../services/profile_api.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:math';
+import '../../services/auth_manager.dart'; // Import AuthManager
 
 class LibraryProfile extends StatefulWidget {
   const LibraryProfile({
@@ -26,8 +26,8 @@ class _LibraryProfileState extends State<LibraryProfile> {
   String _imageBaseUrl = '';
   final ProfileApi api = ProfileApi();
 
-  String? _getToken() {
-    return Supabase.instance.client.auth.currentSession?.accessToken;
+  Future<String?> _getToken() async {
+    return await AuthManager.service.getAccessToken();
   }
 
   ImageProvider? buildProfileImage(String imagePath) {
@@ -65,7 +65,7 @@ class _LibraryProfileState extends State<LibraryProfile> {
     setState(() => _loading = true);
 
     try {
-      final token = Supabase.instance.client.auth.currentSession?.accessToken;
+      final token = await _getToken();
       if (token == null) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
@@ -476,8 +476,10 @@ class _LibraryProfileState extends State<LibraryProfile> {
                           try {
                             final api = ProfileApi();
 
+                            final token = await _getToken();
+                            if (token == null) return;
                             await api.updateProfile(
-                              accessToken: _getToken()!,
+                              accessToken: token,
                               profileId: profile.profileId,
                               profileName: newName,
                               imageFile: newImageFile,
@@ -744,8 +746,10 @@ class _LibraryProfileState extends State<LibraryProfile> {
     setState(() => _loading = true);
 
     try {
+      final token = await _getToken();
+      if (token == null) return;
       await api.deleteProfile(
-        accessToken: _getToken()!,
+        accessToken: token,
         profileId: profile.profileId,
       );
 
@@ -925,9 +929,11 @@ class _LibraryProfileState extends State<LibraryProfile> {
 
     setState(() => _loading = true);
     try {
+      final token = await _getToken();
+      if (token == null) return;
       final api = ProfileApi();
       await api.createProfile(
-        accessToken: _getToken()!,
+        accessToken: token,
         profileName: profileName.trim(),
         imageFile: imageFile,
       );
@@ -962,8 +968,10 @@ class _LibraryProfileState extends State<LibraryProfile> {
 
     setState(() => _loading = true);
     try {
+      final token = await _getToken();
+      if (token == null) return;
       await api.updateProfile(
-        accessToken: _getToken()!,
+        accessToken: token,
         profileId: profileId,
         profileName: profileName.trim(),
         imageFile: imageFile, // ถ้าเป็น /uploads หรือ http จะไม่ส่งไฟล์ซ้ำ

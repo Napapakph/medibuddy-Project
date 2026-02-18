@@ -3,8 +3,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:medibuddy/Model/medicine_regimen_model.dart';
+import 'auth_manager.dart'; // Import
 
 class RegimenApiException implements Exception {
   final String message;
@@ -19,12 +19,9 @@ class RegimenApiException implements Exception {
 class RegimenApiService {
   RegimenApiService({
     http.Client? client,
-    SupabaseClient? supabaseClient,
-  })  : _client = client ?? http.Client(),
-        _supabase = supabaseClient ?? Supabase.instance.client;
+  }) : _client = client ?? http.Client();
 
   final http.Client _client;
-  final SupabaseClient _supabase;
 
   String _baseUrl() {
     final base = dotenv.env['API_BASE_URL']?.trim() ?? '';
@@ -34,12 +31,15 @@ class RegimenApiService {
     return base.endsWith('/') ? base.substring(0, base.length - 1) : base;
   }
 
-  String _requireAccessToken() {
-    final token = _supabase.auth.currentSession?.accessToken;
-    if (token == null || token.isEmpty) {
-      throw RegimenApiException('Please login again (missing access token).');
-    }
-    return token;
+  Future<String> _getAccessToken() async {
+    // Check global
+    if (AuthManager.accessToken != null) return AuthManager.accessToken!;
+
+    // Check service
+    final token = await AuthManager.service.getAccessToken();
+    if (token != null && token.isNotEmpty) return token;
+
+    throw RegimenApiException('Please login again (missing access token).');
   }
 
   Future<MedicineRegimenResponse> createMedicineRegimen({
@@ -52,8 +52,9 @@ class RegimenApiService {
     int? cycleOnDays, // only CYCLE
     int? cycleBreakDays, // only CYCLE
     required List<MedicineRegimenTime> times,
+    String? accessToken,
   }) async {
-    final token = _requireAccessToken();
+    accessToken ??= await _getAccessToken();
     final url =
         Uri.parse('${_baseUrl()}/api/mobile/v1/medicine-regimen/create');
 
@@ -76,7 +77,7 @@ class RegimenApiService {
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'Authorization': 'Bearer $token',
+        'Authorization': 'Bearer $accessToken',
       },
       body: jsonEncode(body),
     );
@@ -119,8 +120,9 @@ class RegimenApiService {
     int? cycleOnDays,
     int? cycleBreakDays,
     List<MedicineRegimenTime>? times,
+    String? accessToken,
   }) async {
-    final token = _requireAccessToken();
+    accessToken ??= await _getAccessToken();
     final url =
         Uri.parse('${_baseUrl()}/api/mobile/v1/medicine-regimen/update');
 
@@ -143,7 +145,7 @@ class RegimenApiService {
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'Authorization': 'Bearer $token',
+        'Authorization': 'Bearer $accessToken',
       },
       body: jsonEncode(body),
     );
@@ -176,11 +178,14 @@ class RegimenApiService {
     return response;
   }
 
-  Future<void> deleteRegimen({required int mediRegimenId}) async {
+  Future<void> deleteRegimen({
+    required int mediRegimenId,
+    String? accessToken,
+  }) async {
     if (mediRegimenId <= 0) {
       throw RegimenApiException('mediRegimenId must be a positive integer.');
     }
-    final token = _requireAccessToken();
+    accessToken ??= await _getAccessToken();
     final url = Uri.parse(
       '${_baseUrl()}/api/mobile/v1/medicine-regimen/delete?mediRegimenId=$mediRegimenId',
     );
@@ -191,7 +196,7 @@ class RegimenApiService {
       url,
       headers: {
         'Accept': 'application/json',
-        'Authorization': 'Bearer $token',
+        'Authorization': 'Bearer $accessToken',
       },
     );
 
@@ -213,11 +218,12 @@ class RegimenApiService {
   Future<void> submitMedicationLogResponse({
     required int logId,
     required String responseStatus,
+    String? accessToken,
   }) async {
     if (logId <= 0) {
       throw RegimenApiException('logId must be a positive integer.');
     }
-    final token = _requireAccessToken();
+    accessToken ??= await _getAccessToken();
     final url =
         Uri.parse('${_baseUrl()}/api/mobile/v1/medication-log/response');
 
@@ -233,7 +239,7 @@ class RegimenApiService {
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'Authorization': 'Bearer $token',
+        'Authorization': 'Bearer $accessToken',
       },
       body: jsonEncode(body),
     );
@@ -254,11 +260,12 @@ class RegimenApiService {
 
   Future<MedicineRegimenDetailResponse> getRegimenDetail({
     required int mediRegimenId,
+    String? accessToken,
   }) async {
     if (mediRegimenId <= 0) {
       throw RegimenApiException('mediRegimenId must be a positive integer.');
     }
-    final token = _requireAccessToken();
+    accessToken ??= await _getAccessToken();
     final url = Uri.parse(
       '${_baseUrl()}/api/mobile/v1/medicine-regimen/detail?mediRegimenId=$mediRegimenId',
     );
@@ -267,7 +274,7 @@ class RegimenApiService {
       url,
       headers: {
         'Accept': 'application/json',
-        'Authorization': 'Bearer $token',
+        'Authorization': 'Bearer $accessToken',
       },
     );
 
@@ -305,11 +312,12 @@ class RegimenApiService {
 
   Future<MedicineRegimenListResponse> getRegimensByProfileId({
     required int profileId,
+    String? accessToken,
   }) async {
     if (profileId <= 0) {
       throw RegimenApiException('profileId must be a positive integer.');
     }
-    final token = _requireAccessToken();
+    accessToken ??= await _getAccessToken();
     final url = Uri.parse(
       '${_baseUrl()}/api/mobile/v1/medicine-regimen/list?profileId=$profileId',
     );
@@ -320,7 +328,7 @@ class RegimenApiService {
       url,
       headers: {
         'Accept': 'application/json',
-        'Authorization': 'Bearer $token',
+        'Authorization': 'Bearer $accessToken',
       },
     );
 
@@ -353,11 +361,12 @@ class RegimenApiService {
     required int profileId,
     DateTime? startDate,
     DateTime? endDate,
+    String? accessToken,
   }) async {
     if (profileId <= 0) {
       throw RegimenApiException('profileId must be a positive integer.');
     }
-    final token = _requireAccessToken();
+    accessToken ??= await _getAccessToken();
     final queryParams = <String, String>{
       'profileId': profileId.toString(),
     };
@@ -381,7 +390,7 @@ class RegimenApiService {
       url,
       headers: {
         'Accept': 'application/json',
-        'Authorization': 'Bearer $token',
+        'Authorization': 'Bearer $accessToken',
       },
     );
 
@@ -413,11 +422,12 @@ class RegimenApiService {
 //------------------ list regimen ----------------------------------------
   Future<MedicineRegimenListResponse> getRegimensByMedicineListId({
     required int medicineListId,
+    String? accessToken,
   }) async {
     if (medicineListId <= 0) {
       throw RegimenApiException('medicineListId must be a positive integer.');
     }
-    final token = _requireAccessToken();
+    accessToken ??= await _getAccessToken();
     final url = Uri.parse(
       '${_baseUrl()}/api/mobile/v1/medicine-regimen/list/by-medicine?medicineListId=$medicineListId',
     );
@@ -426,7 +436,7 @@ class RegimenApiService {
       url,
       headers: {
         'Accept': 'application/json',
-        'Authorization': 'Bearer $token',
+        'Authorization': 'Bearer $accessToken',
       },
     );
 

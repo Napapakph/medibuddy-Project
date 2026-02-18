@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'auth_manager.dart'; // Import
 
 class LogApiException implements Exception {
   final String message;
@@ -18,12 +18,8 @@ class LogApiException implements Exception {
 class LogApiService {
   LogApiService({
     http.Client? client,
-    SupabaseClient? supabaseClient,
-  })  : _client = client ?? http.Client(),
-        _supabase = supabaseClient ?? Supabase.instance.client;
-
+  }) : _client = client ?? http.Client();
   final http.Client _client;
-  final SupabaseClient _supabase;
 
   String _baseUrl() {
     final base = dotenv.env['API_BASE_URL']?.trim() ?? '';
@@ -33,22 +29,26 @@ class LogApiService {
     return base.endsWith('/') ? base.substring(0, base.length - 1) : base;
   }
 
-  String _requireAccessToken() {
-    final token = _supabase.auth.currentSession?.accessToken;
-    if (token == null || token.isEmpty) {
-      throw LogApiException('Please login again (missing access token).');
-    }
-    return token;
+  Future<String> _getAccessToken() async {
+    // Check global
+    if (AuthManager.accessToken != null) return AuthManager.accessToken!;
+
+    // Check service
+    final token = await AuthManager.service.getAccessToken();
+    if (token != null && token.isNotEmpty) return token;
+
+    throw LogApiException('Please login again (missing access token).');
   }
 
   Future<List<Map<String, dynamic>>> getMedicationLogs({
     required int profileId,
+    String? accessToken,
   }) async {
     if (profileId <= 0) {
       throw LogApiException('profileId must be a positive integer.');
     }
 
-    final token = _requireAccessToken();
+    accessToken ??= await _getAccessToken();
     final url = Uri.parse(
       '${_baseUrl()}/api/mobile/v1/medication-log/list?profileId=$profileId',
     );
@@ -59,7 +59,7 @@ class LogApiService {
       url,
       headers: {
         'Accept': 'application/json',
-        'Authorization': 'Bearer $token',
+        'Authorization': 'Bearer $accessToken',
       },
     );
 
@@ -82,12 +82,13 @@ class LogApiService {
 
   Future<Map<String, dynamic>> getMedicationLogDetail({
     required int logId,
+    String? accessToken,
   }) async {
     if (logId <= 0) {
       throw LogApiException('logId must be a positive integer.');
     }
 
-    final token = _requireAccessToken();
+    accessToken ??= await _getAccessToken();
     final url = Uri.parse('${_baseUrl()}/api/mobile/v1/medication-log/$logId');
 
     debugPrint('medication-log detail logId=$logId');
@@ -96,7 +97,7 @@ class LogApiService {
       url,
       headers: {
         'Accept': 'application/json',
-        'Authorization': 'Bearer $token',
+        'Authorization': 'Bearer $accessToken',
       },
     );
 
@@ -135,12 +136,13 @@ class LogApiService {
     required int logId,
     required String responseStatus,
     String? note,
+    String? accessToken,
   }) async {
     if (logId <= 0) {
       throw LogApiException('logId must be a positive integer.');
     }
 
-    final token = _requireAccessToken();
+    accessToken ??= await _getAccessToken();
     final url =
         Uri.parse('${_baseUrl()}/api/mobile/v1/medication-log/response');
 
@@ -160,7 +162,7 @@ class LogApiService {
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'Authorization': 'Bearer $token',
+        'Authorization': 'Bearer $accessToken',
       },
       body: jsonEncode(body),
     );

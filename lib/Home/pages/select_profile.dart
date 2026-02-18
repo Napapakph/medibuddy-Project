@@ -5,8 +5,8 @@ import 'package:lottie/lottie.dart';
 import '../../services/profile_api.dart';
 import '../../Model/profile_model.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../services/app_state.dart';
+import '../../services/auth_manager.dart';
 
 // ถ้าคุณมีหน้า login จริง ๆ ให้ import แล้วเปลี่ยน route ได้
 // import 'login.dart';
@@ -24,8 +24,6 @@ class _SelectProfileState extends State<SelectProfile> {
   bool _loading = true;
   String _imageBaseUrl = '';
 
-  final supabase = Supabase.instance.client;
-
   @override
   void initState() {
     super.initState();
@@ -34,11 +32,8 @@ class _SelectProfileState extends State<SelectProfile> {
   }
 
   Future<String?> _getAccessToken() async {
-    // ปกติจะมีอยู่แล้วหลัง login
-    final token = supabase.auth.currentSession?.accessToken;
-    if (token != null && token.isNotEmpty) return token;
-
-    return null;
+    // ใช้ AuthManager แทน Supabase โดยตรง
+    return await AuthManager.service.getAccessToken();
   }
 
   Future<void> _loadProfiles() async {
@@ -135,49 +130,50 @@ class _SelectProfileState extends State<SelectProfile> {
         children: [
           SafeArea(
             child: LayoutBuilder(
-          builder: (context, constraints) {
-            final maxWidth = constraints.maxWidth;
-            final maxHeight = constraints.maxHeight;
+              builder: (context, constraints) {
+                final maxWidth = constraints.maxWidth;
+                final maxHeight = constraints.maxHeight;
 
-            return Column(
-              children: [
-                Container(
-                  width: double.infinity,
-                  padding: EdgeInsets.only(bottom: maxHeight * 0.03),
-                  color: const Color(0xFFB7DAFF),
-                  child: Column(
-                    children: [
-                      Text(
-                        thaiBuddhistDate,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          color: Color(0xFF1F497D),
+                return Column(
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.only(bottom: maxHeight * 0.03),
+                      color: const Color(0xFFB7DAFF),
+                      child: Column(
+                        children: [
+                          Text(
+                            thaiBuddhistDate,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              color: Color(0xFF1F497D),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    SizedBox(height: maxHeight * 0.05),
+                    Padding(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: maxWidth * 0.05),
+                      child: const Text(
+                        'เลือกผู้ใช้งาน...',
+                        style: TextStyle(
+                          fontSize: 30,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: maxHeight * 0.05),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: maxWidth * 0.05),
-                  child: const Text(
-                    'เลือกผู้ใช้งาน...',
-                    style: TextStyle(
-                      fontSize: 30,
-                      fontWeight: FontWeight.bold,
                     ),
-                  ),
-                ),
-                SizedBox(height: maxHeight * 0.03),
-                Expanded(
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 20),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade100,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: profiles.isEmpty
+                    SizedBox(height: maxHeight * 0.03),
+                    Expanded(
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 20),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade100,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: profiles.isEmpty
                             ? Center(
                                 child: Column(
                                   mainAxisSize: MainAxisSize.min,
@@ -256,85 +252,85 @@ class _SelectProfileState extends State<SelectProfile> {
                                   );
                                 },
                               ),
-                  ),
-                ),
-                SizedBox(height: maxHeight * 0.03),
-                Padding(
-                  padding: EdgeInsets.only(bottom: maxHeight * 0.02),
-                  child: ElevatedButton(
-                    onPressed: canConfirm
-                        ? () {
-                            AppState.instance.currentProfileId =
-                                selectedProfile.profileId;
-                            final pid = selectedProfile.profileId;
-                            Navigator.pushReplacementNamed(
-                              context,
-                              '/home',
-                              arguments: {
-                                'profileId': pid,
-                                'profileName': selectedProfile.username,
-                                'profileImage': selectedProfile.imagePath,
-                              },
-                            );
+                      ),
+                    ),
+                    SizedBox(height: maxHeight * 0.03),
+                    Padding(
+                      padding: EdgeInsets.only(bottom: maxHeight * 0.02),
+                      child: ElevatedButton(
+                        onPressed: canConfirm
+                            ? () {
+                                AppState.instance.currentProfileId =
+                                    selectedProfile.profileId;
+                                final pid = selectedProfile.profileId;
+                                Navigator.pushReplacementNamed(
+                                  context,
+                                  '/home',
+                                  arguments: {
+                                    'profileId': pid,
+                                    'profileName': selectedProfile.username,
+                                    'profileImage': selectedProfile.imagePath,
+                                  },
+                                );
 
-                            debugPrint(
-                                '================= check select ProfileID ==================');
-                            debugPrint(
-                                'Selected Profile ID: ${selectedProfile.profileId}');
-                          }
-                        : null,
-                    style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(
-                        vertical: maxHeight * 0.02,
-                        horizontal: maxWidth * 0.1,
-                      ),
-                      backgroundColor: const Color(0xFF1F497D),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24),
+                                debugPrint(
+                                    '================= check select ProfileID ==================');
+                                debugPrint(
+                                    'Selected Profile ID: ${selectedProfile.profileId}');
+                              }
+                            : null,
+                        style: ElevatedButton.styleFrom(
+                          padding: EdgeInsets.symmetric(
+                            vertical: maxHeight * 0.02,
+                            horizontal: maxWidth * 0.1,
+                          ),
+                          backgroundColor: const Color(0xFF1F497D),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                        ),
+                        child: const Text(
+                          'ยืนยัน',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
+                        ),
                       ),
                     ),
-                    child: const Text(
-                      'ยืนยัน',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
-      ),
-      if (_loading)
-        Positioned.fill(
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              const ModalBarrier(
-                dismissible: false,
-                color: Colors.black26,
-              ),
-              Column(
-                mainAxisSize: MainAxisSize.min,
+                  ],
+                );
+              },
+            ),
+          ),
+          if (_loading)
+            Positioned.fill(
+              child: Stack(
+                alignment: Alignment.center,
                 children: [
-                  Lottie.asset(
-                    'assets/lottie/loader_cat.json',
-                    width: 180,
-                    height: 180,
-                    repeat: true,
+                  const ModalBarrier(
+                    dismissible: false,
+                    color: Colors.black26,
                   ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'กำลังโหลด…',
-                    style: TextStyle(color: Colors.white),
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Lottie.asset(
+                        'assets/lottie/loader_cat.json',
+                        width: 180,
+                        height: 180,
+                        repeat: true,
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'กำลังโหลด…',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ],
-          ),
-        ),
+            ),
         ],
       ),
     );

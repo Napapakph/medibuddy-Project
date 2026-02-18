@@ -4,6 +4,7 @@ import 'package:medibuddy/services/log_api.dart';
 
 import 'package:medibuddy/services/app_state.dart';
 import 'package:medibuddy/widgets/comment.dart';
+import 'package:medibuddy/services/auth_manager.dart'; // Import AuthManager
 
 class ConfirmActionScreen extends StatefulWidget {
   final List<int> logIds;
@@ -61,8 +62,13 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
 
     try {
       final api = LogApiService();
-      final futures =
-          ids.map((id) => api.getMedicationLogDetail(logId: id)).toList();
+      final token = await AuthManager.service.getAccessToken(); // Get token
+      final futures = ids
+          .map((id) => api.getMedicationLogDetail(
+                logId: id,
+                accessToken: token, // Pass token
+              ))
+          .toList();
       final results = await Future.wait(futures);
       if (!mounted) return;
 
@@ -266,10 +272,12 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
 
     try {
       final note = _notesByLogId[logId];
+      final token = await AuthManager.service.getAccessToken(); // Get token
       final api = LogApiService();
       await api.submitMedicationLogResponse(
         logId: logId,
         responseStatus: responseStatus,
+        accessToken: token, // Pass token
         note: note?.trim().isEmpty ?? true ? null : note?.trim(),
       );
       // final api = RegimenApiService();

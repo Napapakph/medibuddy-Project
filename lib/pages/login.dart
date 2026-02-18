@@ -3,6 +3,7 @@ import 'package:lottie/lottie.dart';
 import 'signup.dart';
 import '../widgets/login_button.dart';
 import '../services/authen_login.dart';
+import '../services/auth_manager.dart';
 import 'forget_password.dart';
 import '../Home/pages/profile_screen.dart';
 import '../Home/pages/select_profile.dart';
@@ -25,13 +26,14 @@ class _LoginScreenState extends State<LoginScreen> {
       TextEditingController(); //TextEditingController สำหรับคุมค่าช่องอีเมลและรหัสผ่าน, ใช้ดึงค่าและทำ dispose() เพื่อไม่ให้รั่วหน่วยความจำ
   final _passwordCtrl = TextEditingController();
   //final _auth = MockAuthService(); //จำลองการ Login
-  final _authLoginAPI = AuthenLoginEmail();
+  // final _authLoginAPI = AuthenLoginEmail(); // DEPRECATED
   final _googleAuth = LoginWithGoogle();
   bool _isGoogleLoading = false;
   String? _lastEmail; // เก็บอีเมลล่าสุดที่ใช้ล็อกอินสำเร็จ
   String? _lastPassword; // เก็บรหัสผ่านล่าสุดที่ใช้ล็อกอินสำเร็จ
   bool _obscurePassword = true; //ดู password
-  bool _isLoading = false; // ติดตามสถานะกำลังล็อกอิน
+  bool _isLoading =
+      true; // ✅ Start loading to prevent "flash" of login form before check
   final supabase = Supabase.instance.client;
   bool _navigated = false;
 //---------------- Login with Username/Password----------------------------------
@@ -41,10 +43,11 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final accessToken = await _authLoginAPI.signInWithEmail(
+      final response = await AuthManager.service.login(
         email: _emailCtrl.text.trim(),
         password: _passwordCtrl.text.trim(),
       );
+      final accessToken = response.accessToken;
 
       if (!mounted) return;
       setState(() => _isLoading = false);
@@ -109,6 +112,11 @@ class _LoginScreenState extends State<LoginScreen> {
   void initState() {
     super.initState();
 
+    // Auto-login check (For Custom Auth & Supabase initial state)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkAndNavigate();
+    });
+
     _authSub = Supabase.instance.client.auth.onAuthStateChange.listen((data) {
       if (_navigated) return;
       final event = data.event;
@@ -146,14 +154,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _checkAndNavigate({String? token}) async {
     try {
-      token ??= Supabase.instance.client.auth.currentSession?.accessToken;
+      token ??= await AuthManager.service.getAccessToken(); // ✅ Support both
 
       if (token == null) {
-        // Should not happen if logged in, but safe fallback
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const LoginScreen()), // or stay
-        );
+        // No token found, just stay on LoginScreen
+        if (mounted) setState(() => _isLoading = false); // ✅ Reveal form
         return;
       }
 
@@ -178,12 +183,13 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } catch (e) {
       debugPrint('Check profile error: $e');
-      if (!mounted) return;
-      // Fallback
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const ProfileScreen()),
-      );
+      // If error (e.g. 401 Unauthorized), we should NOT go to ProfileScreen.
+      // We should stay here and let user login again.
+      if (mounted) {
+        // Clear invalid token just in case
+        await AuthManager.service.logout();
+        setState(() => _isLoading = false);
+      }
     }
   }
 

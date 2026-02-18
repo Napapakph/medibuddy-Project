@@ -1,5 +1,5 @@
 ﻿import 'package:flutter/material.dart';
-import 'package:medibuddy/services/auth_session.dart';
+import 'package:medibuddy/services/auth_manager.dart'; // Import
 import 'package:medibuddy/services/follow_api.dart';
 import 'package:medibuddy/widgets/bottomBar.dart';
 import 'package:medibuddy/widgets/follow_user_card.dart';
@@ -235,7 +235,8 @@ class _FollowerScreenState extends State<FollowerScreen> {
                             );
                             return;
                           }
-                          final accessToken = AuthSession.accessToken;
+                          final accessToken =
+                              await AuthManager.service.getAccessToken();
                           if (accessToken == null) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
@@ -296,7 +297,7 @@ class _FollowerScreenState extends State<FollowerScreen> {
   Future<void> _loadFollowers() async {
     try {
       setState(() => _isLoading = true);
-      final accessToken = AuthSession.accessToken;
+      final accessToken = await AuthManager.service.getAccessToken();
       if (accessToken == null) {
         throw Exception('No access token');
       }
@@ -360,7 +361,7 @@ class _FollowerScreenState extends State<FollowerScreen> {
 
   Future<void> _deleteFollower(int followerId) async {
     try {
-      final accessToken = AuthSession.accessToken;
+      final accessToken = await AuthManager.service.getAccessToken();
       if (accessToken == null) throw Exception('No access token');
 
       await _followApi.removeFollower(

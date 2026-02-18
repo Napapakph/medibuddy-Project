@@ -4,6 +4,7 @@ import 'package:http_parser/http_parser.dart';
 import 'package:mime/mime.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'auth_manager.dart'; // Import
 
 class ProfileApi {
   final Dio _dio = Dio();
@@ -45,11 +46,14 @@ class ProfileApi {
 
 // Methods Create Profile -----------------------------------------------
   Future<Map<String, dynamic>> createProfile({
-    required String accessToken,
+    String? accessToken,
     required String profileName,
     File? imageFile,
     int? profileId,
   }) async {
+    accessToken ??= await AuthManager.service.getAccessToken();
+    if (accessToken == null) throw Exception('No access token');
+
     final formMap = <String, dynamic>{
       if (profileId != null) 'profileId': profileId,
       'profileName': profileName,
@@ -115,12 +119,15 @@ class ProfileApi {
 
 // Methods Update Profile -----------------------------------------------
   Future<void> updateProfile({
-    required String accessToken,
+    String? accessToken,
     required int profileId,
     String? profileName,
     File? imageFile,
     String? profilePictureUrl,
   }) async {
+    accessToken ??= await AuthManager.service.getAccessToken();
+    if (accessToken == null) throw Exception('No access token');
+
     if (imageFile != null && (profilePictureUrl?.trim().isNotEmpty ?? false)) {
       throw Exception('Send either imageFile OR profilePictureUrl, not both.');
     }
@@ -162,8 +169,11 @@ class ProfileApi {
 
 // Methods List Profiles -----------------------------------------------
   Future<List<Map<String, dynamic>>> fetchProfiles({
-    required String accessToken,
+    String? accessToken,
   }) async {
+    accessToken ??= await AuthManager.service.getAccessToken();
+    if (accessToken == null) throw Exception('No access token');
+
     debugPrint('FETCH -> ${_dio.options.baseUrl}$_listPath');
     debugPrint('TOKEN -> ${accessToken.substring(0, 20)}...');
 
@@ -199,9 +209,12 @@ class ProfileApi {
 
 // Methods Delete Profile -----------------------------------------------
   Future<void> deleteProfile({
-    required String accessToken,
+    String? accessToken,
     required int profileId,
   }) async {
+    accessToken ??= await AuthManager.service.getAccessToken();
+    if (accessToken == null) throw Exception('No access token');
+
     debugPrint(
         'DELETE -> ${_dio.options.baseUrl}$_deletePath?profileId=$profileId');
 

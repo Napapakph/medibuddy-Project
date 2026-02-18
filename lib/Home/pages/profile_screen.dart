@@ -4,7 +4,7 @@ import 'library_profile.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import '../../services/profile_api.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../services/auth_manager.dart'; // Import
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -44,8 +44,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _checkExistingProfile() async {
     try {
-      final token = Supabase.instance.client.auth.currentSession?.accessToken;
-      if (token == null) return;
+      final token =
+          await AuthManager.service.getAccessToken(); // ✅ Use AuthManager
+      if (token == null) return; // Not logged in
 
       final api = ProfileApi();
       final profiles = await api.fetchProfiles(accessToken: token);
@@ -180,9 +181,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     ProfileModel nextProfile = fallbackProfile;
 
                                     try {
-                                      // 1) ดึง token จาก session
-                                      final token = Supabase.instance.client
-                                          .auth.currentSession?.accessToken;
+                                      // 1) ดึง token จาก AuthManager
+                                      final token = await AuthManager.service
+                                          .getAccessToken(); // ✅ Use AuthManager
                                       if (token == null) {
                                         if (!mounted) return;
                                         ScaffoldMessenger.of(context)

@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'auth_manager.dart';
 
 final supabase = Supabase.instance.client;
 
@@ -58,6 +59,11 @@ class AuthenLoginEmail {
 
 class AuthenLogout {
   Future<void> signOut() async {
-    await supabase.auth.signOut();
+    // await supabase.auth.signOut();
+
+    // ✅ Use AuthManager to support both Supabase and Custom API.
+    // This fixes the issue where the Custom API token remained in storage, causing
+    // the app to auto-login immediately after logout.
+    await AuthManager.service.logout();
   }
 }

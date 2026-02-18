@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:dio/dio.dart' as dio;
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
@@ -9,12 +8,12 @@ import 'package:http_parser/http_parser.dart';
 import 'package:mime/mime.dart';
 import 'package:path/path.dart' as p;
 import 'package:medibuddy/Model/medicine_model.dart';
+import 'auth_manager.dart'; // Import AuthManager
 
 class MedicineApi {
   MedicineApi({dio.Dio? client}) : _dio = client ?? dio.Dio();
 
   final dio.Dio _dio;
-  final _supabase = Supabase.instance.client;
 
   String get _baseUrl => (dotenv.env['API_BASE_URL'] ?? '').trim();
 
@@ -29,8 +28,13 @@ class MedicineApi {
   }
 
   Future<String> _getAccessToken() async {
-    final token = _supabase.auth.currentSession?.accessToken;
+    // Check global variable first
+    if (AuthManager.accessToken != null) return AuthManager.accessToken!;
+
+    // Fallback to service (which might check storage)
+    final token = await AuthManager.service.getAccessToken();
     if (token != null && token.isNotEmpty) return token;
+
     throw Exception('No access token. Please login again.');
   }
 
@@ -301,10 +305,16 @@ class MedicineApi {
     }).toList();
   }
 
-  Future<MedicineDetail> getMedicineDetail({required int mediId}) async {
+  Future<MedicineDetail> getMedicineDetail({
+    required int mediId,
+    String? accessToken,
+  }) async {
     if (_baseUrl.isEmpty) {
       throw Exception('API_BASE_URL is empty. Check your .env');
     }
+
+    // Use passed token or fetch from global/service
+    accessToken ??= await _getAccessToken();
 
     final baseNormalized = _baseUrl.endsWith('/')
         ? _baseUrl.substring(0, _baseUrl.length - 1)
@@ -315,11 +325,8 @@ class MedicineApi {
 
     final headers = <String, String>{
       'Accept': 'application/json',
+      'Authorization': 'Bearer $accessToken',
     };
-    final token = _supabase.auth.currentSession?.accessToken;
-    if (token != null && token.isNotEmpty) {
-      headers['Authorization'] = 'Bearer $token';
-    }
 
     final res = await http.get(uri, headers: headers);
     final body = res.body;

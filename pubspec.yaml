@@ -49,6 +49,7 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   community_material_icon: ^5.9.55
+  flutter_secure_storage: ^9.0.0
 
  
   

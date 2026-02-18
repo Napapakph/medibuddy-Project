@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../widgets/login_button.dart';
 import 'login.dart';
+import 'package:medibuddy/services/auth_manager.dart'; // Import AuthManager
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ForgetPassword extends StatefulWidget {
@@ -43,6 +44,8 @@ class _ForgetPassword extends State<ForgetPassword> {
         throw const AuthException(
             'ลิงก์รีเซ็ตรหัสผ่านไม่ถูกต้องหรือหมดอายุ กรุณากด "ลืมรหัสผ่าน" ใหม่');
       }
+      // ✅ Sync with AuthManager
+      AuthManager.accessToken = session.accessToken;
 
       // ✅ ตั้งรหัสผ่านใหม่
       await supabase.auth.updateUser(
