@@ -183,6 +183,15 @@ class SupabaseAuthService implements AuthService {
   }
 
   @override
+  Future<void> signInWithGoogle() async {
+    await _supabase.auth.signInWithOAuth(
+      OAuthProvider.google,
+      redirectTo: 'com.example.medibuddy://login-callback',
+      queryParams: {'prompt': 'select_account'},
+    );
+  }
+
+  @override
   Future<String?> getAccessToken() async {
     // Check global first? Or trust Supabase client?
     // Supabase client is already in-memory.

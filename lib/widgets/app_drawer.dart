@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import '../pages/login.dart';
-import '../services/authen_login.dart';
+import '../services/auth_manager.dart'; // import '../services/authen_login.dart';
 import '../services/app_state.dart';
 import 'package:icofont_flutter/icofont_flutter.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -38,10 +38,11 @@ class AppDrawer extends StatelessWidget {
   }
 
   Future<void> logout(BuildContext context) async {
-    final _authLogoutAPI = AuthenLogout();
+    // OLD: final _authLogoutAPI = AuthenLogout();
+    // OLD: await _authLogoutAPI.signOut();
 
-    // await Supabase.instance.client.auth.signOut();
-    await _authLogoutAPI.signOut();
+    // NEW: Use AuthManager directly
+    await AuthManager.service.logout();
 
     if (!context.mounted) return;
     Navigator.pushAndRemoveUntil(

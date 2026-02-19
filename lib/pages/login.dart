@@ -1,16 +1,18 @@
+import '../services/auth_manager.dart'; // import 'package:flutter/material.dart';
 import 'package:flutter/material.dart';
+// import '../services/sync_user.dart'; // Removed unused import
+
+// ... imports remain the same
 import 'package:lottie/lottie.dart';
 import 'signup.dart';
 import '../widgets/login_button.dart';
-import '../services/authen_login.dart';
-import '../services/auth_manager.dart';
+// import '../services/authen_login.dart'; // Removed unused import if no longer needed
 import 'forget_password.dart';
 import '../Home/pages/profile_screen.dart';
 import '../Home/pages/select_profile.dart';
 import '../services/profile_api.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:async';
-import '../services/sync_user.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -20,14 +22,10 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _formKey = GlobalKey<
-      FormState>(); //ใช้อ้างถึง FormState เพื่อตรวจสอบ validation หรือเรียก validate()
-  final _emailCtrl =
-      TextEditingController(); //TextEditingController สำหรับคุมค่าช่องอีเมลและรหัสผ่าน, ใช้ดึงค่าและทำ dispose() เพื่อไม่ให้รั่วหน่วยความจำ
+  final _formKey = GlobalKey<FormState>();
+  final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
-  //final _auth = MockAuthService(); //จำลองการ Login
-  // final _authLoginAPI = AuthenLoginEmail(); // DEPRECATED
-  final _googleAuth = LoginWithGoogle();
+  // final _googleAuth = LoginWithGoogle(); // Removed unused field
   bool _isGoogleLoading = false;
   String? _lastEmail; // เก็บอีเมลล่าสุดที่ใช้ล็อกอินสำเร็จ
   String? _lastPassword; // เก็บรหัสผ่านล่าสุดที่ใช้ล็อกอินสำเร็จ
@@ -75,12 +73,13 @@ class _LoginScreenState extends State<LoginScreen> {
 //---------------- Login with Username/Password----------------------------------
 
 //---------------- Login with Google Sign in-------------------------------------
+//---------------- Login with Google Sign in-------------------------------------
   Future<void> _handleGoogleLogin() async {
     if (_isGoogleLoading) return;
     setState(() => _isGoogleLoading = true);
 
     try {
-      await _googleAuth.signInWithGoogle();
+      await AuthManager.service.signInWithGoogle(); // ✅ Use AuthManager
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -90,11 +89,6 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
       setState(() => _isGoogleLoading = false);
     }
-    final _sub = supabase.auth.onAuthStateChange.listen((data) async {
-      if (data.event == AuthChangeEvent.signedIn) {
-        await SyncUserService().syncUser(allowMerge: true);
-      }
-    });
   }
 
   void _restorePreviousEmail() {

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'otp.dart';
 import 'forget_password.dart';
 import 'login.dart';
-import '../services/authen_login.dart'; // Restored for LoginWithGoogle
-import '../services/sync_user.dart'; // Restored for SyncUserService
+// import '../services/authen_login.dart'; // Removed unused import
+// import '../services/sync_user.dart'; // Removed unused import
 import '../services/auth_manager.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -37,8 +37,8 @@ class _SignupScreenState extends State<SignupScreen> {
     super.dispose();
   }
 
-  final LoginWithGoogle _googleAuth = LoginWithGoogle();
-//---------------- Login with Google Sign in-------------------------------------
+  // final LoginWithGoogle _googleAuth = LoginWithGoogle(); // Removed unused field
+  //---------------- Login with Google Sign in-------------------------------------
 
   bool containsUnsafeChar(String value) {
     const unsafeChars = ['<', '>', '"', "'", '/', '\\', '`'];
@@ -269,12 +269,13 @@ class _SignupScreenState extends State<SignupScreen> {
 
   //---------------- Login with Google Sign in-------------------------------------
 
+//---------------- Login with Google Sign in-------------------------------------
   Future<void> _handleGoogleLogin() async {
     if (_isGoogleLoading) return;
     setState(() => _isGoogleLoading = true);
 
     try {
-      await _googleAuth.signInWithGoogle();
+      await AuthManager.service.signInWithGoogle(); // ✅ Use AuthManager
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -284,11 +285,6 @@ class _SignupScreenState extends State<SignupScreen> {
       if (!mounted) return;
       setState(() => _isGoogleLoading = false);
     }
-    final _sub = supabase.auth.onAuthStateChange.listen((data) async {
-      if (data.event == AuthChangeEvent.signedIn) {
-        await SyncUserService().syncUser(allowMerge: true);
-      }
-    });
   }
 
   String? validatePassword(String password) {

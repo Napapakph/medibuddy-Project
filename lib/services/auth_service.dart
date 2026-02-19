@@ -19,6 +19,8 @@ abstract class AuthService {
 
   Future<void> resendOtp(String email);
 
+  Future<void> signInWithGoogle();
+
   Future<String?> getAccessToken();
 }
 

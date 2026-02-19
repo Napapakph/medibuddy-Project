@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'auth_manager.dart'; // Import AuthManager
 import '../pages/login.dart';
 import '../Home/pages/profile_screen.dart';
 
@@ -8,17 +8,35 @@ class AuthGate extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final supabase = Supabase.instance.client;
+    // OLD: final session = Supabase.instance.client.auth.currentSession;
+    // NEW: Check AuthManager
 
-    // ✅ ถ้ามี session แปลว่ายัง login ค้างอยู่
-    final session = supabase.auth.currentSession;
+    // Note: getAccessToken() is async, so AuthGate might need to be stateful or FutureBuilder
+    // BUT for simplicity, we can check the *cached* variable if initialized,
+    // or rely on the Fact that main.dart should have synced it.
 
-    if (session != null) {
-      // เข้าแอปต่อได้เลย
-      return const ProfileScreen();
-    }
+    // Ideally, AuthGate should be a StreamBuilder listening to auth state changes.
+    // For now, let's keep it simple: if we have a token (from main), go to Profile.
+    // However, AuthManager.accessToken might be null on cold start if not persisted?
+    // Supabase perists session automatically. CustomAuth service persists via SecureStorage.
 
-    //ไม่มี session = ต้อง login ใหม่
-    return const LoginScreen();
+    // Ideally we should use a FutureBuilder to check validity.
+    return FutureBuilder<String?>(
+      future: AuthManager.service.getAccessToken(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        final token = snapshot.data;
+        if (token != null && token.isNotEmpty) {
+          return const ProfileScreen();
+        }
+
+        return const LoginScreen();
+      },
+    );
   }
 }

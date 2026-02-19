@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:lottie/lottie.dart';
 import 'package:intl/intl.dart';
-import 'package:medibuddy/services/auth_session.dart';
+import 'package:medibuddy/services/auth_manager.dart'; // import 'package:medibuddy/services/auth_session.dart';
 import 'package:medibuddy/services/follow_api.dart';
 import 'package:medibuddy/services/log_api.dart';
 import 'package:medibuddy/widgets/comment.dart';
@@ -234,7 +234,7 @@ class _FollowingHistoryPageState extends State<FollowingHistoryPage> {
   }
 
   Future<void> _loadHistory() async {
-    final accessToken = AuthSession.accessToken;
+    final accessToken = AuthManager.accessToken;
     if (accessToken == null) {
       setState(() => _errorMessage = 'ไม่พบข้อมูลเข้าสู่ระบบ');
       return;

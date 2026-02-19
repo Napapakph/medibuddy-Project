@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:medibuddy/services/auth_session.dart';
+import 'package:medibuddy/services/auth_manager.dart'; // import 'package:medibuddy/services/auth_session.dart';
 import 'package:medibuddy/services/follow_api.dart';
 import 'package:medibuddy/services/profile_api.dart';
 
@@ -83,7 +83,7 @@ class _AddFollowerScreenState extends State<AddFollowerScreen> {
         _foundUsers = [];
       });
 // ค้นหาผู้ใช้ตามอีเมล
-      final accessToken = AuthSession.accessToken;
+      final accessToken = AuthManager.accessToken;
       if (accessToken == null) {
         throw Exception('No access token');
       }
@@ -426,7 +426,7 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
 
 // โหลดโปรไฟล์ของผู้ใช้ปัจจุบัน
   Future<void> _loadMyProfiles() async {
-    final accessToken = AuthSession.accessToken;
+    final accessToken = AuthManager.accessToken;
     if (accessToken == null) {
       setState(() {
         _myProfiles = [];
@@ -496,7 +496,7 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
     }
 
     try {
-      final accessToken = AuthSession.accessToken;
+      final accessToken = AuthManager.accessToken;
       if (accessToken == null) {
         throw Exception('No access token');
       }

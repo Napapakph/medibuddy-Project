@@ -206,6 +206,12 @@ class CustomAuthService implements AuthService {
   }
 
   @override
+  Future<void> signInWithGoogle() async {
+    // Custom API Google Sign-In needs implementation details (e.g. backend endpoint)
+    throw Exception('Google Sign-In not supported in Custom API yet');
+  }
+
+  @override
   Future<String?> getAccessToken() async {
     // Check global cache first
     if (AuthManager.accessToken != null) return AuthManager.accessToken;
