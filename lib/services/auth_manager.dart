@@ -2,6 +2,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'auth_service.dart';
 import 'supabase_auth_service.dart';
 import 'authen_login_api_v2.dart';
+// import 'firebase_auth_service.dart'; // TODO: Uncomment when using Firebase
 
 class AuthManager {
   static late AuthService service;
@@ -12,6 +13,8 @@ class AuthManager {
     print('🔌 AuthManager Init: Provider = $provider');
     if (provider == 'CUSTOM') {
       service = CustomAuthService();
+      // } else if (provider == 'FIREBASE') {
+      //   // service = FirebaseAuthService(); // TODO: Uncomment when using Firebase
     } else {
       // Default to Supabase
       print('🚀 Using Supabase Auth Service');
