@@ -8,7 +8,7 @@ import 'create_medicine_profile.dart';
 import 'detail_medicine.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../../widgets/bottomBar.dart';
-import 'medication_plan_screen.dart';
+import 'medicine_plan_pdf_screen.dart';
 import 'package:lottie/lottie.dart';
 import 'detail_medicine.dart';
 import 'dart:math';

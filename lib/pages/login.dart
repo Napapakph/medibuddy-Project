@@ -378,7 +378,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('ลืมรหัสผ่าน ?')),
                         );
-                        //ไว้เพิ่มฟังก์ชันลืมรหัสผ่านในอนาคต
+
                         forgetPassword();
                       },
                       style: TextButton.styleFrom(

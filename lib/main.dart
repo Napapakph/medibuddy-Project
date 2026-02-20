@@ -32,6 +32,7 @@ import 'Home/pages/set_remind/setRemind_screen.dart';
 import 'Home/pages/medication-tracking/add_follower.dart';
 import 'Home/pages/medication-tracking/follower.dart';
 import 'Home/pages/medication-tracking/following.dart';
+import 'package:app_links/app_links.dart';
 
 const bool kDisableAuthGate =
     true; // เปลี่ยนเป็น false เมื่อต้องการเปิดใช้งาน AuthGate
@@ -41,6 +42,8 @@ final FlutterLocalNotificationsPlugin flnp = FlutterLocalNotificationsPlugin();
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 String? _pendingNotificationPayload;
+late AppLinks _appLinks;
+StreamSubscription<Uri>? _linkSubscription;
 
 const AndroidNotificationChannel channel = AndroidNotificationChannel(
   'medibuddy_high', // id ต้องคงที่
@@ -391,8 +394,61 @@ Future<void> main() async {
   _flushPendingNotificationNavigation();
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+    _initDeepLinks();
+  }
+
+  Future<void> _initDeepLinks() async {
+    _appLinks = AppLinks();
+
+    // จัดการเมื่อเปิดแอปครั้งแรกจาก Deep Link (Terminated state)
+    try {
+      final initialUri = await _appLinks.getInitialLink();
+      if (initialUri != null) {
+        debugPrint('🔗 Initial Deep Link: $initialUri');
+        _handleDeepLink(initialUri);
+      }
+    } catch (e) {
+      debugPrint('🔗 Failed to receive initial uri: $e');
+    }
+
+    // จัดการเมื่อแอปเปิดอยู่แล้ว (Background/Foreground state)
+    _linkSubscription = _appLinks.uriLinkStream.listen((uri) {
+      debugPrint('🔗 Received Deep Link while running: $uri');
+      _handleDeepLink(uri);
+    }, onError: (err) {
+      debugPrint('🔗 Deep Link stream error: $err');
+    });
+  }
+
+  void _handleDeepLink(Uri uri) {
+    // ตัวอย่าง: com.example.medibuddy://login-callback?token=XYZ...
+    // เช็คกรณีที่เป็นลิงก์สำหรับ Reset Password หรือ Auth Callback
+    if (uri.host == 'login-callback') {
+      final token = uri.queryParameters['token'];
+      if (token != null && token.isNotEmpty) {
+        debugPrint('🔑 Found Reset Token: $token');
+        // TODO: นำ token ไปใช้เปิดหน้า Reset Password และส่งให้ Backend
+        // navigatorKey.currentState?.pushNamed('/reset_password', arguments: token);
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _linkSubscription?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
