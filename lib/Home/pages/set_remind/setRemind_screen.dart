@@ -349,8 +349,8 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
     if (_saving) return false;
     final isEditing = widget.initialPlan != null;
     final message = isEditing
-        ? 'ข้อมูลยังไม่ถูกบันทึก\nยืนยันที่จะออกจากการแก้ไขเวลาการรับประทานยาหรือไม่?'
-        : 'ข้อมูลยังไม่ถูกบันทึก\nยืนยันที่จะออกจากการตั้งเวลาการรับประทานยาหรือไม่?';
+        ? 'ข้อมูลยังไม่ถูกบันทึก\n\nต้องการที่จะออกจากการแก้ไขเวลาการรับประทานยาหรือไม่?'
+        : 'ข้อมูลยังไม่ถูกบันทึก\n\nต้องการที่จะออกจากการตั้งเวลาการรับประทานยาหรือไม่?';
 
     final shouldPop = await showDialog<bool>(
       context: context,
@@ -393,8 +393,9 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
                       child: ElevatedButton(
                         onPressed: () => Navigator.of(context).pop(true),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF1F497D),
-                          foregroundColor: Colors.white,
+                          backgroundColor:
+                              const Color.fromARGB(0, 255, 255, 255),
+                          foregroundColor: Colors.black,
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(20),

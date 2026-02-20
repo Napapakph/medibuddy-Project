@@ -650,15 +650,18 @@ class _Home extends State<Home> {
           'MediBuddy',
           style: TextStyle(
               fontWeight: FontWeight.bold,
-              color: Color(0xFF1F497D),
+              color: Color.fromARGB(255, 255, 255, 255),
               fontSize: 30),
         ),
-        backgroundColor: Color(0xFFB7DAFF),
+        backgroundColor: Color(0xFF1F497D),
         centerTitle: true,
         leading: Builder(
           builder: (context) {
             return IconButton(
-              icon: const Icon(Icons.menu),
+              icon: const Icon(
+                Icons.menu,
+                color: Color.fromARGB(255, 255, 255, 255),
+              ),
               onPressed: () {
                 Scaffold.of(context).openDrawer();
               },
@@ -699,7 +702,6 @@ class _Home extends State<Home> {
                     children: [
                       Container(
                         width: double.infinity,
-                        padding: EdgeInsets.only(bottom: maxHeight * 0.03),
                         color: const Color(0xFFB7DAFF), // สีฟ้าของเดียร์
                         child: Column(
                           children: [

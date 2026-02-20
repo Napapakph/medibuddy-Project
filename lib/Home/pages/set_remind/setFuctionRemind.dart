@@ -392,8 +392,10 @@ Widget type_frequency({
             InkWell(
               onTap: () async {
                 final initialDate = regimenEndDate ?? regimenStartDate;
+
                 final selected = await showDatePicker(
                   context: context,
+                  //  locale: const Locale('th', 'TH'), // 👈 สำคัญ
                   initialDate: initialDate.isBefore(DateTime(2000))
                       ? DateTime.now()
                       : initialDate,
@@ -434,7 +436,7 @@ Widget type_frequency({
                     const SizedBox(width: 10),
                     Text(
                       regimenEndDate != null
-                          ? '${regimenEndDate.day}/${regimenEndDate.month}/${regimenEndDate.year + 543}'
+                          ? '${regimenEndDate.day}/${regimenEndDate.month}/${regimenEndDate.year}'
                           : 'ตลอดไป',
                       style: const TextStyle(fontSize: 16),
                     ),

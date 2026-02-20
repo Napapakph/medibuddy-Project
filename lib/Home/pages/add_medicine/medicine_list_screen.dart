@@ -13,6 +13,7 @@ import 'package:lottie/lottie.dart';
 import 'detail_medicine.dart';
 import 'dart:math';
 import 'package:icofont_flutter/icofont_flutter.dart';
+import 'package:community_material_icon/community_material_icon.dart';
 
 class ListMedicinePage extends StatefulWidget {
   final int profileId;
@@ -726,19 +727,20 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 222, 237, 255),
       appBar: AppBar(
-        backgroundColor: const Color.fromARGB(255, 179, 216, 255),
+        backgroundColor: Color(0xFF1F497D),
         centerTitle: true,
         title: const Text(
           'รายการยาของฉัน',
           style: TextStyle(
-            color: Color(0xFF1F497D),
+            color: Color.fromARGB(255, 255, 255, 255),
             fontWeight: FontWeight.bold,
           ),
         ),
         leading: Builder(
           builder: (context) {
             return IconButton(
-              icon: const Icon(Icons.menu, color: Color(0xFF1F497D)),
+              icon: const Icon(Icons.menu,
+                  color: Color.fromARGB(255, 255, 255, 255)),
               onPressed: () => Scaffold.of(context).openDrawer(),
             );
           },
@@ -756,9 +758,10 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
                   ),
                 );
               },
-              icon: const FaIcon(
-                FontAwesomeIcons.filePdf,
-                color: Color(0xFF1F497D),
+              icon: const Icon(
+                CommunityMaterialIcons.file_pdf_box,
+                color: Color.fromARGB(255, 255, 255, 255),
+                size: 33,
               ),
             ),
           ),
