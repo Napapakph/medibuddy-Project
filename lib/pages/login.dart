@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'signup.dart';
 import '../widgets/login_button.dart';
-// import '../services/authen_login.dart'; // Removed unused import if no longer needed
+import '../services/authen_login_api_v2.dart'; // ✅ import for API password reset
 import 'forget_password.dart';
 import '../Home/pages/profile_screen.dart';
 import '../Home/pages/select_profile.dart';
@@ -498,14 +498,26 @@ class _LoginScreenState extends State<LoginScreen> {
                         final email = _resetEmailCtrl.text.trim();
                         if (email.isEmpty) return;
 
+                        // ✅ สลับการทำงาน: true = ใช้ Custom Backend API, false = ใช้ Supabase เดิม
+                        bool useBackendApi = true;
+
                         try {
-                          await Supabase.instance.client.auth
-                              .resetPasswordForEmail(
-                            email,
-                            // ✅ ต้องเป็น deep link ของแอป (อันเดียวกับที่ใส่ใน Supabase Redirect URLs)
-                            redirectTo:
-                                'com.example.medibuddy://login-callback',
-                          );
+                          if (useBackendApi) {
+                            final authService = CustomAuthService();
+                            await authService.requestPasswordReset(
+                              email,
+                              'com.example.medibuddy://login-callback',
+                            );
+                          } else {
+                            // ignore: dead_code
+                            await Supabase.instance.client.auth
+                                .resetPasswordForEmail(
+                              email,
+                              // ✅ ต้องเป็น deep link ของแอป
+                              redirectTo:
+                                  'com.example.medibuddy://login-callback',
+                            );
+                          }
 
                           if (!context.mounted) return;
                           Navigator.pop(dialogContext);
@@ -523,9 +535,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         } catch (e) {
                           if (!context.mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
+                            SnackBar(
                                 content: Text(
-                                    'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง')),
+                                    'เกิดข้อผิดพลาดในการส่งอีเมลรีเซ็ตรหัสผ่าน: $e')),
                           );
                         }
                       },

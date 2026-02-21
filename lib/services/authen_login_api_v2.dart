@@ -226,4 +226,35 @@ class CustomAuthService implements AuthService {
     }
     return token;
   }
+
+  // ==== ฟังก์ชันลืมรหัสผ่านด้วย API ====
+  Future<void> requestPasswordReset(String email, String redirectTo) async {
+    try {
+      await _dio.post('/api/auth/v2/forgot-password/request', data: {
+        'email': email,
+        'redirectTo': redirectTo,
+      });
+    } on DioException catch (e) {
+      if (e.response != null) {
+        throw Exception(
+            e.response?.data?['message'] ?? 'Request password reset failed');
+      }
+      throw Exception('Connection error');
+    }
+  }
+
+  Future<void> resetPassword(String token, String newPassword) async {
+    try {
+      await _dio.post('/api/auth/v2/forgot-password/reset', data: {
+        'token': token,
+        'newPassword': newPassword,
+      });
+    } on DioException catch (e) {
+      if (e.response != null) {
+        throw Exception(
+            e.response?.data?['message'] ?? 'Reset password failed');
+      }
+      throw Exception('Connection error');
+    }
+  }
 }

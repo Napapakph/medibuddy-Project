@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import '../widgets/login_button.dart';
 import 'login.dart';
 import 'package:medibuddy/services/auth_manager.dart'; // Import AuthManager
+import 'package:medibuddy/services/authen_login_api_v2.dart'; // Import CustomAuthService
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ForgetPassword extends StatefulWidget {
-  const ForgetPassword({super.key});
+  final String? token; // ✅ Token จาก Deep Link
+  const ForgetPassword({super.key, this.token});
 
   @override
   State<ForgetPassword> createState() => _ForgetPassword();
@@ -36,24 +38,37 @@ class _ForgetPassword extends State<ForgetPassword> {
     setState(() => _isLoading = true);
 
     try {
-      final supabase = Supabase.instance.client;
+      // ✅ สลับการทำงาน: true = ใช้ Custom Backend API, false = ใช้ Supabase เดิม
+      bool useBackendApi = true;
 
-      // ✅ กันเคสเข้าหน้านี้แบบไม่ได้มาจากลิงก์รีเซ็ต
-      final session = supabase.auth.currentSession;
-      if (session == null) {
-        throw const AuthException(
-            'ลิงก์รีเซ็ตรหัสผ่านไม่ถูกต้องหรือหมดอายุ กรุณากด "ลืมรหัสผ่าน" ใหม่');
+      if (useBackendApi) {
+        if (widget.token == null || widget.token!.isEmpty) {
+          throw Exception(
+              'ลิงก์รีเซ็ตรหัสผ่านไม่ถูกต้องหรือไม่มี token กรุณากด "ลืมรหัสผ่าน" ใหม่');
+        }
+        final authService = CustomAuthService();
+        await authService.resetPassword(widget.token!, _password.text.trim());
+      } else {
+        // ignore: dead_code
+        final supabase = Supabase.instance.client;
+
+        // ✅ กันเคสเข้าหน้านี้แบบไม่ได้มาจากลิงก์รีเซ็ต
+        final session = supabase.auth.currentSession;
+        if (session == null) {
+          throw const AuthException(
+              'ลิงก์รีเซ็ตรหัสผ่านไม่ถูกต้องหรือหมดอายุ กรุณากด "ลืมรหัสผ่าน" ใหม่');
+        }
+        // ✅ Sync with AuthManager
+        AuthManager.accessToken = session.accessToken;
+
+        // ✅ ตั้งรหัสผ่านใหม่
+        await supabase.auth.updateUser(
+          UserAttributes(password: _password.text.trim()),
+        );
+
+        // ✅ เพื่อความชัวร์: sign out แล้วให้ล็อกอินใหม่ด้วยรหัสใหม่
+        await supabase.auth.signOut();
       }
-      // ✅ Sync with AuthManager
-      AuthManager.accessToken = session.accessToken;
-
-      // ✅ ตั้งรหัสผ่านใหม่
-      await supabase.auth.updateUser(
-        UserAttributes(password: _password.text.trim()),
-      );
-
-      // ✅ เพื่อความชัวร์: sign out แล้วให้ล็อกอินใหม่ด้วยรหัสใหม่
-      await supabase.auth.signOut();
 
       if (!mounted) return;
       setState(() => _isLoading = false);
@@ -74,11 +89,11 @@ class _ForgetPassword extends State<ForgetPassword> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.message)),
       );
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง')),
+        SnackBar(content: Text('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง $e')),
       );
     }
   }

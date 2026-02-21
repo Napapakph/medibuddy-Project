@@ -594,69 +594,107 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
                             if (hasMultipleProfiles)
                               Container(
                                 margin: const EdgeInsets.only(bottom: 16),
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 12),
-                                decoration: BoxDecoration(
-                                  border:
-                                      Border.all(color: Colors.grey.shade300),
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: DropdownButtonHideUnderline(
-                                  child: DropdownButton<int>(
-                                    value: _selectedProfileId,
-                                    isExpanded: true,
-                                    items: _profiles.map((p) {
-                                      final pid = _readInt(p['profileId']) ?? 0;
-                                      final name =
-                                          _readString(p['profileName']);
-                                      final img = _readString(p['profileImage'])
-                                              .isNotEmpty
-                                          ? _readString(p['profileImage'])
-                                          : _readString(p['profilePicture']);
-                                      final provider = _buildImageProvider(img);
+                                height: 110,
+                                child: ListView.builder(
+                                  scrollDirection: Axis.horizontal,
+                                  itemCount: _profiles.length,
+                                  itemBuilder: (context, index) {
+                                    final p = _profiles[index];
+                                    final pid = _readInt(p['profileId']) ?? 0;
+                                    final name = _readString(p['profileName']);
+                                    final img = _readString(p['profileImage'])
+                                            .isNotEmpty
+                                        ? _readString(p['profileImage'])
+                                        : _readString(p['profilePicture']);
+                                    final provider = _buildImageProvider(img);
+                                    final isSelected =
+                                        _selectedProfileId == pid;
 
-                                      return DropdownMenuItem<int>(
-                                        value: pid,
-                                        child: Row(
+                                    return GestureDetector(
+                                      onTap: () {
+                                        setState(() {
+                                          _selectedProfileId = pid;
+                                        });
+                                      },
+                                      child: Container(
+                                        width: 100,
+                                        margin:
+                                            const EdgeInsets.only(right: 12),
+                                        decoration: BoxDecoration(
+                                          color: isSelected
+                                              ? const Color(0xFF1F497D)
+                                              : Colors.white,
+                                          borderRadius:
+                                              BorderRadius.circular(16),
+                                          border: Border.all(
+                                            color: isSelected
+                                                ? const Color(0xFF1F497D)
+                                                : Colors.grey.shade300,
+                                            width: 1.5,
+                                          ),
+                                          boxShadow: [
+                                            if (isSelected)
+                                              const BoxShadow(
+                                                color: Color(0x33000000),
+                                                blurRadius: 6,
+                                                offset: Offset(0, 3),
+                                              )
+                                          ],
+                                        ),
+                                        child: Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
                                           children: [
                                             Container(
-                                              width: 30,
-                                              height: 30,
-                                              margin: const EdgeInsets.only(
-                                                  right: 8),
+                                              width: 48,
+                                              height: 48,
                                               decoration: BoxDecoration(
                                                 shape: BoxShape.circle,
-                                                color: Colors.grey.shade200,
+                                                color: Colors.grey.shade100,
+                                                border: Border.all(
+                                                    color: Colors.grey.shade300,
+                                                    width: 1),
                                                 image: provider != null
                                                     ? DecorationImage(
                                                         image: provider,
-                                                        fit: BoxFit.cover)
+                                                        fit: BoxFit.cover,
+                                                      )
                                                     : null,
                                               ),
                                               child: provider == null
                                                   ? const Icon(Icons.person,
-                                                      size: 20,
-                                                      color: Colors.grey)
+                                                      color: Colors.grey,
+                                                      size: 28)
                                                   : null,
                                             ),
-                                            Text(name),
+                                            const SizedBox(height: 8),
+                                            Padding(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 4.0),
+                                              child: Text(
+                                                name,
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: isSelected
+                                                      ? Colors.white
+                                                      : const Color(0xFF1F497D),
+                                                ),
+                                              ),
+                                            ),
                                           ],
                                         ),
-                                      );
-                                    }).toList(),
-                                    onChanged: (val) {
-                                      if (val != null) {
-                                        setState(() {
-                                          _selectedProfileId = val;
-                                        });
-                                      }
-                                    },
-                                  ),
+                                      ),
+                                    );
+                                  },
                                 ),
                               ),
 
-                            // Profile Image & Name (Centered)
-                            if (currentProfileId > 0)
+                            // Profile Image & Name (Centered for single profile)
+                            if (currentProfileId > 0 && !hasMultipleProfiles)
                               Column(
                                 children: [
                                   Container(
@@ -665,6 +703,9 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
                                       color: Colors.grey.shade200,
+                                      border: Border.all(
+                                          color: Colors.grey.shade300,
+                                          width: 1.5),
                                       image: profileImgProvider != null
                                           ? DecorationImage(
                                               image: profileImgProvider,

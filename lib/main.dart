@@ -433,13 +433,14 @@ class _MyAppState extends State<MyApp> {
 
   void _handleDeepLink(Uri uri) {
     // ตัวอย่าง: com.example.medibuddy://login-callback?token=XYZ...
-    // เช็คกรณีที่เป็นลิงก์สำหรับ Reset Password หรือ Auth Callback
-    if (uri.host == 'login-callback') {
+    // หรือดักลิงก์ https://api.medi-buddy.xyz/api/auth/v2/forgot-password/verify-redirect?token=... โดยตรง
+    if (uri.host == 'login-callback' || uri.path.endsWith('verify-redirect')) {
       final token = uri.queryParameters['token'];
       if (token != null && token.isNotEmpty) {
         debugPrint('🔑 Found Reset Token: $token');
-        // TODO: นำ token ไปใช้เปิดหน้า Reset Password และส่งให้ Backend
-        // navigatorKey.currentState?.pushNamed('/reset_password', arguments: token);
+        // นำ token ไปใช้เปิดหน้า Reset Password และส่งให้ Backend
+        navigatorKey.currentState
+            ?.pushNamed('/forget_password', arguments: token);
       }
     }
   }
@@ -501,7 +502,9 @@ class _MyAppState extends State<MyApp> {
               builder: (_) => const Home(),
             );
           case '/forget_password':
-            return MaterialPageRoute(builder: (_) => const ForgetPassword());
+            final token = settings.arguments as String?;
+            return MaterialPageRoute(
+                builder: (_) => ForgetPassword(token: token));
           case '/library_profile':
             return MaterialPageRoute(builder: (_) => const LibraryProfile());
           case '/list_medicine':

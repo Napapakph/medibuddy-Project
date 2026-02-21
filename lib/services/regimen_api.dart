@@ -5,6 +5,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:medibuddy/Model/medicine_regimen_model.dart';
 import 'auth_manager.dart'; // Import
+import 'custom_http_client.dart';
 
 class RegimenApiException implements Exception {
   final String message;
@@ -19,7 +20,7 @@ class RegimenApiException implements Exception {
 class RegimenApiService {
   RegimenApiService({
     http.Client? client,
-  }) : _client = client ?? http.Client();
+  }) : _client = client ?? CustomHttpClient();
 
   final http.Client _client;
 

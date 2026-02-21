@@ -44,6 +44,22 @@
             android:host="alarm" />
     </intent-filter>
 
+    <!-- รองรับลิงก์จากอีเมลของ Backend โดยตรง (เผื่อในกรณี Browser หาโดเมนไม่เจอ) -->
+    <intent-filter>
+        <action android:name="android.intent.action.VIEW" />
+        <category android:name="android.intent.category.DEFAULT" />
+        <category android:name="android.intent.category.BROWSABLE" />
+        <data android:scheme="https" android:host="api.medi-buddy.xyz" android:path="/api/auth/v2/forgot-password/verify-redirect" />
+        <data android:scheme="http" android:host="api.medi-buddy.xyz" android:path="/api/auth/v2/forgot-password/verify-redirect" />
+    </intent-filter>
+    <intent-filter>
+        <action android:name="android.intent.action.VIEW" />
+        <category android:name="android.intent.category.DEFAULT" />
+        <category android:name="android.intent.category.BROWSABLE" />
+        <data android:scheme="https" android:host="www.medi-buddy.xyz" android:path="/api/auth/v2/forgot-password/verify-redirect" />
+        <data android:scheme="http" android:host="www.medi-buddy.xyz" android:path="/api/auth/v2/forgot-password/verify-redirect" />
+    </intent-filter>
+
         </activity>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->

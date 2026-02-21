@@ -2,8 +2,6 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:medibuddy/Home/pages/alarm_medicine/confirm_action.dart';
-import 'package:medibuddy/services/regimen_api.dart';
-import 'package:medibuddy/services/auth_manager.dart'; // Import AuthManager
 
 class AlarmScreen extends StatefulWidget {
   final Map<String, dynamic>? payload;
@@ -16,7 +14,6 @@ class AlarmScreen extends StatefulWidget {
 
 class _AlarmScreenState extends State<AlarmScreen> {
   bool _submitting = false;
-  final Set<int> _completedLogIds = <int>{};
 
   @override
   void initState() {
@@ -144,91 +141,9 @@ class _AlarmScreenState extends State<AlarmScreen> {
     return ids;
   }
 
-  Future<void> _submitResponseForLogId({
-    required int logId,
-    required String responseStatus,
-    bool popOnSuccess = true,
-  }) async {
-    if (_submitting) return;
-    if (logId <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Missing logId in notification payload')),
-      );
-      return;
-    }
+  // Removed _submitResponseForLogId method
 
-    setState(() => _submitting = true);
-    try {
-      final token = await AuthManager.service.getAccessToken(); // Get token
-      final api = RegimenApiService();
-      await api.submitMedicationLogResponse(
-        logId: logId,
-        responseStatus: responseStatus,
-        accessToken: token, // Pass token
-      );
-      if (!mounted) return;
-      setState(() {
-        _completedLogIds.add(logId);
-      });
-      if (popOnSuccess) {
-        Navigator.of(context).pop();
-      }
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to send response: $e')),
-      );
-    } finally {
-      if (mounted) {
-        setState(() => _submitting = false);
-      }
-    }
-  }
-
-  Future<void> _submitResponse(String responseStatus) async {
-    final logIds = _extractLogIds();
-    if (logIds.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Missing logId in notification payload')),
-      );
-      return;
-    }
-
-    setState(() => _submitting = true);
-
-    // Process all IDs
-    int successCount = 0;
-    String? lastError;
-
-    for (final id in logIds) {
-      if (_completedLogIds.contains(id)) continue;
-      try {
-        await _submitResponseForLogId(
-            logId: id,
-            responseStatus: responseStatus,
-            popOnSuccess: false // Handle pop manually after loop
-            );
-        successCount++;
-      } catch (e) {
-        lastError = e.toString();
-      }
-    }
-
-    setState(() => _submitting = false);
-
-    if (successCount > 0) {
-      // All or some succeeded
-      if (mounted) {
-        _exitToApp(action: responseStatus);
-      }
-    } else if (lastError != null) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to submit: $lastError')),
-        );
-      }
-    }
-  }
+  // Removed _submitResponse method
 
   void _openConfirmAction({required List<int> logIds}) {
     if (_submitting) return;
@@ -336,162 +251,9 @@ class _AlarmScreenState extends State<AlarmScreen> {
     ];
   }
 
-  Widget _buildAlarmItemCard(Map<String, dynamic> item) {
-    final logId = _parseLogId(item['logId']);
-    final profileName = item['profileName']?.toString().trim() ?? '';
-    final scheduleText = _timeFromScheduleTime(item['scheduleTime']);
-    final isDone = logId != null && _completedLogIds.contains(logId);
-    final disabled = _submitting || isDone || logId == null || logId <= 0;
+  // Removing unused _buildAlarmItemCard method
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x12000000),
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            profileName.isNotEmpty ? profileName : 'รายการยา',
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF1F497D),
-            ),
-          ),
-          if (scheduleText.isNotEmpty) ...[
-            const SizedBox(height: 4),
-            Text(
-              'เวลา $scheduleText น.',
-              style: const TextStyle(
-                fontSize: 12,
-                color: Color(0xFF6E7C8B),
-              ),
-            ),
-          ],
-          if (logId != null) ...[
-            const SizedBox(height: 2),
-            Text(
-              'logId: $logId',
-              style: const TextStyle(
-                fontSize: 11,
-                color: Color(0xFF9AA7B5),
-              ),
-            ),
-          ],
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: disabled
-                      ? null
-                      : () => _submitResponseForLogId(
-                            logId: logId!,
-                            responseStatus: 'SKIP',
-                            popOnSuccess: false,
-                          ),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFFE35D5D),
-                    side: const BorderSide(color: Color(0xFFE35D5D)),
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: const Text('ข้ามยา'),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: disabled
-                      ? null
-                      : () => _submitResponseForLogId(
-                            logId: logId!,
-                            responseStatus: 'TAKE',
-                            popOnSuccess: false,
-                          ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1F497D),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: const Text('กินยา'),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: disabled
-                      ? null
-                      : () => _submitResponseForLogId(
-                            logId: logId!,
-                            responseStatus: 'SNOOZE',
-                            popOnSuccess: false,
-                          ),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFFF0A24F),
-                    side: const BorderSide(color: Color(0xFFF0A24F)),
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: const Text('เลื่อน'),
-                ),
-              ),
-            ],
-          ),
-          if (isDone) ...[
-            const SizedBox(height: 6),
-            const Text(
-              'ส่งผลแล้ว',
-              style: TextStyle(
-                fontSize: 12,
-                color: Color(0xFF6E7C8B),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-
-  // ✅ NEW: exit helper (return to previous screen safely)
-  void _exitToApp({required String action, int? snoozeMinutes}) {
-    final payload = widget.payload ?? {};
-
-    debugPrint(
-        '✅ Alarm action="$action" payload=$payload snooze=$snoozeMinutes');
-
-    // (optional) ส่งผลลัพธ์กลับไปหน้าก่อนหน้า เผื่ออยากเอาไปใช้ต่อ
-    final result = <String, dynamic>{
-      'action': action,
-      'snoozeMinutes': snoozeMinutes,
-      'payload': payload,
-    };
-
-    // ถ้า stack มีหลายหน้า -> popUntil หน้าแรกของแอพ
-    // ถ้าเปิดมาจาก noti แล้วมีแค่หน้าเดียว -> popUntil จะไม่พัง และยังอยู่หน้าแรก
-    Navigator.of(context).popUntil((route) => route.isFirst);
-
-    // ถ้าอยากให้ "ปิด AlarmScreen" เฉพาะหน้าเดียว (กลับไปหน้าก่อนหน้าแบบเป๊ะ)
-    // ใช้บรรทัดนี้แทน popUntil:
-    // if (Navigator.of(context).canPop()) Navigator.of(context).pop(result);
-  }
+  // Removed _exitToApp method
 
   void _onGreen() {
     debugPrint('Alarm action: taken');
@@ -515,24 +277,25 @@ class _AlarmScreenState extends State<AlarmScreen> {
       );
       return;
     }
-    if (logIds.length == 1) {
-      _submitResponse('SKIP');
-      return;
-    }
     _openConfirmAction(logIds: logIds);
   }
 
   void _onSnooze(int minutes) {
     debugPrint('Alarm action: snooze $minutes minutes');
-    _submitResponse('SNOOZE');
+    final logIds = _extractLogIds();
+    if (logIds.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Missing logId in notification payload')),
+      );
+      return;
+    }
+    _openConfirmAction(logIds: logIds);
   }
 
   @override
   Widget build(BuildContext context) {
     final title = _titleText();
     final body = _bodyText();
-    final items = _alarmItems();
-    final hasItems = items.isNotEmpty;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF6F2EA),
@@ -546,34 +309,17 @@ class _AlarmScreenState extends State<AlarmScreen> {
             ),
             const SizedBox(height: 8),
             Expanded(
-              child: hasItems
-                  ? Column(
-                      children: [
-                        ..._headerWidgets(title, body),
-                        const SizedBox(height: 12),
-                        Expanded(
-                          child: ListView.builder(
-                            padding: const EdgeInsets.symmetric(horizontal: 20),
-                            itemCount: items.length,
-                            itemBuilder: (context, index) {
-                              return _buildAlarmItemCard(items[index]);
-                            },
-                          ),
-                        ),
-                      ],
-                    )
-                  : Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: _headerWidgets(title, body),
-                    ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: _headerWidgets(title, body),
+              ),
             ),
             const SizedBox(height: 24),
-            if (!hasItems)
-              PillSlideAction(
-                onTake: _onGreen,
-                onSkip: _onRed,
-                onSnooze: () => _onSnooze(10),
-              ),
+            PillSlideAction(
+              onTake: _onGreen,
+              onSkip: _onRed,
+              onSnooze: () => _onSnooze(10),
+            ),
             const SizedBox(height: 16),
           ],
         ),

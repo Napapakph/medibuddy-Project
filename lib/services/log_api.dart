@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'auth_manager.dart'; // Import
+import 'custom_http_client.dart';
 
 class LogApiException implements Exception {
   final String message;
@@ -18,7 +19,7 @@ class LogApiException implements Exception {
 class LogApiService {
   LogApiService({
     http.Client? client,
-  }) : _client = client ?? http.Client();
+  }) : _client = client ?? CustomHttpClient();
   final http.Client _client;
 
   String _baseUrl() {

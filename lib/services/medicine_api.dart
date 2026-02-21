@@ -9,11 +9,15 @@ import 'package:mime/mime.dart';
 import 'package:path/path.dart' as p;
 import 'package:medibuddy/Model/medicine_model.dart';
 import 'auth_manager.dart'; // Import AuthManager
+import 'custom_http_client.dart'; // Import CustomHttpClient
 
 class MedicineApi {
-  MedicineApi({dio.Dio? client}) : _dio = client ?? dio.Dio();
+  MedicineApi({dio.Dio? client, http.Client? httpClient})
+      : _dio = client ?? dio.Dio(),
+        _httpClient = httpClient ?? CustomHttpClient();
 
   final dio.Dio _dio;
+  final http.Client _httpClient;
 
   String get _baseUrl => (dotenv.env['API_BASE_URL'] ?? '').trim();
 
@@ -153,7 +157,7 @@ class MedicineApi {
     final uri = Uri.parse('$_baseUrl/api/mobile/v1/medicine/list')
         .replace(queryParameters: params);
 
-    final resp = await http.get(
+    final resp = await _httpClient.get(
       uri,
       headers: {
         'Authorization': 'Bearer $token',
@@ -236,7 +240,7 @@ class MedicineApi {
       queryParameters: {'profileId': profileId.toString()},
     );
 
-    final resp = await http.get(
+    final resp = await _httpClient.get(
       uri,
       headers: {
         'Authorization': 'Bearer $token',
@@ -328,7 +332,7 @@ class MedicineApi {
       'Authorization': 'Bearer $accessToken',
     };
 
-    final res = await http.get(uri, headers: headers);
+    final res = await _httpClient.get(uri, headers: headers);
     final body = res.body;
     if (res.statusCode < 200 || res.statusCode >= 300) {
       throw Exception(body.isNotEmpty
