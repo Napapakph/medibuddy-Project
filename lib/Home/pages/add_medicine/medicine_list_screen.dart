@@ -27,11 +27,32 @@ class ListMedicinePage extends StatefulWidget {
   State<ListMedicinePage> createState() => _ListMedicinePageState();
 }
 
+enum _SortOption {
+  defaultOrder,
+  byName,
+}
+
 class _ListMedicinePageState extends State<ListMedicinePage> {
   final MedicineApi _api = MedicineApi();
   final List<MedicineItem> _items = [];
   bool _isLoading = true;
   String _errorMessage = '';
+  _SortOption _currentSort = _SortOption.defaultOrder;
+
+  List<MedicineItem> get _sortedItems {
+    if (_currentSort == _SortOption.defaultOrder) {
+      return _items;
+    }
+    final sorted = List<MedicineItem>.from(_items);
+    sorted.sort((a, b) {
+      final nameA =
+          a.nickname_medi.isNotEmpty ? a.nickname_medi : a.officialName_medi;
+      final nameB =
+          b.nickname_medi.isNotEmpty ? b.nickname_medi : b.officialName_medi;
+      return nameA.toLowerCase().compareTo(nameB.toLowerCase());
+    });
+    return sorted;
+  }
 
   @override
   void initState() {
@@ -746,6 +767,67 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
           },
         ),
         actions: [
+          PopupMenuButton<_SortOption>(
+            icon: const Icon(Icons.sort, color: Colors.white),
+            tooltip: 'เรียงลำดับ',
+            onSelected: (option) {
+              setState(() {
+                _currentSort = option;
+              });
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: _SortOption.defaultOrder,
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.access_time_rounded,
+                      color: _currentSort == _SortOption.defaultOrder
+                          ? const Color(0xFF1F497D)
+                          : Colors.grey,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'เพิ่มล่าสุด (เริ่มต้น)',
+                      style: TextStyle(
+                        color: _currentSort == _SortOption.defaultOrder
+                            ? const Color(0xFF1F497D)
+                            : Colors.black87,
+                        fontWeight: _currentSort == _SortOption.defaultOrder
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: _SortOption.byName,
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.sort_by_alpha_rounded,
+                      color: _currentSort == _SortOption.byName
+                          ? const Color(0xFF1F497D)
+                          : Colors.grey,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'เรียงตามชื่อ (A-Z)',
+                      style: TextStyle(
+                        color: _currentSort == _SortOption.byName
+                            ? const Color(0xFF1F497D)
+                            : Colors.black87,
+                        fontWeight: _currentSort == _SortOption.byName
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
           Padding(
             padding: const EdgeInsets.only(right: 10),
             child: IconButton(
@@ -810,10 +892,18 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
                                     ),
                                     child: _isLoading
                                         ? const Center()
-                                        : _items.isNotEmpty
+                                        : _sortedItems.isNotEmpty
                                             ? ListView.builder(
-                                                itemCount: _items.length,
-                                                itemBuilder: _buildMedicineCard,
+                                                itemCount: _sortedItems.length,
+                                                itemBuilder: (context, index) {
+                                                  // Find the actual index in the original `_items` array
+                                                  final sortedItem =
+                                                      _sortedItems[index];
+                                                  final actualIndex = _items
+                                                      .indexOf(sortedItem);
+                                                  return _buildMedicineCard(
+                                                      context, actualIndex);
+                                                },
                                               )
                                             : _errorMessage.isNotEmpty
                                                 ? Center(
