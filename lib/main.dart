@@ -158,10 +158,30 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   final title = payload['title']?.toString() ?? 'MediBuddy';
   final body = payload['body']?.toString() ?? 'ได้เวลาทานยาแล้ว';
 
+  // พยายามจัดกลุ่มกรณีมีแจ้งเตือนมาในเวลาเดียวกันด้วย HashCode
+  String scheduleKey = payload['time']?.toString() ?? '??:??';
+  final rawSchedule = payload['scheduleTime'];
+  if (rawSchedule != null) {
+    final dt = DateTime.tryParse(rawSchedule.toString());
+    if (dt != null) {
+      final local = dt.toLocal();
+      final hh = local.hour.toString().padLeft(2, '0');
+      final mm = local.minute.toString().padLeft(2, '0');
+      scheduleKey = '$hh:$mm';
+    }
+  }
+  // ถ้าไม่มีเวลาเลย ก็ให้ใช้เวลาปัจจุบัน (ถึงจะหลุดกลุ่มแต่ก็ยังมี ID)
+  if (scheduleKey == '??:??') {
+    scheduleKey = DateTime.now().minute.toString();
+  }
+
+  // ป้องกัน hashCode เกิน 32-bit (สำหรับ Android IDs)
+  final notificationId = scheduleKey.hashCode & 0x7FFFFFFF;
+
   await _setupLocalNotifications();
 
   await flnp.show(
-    DateTime.now().millisecond,
+    notificationId,
     title,
     body,
     NotificationDetails(
@@ -345,7 +365,7 @@ Future<void> main() async {
         final jsonPayload = jsonEncode(mergedPayload);
 
         await flnp.show(
-          scheduleTimeKey.hashCode,
+          scheduleTimeKey.hashCode & 0x7FFFFFFF,
           titleText,
           bodyText,
           NotificationDetails(

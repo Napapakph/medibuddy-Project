@@ -542,6 +542,120 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
     );
   }
 
+  void _showProfileSelectorModal() {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setModalState) {
+            return SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'เลือกโปรไฟล์ที่ต้องการ',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 18,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: const Color.fromARGB(255, 219, 231, 252),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: List.generate(_profiles.length, (index) {
+                            final p = _profiles[index];
+                            final pid = _readInt(p['profileId']) ?? 0;
+                            final name = _readString(p['profileName']);
+                            final img =
+                                _readString(p['profileImage']).isNotEmpty
+                                    ? _readString(p['profileImage'])
+                                    : _readString(p['profilePicture']);
+                            final provider = _buildImageProvider(img);
+                            final isSelected = _selectedProfileId == pid;
+
+                            return Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 6),
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(12),
+                                onTap: () {
+                                  setState(() {
+                                    _selectedProfileId = pid;
+                                  });
+                                  Navigator.pop(ctx);
+                                },
+                                child: Container(
+                                  width: 84,
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 8, horizontal: 4),
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? const Color.fromARGB(
+                                            84, 154, 200, 255)
+                                        : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      ClipOval(
+                                        child: Container(
+                                          width: 46,
+                                          height: 46,
+                                          color: Colors.grey.shade200,
+                                          child: provider != null
+                                              ? Image(
+                                                  image: provider,
+                                                  fit: BoxFit.cover)
+                                              : const Icon(Icons.person,
+                                                  color: Colors.grey),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        name,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          color: Color(0xFF1F497D),
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          }),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final timeText = _headerTimeText();
@@ -591,110 +705,8 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
                         padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
                         child: Column(
                           children: [
-                            if (hasMultipleProfiles)
-                              Container(
-                                margin: const EdgeInsets.only(bottom: 16),
-                                height: 110,
-                                child: ListView.builder(
-                                  scrollDirection: Axis.horizontal,
-                                  itemCount: _profiles.length,
-                                  itemBuilder: (context, index) {
-                                    final p = _profiles[index];
-                                    final pid = _readInt(p['profileId']) ?? 0;
-                                    final name = _readString(p['profileName']);
-                                    final img = _readString(p['profileImage'])
-                                            .isNotEmpty
-                                        ? _readString(p['profileImage'])
-                                        : _readString(p['profilePicture']);
-                                    final provider = _buildImageProvider(img);
-                                    final isSelected =
-                                        _selectedProfileId == pid;
-
-                                    return GestureDetector(
-                                      onTap: () {
-                                        setState(() {
-                                          _selectedProfileId = pid;
-                                        });
-                                      },
-                                      child: Container(
-                                        width: 100,
-                                        margin:
-                                            const EdgeInsets.only(right: 12),
-                                        decoration: BoxDecoration(
-                                          color: isSelected
-                                              ? const Color(0xFF1F497D)
-                                              : Colors.white,
-                                          borderRadius:
-                                              BorderRadius.circular(16),
-                                          border: Border.all(
-                                            color: isSelected
-                                                ? const Color(0xFF1F497D)
-                                                : Colors.grey.shade300,
-                                            width: 1.5,
-                                          ),
-                                          boxShadow: [
-                                            if (isSelected)
-                                              const BoxShadow(
-                                                color: Color(0x33000000),
-                                                blurRadius: 6,
-                                                offset: Offset(0, 3),
-                                              )
-                                          ],
-                                        ),
-                                        child: Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            Container(
-                                              width: 48,
-                                              height: 48,
-                                              decoration: BoxDecoration(
-                                                shape: BoxShape.circle,
-                                                color: Colors.grey.shade100,
-                                                border: Border.all(
-                                                    color: Colors.grey.shade300,
-                                                    width: 1),
-                                                image: provider != null
-                                                    ? DecorationImage(
-                                                        image: provider,
-                                                        fit: BoxFit.cover,
-                                                      )
-                                                    : null,
-                                              ),
-                                              child: provider == null
-                                                  ? const Icon(Icons.person,
-                                                      color: Colors.grey,
-                                                      size: 28)
-                                                  : null,
-                                            ),
-                                            const SizedBox(height: 8),
-                                            Padding(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                      horizontal: 4.0),
-                                              child: Text(
-                                                name,
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                                style: TextStyle(
-                                                  fontSize: 14,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: isSelected
-                                                      ? Colors.white
-                                                      : const Color(0xFF1F497D),
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-
-                            // Profile Image & Name (Centered for single profile)
-                            if (currentProfileId > 0 && !hasMultipleProfiles)
+                            // Profile Image & Name (Centered always)
+                            if (currentProfileId > 0)
                               Column(
                                 children: [
                                   Container(
@@ -732,6 +744,27 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
                                       style: const TextStyle(
                                           fontSize: 14, color: Colors.grey),
                                     ),
+                                  if (hasMultipleProfiles) ...[
+                                    const SizedBox(height: 12),
+                                    TextButton.icon(
+                                      onPressed: _showProfileSelectorModal,
+                                      icon: const Icon(Icons.swap_horiz,
+                                          size: 18),
+                                      label: const Text('สลับโปรไฟล์'),
+                                      style: TextButton.styleFrom(
+                                        foregroundColor:
+                                            const Color(0xFF1F497D),
+                                        backgroundColor: const Color.fromARGB(
+                                            255, 219, 231, 252),
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 16, vertical: 8),
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(20),
+                                        ),
+                                      ),
+                                    )
+                                  ],
                                 ],
                               ),
                           ],
