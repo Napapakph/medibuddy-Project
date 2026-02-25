@@ -343,7 +343,6 @@ class _AlarmScreenState extends State<AlarmScreen> {
       return;
     }
     _openConfirmAction(logIds: logIds);
-    // _submitResponse('TAKE');
   }
 
   Future<void> _processBatchAction(String responseStatus) async {
@@ -413,12 +412,12 @@ class _AlarmScreenState extends State<AlarmScreen> {
           children: [
             Column(
               children: [
-                const SizedBox(height: 12),
                 const Text(
                   'MediBuddy',
                   style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
                 ),
-                const SizedBox(height: 8),
+
+                // ✅ ส่วนหัว/รายละเอียด scroll ได้ตามเดิม
                 Expanded(
                   child: SingleChildScrollView(
                     child: Column(
@@ -427,13 +426,19 @@ class _AlarmScreenState extends State<AlarmScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 12),
-                PillSlideAction(
-                  onTake: _onGreen,
-                  onSkip: _onRed,
-                  onSnooze: () => _onSnooze(10),
+
+                // ✅ ล็อกความสูงให้ slider -> ไม่เกิด infinite height
+                SizedBox(
+                  height: 360, // ปรับได้ เช่น 320/360/380
+                  child: Align(
+                    alignment: Alignment.bottomCenter,
+                    child: PillSlideAction(
+                      onTake: _onGreen,
+                      onSkip: _onRed,
+                      onSnooze: () => _onSnooze(10),
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 16),
               ],
             ),
             if (_submitting)
@@ -582,6 +587,7 @@ class _PillSlideActionState extends State<PillSlideAction>
   }
 
   @override
+  @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -603,62 +609,71 @@ class _PillSlideActionState extends State<PillSlideAction>
         final isTake = _activeTarget == _SlideTarget.take;
         final isSnooze = _activeTarget == _SlideTarget.snooze;
 
+        // ✅ ทำให้ widget นี้กินพื้นที่เต็มกว้างของ parent
+        // แล้วจัดวงกลมไปล่างกลาง
         return SizedBox(
-          width: size,
-          height: size,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Container(
-                width: size,
-                height: size,
-                decoration: BoxDecoration(
-                  color: Colors.transparent,
-                  borderRadius: BorderRadius.circular(24),
-                ),
-              ),
-              Positioned(
-                left: inset,
-                child: _TargetIcon(
-                  icon: Icons.close,
-                  color: Colors.red,
-                  active: isSkip,
-                  size: iconSize,
-                  label: 'Skip',
-                ),
-              ),
-              Positioned(
-                top: inset,
-                child: _TargetIcon(
-                  icon: Icons.snooze,
-                  color: Colors.black87,
-                  active: isSnooze,
-                  size: iconSize,
-                  label: 'Snooze',
-                ),
-              ),
-              Positioned(
-                right: inset,
-                child: _TargetIcon(
-                  icon: Icons.check,
-                  color: Colors.green,
-                  active: isTake,
-                  size: iconSize,
-                  label: 'Take',
-                ),
-              ),
-              GestureDetector(
-                onPanUpdate: _handlePanUpdate,
-                onPanEnd: _handlePanEnd,
-                child: Transform.translate(
-                  offset: _thumbOffset,
-                  child: _PillThumb(
-                    width: pillWidth,
-                    height: pillHeight,
+          width: double.infinity,
+          height: constraints.maxHeight, // ให้ parent เป็นตัวกำหนดความสูง
+          child: Align(
+            alignment: Alignment.bottomCenter,
+            child: SizedBox(
+              width: size,
+              height: size,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Container(
+                    width: size,
+                    height: size,
+                    decoration: BoxDecoration(
+                      color: Colors.transparent,
+                      borderRadius: BorderRadius.circular(24),
+                    ),
                   ),
-                ),
+                  Positioned(
+                    left: inset,
+                    child: _TargetIcon(
+                      icon: Icons.close,
+                      color: Colors.red,
+                      active: isSkip,
+                      size: iconSize,
+                      label: 'Skip',
+                    ),
+                  ),
+                  Positioned(
+                    top: inset,
+                    child: _TargetIcon(
+                      icon: Icons.snooze,
+                      color: Colors.black87,
+                      active: isSnooze,
+                      size: iconSize,
+                      label: 'Snooze',
+                    ),
+                  ),
+                  Positioned(
+                    right: inset,
+                    child: _TargetIcon(
+                      icon: Icons.check,
+                      color: Colors.green,
+                      active: isTake,
+                      size: iconSize,
+                      label: 'Take',
+                    ),
+                  ),
+                  GestureDetector(
+                    onPanUpdate: _handlePanUpdate,
+                    onPanEnd: _handlePanEnd,
+                    child: Transform.translate(
+                      offset: _thumbOffset,
+                      child: _PillThumb(
+                        width: pillWidth,
+                        height: pillHeight,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         );
       },

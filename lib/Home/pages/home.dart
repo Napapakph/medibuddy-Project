@@ -540,7 +540,7 @@ class _Home extends State<Home> {
   }) {
     if (group.isEmpty) return const SizedBox.shrink();
 
-    final timeColor = const Color(0xFF1F497D);
+    final timeColor = const Color.fromARGB(255, 198, 111, 159);
     final borderColor = const Color(0xFFD6E3F3);
 
     return Row(
@@ -578,7 +578,7 @@ class _Home extends State<Home> {
                           group.first.time,
                           style: TextStyle(
                             fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w400,
                             color: timeColor,
                           ),
                         ),
