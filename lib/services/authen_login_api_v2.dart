@@ -4,6 +4,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'auth_service.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'auth_manager.dart'; // Import AuthManager
+import '../main.dart'; // ✅ Import globalDeviceTokenService
 
 class CustomAuthService implements AuthService {
   final Dio _dio = Dio();
@@ -152,6 +153,8 @@ class CustomAuthService implements AuthService {
       if (accessToken != null) {
         await _storage.write(key: _accessTokenKey, value: accessToken);
         AuthManager.accessToken = accessToken; // ✅ Set Global
+        globalDeviceTokenService.registerDeviceToken(
+            force: true); // ✅ Push token to backend
       }
       if (refreshToken != null) {
         await _storage.write(key: _refreshTokenKey, value: refreshToken);
@@ -251,6 +254,8 @@ class CustomAuthService implements AuthService {
       if (accessToken != null) {
         await _storage.write(key: _accessTokenKey, value: accessToken);
         AuthManager.accessToken = accessToken; // ✅ Set Global
+        globalDeviceTokenService.registerDeviceToken(
+            force: true); // ✅ Push token to backend
       }
       if (refreshToken != null) {
         await _storage.write(key: _refreshTokenKey, value: refreshToken);

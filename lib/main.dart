@@ -41,12 +41,15 @@ late final StreamSubscription<AuthState> _authSub;
 final FlutterLocalNotificationsPlugin flnp = FlutterLocalNotificationsPlugin();
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
+late final DeviceTokenService
+    globalDeviceTokenService; // 🔹 EXPOSED GLOBALLY FOR CUSTOM AUTH
+
 String? _pendingNotificationPayload;
 late AppLinks _appLinks;
 StreamSubscription<Uri>? _linkSubscription;
 
 const AndroidNotificationChannel channel = AndroidNotificationChannel(
-  'medibuddy_high', // id ต้องคงที่
+  'medibuddy_alarm', // เปลี่ยนเป็นชื่อใหม่ เพื่อทำลายบั๊กแบนเนอร์ที่ไม่เด้งบนเครื่องที่เผลอจำค่าเก่า
   'MediBuddy Notifications',
   description: 'Foreground notifications',
   importance: Importance.high,
@@ -252,6 +255,13 @@ Future<void> main() async {
   // ✅ request permission
   await FirebaseMessaging.instance.requestPermission();
 
+  // ✅ บังคับให้ Push Notification แสดงแบนเนอร์ได้แม้แอปอยู่เบื้องหน้า (โดยเฉพาะ iOS และช่วยในบางกรณี)
+  await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+    alert: true,
+    badge: true,
+    sound: true,
+  );
+
   FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
     debugPrint('🔔 FCM TAP data=${message.data}');
     debugPrint('➡️ ROUTING TO /alarm (fcm)');
@@ -393,8 +403,11 @@ Future<void> main() async {
   );
 
   final supa = Supabase.instance.client;
-  final deviceTokenService = DeviceTokenService(supabase: supa);
-  await deviceTokenService.initializeAuthListener();
+  globalDeviceTokenService = DeviceTokenService(supabase: supa);
+  await globalDeviceTokenService.initializeAuthListener();
+
+  // ✅ บังคับยิง register แบบดื้อๆ ทันทีที่เปิดแอป (เพื่ออุดรอยรั่ว Custom Auth API)
+  globalDeviceTokenService.registerDeviceToken(force: true);
 
   // ⭐ โหลดข้อมูล format วันที่ของ locale ภาษาไทย
   await initializeDateFormatting('th_TH', null);

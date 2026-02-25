@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'auth_manager.dart'; // ✅ Import AuthManager
 
 class DeviceTokenService {
   DeviceTokenService({
@@ -154,8 +155,10 @@ class DeviceTokenService {
       return;
     }
 
-    final token = _supabase.auth.currentSession?.accessToken;
-    debugPrint('🔑 token supa = $token');
+    final token = accessToken ??
+        AuthManager.accessToken ??
+        _supabase.auth.currentSession?.accessToken;
+    debugPrint('🔑 token to use = $token');
     if (token == null || token.isEmpty) {
       debugPrint(
           '-------------------DeviceTokenService: no access token--------------');

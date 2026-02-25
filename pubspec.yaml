@@ -117,6 +117,8 @@ flutter:
      - assets/cat_add_follower.png
      - assets/cat_home.png
      - assets/cat_home_drawer.png
+     - assets/512x512_แบบไม่มีตัวอักษร.png
+     - assets/1024x1024_แบบไม่มีตัวอักษร.png
 
   fonts:
      - family: Kodchasan
@@ -151,8 +153,7 @@ flutter:
 
 flutter_launcher_icons:
   android: true
-  ios: true
-  image_path: "assets/cat_add_follower.png"
+  image_path: "assets/1024x1024_แบบไม่มีตัวอักษร.png"
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 

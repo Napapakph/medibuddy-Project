@@ -209,8 +209,41 @@ class _AlarmScreenState extends State<AlarmScreen> {
     return '12:00';
   }
 
-  String _titleText() => _normalizedPayload()['title']?.toString() ?? '';
-  String _bodyText() => _normalizedPayload()['body']?.toString() ?? '';
+  String _titleText() {
+    final payloadTitle = _normalizedPayload()['title']?.toString() ?? '';
+    if (payloadTitle.isNotEmpty) return payloadTitle;
+    return 'ได้เวลาทานยาแล้ว';
+  }
+
+  String _bodyText() {
+    final items = _alarmItems();
+    if (items.isNotEmpty) {
+      final profileNames = items
+          .map((item) => item['profileName']?.toString() ?? '')
+          .where((n) => n.isNotEmpty)
+          .toSet()
+          .toList();
+
+      if (profileNames.length > 1) {
+        // หลายโปรไฟล์: แสดงชื่อโปรไฟล์รัวๆ
+        return 'ผู้ใช้: ${profileNames.join(', ')}';
+      } else if (profileNames.length == 1) {
+        // โปรไฟล์เดียว: ลองดึงชื่อยา ถ้ายาไม่มีก็ตกกลับไปใช้ Body เดิม
+        final mediNames = items
+            .map((item) =>
+                (item['mediNickname'] ?? item['medicineName'])?.toString() ??
+                '')
+            .where((n) => n.isNotEmpty)
+            .toSet()
+            .toList();
+        if (mediNames.isNotEmpty) {
+          return mediNames.join(', ');
+        }
+      }
+    }
+    // Fallback ใช้ข้อความ body ที่แนบมาจาก server
+    return _normalizedPayload()['body']?.toString() ?? '';
+  }
 
   List<Widget> _headerWidgets(String title, String body) {
     return [
