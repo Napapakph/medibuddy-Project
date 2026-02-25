@@ -465,62 +465,21 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
-  Timer? _tokenRefreshTimer;
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _initDeepLinks();
-    _startTokenRefreshTimer();
-  }
-
-  void _startTokenRefreshTimer() {
-    // ยกเลิก Timer เก่า (ถ้ามี) ก่อนเริ่มใหม่
-    _tokenRefreshTimer?.cancel();
-    // ตั้งเวลาให้ Refresh Token ทุกๆ 10 นาที
-    _tokenRefreshTimer = Timer.periodic(const Duration(minutes: 10), (timer) {
-      _refreshToken();
-    });
-  }
-
-  Future<void> _refreshToken() async {
-    try {
-      // ✅ เช็คก่อนว่ามี Token อยู่ที่ AuthManager ไหม (คือล็อกอินอยู่)
-      if (AuthManager.accessToken == null) {
-        return; // ถ้ายากล็อกเอาท์อยู่ หรือเพิ่งเปิดแอป ไม่ต้องทำอะไร
-      }
-
-      final session = Supabase.instance.client.auth.currentSession;
-      if (session != null) {
-        debugPrint('🔄 Auto Refreshing Session Token...');
-        final response = await Supabase.instance.client.auth.refreshSession();
-        if (response.session != null) {
-          AuthManager.accessToken = response.session!.accessToken;
-          debugPrint('✅ Token Refreshed Successfully!');
-        }
-      }
-    } catch (e) {
-      debugPrint('❌ Failed to refresh token: $e');
-    }
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      // ✅ จะสั่งเปิดระบบ Refresh ก็ต่อเมื่อมีคนล็อกอินอยู่
-      if (AuthManager.accessToken != null ||
-          Supabase.instance.client.auth.currentSession != null) {
-        debugPrint(
-            '📱 App Resumed: Checking & Refreshing Token Immediately...');
-        _refreshToken();
-        _startTokenRefreshTimer(); // เริ่มจับเวลา 10 นาทีใหม่
-      } else {
-        debugPrint(
-            '📱 App Resumed: User not logged in, skipping Token Refresh.');
-      }
+      // ✅ TokenManager handles refreshing proactively when API calls are made.
+      debugPrint(
+          '📱 App Resumed: Deferred proactive token refresh to TokenManager.');
     } else if (state == AppLifecycleState.paused) {
-      debugPrint('💤 App Paused: Pausing Token Refresh Timer...');
-      _tokenRefreshTimer?.cancel();
+      debugPrint('💤 App Paused.');
     }
   }
 
@@ -614,7 +573,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   @override
   void dispose() {
     _linkSubscription?.cancel();
-    _tokenRefreshTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }

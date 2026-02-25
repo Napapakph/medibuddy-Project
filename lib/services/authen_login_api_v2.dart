@@ -1,18 +1,13 @@
 import 'package:dio/dio.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'auth_service.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'auth_manager.dart'; // Import AuthManager
 import '../main.dart'; // ✅ Import globalDeviceTokenService
+import 'token_manager.dart';
+import 'auth_interceptor.dart';
 
 class CustomAuthService implements AuthService {
   final Dio _dio = Dio();
-  final FlutterSecureStorage _storage = const FlutterSecureStorage();
-
-  // Keys for storage
-  static const String _accessTokenKey = 'access_token';
-  static const String _refreshTokenKey = 'refresh_token';
 
   CustomAuthService() {
     final baseUrl = (dotenv.env['API_BASE_URL'] ?? '').trim();
@@ -24,67 +19,8 @@ class CustomAuthService implements AuthService {
       'accept': 'application/json',
     };
 
-    // Add interceptor for token injection and refresh logic could be added here
-    _dio.interceptors.add(InterceptorsWrapper(
-      onRequest: (options, handler) async {
-        // Try getting from memory first (faster)
-        var token = AuthManager.accessToken;
-
-        // If not in memory, try storage
-        if (token == null) {
-          token = await _storage.read(key: _accessTokenKey);
-          if (token != null) AuthManager.accessToken = token; // Cache it
-        }
-
-        if (token != null) {
-          options.headers['Authorization'] = 'Bearer $token';
-        }
-        return handler.next(options);
-      },
-      onError: (DioException e, handler) async {
-        if (e.response?.statusCode == 401) {
-          // simple handling: avoid infinite loop
-          if (e.requestOptions.path.contains('/refresh')) {
-            return handler.next(e);
-          }
-
-          // Try refresh
-          try {
-            final newToken = await _refreshTokenInternal();
-            if (newToken != null) {
-              // Retry original request
-              e.requestOptions.headers['Authorization'] = 'Bearer $newToken';
-              return handler.resolve(await _dio.fetch(e.requestOptions));
-            }
-          } catch (_) {
-            // Refresh failed
-          }
-        }
-        return handler.next(e);
-      },
-    ));
-  }
-
-  Future<String?> _refreshTokenInternal() async {
-    final refreshToken = await _storage.read(key: _refreshTokenKey);
-    if (refreshToken == null) return null;
-
-    try {
-      final res = await _dio.post('/api/auth/v2/refresh', data: {
-        'refreshToken': refreshToken,
-      });
-      final accessToken = res.data['accessToken'];
-      if (accessToken != null) {
-        await _storage.write(key: _accessTokenKey, value: accessToken);
-        AuthManager.accessToken = accessToken; // ✅ Update Global
-        return accessToken;
-      }
-    } catch (e) {
-      // Clear tokens if refresh fails?
-      AuthManager.accessToken = null; // Clear Global
-      // await logout();
-    }
-    return null;
+    // Register Interceptor
+    _dio.interceptors.add(AuthInterceptor());
   }
 
   @override
@@ -117,11 +53,10 @@ class CustomAuthService implements AuthService {
       final refreshToken = data['refreshToken'];
 
       if (accessToken != null) {
-        await _storage.write(key: _accessTokenKey, value: accessToken);
-        AuthManager.accessToken = accessToken; // ✅ Set Global
-      }
-      if (refreshToken != null) {
-        await _storage.write(key: _refreshTokenKey, value: refreshToken);
+        await TokenManager.setSession(
+          accessToken: accessToken,
+          refreshToken: refreshToken,
+        );
       }
 
       return AuthResponse(
@@ -151,13 +86,12 @@ class CustomAuthService implements AuthService {
       final refreshToken = data['refreshToken'];
 
       if (accessToken != null) {
-        await _storage.write(key: _accessTokenKey, value: accessToken);
-        AuthManager.accessToken = accessToken; // ✅ Set Global
+        await TokenManager.setSession(
+          accessToken: accessToken,
+          refreshToken: refreshToken,
+        );
         globalDeviceTokenService.registerDeviceToken(
             force: true); // ✅ Push token to backend
-      }
-      if (refreshToken != null) {
-        await _storage.write(key: _refreshTokenKey, value: refreshToken);
       }
 
       return AuthResponse(
@@ -174,20 +108,17 @@ class CustomAuthService implements AuthService {
   @override
   Future<void> logout() async {
     try {
-      final refreshToken = await _storage.read(key: _refreshTokenKey);
-      if (refreshToken != null) {
-        await _dio.post('/api/auth/v2/logout', data: {
-          'refreshToken': refreshToken,
-        });
-      }
+      // Note: Backend logout not implemented with stored token here due to removal of storage read
+      // but if a `/logout` API requires the refresh token, it should be handled before TokenManager.clear()
+      await _dio.post('/api/auth/v2/logout');
     } catch (_) {}
-    await _storage.deleteAll();
-    AuthManager.accessToken = null; // ✅ Clear Global Variable
+    await TokenManager.clear();
   }
 
   @override
   Future<String?> refreshToken() async {
-    return _refreshTokenInternal();
+    await TokenManager.refreshIfNeeded(force: true);
+    return TokenManager.currentAccessToken;
   }
 
   @override
@@ -252,13 +183,12 @@ class CustomAuthService implements AuthService {
       final refreshToken = data['refreshToken'];
 
       if (accessToken != null) {
-        await _storage.write(key: _accessTokenKey, value: accessToken);
-        AuthManager.accessToken = accessToken; // ✅ Set Global
+        await TokenManager.setSession(
+          accessToken: accessToken,
+          refreshToken: refreshToken,
+        );
         globalDeviceTokenService.registerDeviceToken(
             force: true); // ✅ Push token to backend
-      }
-      if (refreshToken != null) {
-        await _storage.write(key: _refreshTokenKey, value: refreshToken);
       }
     } on DioException catch (e) {
       if (e.response != null) {
@@ -273,12 +203,8 @@ class CustomAuthService implements AuthService {
 
   @override
   Future<String?> getAccessToken() async {
-    // Check global cache first
-    if (AuthManager.accessToken != null) return AuthManager.accessToken;
-
-    final token = await _storage.read(key: _accessTokenKey);
+    final token = await TokenManager.getValidAccessToken();
     if (token != null) {
-      AuthManager.accessToken = token; // Sync back to global
       print(
           '🔑 [CustomAPI] getAccessToken: Found (${token.substring(0, 5)}...)');
     } else {
