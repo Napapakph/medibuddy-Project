@@ -118,7 +118,7 @@ class FollowUserCard extends StatelessWidget {
                 ),
               ],
             ),
-
+            const SizedBox(height: 5),
             // === Bottom Section: View History Button and Regimen Button (Right) ===
             Align(
               alignment: Alignment.center,
