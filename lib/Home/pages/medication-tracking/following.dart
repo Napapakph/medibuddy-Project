@@ -277,8 +277,9 @@ class _FollowingScreenState extends State<FollowingScreen>
   }
 
   Future<void> _selectProfileAndOpenDetail(
-    Map<String, dynamic> user,
-  ) async {
+    Map<String, dynamic> user, {
+    bool isRegimen = false,
+  }) async {
     final accessToken = await AuthManager.service.getAccessToken();
     if (accessToken == null) {
       if (mounted) {
@@ -357,9 +358,11 @@ class _FollowingScreenState extends State<FollowingScreen>
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text(
-                      'เลือกโปรไฟล์ที่ต้องการดู',
-                      style: TextStyle(
+                    Text(
+                      isRegimen
+                          ? 'เลือกโปรไฟล์เพื่อดูแผนการทานยา'
+                          : 'เลือกโปรไฟล์เพื่อดูประวัติ',
+                      style: const TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 18,
                       ),
@@ -464,105 +467,62 @@ class _FollowingScreenState extends State<FollowingScreen>
                     SizedBox(
                       width: double.infinity,
                       height: 48,
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: () {
-                                Navigator.pop(ctx);
-                                final selected = profiles[selectedIndex];
-                                final selectedProfileId =
-                                    _readProfileId(selected);
-                                final selectedProfileName =
-                                    _readProfileName(selected);
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(ctx);
+                          final selected = profiles[selectedIndex];
+                          final selectedProfileId = _readProfileId(selected);
+                          final selectedProfileName =
+                              _readProfileName(selected);
 
-                                String finalImage =
-                                    _readProfileAvatar(selected);
-                                if (finalImage.isEmpty) {
-                                  finalImage = accountPicture;
-                                }
+                          String finalImage = _readProfileAvatar(selected);
+                          if (finalImage.isEmpty) {
+                            finalImage = accountPicture;
+                          }
 
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => FollowingRegimenPage(
-                                      relationshipId: relationshipId,
-                                      profileId: selectedProfileId,
-                                      profileName: selectedProfileName,
-                                      ownerName: ownerName,
-                                      ownerImage: finalImage,
-                                    ),
-                                  ),
-                                );
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFFF0F6FF),
-                                foregroundColor: const Color(0xFF1F497D),
-                                elevation: 0,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
-                                  side: const BorderSide(
-                                      color: Color(0xFF1F497D), width: 1.5),
+                          if (isRegimen) {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => FollowingRegimenPage(
+                                  relationshipId: relationshipId,
+                                  profileId: selectedProfileId,
+                                  profileName: selectedProfileName,
+                                  ownerName: ownerName,
+                                  ownerImage: finalImage,
                                 ),
                               ),
-                              child: const Text(
-                                'ดูแผนการทานยา',
-                                style: TextStyle(
-                                    fontSize: 14, fontWeight: FontWeight.bold),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: () {
-                                Navigator.pop(ctx);
-                                // Navigate to Following History page
-                                final selected = profiles[selectedIndex];
-                                final selectedProfileId =
-                                    _readProfileId(selected);
-                                final selectedProfileName =
-                                    _readProfileName(selected);
-
-                                String finalImage =
-                                    _readProfileAvatar(selected);
-                                if (finalImage.isEmpty) {
-                                  finalImage = accountPicture;
-                                }
-
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) => FollowingHistoryPage(
-                                      relationshipId: relationshipId,
-                                      profileId: selectedProfileId,
-                                      profileName: selectedProfileName,
-                                      ownerName: ownerName,
-                                      ownerImage: finalImage,
-                                    ),
-                                  ),
-                                );
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF1F497D),
-                                foregroundColor: Colors.white,
-                                elevation: 0,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(10),
+                            );
+                          } else {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => FollowingHistoryPage(
+                                  relationshipId: relationshipId,
+                                  profileId: selectedProfileId,
+                                  profileName: selectedProfileName,
+                                  ownerName: ownerName,
+                                  ownerImage: finalImage,
                                 ),
                               ),
-                              child: const Text(
-                                'ดูประวัติการทานยา',
-                                style: TextStyle(
-                                    fontSize: 14, fontWeight: FontWeight.bold),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
+                            );
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF1F497D),
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
                           ),
-                        ],
+                        ),
+                        child: Text(
+                          isRegimen ? 'ดูแผนการทานยา' : 'ดูประวัติการทานยา',
+                          style: const TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ),
                   ],
@@ -890,8 +850,12 @@ class _FollowingScreenState extends State<FollowingScreen>
                                   avatarImage: avatarImage,
                                   onDelete: () => _confirmRemoveFollowing(user),
                                   onEdit: () => _openEditDialog(user),
-                                  onDetail: () =>
-                                      _selectProfileAndOpenDetail(user),
+                                  onDetail_1: () => _selectProfileAndOpenDetail(
+                                      user,
+                                      isRegimen: false),
+                                  onDetail_2: () => _selectProfileAndOpenDetail(
+                                      user,
+                                      isRegimen: true),
                                 );
                               },
                             ),

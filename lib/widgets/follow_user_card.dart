@@ -9,7 +9,8 @@ class FollowUserCard extends StatelessWidget {
     this.avatarImage,
     required this.onDelete,
     this.onEdit,
-    this.onDetail,
+    this.onDetail_1,
+    this.onDetail_2,
     this.actionLabel_1 = 'ดูประวัติการทานยา',
     this.actionLabel_2 = 'ดูแผนการทานยา',
     this.actionIcon = Icons.history,
@@ -21,9 +22,10 @@ class FollowUserCard extends StatelessWidget {
   final ImageProvider? avatarImage;
   final VoidCallback onDelete;
   final VoidCallback? onEdit;
-  final VoidCallback? onDetail;
+  final VoidCallback? onDetail_1;
+  final VoidCallback? onDetail_2;
   final String actionLabel_1;
-  final String actionLabel_2;
+  final String? actionLabel_2;
   final IconData actionIcon;
 
   @override
@@ -124,7 +126,7 @@ class FollowUserCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   ElevatedButton.icon(
-                    onPressed: onDetail,
+                    onPressed: onDetail_1,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF1F497D),
                       foregroundColor: Colors.white,
@@ -137,21 +139,23 @@ class FollowUserCard extends StatelessWidget {
                     ),
                     label: Text(actionLabel_1),
                   ),
-                  const SizedBox(width: 12),
-                  ElevatedButton.icon(
-                    onPressed: onDetail,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF1F497D),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                  if (onDetail_2 != null && actionLabel_2 != null) ...[
+                    const SizedBox(width: 12),
+                    ElevatedButton.icon(
+                      onPressed: onDetail_2,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF1F497D),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 8),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        elevation: 0,
                       ),
-                      elevation: 0,
+                      label: Text(actionLabel_2!),
                     ),
-                    label: Text(actionLabel_2),
-                  ),
+                  ],
                 ],
               ),
             ),
