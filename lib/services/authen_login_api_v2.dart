@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'auth_service.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'auth_manager.dart'; // Import AuthManager
 
 class CustomAuthService implements AuthService {
@@ -207,8 +208,62 @@ class CustomAuthService implements AuthService {
 
   @override
   Future<void> signInWithGoogle() async {
-    // Custom API Google Sign-In needs implementation details (e.g. backend endpoint)
-    throw Exception('Google Sign-In not supported in Custom API yet');
+    try {
+      // ดึงค่า Web Client ID (ที่นำมาจาก Google Cloud Console) จาก .env
+      final serverClientId = dotenv.env['GOOGLE_SERVER_CLIENT_ID'];
+
+      final GoogleSignIn googleSignIn = GoogleSignIn(
+        serverClientId:
+            serverClientId, // สำคัญมากสำหรับระบบที่ไม่ได้ใช้ Firebase เป็นตัวกลาง
+        scopes: [
+          'email',
+          'profile',
+        ],
+      );
+
+      // ✅ สั่ง Sign Out ก่อนทุกครั้ง เพื่อล้างแคชบัญชีเก่า
+      // วิธีนี้จะบังคับให้ Google เด้งหน้าต่างเลือกบัญชีมาใหม่เสมอ!
+      await googleSignIn.signOut();
+
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+      if (googleUser == null) {
+        throw Exception('ยกเลิกการเข้าสู่ระบบ'); // User canceled
+      }
+
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+      final String? idToken = googleAuth.idToken;
+
+      if (idToken == null) {
+        // บางกรณี Google ไม่ยอมคาย idToken ต้องกำหนด clientId/serverClientId แบบเฉพาะเจาะจง
+        throw Exception('ไม่ได้รับ idToken จาก Google');
+      }
+
+      // ส่ง idToken ไปยัง Backend API
+      final res = await _dio.post('/api/auth/v2/google-login', data: {
+        'idToken': idToken,
+      });
+
+      final data = res.data;
+      final accessToken = data['accessToken'];
+      final refreshToken = data['refreshToken'];
+
+      if (accessToken != null) {
+        await _storage.write(key: _accessTokenKey, value: accessToken);
+        AuthManager.accessToken = accessToken; // ✅ Set Global
+      }
+      if (refreshToken != null) {
+        await _storage.write(key: _refreshTokenKey, value: refreshToken);
+      }
+    } on DioException catch (e) {
+      if (e.response != null) {
+        throw Exception(
+            e.response?.data?['message'] ?? 'Google Login failed on server');
+      }
+      throw Exception('Connection error');
+    } catch (e) {
+      throw Exception('Google Login Error: $e');
+    }
   }
 
   @override

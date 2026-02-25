@@ -80,6 +80,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       await AuthManager.service.signInWithGoogle(); // ✅ Use AuthManager
+      // ✅ เพิ่ม manual check & navigate สำหรับ custom API ที่เสร็จสมบูรณ์ทันที
+      if (AuthManager.accessToken != null) {
+        if (!mounted) return;
+        _navigated = true;
+        await _checkAndNavigate(token: AuthManager.accessToken);
+      }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
