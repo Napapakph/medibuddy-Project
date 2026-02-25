@@ -50,6 +50,8 @@ class FollowApi {
   static const _followingPath = '/api/mobile/v2/follow/list-following';
   static const _followingDetailPath = '/api/mobile/v2/follow/following/detail';
   static const _followingLogsPath = '/api/mobile/v2/follow/following/logs';
+  static const _followingRegimenPath =
+      '/api/mobile/v2/follow/following/list-regimen';
   static const _followingRemovePath = '/api/mobile/v1/follow/following/remove';
   static const _searchUserPath = '/api/mobile/v1/follow/search-user';
   static const _followingUpdatePath = '/api/mobile/v2/follow/update-following';
@@ -472,6 +474,31 @@ class FollowApi {
 
     if (res.data is Map && res.data['logs'] is List) {
       return (res.data['logs'] as List).cast<Map<String, dynamic>>();
+    }
+    return [];
+  }
+
+  Future<List<Map<String, dynamic>>> fetchFollowingRegimen({
+    String? accessToken,
+    required int relationshipId,
+    required int profileId,
+  }) async {
+    accessToken ??= await AuthManager.service.getAccessToken();
+    if (accessToken == null) throw Exception('No access token');
+
+    final params = <String, dynamic>{
+      'relationshipId': relationshipId,
+      'profileId': profileId,
+    };
+    final res = await _dio.get(
+      _followingRegimenPath,
+      queryParameters: params,
+      options: _authOptions(accessToken),
+    );
+    _ensureSuccess(res, 'Fetch following regimen failed');
+
+    if (res.data is Map && res.data['regimens'] is List) {
+      return (res.data['regimens'] as List).cast<Map<String, dynamic>>();
     }
     return [];
   }

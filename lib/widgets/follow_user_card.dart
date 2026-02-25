@@ -10,7 +10,8 @@ class FollowUserCard extends StatelessWidget {
     required this.onDelete,
     this.onEdit,
     this.onDetail,
-    this.actionLabel = 'ดูประวัติการทานยา',
+    this.actionLabel_1 = 'ดูประวัติการทานยา',
+    this.actionLabel_2 = 'ดูแผนการทานยา',
     this.actionIcon = Icons.history,
   });
 
@@ -21,13 +22,14 @@ class FollowUserCard extends StatelessWidget {
   final VoidCallback onDelete;
   final VoidCallback? onEdit;
   final VoidCallback? onDetail;
-  final String actionLabel;
+  final String actionLabel_1;
+  final String actionLabel_2;
   final IconData actionIcon;
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      margin: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
       elevation: 2,
       color: const Color.fromARGB(255, 232, 236, 241),
       shape: RoundedRectangleBorder(
@@ -115,22 +117,42 @@ class FollowUserCard extends StatelessWidget {
               ],
             ),
 
-            // === Bottom Section: View History Button (Right) ===
+            // === Bottom Section: View History Button and Regimen Button (Right) ===
             Align(
-              alignment: Alignment.centerRight,
-              child: ElevatedButton.icon(
-                onPressed: onDetail,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF1F497D),
-                  foregroundColor: Colors.white,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+              alignment: Alignment.center,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: onDetail,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF1F497D),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      elevation: 0,
+                    ),
+                    label: Text(actionLabel_1),
                   ),
-                  elevation: 0,
-                ),
-                label: Text(actionLabel),
+                  const SizedBox(width: 12),
+                  ElevatedButton.icon(
+                    onPressed: onDetail,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF1F497D),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      elevation: 0,
+                    ),
+                    label: Text(actionLabel_2),
+                  ),
+                ],
               ),
             ),
           ],

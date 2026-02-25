@@ -355,7 +355,7 @@ class _FollowerScreenState extends State<FollowerScreen> {
       onDelete: () => _showDeleteConfirmDialog(id, name),
       onEdit: () => _openEditDialog(follower),
       onDetail: () => _openPermissionEdit(follower),
-      actionLabel: 'สิทธิ์การติดตาม',
+      actionLabel_1: 'สิทธิ์การติดตาม',
     );
   }
 
