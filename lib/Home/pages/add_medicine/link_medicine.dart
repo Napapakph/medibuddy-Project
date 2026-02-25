@@ -263,6 +263,7 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
                   builder: (_) => RemindListScreen(
                     medicines: [duplicateItem!],
                     initialMedicine: duplicateItem!,
+                    profileId: widget.profileId,
                   ),
                 ),
               );

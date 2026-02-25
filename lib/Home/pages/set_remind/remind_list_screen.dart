@@ -47,10 +47,12 @@ class RemindListScreen extends StatefulWidget {
   final List<MedicineItem> medicines;
   final MedicineItem? initialMedicine;
   final List<ReminderPlan>? initialPlans;
+  final int profileId;
 
   const RemindListScreen({
     super.key,
     required this.medicines,
+    required this.profileId,
     this.initialMedicine,
     this.initialPlans,
   });
@@ -62,6 +64,7 @@ class RemindListScreen extends StatefulWidget {
 class _RemindListScreenState extends State<RemindListScreen> {
   List<ReminderPlan> _plans = [];
   MedicineItem? _selectedMedicine;
+  bool _isAllSelected = false;
   final Set<String> _deletingPlanIds = {};
   bool _loading = false;
   String? _error;
@@ -176,6 +179,10 @@ class _RemindListScreenState extends State<RemindListScreen> {
   }
 
   Future<void> _fetchRegimens() async {
+    if (_isAllSelected) {
+      return _fetchAllRegimens();
+    }
+
     final medicineListId = _currentMedicineListId();
     debugPrint('🧪 fetch regimens medicineListId=$medicineListId');
 
@@ -211,6 +218,38 @@ class _RemindListScreenState extends State<RemindListScreen> {
         _hasFetched = true;
       });
       debugPrint('❌ fetch regimens error=$_error');
+    } finally {
+      if (mounted) {
+        setState(() => _loading = false);
+      }
+    }
+  }
+
+  Future<void> _fetchAllRegimens() async {
+    debugPrint('🧪 fetch ALL regimens profileId=${widget.profileId}');
+
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+
+    try {
+      final res = await RegimenApiService().getAllRegimens(
+        profileId: widget.profileId,
+      );
+      if (!mounted) return;
+      setState(() {
+        _serverItems = res.items;
+        _hasFetched = true;
+      });
+      debugPrint('🧪 fetched ALL count=${_serverItems.length}');
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = e.toString();
+        _hasFetched = true;
+      });
+      debugPrint('❌ fetch all regimens error=$_error');
     } finally {
       if (mounted) {
         setState(() => _loading = false);
@@ -428,6 +467,7 @@ class _RemindListScreenState extends State<RemindListScreen> {
   }
 
   List<ReminderPlan> get _filteredPlans {
+    if (_isAllSelected) return _plans;
     final selected = _selectedMedicine;
     if (selected == null) return _plans;
 
@@ -830,8 +870,8 @@ class _RemindListScreenState extends State<RemindListScreen> {
                   : Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        DropdownButtonFormField<MedicineItem>(
-                          value: _selectedMedicine,
+                        DropdownButtonFormField<MedicineItem?>(
+                          value: _isAllSelected ? null : _selectedMedicine,
                           isExpanded: true,
                           hint: const Text('เลือกรายการยา'),
                           dropdownColor: Colors.white,
@@ -846,21 +886,38 @@ class _RemindListScreenState extends State<RemindListScreen> {
                               borderSide: BorderSide.none,
                             ),
                           ),
-                          items: widget.medicines
-                              .map(
-                                (item) => DropdownMenuItem(
-                                  value: item,
-                                  child: Text(
-                                    item.nickname_medi,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
+                          items: [
+                            DropdownMenuItem<MedicineItem?>(
+                              value: null,
+                              child: Text(
+                                'ทั้งหมด',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF1F497D),
                                 ),
-                              )
-                              .toList(),
+                              ),
+                            ),
+                            ...widget.medicines.map(
+                              (item) => DropdownMenuItem<MedicineItem?>(
+                                value: item,
+                                child: Text(
+                                  item.nickname_medi,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ),
+                          ],
                           onChanged: (value) {
                             setState(() {
-                              _selectedMedicine = value;
-                              debugPrint('MedID : $value');
+                              if (value == null) {
+                                _isAllSelected = true;
+                                _selectedMedicine = null;
+                              } else {
+                                _isAllSelected = false;
+                                _selectedMedicine = value;
+                              }
+                              debugPrint(
+                                  'MedID : $value, isAll: $_isAllSelected');
                             });
                             _fetchRegimens();
                           },

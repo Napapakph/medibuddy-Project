@@ -705,6 +705,7 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
                           builder: (_) => RemindListScreen(
                             medicines: _items,
                             initialMedicine: item,
+                            profileId: widget.profileId,
                           ),
                         ),
                       );
