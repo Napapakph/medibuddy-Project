@@ -276,16 +276,7 @@ Future<void> main() async {
           final names = <String>{};
           for (final p in mergedList) {
             final b = p['body']?.toString() ?? '';
-            // Simple extraction if body is "Take Paracetamol" -> "Paracetamol"
-            // Or just use the body as is if complex.
-            // Ideally backend sends medicine name properly.
-            // For now, let's try to extract or use a generic summary.
 
-            // If we have profileName/medicineName in data, use it.
-            // checking payload keys from _payloadFromRemoteMessage
-            // The payload has just flat keys.
-
-            // Fallback: Use body directly if it's short, or generic "X medications"
             if (b.isNotEmpty)
               names.add(b.replaceAll('ได้เวลาทานยา ', '').trim());
           }
@@ -401,11 +392,64 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
+  Timer? _tokenRefreshTimer;
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _initDeepLinks();
+    _startTokenRefreshTimer();
+  }
+
+  void _startTokenRefreshTimer() {
+    // ยกเลิก Timer เก่า (ถ้ามี) ก่อนเริ่มใหม่
+    _tokenRefreshTimer?.cancel();
+    // ตั้งเวลาให้ Refresh Token ทุกๆ 10 นาที
+    _tokenRefreshTimer = Timer.periodic(const Duration(minutes: 10), (timer) {
+      _refreshToken();
+    });
+  }
+
+  Future<void> _refreshToken() async {
+    try {
+      // ✅ เช็คก่อนว่ามี Token อยู่ที่ AuthManager ไหม (คือล็อกอินอยู่)
+      if (AuthManager.accessToken == null) {
+        return; // ถ้ายากล็อกเอาท์อยู่ หรือเพิ่งเปิดแอป ไม่ต้องทำอะไร
+      }
+
+      final session = Supabase.instance.client.auth.currentSession;
+      if (session != null) {
+        debugPrint('🔄 Auto Refreshing Session Token...');
+        final response = await Supabase.instance.client.auth.refreshSession();
+        if (response.session != null) {
+          AuthManager.accessToken = response.session!.accessToken;
+          debugPrint('✅ Token Refreshed Successfully!');
+        }
+      }
+    } catch (e) {
+      debugPrint('❌ Failed to refresh token: $e');
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // ✅ จะสั่งเปิดระบบ Refresh ก็ต่อเมื่อมีคนล็อกอินอยู่
+      if (AuthManager.accessToken != null ||
+          Supabase.instance.client.auth.currentSession != null) {
+        debugPrint(
+            '📱 App Resumed: Checking & Refreshing Token Immediately...');
+        _refreshToken();
+        _startTokenRefreshTimer(); // เริ่มจับเวลา 10 นาทีใหม่
+      } else {
+        debugPrint(
+            '📱 App Resumed: User not logged in, skipping Token Refresh.');
+      }
+    } else if (state == AppLifecycleState.paused) {
+      debugPrint('💤 App Paused: Pausing Token Refresh Timer...');
+      _tokenRefreshTimer?.cancel();
+    }
   }
 
   Future<void> _initDeepLinks() async {
@@ -432,22 +476,74 @@ class _MyAppState extends State<MyApp> {
   }
 
   void _handleDeepLink(Uri uri) {
-    // ตัวอย่าง: com.example.medibuddy://login-callback?token=XYZ...
-    // หรือดักลิงก์ https://api.medi-buddy.xyz/api/auth/v2/forgot-password/verify-redirect?token=... โดยตรง
-    if (uri.host == 'login-callback' || uri.path.endsWith('verify-redirect')) {
+    debugPrint('====================================');
+    debugPrint('📌 Deep Link FULL URI: $uri');
+    debugPrint('📌 Deep Link Host: ${uri.host}, Path: ${uri.path}');
+    debugPrint('📌 Deep Link Query Parameters: ${uri.queryParameters}');
+    debugPrint('====================================');
+
+    if (uri.host == 'forget-password' ||
+        uri.host == 'login-callback' ||
+        uri.path.endsWith('verify-redirect')) {
       final token = uri.queryParameters['token'];
-      if (token != null && token.isNotEmpty) {
-        debugPrint('🔑 Found Reset Token: $token');
-        // นำ token ไปใช้เปิดหน้า Reset Password และส่งให้ Backend
-        navigatorKey.currentState
-            ?.pushNamed('/forget_password', arguments: token);
+      final error = uri.queryParameters['error'];
+      final errorCode = uri.queryParameters['error_code'];
+      final errorDescription = uri.queryParameters['error_description'];
+
+      debugPrint('🔎 Parsed Values -> token: "$token"');
+      debugPrint('🔎 Parsed Values -> error: "$error"');
+      debugPrint('🔎 Parsed Values -> error_code: "$errorCode"');
+      debugPrint('🔎 Parsed Values -> error_description: "$errorDescription"');
+
+      // ตรวจจับ error ใดๆ ที่ส่งมา
+      if ((error != null && error.isNotEmpty) ||
+          (errorCode != null && errorCode.isNotEmpty)) {
+        debugPrint('❌ Deep Link Error Detected!');
+        // รอให้ UI พร้อมก่อนแสดง Dialog
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          final context = navigatorKey.currentContext;
+          if (context != null) {
+            showDialog(
+              context: context,
+              builder: (ctx) => AlertDialog(
+                title: const Text('ข้อผิดพลาด'),
+                content: const Text(
+                    'ลิงก์รีเซ็ตรหัสผ่านหมดอายุหรือไม่ถูกต้อง กรุณาทำรายการใหม่อีกครั้ง'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    child: const Text('ตกลง'),
+                  ),
+                ],
+              ),
+            );
+          }
+        });
+        return;
       }
+
+      if (token != null && token.isNotEmpty) {
+        debugPrint(
+            '🔑 Found Reset Token: $token, Routing to /forget_password...');
+        // สั่งเปิดหน้า ForgetPassword
+        // ใช้ Future.delayed เพื่อให้มั่นใจว่า Navigator ถูกสร้างเสร็จแล้ว (กรณี Cold Start)
+        Future.delayed(const Duration(milliseconds: 300), () {
+          navigatorKey.currentState
+              ?.pushNamed('/forget_password', arguments: token);
+        });
+      } else {
+        debugPrint('❌ Deep Link matched but NO token found!');
+      }
+    } else {
+      debugPrint('ℹ️ Deep Link did not match any routing rules.');
     }
   }
 
   @override
   void dispose() {
     _linkSubscription?.cancel();
+    _tokenRefreshTimer?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
@@ -472,6 +568,27 @@ class _MyAppState extends State<MyApp> {
       ],
       locale: const Locale('th', 'TH'),
 
+      // จัดการเมื่อแอปถูกเปิดครั้งแรกจาก Deep Link (Cold Start)
+      onGenerateInitialRoutes: (initialRouteName) {
+        final routes = <Route>[];
+        // 1. ใส่หน้า Base เสมอ (LoginScreen หรือ AuthGate)
+        routes.add(MaterialPageRoute(builder: (_) => defaultPage()));
+
+        // 2. ถ้ามีลิงก์แนบมาด้วย ให้พิจารณาซ้อนหน้า ForgetPassword ทับไปอีกชั้น
+        final uri = Uri.tryParse(initialRouteName);
+        if (uri != null &&
+            (uri.host == 'forget-password' ||
+                uri.path.endsWith('verify-redirect'))) {
+          final token = uri.queryParameters['token'];
+          if (token != null && token.isNotEmpty) {
+            debugPrint('🚀 Initial Route Routing to /forget_password');
+            routes.add(MaterialPageRoute(
+                builder: (_) => ForgetPassword(token: token)));
+          }
+        }
+        return routes;
+      },
+
       //  รับ deep link ที่มาเป็น "/?code=..."
       onGenerateRoute: (settings) {
         final uri = Uri.tryParse(settings.name ?? '/');
@@ -479,6 +596,21 @@ class _MyAppState extends State<MyApp> {
         // ถ้า parse ไม่ได้ ก็กลับไปหน้าแรก : parse = การแปลงข้อความ (String) ให้เป็น Uri object
         if (uri == null) {
           return MaterialPageRoute(builder: (_) => const AuthGate());
+        }
+
+        // จัดการ Deep Link เมื่อแอปถูกปลุกขึ้นมาจากพื้นหลัง (Hot Start)
+        if (uri.host == 'forget-password' ||
+            uri.host == 'login-callback' ||
+            uri.path.endsWith('verify-redirect')) {
+          final token = uri.queryParameters['token'];
+          if (token != null && token.isNotEmpty) {
+            debugPrint('🚀 Hot Start Routing to /forget_password');
+            return MaterialPageRoute(
+                builder: (_) => ForgetPassword(token: token));
+          }
+          // ถ้าไม่มี token (เช่น error) ก็กระเด็นไปหน้า Login
+          // ซึ่งตัว app_links จะแสดง Error Dialog ให้เราอยู่แล้ว
+          return MaterialPageRoute(builder: (_) => defaultPage());
         }
 
         //  สำคัญ: "/?code=..." จะมี uri.path = "/"
@@ -503,6 +635,7 @@ class _MyAppState extends State<MyApp> {
             );
           case '/forget_password':
             final token = settings.arguments as String?;
+            debugPrint('🚀 Routing to /forget_password, token: $token');
             return MaterialPageRoute(
                 builder: (_) => ForgetPassword(token: token));
           case '/library_profile':

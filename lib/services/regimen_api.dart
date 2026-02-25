@@ -499,10 +499,11 @@ class RegimenApiService {
 
     switch (normalized) {
       case 'DAILY':
-        if (endDateUtc == null) {
-          throw RegimenApiException('DAILY requires endDate.');
+        if (endDateUtc != null) {
+          body['endDate'] = _iso(endDateUtc);
+        } else {
+          body['endDate'] = null;
         }
-        body['endDate'] = _iso(endDateUtc);
         break;
       case 'WEEKLY':
         if (daysOfWeek == null || daysOfWeek.isEmpty) {
@@ -571,10 +572,11 @@ class RegimenApiService {
 
     switch (normalized) {
       case 'DAILY':
-        if (endDateUtc == null) {
-          throw RegimenApiException('DAILY requires endDate.');
+        if (endDateUtc != null) {
+          body['endDate'] = _iso(endDateUtc);
+        } else {
+          body['endDate'] = null;
         }
-        body['endDate'] = _iso(endDateUtc);
         break;
       case 'WEEKLY':
         if (daysOfWeek == null || daysOfWeek.isEmpty) {

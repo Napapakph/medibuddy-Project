@@ -1571,7 +1571,7 @@ int intervalDaysFrom(int everyCount, String unit) {
   return count;
 }
 
-DateTime computeDailyEndDateUtc({
+DateTime? computeDailyEndDateUtc({
   required DurationMode durationMode,
   required int durationValue,
   required String durationUnit,
@@ -1598,10 +1598,7 @@ DateTime computeDailyEndDateUtc({
     return normalized.toUtc();
   }
 
-  final startLocal = startDateUtc.toLocal();
-  final far =
-      DateTime(startLocal.year + 20, startLocal.month, startLocal.day, 0, 0, 0);
-  return far.toUtc();
+  return null;
 }
 
 String mapMealRelation(MealTiming timing) {

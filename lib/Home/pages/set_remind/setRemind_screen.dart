@@ -282,7 +282,8 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
       startTime: _startTime,
       doses: _doses,
       regimenStartDate: _regimenStartDate,
-      regimenEndDate: _regimenEndDate,
+      regimenEndDate:
+          _durationMode == DurationMode.forever ? null : _regimenEndDate,
     );
 
     setState(() => _saving = true);

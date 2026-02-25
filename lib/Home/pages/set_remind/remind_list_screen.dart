@@ -664,7 +664,8 @@ class _RemindListScreenState extends State<RemindListScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        '${plan.regimenStartDate!.day}/${plan.regimenStartDate!.month}/${plan.regimenStartDate!.year + 543} - ${plan.regimenEndDate != null ? "${plan.regimenEndDate!.day}/${plan.regimenEndDate!.month}/${plan.regimenEndDate!.year + 543}" : "ตลอดไป"}',
+                        '${plan.regimenStartDate!.day}/${plan.regimenStartDate!.month}/${plan.regimenStartDate!.year + 543} - '
+                        '${plan.regimenEndDate != null ? "${plan.regimenEndDate!.day}/${plan.regimenEndDate!.month}/${plan.regimenEndDate!.year + 543}" : "ตลอดไป"}',
                         style: const TextStyle(
                           fontSize: 12,
                           color: Color(0xFF1F497D),

@@ -506,7 +506,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             final authService = CustomAuthService();
                             await authService.requestPasswordReset(
                               email,
-                              'com.example.medibuddy://login-callback',
+                              'com.example.medibuddy://forget-password',
                             );
                           } else {
                             // ignore: dead_code
@@ -515,7 +515,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               email,
                               // ✅ ต้องเป็น deep link ของแอป
                               redirectTo:
-                                  'com.example.medibuddy://login-callback',
+                                  'com.example.medibuddy://forget-password',
                             );
                           }
 
