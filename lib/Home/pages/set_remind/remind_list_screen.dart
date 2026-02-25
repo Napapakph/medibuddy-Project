@@ -274,8 +274,9 @@ class _RemindListScreenState extends State<RemindListScreen> {
     DateTime? endDate;
 
     if (hasEndDate) {
-      final start = DateTime.tryParse(item.startDate) ?? DateTime.now();
-      endDate = DateTime.tryParse(item.endDate!) ?? start;
+      final start =
+          DateTime.tryParse(item.startDate)?.toLocal() ?? DateTime.now();
+      endDate = DateTime.tryParse(item.endDate!)?.toLocal() ?? start;
 
       var diffDays = endDate.difference(start).inDays;
       if (diffDays < 1) diffDays = 1;
@@ -315,7 +316,8 @@ class _RemindListScreenState extends State<RemindListScreen> {
       durationUnit: durationUnit,
       startTime: effectiveDoses.first.time,
       doses: effectiveDoses,
-      regimenStartDate: DateTime.tryParse(item.startDate) ?? DateTime.now(),
+      regimenStartDate:
+          DateTime.tryParse(item.startDate)?.toLocal() ?? DateTime.now(),
       regimenEndDate: endDate,
     );
   }

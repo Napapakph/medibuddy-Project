@@ -1460,8 +1460,9 @@ ReminderPlan fromRegimenDetail({
   DateTime? endDate;
 
   if (hasEndDate) {
-    final start = DateTime.tryParse(detail.startDate) ?? DateTime.now();
-    endDate = DateTime.tryParse(detail.endDate!) ?? start;
+    final start =
+        DateTime.tryParse(detail.startDate)?.toLocal() ?? DateTime.now();
+    endDate = DateTime.tryParse(detail.endDate!)?.toLocal() ?? start;
 
     var diffDays = endDate.difference(start).inDays;
     if (diffDays < 1) diffDays = 1;
@@ -1500,7 +1501,8 @@ ReminderPlan fromRegimenDetail({
     durationUnit: durationUnit,
     startTime: startTime,
     doses: effectiveDoses,
-    regimenStartDate: DateTime.tryParse(detail.startDate) ?? DateTime.now(),
+    regimenStartDate:
+        DateTime.tryParse(detail.startDate)?.toLocal() ?? DateTime.now(),
     regimenEndDate: endDate,
   );
 }
@@ -1559,8 +1561,8 @@ TimeOfDay _parseTimeOfDay(String value) {
 
 DateTime regimenStartDateUtc({DateTime? now}) {
   final base = now ?? DateTime.now();
-  final local = DateTime(base.year, base.month, base.day, 0, 0, 0);
-  return local.toUtc();
+  // ส่งเป็นรอบวันแบบ Local ที่ถูกจำลองเป็น UTC เสมอเพื่อรักษาค่า "วัน" เอาไว้ ป้องกันปัญหาเมื่อ Backend ตัด timezone ทิ้งแล้ววันหายไป 1 วัน
+  return DateTime.utc(base.year, base.month, base.day, 0, 0, 0);
 }
 
 int intervalDaysFrom(int everyCount, String unit) {
@@ -1593,9 +1595,8 @@ DateTime? computeDailyEndDateUtc({
       endLocal = startLocal.add(Duration(days: 7 * v));
     }
 
-    final normalized =
-        DateTime(endLocal.year, endLocal.month, endLocal.day, 0, 0, 0);
-    return normalized.toUtc();
+    // ป้องกันปัญหา Timezone กลับวันด้วยการคงค่าวันในรูปแบบ UTC เสมอ
+    return DateTime.utc(endLocal.year, endLocal.month, endLocal.day, 0, 0, 0);
   }
 
   return null;

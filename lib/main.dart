@@ -146,6 +146,36 @@ void _navigateToAlarm(Map<String, dynamic> payload) {
   nav.pushNamed(route, arguments: payload);
 }
 
+@pragma('vm:entry-point')
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  await Firebase.initializeApp();
+  debugPrint('📩 FCM onBackgroundMessage received!');
+
+  final payload = _payloadFromRemoteMessage(message);
+  final title = payload['title']?.toString() ?? 'MediBuddy';
+  final body = payload['body']?.toString() ?? 'ได้เวลาทานยาแล้ว';
+
+  await _setupLocalNotifications();
+
+  await flnp.show(
+    DateTime.now().millisecond,
+    title,
+    body,
+    NotificationDetails(
+      android: AndroidNotificationDetails(
+        channel.id,
+        channel.name,
+        channelDescription: channel.description,
+        importance: Importance.max,
+        priority: Priority.high,
+        icon: '@mipmap/ic_launcher',
+        styleInformation: BigTextStyleInformation(body),
+      ),
+    ),
+    payload: jsonEncode(payload),
+  );
+}
+
 void _handleLocalNotificationTap(String? payload) {
   final parsed = _payloadFromString(payload);
   if (parsed == null) return;
@@ -184,6 +214,9 @@ Future<void> main() async {
   // ✅ INIT FIREBASE แค่ครั้งเดียว
   await Firebase.initializeApp();
 
+  // ✅ ลงทะเบียนเพื่อรับ Background Messages กรณีที่แอปถูกปิดทิ้งหรืออยู่ในพื้นหลัง
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+
   debugPrint('🌿 API_BASE_URL from env = "${dotenv.env['API_BASE_URL']}"');
   print('ENV = ${dotenv.env}');
   print('BASE = ${dotenv.env['API_BASE_URL']}');
@@ -206,6 +239,12 @@ Future<void> main() async {
     debugPrint('DeviceTokenService: init listener');
     // ✅ เรียกเฉพาะ Android เท่านั้น
     await _setupLocalNotifications();
+
+    // ⚡ บังคับขอสิทธิแจ้งเตือน Android 13+ (POST_NOTIFICATIONS) ให้เด้ง팝อัปให้ชัวร์
+    await flnp
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
+        ?.requestNotificationsPermission();
   } else {
     debugPrint('DeviceTokenService: skip init listener');
   }
