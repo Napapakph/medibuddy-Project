@@ -1,5 +1,52 @@
 ﻿import 'package:flutter/material.dart';
 
+/// ============================
+/// Helper: Show comment editor as a Modal Bottom Sheet
+/// ============================
+Future<String?> showCommentBottomSheet({
+  required BuildContext context,
+  required String medicineNickname,
+  String initialText = '',
+  VoidCallback? onCancel,
+  required ValueChanged<String> onSubmit,
+}) {
+  return showModalBottomSheet<String>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (ctx) => CommentPopup(
+      title: 'คอมเม้น',
+      medicineNickname: medicineNickname,
+      initialText: initialText,
+      onCancel: onCancel,
+      onSubmit: onSubmit,
+    ),
+  );
+}
+
+/// ============================
+/// Helper: Show comment viewer as a Modal Bottom Sheet
+/// ============================
+Future<void> showCommentViewerBottomSheet({
+  required BuildContext context,
+  required String medicineNickname,
+  required String note,
+}) {
+  return showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (ctx) => CommentViewer(
+      title: 'คอมเม้น',
+      medicineNickname: medicineNickname,
+      note: note,
+    ),
+  );
+}
+
+/// ============================
+/// CommentPopup – ModalBottomSheet for writing comments
+/// ============================
 class CommentPopup extends StatefulWidget {
   final String title;
   final String medicineNickname;
@@ -51,92 +98,126 @@ class _CommentPopupState extends State<CommentPopup> {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    widget.title,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF1F497D),
-                    ),
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    return Container(
+      padding: EdgeInsets.only(bottom: bottomInset),
+      decoration: const BoxDecoration(
+        color: Color.fromARGB(255, 240, 240, 255),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Drag handle
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade400,
+                    borderRadius: BorderRadius.circular(2),
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.close, size: 18),
-                  onPressed: _handleCancel,
-                ),
-              ],
-            ),
-            const SizedBox(height: 6),
-            Text(
-              'ยาเกี่ยวข้อง: ${widget.medicineNickname}',
-              style: const TextStyle(
-                fontSize: 13,
-                color: Color(0xFF6E7C8B),
               ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _controller,
-              maxLines: 4,
-              onChanged: (_) => setState(() {}),
-              decoration: InputDecoration(
-                hintText: 'พิมพ์ความคิดเห็น...',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Color(0xFFE0E6EF)),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Color(0xFFE0E6EF)),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Color(0xFF1F497D)),
+              // Header
+              Row(
+                children: [
+                  const Expanded(
+                    child: Text(
+                      'คอมเม้น',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF1F497D),
+                      ),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: _handleCancel,
+                    child: Container(
+                      width: 30,
+                      height: 30,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.grey.shade300,
+                      ),
+                      child: const Icon(Icons.close,
+                          size: 16, color: Color(0xFF5D4037)),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              // Medicine name
+              Text(
+                widget.medicineNickname,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Color.fromARGB(255, 74, 128, 196),
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                TextButton(
-                  onPressed: _handleCancel,
-                  child: const Text('ยกเลิก'),
+              const SizedBox(height: 14),
+              // Text input
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
                 ),
-                const Spacer(),
-                ElevatedButton(
+                child: TextField(
+                  controller: _controller,
+                  maxLines: 4,
+                  autofocus: true,
+                  onChanged: (_) => setState(() {}),
+                  decoration: InputDecoration(
+                    hintText: 'เขียนความคิดเห็นของคุณ (ไม่บังคับ)',
+                    hintStyle: TextStyle(
+                      color: Colors.grey.shade400,
+                      fontSize: 14,
+                    ),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.all(14),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              // Submit button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
                   onPressed: _canSubmit ? _handleSubmit : null,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF1F497D),
+                    disabledBackgroundColor: const Color(0xFFB7DAFF),
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 12),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(30),
                     ),
+                    elevation: 0,
                   ),
-                  child: const Text('ส่ง'),
+                  child: const Text(
+                    'บันทึกคอมเม้น',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                  ),
                 ),
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
+/// ============================
+/// CommentViewer – ModalBottomSheet to view existing comments (read-only)
+/// ============================
 class CommentViewer extends StatelessWidget {
   final String title;
   final String medicineNickname;
@@ -151,74 +232,105 @@ class CommentViewer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Dialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      backgroundColor: Color.fromARGB(255, 248, 248, 255),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
+    return Container(
+      decoration: const BoxDecoration(
+        color: Color.fromARGB(255, 240, 240, 255),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Drag handle
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade400,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              // Header
+              Row(
+                children: [
+                  const Expanded(
+                    child: Text(
+                      'คอมเม้น',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF1F497D),
+                      ),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => Navigator.of(context).pop(),
+                    child: Container(
+                      width: 30,
+                      height: 30,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.grey.shade300,
+                      ),
+                      child: const Icon(Icons.close,
+                          size: 16, color: Color(0xFF5D4037)),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              // Medicine name
+              Text(
+                medicineNickname,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Color.fromARGB(255, 74, 128, 196),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 14),
+              // Note content
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: SingleChildScrollView(
                   child: Text(
-                    title,
+                    note,
                     style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
                       color: Color(0xFF1F497D),
+                      height: 1.5,
                     ),
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.close, size: 18),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-              ],
-            ),
-            const SizedBox(height: 6),
-            Text(
-              'ยาเกี่ยวข้อง: $medicineNickname',
-              style: const TextStyle(
-                fontSize: 13,
-                color: Color.fromARGB(255, 31, 40, 49),
               ),
-            ),
-            const SizedBox(height: 12),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: const Color.fromARGB(255, 255, 255, 255),
-                borderRadius: BorderRadius.circular(12),
-                border:
-                    Border.all(color: const Color.fromARGB(255, 133, 135, 176)),
-              ),
-              child: SingleChildScrollView(
-                child: Text(
-                  note,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Color(0xFF1F497D),
-                  ),
-                ),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
+/// ============================
+/// CommentInline – Inline comment editor (used in confirm_action.dart)
+/// ============================
 class CommentInline extends StatefulWidget {
   final String medicineNickname;
   final String initialText;
   final ValueChanged<String> onChanged;
   final VoidCallback onSubmit;
+  final VoidCallback? onClose;
 
   const CommentInline({
     super.key,
@@ -226,6 +338,7 @@ class CommentInline extends StatefulWidget {
     required this.initialText,
     required this.onChanged,
     required this.onSubmit,
+    this.onClose,
   });
 
   @override
@@ -247,82 +360,107 @@ class _CommentInlineState extends State<CommentInline> {
     super.dispose();
   }
 
-  bool get _canSubmit => _controller.text.trim().isNotEmpty;
-
   void _handleSubmit() {
-    if (!_canSubmit) return;
     widget.onSubmit();
   }
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FBFF),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE0E6EF)),
+        color: const Color.fromARGB(255, 240, 240, 255),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color.fromARGB(255, 132, 145, 204)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'comment',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF1F497D),
-            ),
+          // Header with title + close button
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'คอมเม้น',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF1F497D),
+                  ),
+                ),
+              ),
+              if (widget.onClose != null)
+                GestureDetector(
+                  onTap: widget.onClose,
+                  child: Container(
+                    width: 28,
+                    height: 28,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.grey.shade300,
+                    ),
+                    child: const Icon(Icons.close,
+                        size: 16, color: Color.fromARGB(255, 55, 66, 93)),
+                  ),
+                ),
+            ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 4),
+          // Medicine name
           Text(
-            'ยาเกี่ยวข้อง: ${widget.medicineNickname}',
+            widget.medicineNickname,
             style: const TextStyle(
               fontSize: 13,
-              color: Color(0xFF6E7C8B),
+              color: Color.fromARGB(255, 102, 100, 145),
+              fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 10),
-          TextField(
-            controller: _controller,
-            maxLines: 4,
-            onChanged: (value) {
-              widget.onChanged(value);
-              setState(() {});
-            },
-            decoration: InputDecoration(
-              hintText: 'พิมพ์ความคิดเห็น...',
-              filled: true,
-              fillColor: Colors.white,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: Color(0xFFE0E6EF)),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: Color(0xFFE0E6EF)),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-                borderSide: const BorderSide(color: Color(0xFF1F497D)),
+          const SizedBox(height: 12),
+          // Text input
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                  color: const Color.fromARGB(255, 255, 255, 255), width: 1.5),
+            ),
+            child: TextField(
+              controller: _controller,
+              maxLines: 3,
+              onChanged: (value) {
+                widget.onChanged(value);
+                setState(() {});
+              },
+              decoration: InputDecoration(
+                hintText: 'เขียนความคิดเห็นของคุณ (ไม่บังคับ)',
+                hintStyle: TextStyle(
+                  color: Colors.grey.shade400,
+                  fontSize: 13,
+                ),
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.all(12),
               ),
             ),
           ),
-          const SizedBox(height: 10),
-          Align(
-            alignment: Alignment.centerRight,
+          const SizedBox(height: 12),
+          // Save button
+          SizedBox(
+            width: double.infinity,
             child: ElevatedButton(
-              onPressed: _canSubmit ? _handleSubmit : null,
+              onPressed: _handleSubmit,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF1F497D),
                 foregroundColor: Colors.white,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(24),
                 ),
+                elevation: 0,
               ),
-              child: const Text('ส่ง'),
+              child: const Text(
+                'บันทึกคอมเม้น',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+              ),
             ),
           ),
         ],

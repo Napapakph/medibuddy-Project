@@ -3,7 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:medibuddy/services/log_api.dart';
 
 import 'package:medibuddy/services/app_state.dart';
-import 'package:medibuddy/widgets/comment.dart';
+
 import 'package:medibuddy/services/auth_manager.dart'; // Import AuthManager
 
 class ConfirmActionScreen extends StatefulWidget {
@@ -29,8 +29,7 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
   final Set<int> _submittingIds = <int>{};
   final Map<int, String> _responses = <int, String>{};
   final Map<int, String> _notesByLogId = <int, String>{};
-  // int? _activeCommentLogId;
-  int? _expandedCommentLogId;
+  // Comment panel is now a modal bottom sheet (no inline state needed)
   Map<int, List<Map<String, dynamic>>> _groupedLogs = {};
   int? _selectedProfileId;
   List<Map<String, dynamic>> _profiles =
@@ -219,9 +218,58 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
   }
 
   void _toggleCommentPanel(int logId) {
-    setState(() {
-      _expandedCommentLogId = _expandedCommentLogId == logId ? null : logId;
-    });
+    _openCommentBottomSheet(logId);
+  }
+
+  void _openCommentBottomSheet(int logId) {
+    // Resolve display name
+    String displayName = '-';
+    for (final log in _logs) {
+      final id = _readInt(log['logId']) ?? 0;
+      if (id == logId) {
+        final medicineList = _readMap(log['medicineList']);
+        final medicine = _readMap(medicineList['medicine']);
+        final nickname = _readString(medicineList['mediNickname']);
+        final tradeName = _readString(medicine['mediTradeName']);
+        final thName = _readString(medicine['mediThName']);
+        final enName = _readString(medicine['mediEnName']);
+        displayName = nickname.isNotEmpty
+            ? nickname
+            : (tradeName.isNotEmpty
+                ? tradeName
+                : (thName.isNotEmpty
+                    ? thName
+                    : (enName.isNotEmpty ? enName : '-')));
+        break;
+      }
+    }
+
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return _CommentSheetContent(
+          medicineNickname: displayName,
+          initialText: _notesByLogId[logId] ?? '',
+          onChanged: (text) {
+            _notesByLogId[logId] = text;
+          },
+          onSubmit: () {
+            final text = _notesByLogId[logId] ?? '';
+            final trimmed = text.trim();
+            setState(() {
+              if (trimmed.isEmpty) {
+                _notesByLogId.remove(logId);
+              } else {
+                _notesByLogId[logId] = trimmed;
+              }
+            });
+            Navigator.of(ctx).pop();
+          },
+        );
+      },
+    );
   }
 
   /*
@@ -542,119 +590,7 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
     );
   }
 
-  void _showProfileSelectorModal() {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      builder: (ctx) {
-        return StatefulBuilder(
-          builder: (ctx, setModalState) {
-            return SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text(
-                      'เลือกโปรไฟล์ที่ต้องการ',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 18,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 12),
-                      decoration: BoxDecoration(
-                        color: const Color.fromARGB(255, 219, 231, 252),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: List.generate(_profiles.length, (index) {
-                            final p = _profiles[index];
-                            final pid = _readInt(p['profileId']) ?? 0;
-                            final name = _readString(p['profileName']);
-                            final img =
-                                _readString(p['profileImage']).isNotEmpty
-                                    ? _readString(p['profileImage'])
-                                    : _readString(p['profilePicture']);
-                            final provider = _buildImageProvider(img);
-                            final isSelected = _selectedProfileId == pid;
-
-                            return Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 6),
-                              child: InkWell(
-                                borderRadius: BorderRadius.circular(12),
-                                onTap: () {
-                                  setState(() {
-                                    _selectedProfileId = pid;
-                                  });
-                                  Navigator.pop(ctx);
-                                },
-                                child: Container(
-                                  width: 84,
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: 8, horizontal: 4),
-                                  decoration: BoxDecoration(
-                                    color: isSelected
-                                        ? const Color.fromARGB(
-                                            84, 154, 200, 255)
-                                        : Colors.transparent,
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      ClipOval(
-                                        child: Container(
-                                          width: 46,
-                                          height: 46,
-                                          color: Colors.grey.shade200,
-                                          child: provider != null
-                                              ? Image(
-                                                  image: provider,
-                                                  fit: BoxFit.cover)
-                                              : const Icon(Icons.person,
-                                                  color: Colors.grey),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 6),
-                                      Text(
-                                        name,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          color: Color(0xFF1F497D),
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            );
-                          }),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
+  // Profile selector is now inline (dropdown under image)
 
   @override
   Widget build(BuildContext context) {
@@ -746,24 +682,58 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
                                     ),
                                   if (hasMultipleProfiles) ...[
                                     const SizedBox(height: 12),
-                                    TextButton.icon(
-                                      onPressed: _showProfileSelectorModal,
-                                      icon: const Icon(Icons.swap_horiz,
-                                          size: 18),
-                                      label: const Text('สลับโปรไฟล์'),
-                                      style: TextButton.styleFrom(
-                                        foregroundColor:
-                                            const Color(0xFF1F497D),
-                                        backgroundColor: const Color.fromARGB(
-                                            255, 219, 231, 252),
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 16, vertical: 8),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(20),
+                                    Container(
+                                      width: 150,
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 14, vertical: 0),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: const Color(0xFFB7DAFF),
+                                          width: 1.5,
                                         ),
                                       ),
-                                    )
+                                      child: DropdownButtonHideUnderline(
+                                        child: DropdownButton<int>(
+                                          value: _selectedProfileId,
+                                          isExpanded: true,
+                                          isDense: false,
+                                          icon: const Icon(
+                                            Icons.keyboard_arrow_down_rounded,
+                                            size: 24,
+                                            color: Color(0xFF1F497D),
+                                          ),
+                                          dropdownColor: Colors.white,
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                          style: const TextStyle(
+                                            color: Color(0xFF1F497D),
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                          items: _groupedLogs.keys.map((pid) {
+                                            final name = _profileName(pid);
+                                            return DropdownMenuItem<int>(
+                                              value: pid,
+                                              child: Text(
+                                                name.isNotEmpty
+                                                    ? name
+                                                    : 'โปรไฟล์ $pid',
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            );
+                                          }).toList(),
+                                          onChanged: (value) {
+                                            if (value != null) {
+                                              setState(() {
+                                                _selectedProfileId = value;
+                                              });
+                                            }
+                                          },
+                                        ),
+                                      ),
+                                    ),
                                   ],
                                 ],
                               ),
@@ -781,69 +751,166 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
                                 itemCount: displayLogs.length,
                                 itemBuilder: (context, index) {
                                   final log = displayLogs[index];
-                                  final logId = _readInt(log['logId']) ?? 0;
-                                  final medicineList =
-                                      _readMap(log['medicineList']);
-                                  final medicine =
-                                      _readMap(medicineList['medicine']);
-                                  final nickname =
-                                      _readString(medicineList['mediNickname']);
-                                  final tradeName =
-                                      _readString(medicine['mediTradeName']);
-                                  final thName =
-                                      _readString(medicine['mediThName']);
-                                  final enName =
-                                      _readString(medicine['mediEnName']);
-
-                                  final displayName = nickname.isNotEmpty
-                                      ? nickname
-                                      : (tradeName.isNotEmpty
-                                          ? tradeName
-                                          : (thName.isNotEmpty
-                                              ? thName
-                                              : (enName.isNotEmpty
-                                                  ? enName
-                                                  : '-')));
-
-                                  return Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.stretch,
-                                    children: [
-                                      _buildLogCard(log),
-                                      if (_expandedCommentLogId == logId)
-                                        Padding(
-                                          padding: const EdgeInsets.only(
-                                              top: 8, left: 12, right: 12),
-                                          child: CommentInline(
-                                            medicineNickname: displayName,
-                                            initialText:
-                                                _notesByLogId[logId] ?? '',
-                                            onChanged: (text) {
-                                              _notesByLogId[logId] = text;
-                                            },
-                                            onSubmit: () {
-                                              final text =
-                                                  _notesByLogId[logId] ?? '';
-                                              final trimmed = text.trim();
-                                              setState(() {
-                                                if (trimmed.isEmpty) {
-                                                  _notesByLogId.remove(logId);
-                                                } else {
-                                                  _notesByLogId[logId] =
-                                                      trimmed;
-                                                }
-                                                _expandedCommentLogId = null;
-                                              });
-                                            },
-                                          ),
-                                        ),
-                                    ],
-                                  );
+                                  return _buildLogCard(log);
                                 },
                               ),
                       ),
                     ],
                   ),
+      ),
+    );
+  }
+}
+
+/// Bottom sheet content widget for comment input
+class _CommentSheetContent extends StatefulWidget {
+  final String medicineNickname;
+  final String initialText;
+  final ValueChanged<String> onChanged;
+  final VoidCallback onSubmit;
+
+  const _CommentSheetContent({
+    required this.medicineNickname,
+    required this.initialText,
+    required this.onChanged,
+    required this.onSubmit,
+  });
+
+  @override
+  State<_CommentSheetContent> createState() => _CommentSheetContentState();
+}
+
+class _CommentSheetContentState extends State<_CommentSheetContent> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialText);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    return Container(
+      padding: EdgeInsets.only(bottom: bottomInset),
+      decoration: const BoxDecoration(
+        color: Color.fromARGB(255, 240, 240, 255),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Drag handle
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 14),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade400,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              // Header
+              Row(
+                children: [
+                  const Expanded(
+                    child: Text(
+                      '\u0e04\u0e2d\u0e21\u0e40\u0e21\u0e49\u0e19',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF1F497D),
+                      ),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => Navigator.of(context).pop(),
+                    child: Container(
+                      width: 30,
+                      height: 30,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.grey.shade300,
+                      ),
+                      child: const Icon(Icons.close,
+                          size: 16, color: Color.fromARGB(255, 55, 66, 93)),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              // Medicine name
+              Text(
+                widget.medicineNickname,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Color.fromARGB(255, 102, 100, 145),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 14),
+              // Text input
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: TextField(
+                  controller: _controller,
+                  maxLines: 4,
+                  autofocus: true,
+                  onChanged: (value) {
+                    widget.onChanged(value);
+                  },
+                  decoration: InputDecoration(
+                    hintText:
+                        '\u0e40\u0e02\u0e35\u0e22\u0e19\u0e04\u0e27\u0e32\u0e21\u0e04\u0e34\u0e14\u0e40\u0e2b\u0e47\u0e19\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13 (\u0e44\u0e21\u0e48\u0e1a\u0e31\u0e07\u0e04\u0e31\u0e1a)',
+                    hintStyle: TextStyle(
+                      color: Colors.grey.shade400,
+                      fontSize: 14,
+                    ),
+                    border: InputBorder.none,
+                    contentPadding: const EdgeInsets.all(14),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              // Submit button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: widget.onSubmit,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF1F497D),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: const Text(
+                    '\u0e1a\u0e31\u0e19\u0e17\u0e36\u0e01\u0e04\u0e2d\u0e21\u0e40\u0e21\u0e49\u0e19',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

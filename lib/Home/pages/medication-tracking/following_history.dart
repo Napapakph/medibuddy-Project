@@ -476,20 +476,11 @@ class _FollowingHistoryPageState extends State<FollowingHistoryPage> {
 
   void _showNoteViewer(MedicineHistoryItem item) {
     final note = item.note?.trim() ?? '';
-    if (note.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('ไม่มีคอมเมนต์')),
-      );
-      return;
-    }
     final nickname = item.nickname.isNotEmpty ? item.nickname : item.titleTh;
-    showDialog<void>(
+    showCommentViewerBottomSheet(
       context: context,
-      builder: (_) => CommentViewer(
-        title: 'comment',
-        medicineNickname: nickname.isNotEmpty ? nickname : '-',
-        note: note,
-      ),
+      medicineNickname: nickname.isNotEmpty ? nickname : '-',
+      note: note,
     );
   }
 
@@ -1056,8 +1047,12 @@ class _HistoryRow extends StatelessWidget {
               border: Border.all(color: const Color(0xFFB7DAFF)),
               color: Colors.white,
             ),
-            child: const Icon(Icons.chat_bubble_outline,
-                color: _primary, size: 18),
+            child: Icon(
+                (item.note != null && item.note!.trim().isNotEmpty)
+                    ? Icons.chat_bubble
+                    : Icons.chat_bubble_outline,
+                color: _primary,
+                size: 18),
           ),
         ),
       ],

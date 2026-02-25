@@ -93,7 +93,7 @@ Map<String, dynamic> _payloadFromRemoteMessage(RemoteMessage message) {
   payload['route'] = data['route']?.toString() ?? '/alarm';
   payload['title'] = data['title']?.toString() ?? (notification?.title ?? '');
   payload['body'] = data['body']?.toString() ?? (notification?.body ?? '');
-  payload['time'] = data['time']?.toString() ?? '12:00';
+  payload['time'] = data['time']?.toString();
   payload['menuIndex'] = menuIndex;
 
   payload['type'] = data['type']?.toString();
@@ -504,7 +504,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     }, onError: (err) {
       debugPrint('🔗 Deep Link stream error: $err');
     });
-  } 
+  }
 
   void _handleDeepLink(Uri uri) {
     debugPrint('====================================');

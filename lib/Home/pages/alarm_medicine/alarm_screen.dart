@@ -217,33 +217,74 @@ class _AlarmScreenState extends State<AlarmScreen> {
   }
 
   String _bodyText() {
-    final items = _alarmItems();
-    if (items.isNotEmpty) {
-      final profileNames = items
-          .map((item) => item['profileName']?.toString() ?? '')
-          .where((n) => n.isNotEmpty)
-          .toSet()
-          .toList();
+    return _normalizedPayload()['body']?.toString() ?? '';
+  }
 
-      if (profileNames.length > 1) {
-        // หลายโปรไฟล์: แสดงชื่อโปรไฟล์รัวๆ
-        return 'ผู้ใช้: ${profileNames.join(', ')}';
-      } else if (profileNames.length == 1) {
-        // โปรไฟล์เดียว: ลองดึงชื่อยา ถ้ายาไม่มีก็ตกกลับไปใช้ Body เดิม
-        final mediNames = items
-            .map((item) =>
-                (item['mediNickname'] ?? item['medicineName'])?.toString() ??
-                '')
-            .where((n) => n.isNotEmpty)
-            .toSet()
-            .toList();
-        if (mediNames.isNotEmpty) {
-          return mediNames.join(', ');
-        }
+  /// Build a summary list of profile → medicines from the payload items
+  List<Widget> _buildItemsSummaryWidgets() {
+    final items = _alarmItems();
+    if (items.isEmpty) return [];
+
+    // Group items by profileName
+    final grouped = <String, List<String>>{};
+    for (final item in items) {
+      final profile = (item['profileName']?.toString() ?? '').trim();
+      final mediName =
+          (item['mediNickname'] ?? item['medicineName'] ?? item['body'] ?? '')
+              .toString()
+              .trim();
+      // Clean up mediName: remove common prefix
+      final cleanName = mediName.replaceAll('ได้เวลาทานยา ', '').trim();
+      final key = profile.isNotEmpty ? profile : 'ไม่ระบุ';
+      grouped.putIfAbsent(key, () => []);
+      if (cleanName.isNotEmpty && !grouped[key]!.contains(cleanName)) {
+        grouped[key]!.add(cleanName);
       }
     }
-    // Fallback ใช้ข้อความ body ที่แนบมาจาก server
-    return _normalizedPayload()['body']?.toString() ?? '';
+
+    if (grouped.isEmpty) return [];
+
+    final widgets = <Widget>[];
+
+    for (final entry in grouped.entries) {
+      // Profile name header
+      widgets.add(
+        Padding(
+          padding: const EdgeInsets.only(top: 6),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.person, size: 16, color: Color(0xFF1F497D)),
+              const SizedBox(width: 4),
+            ],
+          ),
+        ),
+      );
+      // Medicine names
+      for (final medi in entry.value) {
+        widgets.add(
+          Padding(
+            padding: const EdgeInsets.only(left: 24, top: 2),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.medication, size: 14, color: Colors.black54),
+                const SizedBox(width: 4),
+                Flexible(
+                  child: Text(
+                    medi,
+                    style: const TextStyle(fontSize: 13, color: Colors.black54),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+    }
+
+    return widgets;
   }
 
   List<Widget> _headerWidgets(String title, String body) {
@@ -274,7 +315,10 @@ class _AlarmScreenState extends State<AlarmScreen> {
           textAlign: TextAlign.center,
         ),
       ],
-      if (body.isNotEmpty) ...[
+      // Show items summary (profiles + medicines)
+      ..._buildItemsSummaryWidgets(),
+      // Fallback: show body text if no items summary
+      if (_buildItemsSummaryWidgets().isEmpty && body.isNotEmpty) ...[
         const SizedBox(height: 4),
         Text(
           body,
@@ -376,12 +420,14 @@ class _AlarmScreenState extends State<AlarmScreen> {
                 ),
                 const SizedBox(height: 8),
                 Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: _headerWidgets(title, body),
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: _headerWidgets(title, body),
+                    ),
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 12),
                 PillSlideAction(
                   onTake: _onGreen,
                   onSkip: _onRed,
