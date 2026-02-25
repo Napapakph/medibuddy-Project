@@ -533,16 +533,15 @@ class _Home extends State<Home> {
     });
   }
 
-  Widget _buildReminderCard(
+  Widget _buildReminderGroupedCard(
     BuildContext context,
-    _MedicineReminder reminder, {
+    List<_MedicineReminder> group, {
     required bool pastDue,
   }) {
-    final isTaken = reminder.isTaken;
-    final checkColor =
-        isTaken ? const Color(0xFF1F497D) : const Color(0xFF9EC6F5);
-    final timeColor =
-        isTaken ? const Color(0xFF1F497D) : const Color(0xFF6FA8DC);
+    if (group.isEmpty) return const SizedBox.shrink();
+
+    final timeColor = const Color(0xFF1F497D);
+    final borderColor = const Color(0xFFD6E3F3);
 
     return Row(
       children: [
@@ -550,75 +549,126 @@ class _Home extends State<Home> {
           child: Stack(
             children: [
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: isTaken
-                        ? const Color(0xFF1F497D)
-                        : const Color(0xFFD6E3F3),
+                    color: borderColor,
                     width: 1.5,
                   ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.03),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            reminder.time,
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: timeColor,
-                            ),
+                    // Time Header
+                    Row(
+                      children: [
+                        Icon(Icons.access_time_filled_rounded,
+                            size: 18, color: timeColor),
+                        const SizedBox(width: 8),
+                        Text(
+                          group.first.time,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: timeColor,
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            reminder.name,
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.circle,
-                                size: 6,
-                                color: Color(0xFF6FA8DC),
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                reminder.meal,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  color: Color(0xFF6FA8DC),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                    SizedBox(
-                      width: 56,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            reminder.pills,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              color: Color(0xFF6FA8DC),
+                    const SizedBox(height: 16),
+                    // List of Medicines
+                    ...group.asMap().entries.map((entry) {
+                      final isLast = entry.key == group.length - 1;
+                      final reminder = entry.value;
+                      return Padding(
+                        padding: EdgeInsets.only(bottom: isLast ? 0 : 16.0),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Vertical Line indicator
+                            Container(
+                              margin: const EdgeInsets.only(top: 4, right: 12),
+                              width: 3,
+                              height: 32,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF6FA8DC),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    reminder.name,
+                                    style: const TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w700,
+                                      color: Color(0xFF333333),
+                                    ),
+                                  ),
+                                  if (reminder.meal.isNotEmpty) ...[
+                                    const SizedBox(height: 4),
+                                    Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.restaurant_rounded,
+                                          size: 14,
+                                          color: Color(0xFF6FA8DC),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Text(
+                                          reminder.meal,
+                                          style: const TextStyle(
+                                            fontSize: 14,
+                                            color: Color(0xFF6FA8DC),
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                            SizedBox(
+                              width: 64,
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFF0F6FF),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      reminder.pills,
+                                      style: const TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFF1F497D),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
                   ],
                 ),
               ),
@@ -843,6 +893,29 @@ class _Home extends State<Home> {
                                           );
                                         }
 
+                                        // Group active reminders by time
+                                        final List<List<_MedicineReminder>>
+                                            groupedReminders = [];
+                                        if (activeReminders.isNotEmpty) {
+                                          String currentTime =
+                                              activeReminders.first.time;
+                                          List<_MedicineReminder> currentGroup =
+                                              [];
+                                          for (var r in activeReminders) {
+                                            if (r.time == currentTime) {
+                                              currentGroup.add(r);
+                                            } else {
+                                              groupedReminders
+                                                  .add(currentGroup);
+                                              currentTime = r.time;
+                                              currentGroup = [r];
+                                            }
+                                          }
+                                          if (currentGroup.isNotEmpty) {
+                                            groupedReminders.add(currentGroup);
+                                          }
+                                        }
+
                                         // 2) โหลดเสร็จแล้ว (มีใน cache แล้ว) ค่อยตัดสินใจ empty state
                                         // User request: รวม reminders.isEmpty กลับเข้ามา (ว่าง = แสดง Guide)
                                         final bool showGuide =
@@ -964,18 +1037,18 @@ class _Home extends State<Home> {
                                                 )
                                               : ListView.separated(
                                                   itemCount:
-                                                      activeReminders.length,
+                                                      groupedReminders.length,
                                                   separatorBuilder: (_, __) =>
                                                       const SizedBox(
                                                           height: 12),
                                                   itemBuilder:
                                                       (context, index) {
-                                                    final reminder =
-                                                        activeReminders[index];
+                                                    final group =
+                                                        groupedReminders[index];
                                                     // Filtered out past due, so always false
-                                                    return _buildReminderCard(
+                                                    return _buildReminderGroupedCard(
                                                       context,
-                                                      reminder,
+                                                      group,
                                                       pastDue: false,
                                                     );
                                                   },
