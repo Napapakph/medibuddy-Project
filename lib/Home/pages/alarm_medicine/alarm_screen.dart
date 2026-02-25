@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:medibuddy/Home/pages/alarm_medicine/confirm_action.dart';
+import 'package:medibuddy/services/log_api.dart';
 
 class AlarmScreen extends StatefulWidget {
   final Map<String, dynamic>? payload;
@@ -301,8 +302,9 @@ class _AlarmScreenState extends State<AlarmScreen> {
     // _submitResponse('TAKE');
   }
 
-  void _onRed() {
-    debugPrint('Alarm action: skip');
+  Future<void> _processBatchAction(String responseStatus) async {
+    if (_submitting) return;
+
     final logIds = _extractLogIds();
     if (logIds.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -310,19 +312,49 @@ class _AlarmScreenState extends State<AlarmScreen> {
       );
       return;
     }
-    _openConfirmAction(logIds: logIds);
+
+    setState(() {
+      _submitting = true;
+    });
+
+    try {
+      final api = LogApiService();
+
+      // Execute all requests in parallel using Future.wait
+      await Future.wait(
+        logIds.map((id) => api.submitMedicationLogResponse(
+              logId: id,
+              responseStatus: responseStatus,
+            )),
+      );
+
+      if (!mounted) return;
+
+      // After all succeed: Close alarm screen and update local state / refresh schedule.
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        '/home',
+        (route) => false,
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _submitting = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to $responseStatus: $e')),
+      );
+    }
+  }
+
+  void _onRed() {
+    debugPrint('Alarm action: skip');
+    _processBatchAction('SKIP');
   }
 
   void _onSnooze(int minutes) {
     debugPrint('Alarm action: snooze $minutes minutes');
-    final logIds = _extractLogIds();
-    if (logIds.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Missing logId in notification payload')),
-      );
-      return;
-    }
-    _openConfirmAction(logIds: logIds);
+    _processBatchAction('SNOOZE');
   }
 
   @override
@@ -333,27 +365,38 @@ class _AlarmScreenState extends State<AlarmScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF6F2EA),
       body: SafeArea(
-        child: Column(
+        child: Stack(
           children: [
-            const SizedBox(height: 12),
-            const Text(
-              'MediBuddy',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
+            Column(
+              children: [
+                const SizedBox(height: 12),
+                const Text(
+                  'MediBuddy',
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: _headerWidgets(title, body),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                PillSlideAction(
+                  onTake: _onGreen,
+                  onSkip: _onRed,
+                  onSnooze: () => _onSnooze(10),
+                ),
+                const SizedBox(height: 16),
+              ],
             ),
-            const SizedBox(height: 8),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: _headerWidgets(title, body),
+            if (_submitting)
+              Container(
+                color: Colors.black.withOpacity(0.5),
+                child: const Center(
+                  child: CircularProgressIndicator(),
+                ),
               ),
-            ),
-            const SizedBox(height: 24),
-            PillSlideAction(
-              onTake: _onGreen,
-              onSkip: _onRed,
-              onSnooze: () => _onSnooze(10),
-            ),
-            const SizedBox(height: 16),
           ],
         ),
       ),

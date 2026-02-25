@@ -504,7 +504,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     }, onError: (err) {
       debugPrint('🔗 Deep Link stream error: $err');
     });
-  }
+  } 
 
   void _handleDeepLink(Uri uri) {
     debugPrint('====================================');
