@@ -1,4 +1,5 @@
 ﻿// history.dart
+import 'package:community_material_icon/community_material_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../services/auth_manager.dart'; // Import
@@ -11,6 +12,7 @@ import 'package:medibuddy/widgets/comment.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import 'package:community_material_icon/community_material_icon.dart';
 
 /// ===============================
 /// Models
@@ -667,7 +669,11 @@ class _HistoryPageState extends State<HistoryPage> {
             child: IconButton(
               tooltip: 'Export PDF',
               onPressed: _exportPdf,
-              icon: const Icon(FontAwesomeIcons.filePdf, color: Colors.white),
+              icon: const Icon(
+                CommunityMaterialIcons.file_pdf_box,
+                color: Color.fromARGB(255, 255, 255, 255),
+                size: 33,
+              ),
             ),
           ),
         ],
