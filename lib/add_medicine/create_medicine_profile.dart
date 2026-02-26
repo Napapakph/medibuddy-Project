@@ -6,7 +6,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:medibuddy/Model/medicine_model.dart';
 import 'package:medibuddy/widgets/medicine_step_timeline.dart';
 
-import 'search_system_medicine.dart';
+import '../search_system_medicine/search_system_medicine.dart';
 
 class CreateNameMedicinePage extends StatefulWidget {
   final int profileId;

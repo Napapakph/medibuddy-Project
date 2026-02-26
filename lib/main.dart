@@ -16,7 +16,7 @@ import 'authen_pages/forget_password.dart';
 import 'profile_pages/create_profile_screen.dart';
 import 'profile_pages/select_profile.dart';
 import 'services/auth_gate.dart';
-import 'home_pages/home.dart';
+import 'home_pages/home_screen.dart';
 import 'profile_pages/library_profile.dart';
 import 'add_medicine/medicine_list_screen.dart';
 import 'export_pdf/history.dart';

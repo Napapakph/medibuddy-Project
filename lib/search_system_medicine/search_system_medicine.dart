@@ -1,9 +1,9 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:medibuddy/Model/medicine_model.dart';
 import 'package:medibuddy/widgets/medicine_step_timeline.dart';
-import 'link_medicine.dart';
+import '../add_medicine/link_medicine.dart';
 import '../OCR/camera_ocr.dart';
-import 'summary_medicine.dart';
+import '../add_medicine/summary_medicine.dart';
 
 class FindMedicinePage extends StatefulWidget {
   final MedicineDraft draft;

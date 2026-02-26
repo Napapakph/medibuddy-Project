@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:medibuddy/Model/medicine_model.dart';
 import 'package:medibuddy/widgets/medicine_step_timeline.dart';
 import 'package:medibuddy/services/medicine_api.dart';
-import 'detail_medicine.dart';
+import '../search_system_medicine/detail_medicine.dart';
 
 class SummaryMedicinePage extends StatefulWidget {
   final MedicineDraft draft;
