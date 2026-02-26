@@ -5,14 +5,14 @@ import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
 import 'package:medibuddy/widgets/app_drawer.dart';
 import 'package:medibuddy/services/regimen_api.dart';
-import '../../Model/profile_model.dart';
-import '../../Model/medicine_regimen_model.dart';
-import 'select_profile.dart';
-import '../../services/app_state.dart';
-import '../../widgets/bottomBar.dart';
+import '../Model/profile_model.dart';
+import '../Model/medicine_regimen_model.dart';
+import '../profile_pages/select_profile.dart';
+import '../services/app_state.dart';
+import '../widgets/bottomBar.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'add_medicine/create_medicine_profile.dart';
-import '../../services/auth_manager.dart'; // Import
+import '../add_medicine/create_medicine_profile.dart';
+import '../services/auth_manager.dart'; // Import
 
 class Home extends StatefulWidget {
   final ProfileModel? selectedProfile;

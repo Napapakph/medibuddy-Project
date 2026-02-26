@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:medibuddy/widgets/app_drawer.dart';
 import 'package:lottie/lottie.dart';
-import '../../services/profile_api.dart';
-import '../../Model/profile_model.dart';
+import '../services/profile_api.dart';
+import '../Model/profile_model.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import '../../services/app_state.dart';
-import '../../services/auth_manager.dart';
+import '../services/app_state.dart';
+import '../services/auth_manager.dart';
 
 // ถ้าคุณมีหน้า login จริง ๆ ให้ import แล้วเปลี่ยน route ได้
 // import 'login.dart';

@@ -1,7 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:medibuddy/Home/pages/alarm_medicine/confirm_action.dart';
+import 'package:medibuddy/alarm_medicine/confirm_action.dart';
 import 'package:medibuddy/services/log_api.dart';
 
 class AlarmScreen extends StatefulWidget {

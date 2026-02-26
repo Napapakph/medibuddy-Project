@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'auth_manager.dart'; // Import AuthManager
-import '../pages/login.dart';
-import '../Home/pages/profile_screen.dart';
+import '../authen_pages/login.dart';
+import '../profile_pages/profile_screen.dart';
 
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});

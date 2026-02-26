@@ -3,8 +3,8 @@ import 'package:medibuddy/Model/profile_model.dart';
 import 'library_profile.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
-import '../../services/profile_api.dart';
-import '../../services/auth_manager.dart'; // Import
+import '../services/profile_api.dart';
+import '../services/auth_manager.dart'; // Import
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});

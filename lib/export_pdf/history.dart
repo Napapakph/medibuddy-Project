@@ -2,7 +2,7 @@
 import 'package:community_material_icon/community_material_icon.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import '../../services/auth_manager.dart'; // Import
+import '../services/auth_manager.dart'; // Import
 import 'package:lottie/lottie.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';

@@ -1,13 +1,13 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:medibuddy/Model/profile_model.dart';
-import '../../widgets/profile_widget.dart';
+import '../widgets/profile_widget.dart';
 import 'package:image_picker/image_picker.dart';
 import 'buddy.dart';
-import '../../services/profile_api.dart';
+import '../services/profile_api.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:math';
-import '../../services/auth_manager.dart'; // Import AuthManager
+import '../services/auth_manager.dart'; // Import AuthManager
 
 class LibraryProfile extends StatefulWidget {
   const LibraryProfile({

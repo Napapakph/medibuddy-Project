@@ -1,7 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:medibuddy/Model/medicine_model.dart';
 
-import '../../../services/regimen_api.dart';
+import '../services/regimen_api.dart';
 import 'setFuctionRemind.dart';
 
 class SetRemindScreen extends StatefulWidget {

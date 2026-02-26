@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:medibuddy/Model/medicine_model.dart';
 import 'package:medibuddy/services/medicine_api.dart';
-import '../../../services/app_state.dart';
+import '../services/app_state.dart';
 import 'package:lottie/lottie.dart';
 
 /// หน้า "ค้นหาข้อมูลยา"
