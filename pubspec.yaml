@@ -123,6 +123,7 @@ flutter:
      - assets/tutorial_2.jpg
      - assets/tutorial_3.jpg
      - assets/tutorial_4.jpg
+     - assets/splash_logo.png
 
   fonts:
      - family: Kodchasan
@@ -156,8 +157,9 @@ flutter:
         - asset: assets/fonts/Mali-SemiBoldItalic.ttf
 
 flutter_launcher_icons:
+  color: "#FFFFFF"
   android: true
-  image_path: "assets/1024x1024_แบบไม่มีตัวอักษร.png"
+  image_path: "assets/splash_logo.png"
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 

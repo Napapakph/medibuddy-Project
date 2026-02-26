@@ -144,7 +144,6 @@ class TokenManager {
       debugPrint(
           '❌ TokenManager: No refresh token available. Clearing session.');
       await clear();
-      _notifySessionExpired();
       return;
     }
 
