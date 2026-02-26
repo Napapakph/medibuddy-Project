@@ -119,6 +119,10 @@ flutter:
      - assets/cat_home_drawer.png
      - assets/512x512_แบบไม่มีตัวอักษร.png
      - assets/1024x1024_แบบไม่มีตัวอักษร.png
+     - assets/tutorial_1.jpg
+     - assets/tutorial_2.jpg
+     - assets/tutorial_3.jpg
+     - assets/tutorial_4.jpg
 
   fonts:
      - family: Kodchasan

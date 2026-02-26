@@ -37,9 +37,11 @@ class CustomHttpClient extends http.BaseClient {
           response = await _inner.send(retryRequest);
         } else {
           debugPrint('❌ CustomHttpClient: Refresh token failed or is null.');
+          // TokenManager.onSessionExpired will handle redirect to login
         }
       } catch (e) {
         debugPrint('❌ CustomHttpClient: Refresh process exception: $e');
+        // TokenManager.onSessionExpired will handle redirect to login
       }
     }
 

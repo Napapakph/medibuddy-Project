@@ -6,6 +6,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'auth_manager.dart'; // To update AuthManager.accessToken globally if needed
+import 'package:flutter/widgets.dart';
 
 class TokenManager {
   static const _storage = FlutterSecureStorage();
@@ -19,6 +20,10 @@ class TokenManager {
 
   // Single-flight refresh mutex
   static Future<void>? _refreshFuture;
+
+  /// Global callback when session is expired (refresh token invalid).
+  /// Set this in main.dart to navigate to login screen.
+  static VoidCallback? onSessionExpired;
 
   /// Getter for access token without triggering refresh
   static String? get currentAccessToken => _accessToken;
@@ -139,6 +144,7 @@ class TokenManager {
       debugPrint(
           '❌ TokenManager: No refresh token available. Clearing session.');
       await clear();
+      _notifySessionExpired();
       return;
     }
 
@@ -179,8 +185,18 @@ class TokenManager {
     } catch (e) {
       debugPrint('❌ TokenManager: Refresh failed: $e');
       await clear(); // Clear tokens to force re-login
-      // Ignore throwing here so we don't crash waiting requests,
-      // they will just fail with 401 later since _accessToken is null.
+      _notifySessionExpired();
+    }
+  }
+
+  /// Safely invoke the session-expired callback on the next frame
+  static void _notifySessionExpired() {
+    if (onSessionExpired != null) {
+      debugPrint('🔒 TokenManager: Session expired → redirecting to login');
+      // Use addPostFrameCallback to avoid calling during build
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        onSessionExpired?.call();
+      });
     }
   }
 }

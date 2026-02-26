@@ -22,6 +22,7 @@ import 'Home/pages/add_medicine/medicine_list_screen.dart';
 import 'Home/pages/history.dart';
 import 'OCR/camera_ocr.dart';
 import 'services/sync_user.dart';
+import 'services/token_manager.dart';
 import 'dart:async';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -470,6 +471,29 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _initDeepLinks();
+
+    // ✅ When refresh token expires, redirect to login
+    TokenManager.onSessionExpired = _handleSessionExpired;
+  }
+
+  void _handleSessionExpired() {
+    debugPrint('🔒 Session expired → navigating to login');
+    final ctx = navigatorKey.currentContext;
+    if (ctx == null) return;
+
+    // Sign out Supabase session too (if using Supabase)
+    try {
+      Supabase.instance.client.auth.signOut();
+    } catch (_) {}
+
+    // Clear global token
+    AuthManager.accessToken = null;
+
+    // Navigate to login and clear the stack
+    navigatorKey.currentState?.pushNamedAndRemoveUntil(
+      '/login',
+      (route) => false,
+    );
   }
 
   @override
