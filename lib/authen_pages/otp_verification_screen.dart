@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_otp_text_field/flutter_otp_text_field.dart';
-import 'login.dart';
+import 'login_screen.dart';
 import '../services/auth_manager.dart';
 
 class OTPScreen extends StatefulWidget {

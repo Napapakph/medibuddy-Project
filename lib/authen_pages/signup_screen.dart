@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'otp.dart';
+import 'otp_verification_screen.dart';
 import 'forget_password.dart';
-import 'login.dart';
+import 'login_screen.dart';
 // import '../services/authen_login.dart'; // Removed unused import
 // import '../services/sync_user.dart'; // Removed unused import
 import '../services/auth_manager.dart';

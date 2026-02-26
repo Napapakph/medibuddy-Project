@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 
 // ... imports remain the same
 import 'package:lottie/lottie.dart';
-import 'signup.dart';
+import 'signup_screen.dart';
 import '../widgets/login_button.dart';
 import '../services/authen_login_api_v2.dart'; // ✅ import for API password reset
 import 'forget_password.dart';
-import '../profile_pages/profile_screen.dart';
+import '../profile_pages/create_profile_screen.dart';
 import '../profile_pages/select_profile.dart';
 import '../services/profile_api.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/login_button.dart';
-import 'login.dart';
+import 'login_screen.dart';
 import 'package:medibuddy/services/auth_manager.dart'; // Import AuthManager
 import 'package:medibuddy/services/authen_login_api_v2.dart'; // Import CustomAuthService
 import 'package:supabase_flutter/supabase_flutter.dart';
