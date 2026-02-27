@@ -613,19 +613,41 @@ class _RemindListScreenState extends State<RemindListScreen> {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text('ลบแจ้งเตือน'),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          titlePadding: EdgeInsets.zero, // ⭐ สำคัญมาก
+          title: Container(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            decoration: const BoxDecoration(
+              color: Color(0xFF1F497D), // สีพื้นหลัง title
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
+            ),
+            child: const Center(
+              child: Text(
+                'ลบแจ้งเตือน',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
           content: const Text('ต้องการลบการแจ้งเตือนนี้หรือไม่'),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(dialogContext, false),
+              onPressed: () => Navigator.pop(context, false),
               child: const Text('ยกเลิก'),
             ),
             TextButton(
-              onPressed: () {
-                Navigator.pop(dialogContext, true);
-              },
-              child:
-                  const Text('ลบ', style: TextStyle(color: Colors.redAccent)),
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text(
+                'ลบ',
+                style: TextStyle(color: Colors.redAccent),
+              ),
             ),
           ],
         );

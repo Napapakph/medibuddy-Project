@@ -125,7 +125,22 @@ class _TutorialDialogState extends State<TutorialDialog> {
                   )
                 else
                   const SizedBox(width: 30),
-                Expanded(
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(1),
+                    border: Border.all(
+                      color: const Color(0xFF1F497D),
+                      width: 1,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
                   child: Image.asset(
                     pageData['image'],
                     height: 250,

@@ -207,7 +207,12 @@ class _FindMedicinePageState extends State<FindMedicinePage> {
                         Container(
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           width: double.infinity,
-                          color: const Color(0xFFF0F4F8),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFF0F4F8),
+                            borderRadius: BorderRadius.vertical(
+                              top: Radius.circular(20),
+                            ),
+                          ),
                           child: const Text(
                             'วิธีการเพิ่มยาด้วยการสแกนฉลาก',
                             style: TextStyle(
@@ -218,18 +223,51 @@ class _FindMedicinePageState extends State<FindMedicinePage> {
                             textAlign: TextAlign.center,
                           ),
                         ),
+
+                        /// 👇 กรอบรูป
                         Expanded(
-                          child: PageView(
-                            children: [
-                              Image.asset('assets/tutorial_1.jpg',
-                                  fit: BoxFit.contain),
-                              Image.asset('assets/tutorial_2.jpg',
-                                  fit: BoxFit.contain),
-                              Image.asset('assets/tutorial_3.jpg',
-                                  fit: BoxFit.contain),
-                            ],
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                                vertical: 8, horizontal: 16),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: const Color(0xFF1F497D),
+                                  width: 1,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.05),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: PageView(
+                                  children: [
+                                    Image.asset(
+                                      'assets/tutorial_1.jpg',
+                                      fit: BoxFit.contain,
+                                    ),
+                                    Image.asset(
+                                      'assets/tutorial_2.jpg',
+                                      fit: BoxFit.contain,
+                                    ),
+                                    Image.asset(
+                                      'assets/tutorial_3.jpg',
+                                      fit: BoxFit.contain,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
                           ),
                         ),
+
                         const Padding(
                           padding: EdgeInsets.symmetric(vertical: 8),
                           child: Row(
@@ -241,7 +279,9 @@ class _FindMedicinePageState extends State<FindMedicinePage> {
                               Text(
                                 'แตะเพื่อดูรายละเอียด',
                                 style: TextStyle(
-                                    color: Color(0xFF7A869A), fontSize: 12),
+                                  color: Color(0xFF7A869A),
+                                  fontSize: 12,
+                                ),
                               ),
                             ],
                           ),

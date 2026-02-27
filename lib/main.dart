@@ -207,12 +207,59 @@ void _handleLocalNotificationTap(String? payload) {
 }
 
 void openAlarmFromNoti({String? payload, Map<String, dynamic>? data}) {
-  debugPrint('?? ROUTING TO /alarm payload=$payload data=$data');
+  debugPrint('\n================ [DEBUG NOTIFICATION CLICK] ================');
+  debugPrint('RAW payload: $payload');
+  debugPrint('RAW data: $data');
   Map<String, dynamic>? parsed;
   if (payload != null) {
     parsed = _payloadFromString(payload);
   }
   parsed ??= data;
+
+  if (parsed != null) {
+    debugPrint('PARSED MAP KEYS: ${parsed.keys.toList()}');
+    final allLogIds = <String>[];
+
+    // Root logId
+    if (parsed['logId'] != null) allLogIds.add(parsed['logId'].toString());
+
+    // Local debug helper function
+    void extractFrom(dynamic raw) {
+      if (raw == null) return;
+      try {
+        final decoded = raw is String ? jsonDecode(raw) : raw;
+        if (decoded is List) {
+          for (final item in decoded) {
+            if (item is Map && item['logId'] != null) {
+              allLogIds.add(item['logId'].toString());
+            } else if (item != null) {
+              // Fallback if it's just a list of IDs
+              allLogIds.add(item.toString());
+            }
+          }
+        }
+      } catch (_) {}
+    }
+
+    extractFrom(parsed['items']);
+    extractFrom(parsed['payload']);
+    if (parsed['data'] is Map) {
+      final innerData = parsed['data'] as Map;
+      if (innerData['logId'] is List) {
+        extractFrom(innerData['logId']);
+      } else if (innerData['logId'] != null) {
+        allLogIds.add(innerData['logId'].toString());
+      }
+    }
+
+    final uniqueLogIds = allLogIds.toSet().toList();
+    debugPrint('➡️ EXTRACTED logIds COUNT = ${uniqueLogIds.length}');
+    debugPrint('➡️ EXTRACTED logIds VALUES = $uniqueLogIds');
+  } else {
+    debugPrint('❌ PARSED MAP is NULL');
+  }
+  debugPrint('============================================================\n');
+
   if (parsed == null) return;
   final nav = navigatorKey.currentState;
   if (nav == null) {
