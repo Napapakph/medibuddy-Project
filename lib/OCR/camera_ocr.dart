@@ -8,6 +8,7 @@ import 'ocr_camera_frame.dart';
 import 'ocr_image_cropper.dart';
 import 'ocr_result_page.dart';
 import 'ocr_text_service.dart';
+import 'tutorial_dialog.dart';
 
 class CameraOcrPage extends StatefulWidget {
   const CameraOcrPage({super.key});
@@ -48,6 +49,9 @@ class _CameraOcrPageState extends State<CameraOcrPage> {
     super.initState();
     _log('initState()');
     _initCamera(_lensDirection);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      TutorialDialog.show(context);
+    });
   }
 
   @override
@@ -386,6 +390,12 @@ class _CameraOcrPageState extends State<CameraOcrPage> {
             ),
           ],
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.help_outline, color: Colors.white),
+            onPressed: () => TutorialDialog.show(context, forceShow: true),
+          ),
+        ],
       ),
       body: SafeArea(
         child: Column(

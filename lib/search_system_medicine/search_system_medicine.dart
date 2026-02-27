@@ -4,6 +4,7 @@ import 'package:medibuddy/widgets/medicine_step_timeline.dart';
 import '../add_medicine/link_medicine.dart';
 import '../OCR/camera_ocr.dart';
 import '../add_medicine/summary_medicine.dart';
+import '../OCR/tutorial_dialog.dart';
 
 class FindMedicinePage extends StatefulWidget {
   final MedicineDraft draft;
@@ -185,17 +186,67 @@ class _FindMedicinePageState extends State<FindMedicinePage> {
               const SizedBox(height: 10),
               SizedBox(
                 height: 350,
-                child: Container(
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: const Color.fromARGB(255, 255, 255, 255),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: const Center(
-                    child: Text(
-                      'พิมพ์คำค้นหา หรือใช้กล้องสแกนฉลากยา',
-                      style: TextStyle(color: Color(0xFF7A869A)),
-                      textAlign: TextAlign.center,
+                child: GestureDetector(
+                  onTap: () => TutorialDialog.show(context, forceShow: true),
+                  child: Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: const Color.fromARGB(255, 255, 255, 255),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        )
+                      ],
+                    ),
+                    clipBehavior: Clip.hardEdge,
+                    child: Column(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          width: double.infinity,
+                          color: const Color(0xFFF0F4F8),
+                          child: const Text(
+                            'วิธีการเพิ่มยาด้วยการสแกนฉลาก',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF1F497D),
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                        Expanded(
+                          child: PageView(
+                            children: [
+                              Image.asset('assets/tutorial_1.jpg',
+                                  fit: BoxFit.contain),
+                              Image.asset('assets/tutorial_2.jpg',
+                                  fit: BoxFit.contain),
+                              Image.asset('assets/tutorial_3.jpg',
+                                  fit: BoxFit.contain),
+                            ],
+                          ),
+                        ),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 8),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.touch_app,
+                                  size: 16, color: Color(0xFF7A869A)),
+                              SizedBox(width: 4),
+                              Text(
+                                'แตะเพื่อดูรายละเอียด',
+                                style: TextStyle(
+                                    color: Color(0xFF7A869A), fontSize: 12),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),

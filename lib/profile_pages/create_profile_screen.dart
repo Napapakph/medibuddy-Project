@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import '../services/profile_api.dart';
 import '../services/auth_manager.dart'; // Import
+import '../OCR/tutorial_dialog.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -92,6 +93,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
         title:
             const Text('โปรไฟล์ของฉัน', style: TextStyle(color: Colors.white)),
         backgroundColor: Color(0xFF1F497D),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.help_outline, color: Colors.white),
+            onPressed: () => TutorialDialog.show(context, forceShow: true),
+          ),
+        ],
       ),
       resizeToAvoidBottomInset: false,
       backgroundColor: const Color.fromARGB(255, 227, 242, 255),
