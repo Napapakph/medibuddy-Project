@@ -301,22 +301,38 @@ class _HistoryPageState extends State<HistoryPage> {
       firstDate: firstDate,
       lastDate: lastDate,
       locale: const Locale('th', 'TH'),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFF1F497D),
+              onPrimary: Colors.white,
+              onSurface: Color(0xFF1F497D),
+            ),
+            dialogBackgroundColor: Colors.white,
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: Color(0xFF1F497D),
+                textStyle: TextStyle(fontWeight: FontWeight.w700),
+              ),
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
 
     if (picked == null) return;
 
     setState(() {
       _isDateFilterUserSet = true;
+
       if (isStart) {
         _startDate = picked;
-        if (_startDate.isAfter(_endDate)) {
-          _endDate = _startDate;
-        }
+        if (_startDate.isAfter(_endDate)) _endDate = _startDate;
       } else {
         _endDate = picked;
-        if (_endDate.isBefore(_startDate)) {
-          _startDate = _endDate;
-        }
+        if (_endDate.isBefore(_startDate)) _startDate = _endDate;
       }
     });
 
@@ -630,6 +646,12 @@ class _HistoryPageState extends State<HistoryPage> {
     final grouped = _groupByDate(items);
     final dateKeys = grouped.keys.toList()..sort((a, b) => b.compareTo(a));
 
+    String formatThaiDateBE(DateTime date) {
+      final dayMonth = DateFormat('d MMMM', 'th_TH').format(date);
+      final buddhistYear = date.year + 543;
+      return '$dayMonth $buddhistYear';
+    }
+
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 255, 255, 255),
       appBar: AppBar(
@@ -742,8 +764,7 @@ class _HistoryPageState extends State<HistoryPage> {
                       Expanded(
                         child: _DateField(
                           label: '',
-                          value:
-                              DateFormat('d MMMM', 'th_TH').format(_startDate),
+                          value: formatThaiDateBE(_startDate),
                           onTap: () => _pickDate(isStart: true),
                         ),
                       ),
@@ -753,7 +774,7 @@ class _HistoryPageState extends State<HistoryPage> {
                       Expanded(
                         child: _DateField(
                           label: '',
-                          value: DateFormat('d MMMM', 'th_TH').format(_endDate),
+                          value: formatThaiDateBE(_endDate),
                           onTap: () => _pickDate(isStart: false),
                         ),
                       ),

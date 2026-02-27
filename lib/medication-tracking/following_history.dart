@@ -396,25 +396,53 @@ class _FollowingHistoryPageState extends State<FollowingHistoryPage> {
 
   Future<void> _pickDate({required bool isStart}) async {
     final initial = isStart ? _startDate : _endDate;
+
     final picked = await showDatePicker(
       context: context,
       initialDate: initial,
       firstDate: DateTime(2000),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
+      lastDate: DateTime(2100),
       locale: const Locale('th', 'TH'),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFF1F497D), // ✅ สีหัวปฏิทิน + วันที่เลือก
+              onPrimary: Colors.white, // ✅ สีตัวอักษรบนหัวปฏิทิน
+              onSurface: Color(0xFF1F497D), // ✅ สีตัวเลขวันปกติ
+            ),
+            dialogBackgroundColor: Colors.white,
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: Color(0xFF1F497D), // ✅ สีปุ่ม CANCEL/OK
+                textStyle: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
+
     if (picked == null) return;
+
     setState(() {
-      _isDateFilterUserSet = true;
       if (isStart) {
         _startDate = picked;
-        if (_startDate.isAfter(_endDate)) _endDate = _startDate;
+
+        // กัน start > end
+        if (_startDate.isAfter(_endDate)) {
+          _endDate = _startDate;
+        }
       } else {
         _endDate = picked;
-        if (_endDate.isBefore(_startDate)) _startDate = _endDate;
+
+        // กัน end < start
+        if (_endDate.isBefore(_startDate)) {
+          _startDate = _endDate;
+        }
       }
     });
-    _loadHistory();
   }
 
   String _formatThaiDate(DateTime d) {

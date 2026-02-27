@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:lottie/lottie.dart';
+import 'package:intl/intl.dart';
 import 'package:medibuddy/services/auth_manager.dart';
 import 'package:medibuddy/services/follow_api.dart';
 
@@ -42,6 +43,9 @@ class _FollowingRegimenPageState extends State<FollowingRegimenPage> {
 
   List<Map<String, dynamic>> _allRegimens = [];
   List<Map<String, dynamic>> _filteredRegimens = [];
+
+  DateTime _startDate = DateTime.now();
+  DateTime _endDate = DateTime.now().add(const Duration(days: 7));
 
   // State for header info
   String _ownerName = '';
@@ -175,9 +179,43 @@ class _FollowingRegimenPageState extends State<FollowingRegimenPage> {
     setState(() => _filteredRegimens = _filterItems(_allRegimens));
   }
 
+  bool _isInDateRange(Map<String, dynamic> item) {
+    final itemStartStr = _readString(item['startDate']);
+    final itemEndStr = _readString(item['endDate']);
+
+    DateTime? itemStart;
+    DateTime? itemEnd;
+
+    if (itemStartStr.isNotEmpty)
+      itemStart = DateTime.tryParse(itemStartStr)?.toLocal();
+    if (itemEndStr.isNotEmpty)
+      itemEnd = DateTime.tryParse(itemEndStr)?.toLocal();
+
+    if (itemStart == null)
+      return true; // If no start date, consider it always active
+
+    final startRange =
+        DateTime(_startDate.year, _startDate.month, _startDate.day);
+    final endRange =
+        DateTime(_endDate.year, _endDate.month, _endDate.day, 23, 59, 59);
+
+    final rStart = DateTime(itemStart.year, itemStart.month, itemStart.day);
+    DateTime? rEnd;
+    if (itemEnd != null) {
+      rEnd = DateTime(itemEnd.year, itemEnd.month, itemEnd.day, 23, 59, 59);
+    }
+
+    if (rStart.isAfter(endRange)) return false;
+    if (rEnd != null && rEnd.isBefore(startRange)) return false;
+
+    return true;
+  }
+
   List<Map<String, dynamic>> _filterItems(List<Map<String, dynamic>> items) {
     return items.where((item) {
-      return _matchesKeyword(item);
+      if (!_matchesKeyword(item)) return false;
+      if (!_isInDateRange(item)) return false;
+      return true;
     }).toList();
   }
 
@@ -203,6 +241,60 @@ class _FollowingRegimenPageState extends State<FollowingRegimenPage> {
       default:
         return false;
     }
+  }
+
+  Future<void> _pickDate({required bool isStart}) async {
+    final now = DateTime.now();
+    final firstDate = DateTime(now.year, now.month, now.day);
+
+    DateTime initial = isStart ? _startDate : _endDate;
+    if (initial.isBefore(firstDate)) {
+      initial = firstDate;
+    }
+
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: firstDate,
+      lastDate: DateTime(2100),
+      locale: const Locale('th', 'TH'),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFF1F497D),
+              onPrimary: Colors.white,
+              onSurface: Color(0xFF1F497D),
+            ),
+            dialogBackgroundColor: Colors.white,
+            textButtonTheme: TextButtonThemeData(
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFF1F497D),
+                textStyle: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (picked == null) return;
+
+    setState(() {
+      if (isStart) {
+        _startDate = picked;
+        if (_startDate.isAfter(_endDate)) {
+          _endDate = _startDate;
+        }
+      } else {
+        _endDate = picked;
+        if (_endDate.isBefore(_startDate)) {
+          _startDate = _endDate;
+        }
+      }
+      _applyFilters();
+    });
   }
 
   // ===== Grouping by schedule time =====
@@ -530,6 +622,34 @@ class _FollowingRegimenPageState extends State<FollowingRegimenPage> {
                   ),
                 ),
 
+                // ===== Date range =====
+                Container(
+                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _DateField(
+                          label: '',
+                          value: DateFormat('d MMMM yyyy', 'th_TH')
+                              .format(_startDate),
+                          onTap: () => _pickDate(isStart: true),
+                        ),
+                      ),
+                      const SizedBox(width: 5),
+                      const Text('ถึง'),
+                      const SizedBox(width: 5),
+                      Expanded(
+                        child: _DateField(
+                          label: '',
+                          value: DateFormat('d MMMM yyyy', 'th_TH')
+                              .format(_endDate),
+                          onTap: () => _pickDate(isStart: false),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
                 const SizedBox(height: 8),
 
                 // ===== List =====
@@ -615,6 +735,63 @@ class _FollowingRegimenPageState extends State<FollowingRegimenPage> {
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+// ===== Date Field Widget =====
+class _DateField extends StatelessWidget {
+  final String label;
+  final String value;
+  final VoidCallback onTap;
+
+  const _DateField({
+    required this.label,
+    required this.value,
+    required this.onTap,
+  });
+
+  static const _primary = Color(0xFF1F497D);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 44,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE0E6EF)),
+      ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          child: Row(
+            children: [
+              Text(
+                label,
+                style: const TextStyle(
+                  color: _primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  value,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: _primary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              const Icon(Icons.calendar_month, color: _primary),
+            ],
+          ),
+        ),
       ),
     );
   }

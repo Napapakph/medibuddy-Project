@@ -378,7 +378,7 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
                 height: 180,
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF2F4F8),
+                  color: const Color.fromARGB(255, 255, 255, 255),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: localImagePath.isNotEmpty
@@ -407,7 +407,7 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
                                       Icons
                                           .broken_image, // Show different icon for local file error
                                       size: 64,
-                                      color: Color(0xFF9AA7B8),
+                                      color: Color.fromARGB(255, 255, 255, 255),
                                     ),
                                   );
                                 },
@@ -424,7 +424,7 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
                                   child: Icon(
                                     Icons.photo,
                                     size: 64,
-                                    color: Color(0xFF9AA7B8),
+                                    color: Color.fromARGB(255, 255, 255, 255),
                                   ),
                                 );
                               },
