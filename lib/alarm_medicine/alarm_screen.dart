@@ -3,6 +3,10 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:medibuddy/alarm_medicine/confirm_action.dart';
 import 'package:medibuddy/services/log_api.dart';
+import 'package:medibuddy/services/auth_manager.dart';
+import 'package:medibuddy/services/notification_launch_guard.dart';
+import 'package:medibuddy/services/app_route_observer.dart';
+import 'package:medibuddy/main.dart' show navigatorKey;
 
 class AlarmScreen extends StatefulWidget {
   final Map<String, dynamic>? payload;
@@ -60,15 +64,13 @@ class _AlarmScreenState extends State<AlarmScreen> {
   List<Map<String, dynamic>> _parsePayloadItems(dynamic raw) {
     if (raw == null) return [];
     try {
-      final decoded = raw is String ? jsonDecode(raw) : raw;
-      if (decoded is! List) return [];
-      final items = <Map<String, dynamic>>[];
-      for (final item in decoded) {
-        if (item is Map) {
-          items.add(item.map((key, value) => MapEntry(key.toString(), value)));
-        }
+      dynamic decoded = raw is String ? jsonDecode(raw) : raw;
+      if (decoded is List) {
+        return decoded.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+      } else if (decoded is Map) {
+        return [Map<String, dynamic>.from(decoded)];
       }
-      return items;
+      return [];
     } catch (e) {
       debugPrint('❌ Failed to decode payload list: $e');
       return [];
@@ -125,6 +127,9 @@ class _AlarmScreenState extends State<AlarmScreen> {
       }
     }
 
+    debugPrint(
+        '🧪 alarm_screen received items length: ${itemsList.length} (expect > 0)');
+
     return itemsList;
   }
 
@@ -175,9 +180,20 @@ class _AlarmScreenState extends State<AlarmScreen> {
 
   // Removed _submitResponse method
 
-  void _openConfirmAction({required List<int> logIds}) {
-    if (_submitting) return;
-    Navigator.of(context).push(
+  Future<void> _openConfirmAction({required List<int> logIds}) async {
+    if (_submitting) {
+      debugPrint('⚠️ _openConfirmAction blocked because _submitting=true');
+      return;
+    }
+
+    setState(() {
+      _submitting = true;
+    });
+
+    debugPrint('✅ Pushing ConfirmActionScreen directly');
+
+    if (!mounted) return;
+    await Navigator.of(context, rootNavigator: true).push(
       MaterialPageRoute(
         builder: (_) => ConfirmActionScreen(
           logIds: logIds,
@@ -186,6 +202,12 @@ class _AlarmScreenState extends State<AlarmScreen> {
         ),
       ),
     );
+
+    if (mounted) {
+      setState(() {
+        _submitting = false;
+      });
+    }
   }
 
   // ✅ NEW: format TimeOfDay to HH:mm
@@ -363,7 +385,7 @@ class _AlarmScreenState extends State<AlarmScreen> {
   // Removed _exitToApp method
 
   void _onGreen() {
-    debugPrint('Alarm action: taken');
+    debugPrint('▶️ _onGreen called: TAKE -> opening confirm');
     final logIds = _extractLogIds();
     if (logIds.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -371,11 +393,17 @@ class _AlarmScreenState extends State<AlarmScreen> {
       );
       return;
     }
+    // Mark user action BEFORE opening confirm screen
+    NotificationLaunchGuard.markUserAction();
     _openConfirmAction(logIds: logIds);
   }
 
   Future<void> _processBatchAction(String responseStatus) async {
-    if (_submitting) return;
+    debugPrint('▶️ _processBatchAction called with status: $responseStatus');
+    if (_submitting) {
+      debugPrint('⚠️ _processBatchAction blocked because _submitting=true');
+      return;
+    }
 
     final logIds = _extractLogIds();
     if (logIds.isEmpty) {
@@ -384,12 +412,18 @@ class _AlarmScreenState extends State<AlarmScreen> {
       );
       return;
     }
+
+    // Mark user action for guard
+    NotificationLaunchGuard.markUserAction();
 
     setState(() {
       _submitting = true;
     });
 
     try {
+      debugPrint(
+          '🔄 Fetching access token for batch action (Cold start protection)');
+      final token = await AuthManager.service.getAccessToken();
       final api = LogApiService();
 
       // Execute all requests in parallel using Future.wait
@@ -397,17 +431,33 @@ class _AlarmScreenState extends State<AlarmScreen> {
         logIds.map((id) => api.submitMedicationLogResponse(
               logId: id,
               responseStatus: responseStatus,
+              accessToken: token,
             )),
       );
 
       if (!mounted) return;
 
-      // After all succeed: Close alarm screen and update local state / refresh schedule.
-      Navigator.pushNamedAndRemoveUntil(
-        context,
+      // After all succeed: navigate to /home
+      debugPrint('✅ Batch action success -> navigating to /home');
+      debugPrint(
+          '📍 Current route before /home: ${AppRouteObserver.currentRouteName}');
+      debugPrint(StackTrace.current.toString());
+
+      Navigator.of(context, rootNavigator: true).pushNamedAndRemoveUntil(
         '/home',
         (route) => false,
       );
+
+      // Clear guard and handle deferred session redirect
+      final shouldRedirectSession =
+          NotificationLaunchGuard.clearAndCheckDeferred();
+      if (shouldRedirectSession) {
+        debugPrint('🔒 Deferred session redirect -> /login');
+        navigatorKey.currentState?.pushNamedAndRemoveUntil(
+          '/login',
+          (route) => false,
+        );
+      }
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -420,12 +470,12 @@ class _AlarmScreenState extends State<AlarmScreen> {
   }
 
   void _onRed() {
-    debugPrint('Alarm action: skip');
+    debugPrint('▶️ _onRed called: SKIP -> routing to /home');
     _processBatchAction('SKIP');
   }
 
   void _onSnooze(int minutes) {
-    debugPrint('Alarm action: snooze $minutes minutes');
+    debugPrint('▶️ _onSnooze called: SNOOZE -> routing to /home');
     _processBatchAction('SNOOZE');
   }
 

@@ -1,10 +1,14 @@
-﻿import 'package:flutter/material.dart';
+﻿import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:medibuddy/services/log_api.dart';
 
 import 'package:medibuddy/services/app_state.dart';
 
 import 'package:medibuddy/services/auth_manager.dart'; // Import AuthManager
+import 'package:medibuddy/services/notification_launch_guard.dart';
+import 'package:medibuddy/services/app_route_observer.dart';
+import 'package:medibuddy/main.dart' show navigatorKey;
 
 class ConfirmActionScreen extends StatefulWidget {
   final List<int> logIds;
@@ -40,6 +44,7 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
   @override
   void initState() {
     super.initState();
+    debugPrint('✅ ConfirmActionScreen initialized');
     _loadLogs();
   }
 
@@ -339,15 +344,30 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
         _responses[logId] = responseStatus;
       });
       if (_responses.length >= _logs.length && _logs.isNotEmpty) {
-        Navigator.pushReplacementNamed(
-          context,
+        debugPrint('✅ ConfirmActionScreen success -> navigating to /home');
+        debugPrint(
+            '📍 Current route before /home: ${AppRouteObserver.currentRouteName}');
+        debugPrint(StackTrace.current.toString());
+        Navigator.of(context, rootNavigator: true).pushNamedAndRemoveUntil(
           '/home',
+          (route) => false,
           arguments: {
             'profileId': pid,
             'profileName': AppState.instance.currentProfileName,
             'profileImage': AppState.instance.currentProfileImagePath,
           },
         );
+
+        // Clear guard and handle deferred session redirect
+        final shouldRedirectSession =
+            NotificationLaunchGuard.clearAndCheckDeferred();
+        if (shouldRedirectSession) {
+          debugPrint('🔒 Deferred session redirect -> /login');
+          navigatorKey.currentState?.pushNamedAndRemoveUntil(
+            '/login',
+            (route) => false,
+          );
+        }
       }
     } catch (e) {
       if (!mounted) return;

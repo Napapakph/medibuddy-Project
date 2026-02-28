@@ -2,25 +2,27 @@ import 'package:flutter/material.dart';
 import 'auth_manager.dart'; // Import AuthManager
 import '../authen_pages/login_screen.dart';
 import '../profile_pages/create_profile_screen.dart';
+import 'notification_launch_guard.dart';
+import 'app_route_observer.dart';
 
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // OLD: final session = Supabase.instance.client.auth.currentSession;
-    // NEW: Check AuthManager
+    // ── Guard: if alarm flow is active, do NOT auto-redirect ──
+    final currentRoute = AppRouteObserver.currentRouteName;
+    if (NotificationLaunchGuard.isHandlingNotificationOpen &&
+        NotificationLaunchGuard.isAlarmFlowRoute(currentRoute)) {
+      debugPrint(
+          '🔔 [AuthGate] Guard active on $currentRoute → skipping auto-redirect');
+      // Return a safe, harmless scaffold while the alarm screen is on top.
+      // This is only reached if AuthGate is rebuilt in the background.
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
 
-    // Note: getAccessToken() is async, so AuthGate might need to be stateful or FutureBuilder
-    // BUT for simplicity, we can check the *cached* variable if initialized,
-    // or rely on the Fact that main.dart should have synced it.
-
-    // Ideally, AuthGate should be a StreamBuilder listening to auth state changes.
-    // For now, let's keep it simple: if we have a token (from main), go to Profile.
-    // However, AuthManager.accessToken might be null on cold start if not persisted?
-    // Supabase perists session automatically. CustomAuth service persists via SecureStorage.
-
-    // Ideally we should use a FutureBuilder to check validity.
     return FutureBuilder<String?>(
       future: AuthManager.service.getAccessToken(),
       builder: (context, snapshot) {

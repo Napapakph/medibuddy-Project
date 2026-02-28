@@ -34,6 +34,8 @@ import 'medication-tracking/add_follower.dart';
 import 'medication-tracking/follower.dart';
 import 'medication-tracking/following.dart';
 import 'package:app_links/app_links.dart';
+import 'services/notification_launch_guard.dart';
+import 'services/app_route_observer.dart';
 
 const bool kDisableAuthGate =
     true; // เปลี่ยนเป็น false เมื่อต้องการเปิดใช้งาน AuthGate
@@ -41,13 +43,18 @@ const bool kDisableAuthGate =
 late final StreamSubscription<AuthState> _authSub;
 final FlutterLocalNotificationsPlugin flnp = FlutterLocalNotificationsPlugin();
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
-
 late final DeviceTokenService
     globalDeviceTokenService; // 🔹 EXPOSED GLOBALLY FOR CUSTOM AUTH
 
-String? _pendingNotificationPayload;
 late AppLinks _appLinks;
 StreamSubscription<Uri>? _linkSubscription;
+
+// One-shot pending alarm navigation (replaces recursive attemptNavigation)
+Map<String, dynamic>? _pendingAlarmArgs;
+bool _pendingAlarmScheduled = false;
+
+// Global instance of the route observer
+final appRouteObserver = AppRouteObserver();
 
 const AndroidNotificationChannel channel = AndroidNotificationChannel(
   'medibuddy_alarm', // เปลี่ยนเป็นชื่อใหม่ เพื่อทำลายบั๊กแบนเนอร์ที่ไม่เด้งบนเครื่องที่เผลอจำค่าเก่า
@@ -165,19 +172,6 @@ Map<String, dynamic>? _payloadFromString(String? payload) {
   return null;
 }
 
-void _navigateToAlarm(Map<String, dynamic> payload) {
-  final route = payload['route']?.toString() ?? '/alarm';
-  final nav = navigatorKey.currentState;
-  if (nav == null) {
-    _pendingNotificationPayload = jsonEncode(payload);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _flushPendingNotificationNavigation();
-    });
-    return;
-  }
-  nav.pushNamed(route, arguments: payload);
-}
-
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
@@ -185,12 +179,6 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
   // OS จะจัดการเรื่องการโชว์แจ้งเตือนเองผ่านคีย์ "notification" ไม่ต้องรัน flnp.show()
   debugPrint('📩 OS is handling background notification. Skipped flnp.show()');
-}
-
-void _handleLocalNotificationTap(String? payload) {
-  final parsed = _payloadFromString(payload);
-  if (parsed == null) return;
-  _navigateToAlarm(parsed);
 }
 
 void openAlarmFromNoti({String? payload, Map<String, dynamic>? data}) {
@@ -220,7 +208,6 @@ void openAlarmFromNoti({String? payload, Map<String, dynamic>? data}) {
             if (item is Map && item['logId'] != null) {
               allLogIds.add(item['logId'].toString());
             } else if (item != null) {
-              // Fallback if it's just a list of IDs
               allLogIds.add(item.toString());
             }
           }
@@ -248,22 +235,66 @@ void openAlarmFromNoti({String? payload, Map<String, dynamic>? data}) {
   debugPrint('============================================================\n');
 
   if (parsed == null) return;
-  final nav = navigatorKey.currentState;
-  if (nav == null) {
-    _pendingNotificationPayload = jsonEncode(parsed);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _flushPendingNotificationNavigation();
-    });
+
+  // ── Dedupe key ──
+  final dedupeKey = parsed['messageId']?.toString() ??
+      '${parsed['timestamp'] ?? parsed['scheduleTime'] ?? ''}_${parsed['type'] ?? ''}';
+
+  if (NotificationLaunchGuard.isDuplicate(dedupeKey)) {
+    debugPrint(
+        '🧪 openAlarmFromNoti deduplicated duplicate request for key: $dedupeKey');
     return;
   }
-  nav.pushNamed('/alarm', arguments: parsed);
-}
 
-void _flushPendingNotificationNavigation() {
-  if (_pendingNotificationPayload == null) return;
-  final payload = _pendingNotificationPayload;
-  _pendingNotificationPayload = null;
-  openAlarmFromNoti(payload: payload);
+  // ── Resolve profile ID (int?) for guard ──
+  int? profileId;
+  final rawPid = parsed['profileId'];
+  if (rawPid is int) {
+    profileId = rawPid;
+  } else if (rawPid != null) {
+    profileId = int.tryParse(rawPid.toString());
+  }
+
+  // ── Activate guard ──
+  NotificationLaunchGuard.activate(notiKey: dedupeKey, profileId: profileId);
+
+  // ── One-shot deterministic navigation ──
+  final nav = navigatorKey.currentState;
+  if (nav != null) {
+    // Navigator is ready → navigate immediately
+    debugPrint('🧪 Navigator ready → pushNamedAndRemoveUntil /alarm');
+    nav.pushNamedAndRemoveUntil(
+      '/alarm',
+      (route) => false,
+      arguments: parsed,
+    );
+  } else {
+    // Navigator not yet mounted (cold start) → store args and schedule ONE callback
+    debugPrint('🧪 Navigator not ready → storing _pendingAlarmArgs');
+    _pendingAlarmArgs = parsed;
+    if (!_pendingAlarmScheduled) {
+      _pendingAlarmScheduled = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _pendingAlarmScheduled = false;
+        final pending = _pendingAlarmArgs;
+        _pendingAlarmArgs = null;
+        if (pending == null) return;
+
+        final navInner = navigatorKey.currentState;
+        if (navInner != null) {
+          debugPrint('🧪 Post-frame callback → pushNamedAndRemoveUntil /alarm');
+          navInner.pushNamedAndRemoveUntil(
+            '/alarm',
+            (route) => false,
+            arguments: pending,
+          );
+        } else {
+          debugPrint(
+              '❌ Post-frame callback: navigator STILL null — cannot navigate to /alarm');
+        }
+      });
+    }
+  }
 }
 
 Future<void> main() async {
@@ -324,10 +355,12 @@ Future<void> main() async {
   });
 
   final initialMessage = await FirebaseMessaging.instance.getInitialMessage();
-  debugPrint('🧪 initialMessage = ${initialMessage?.data}');
+  debugPrint('🧪 getInitialMessage != null: ${initialMessage != null}');
   if (initialMessage != null) {
+    debugPrint(
+        '🧪 initialMessage.data keys: ${initialMessage.data.keys.toList()}');
     debugPrint('🔔 FCM INITIAL TAP data=${initialMessage.data}');
-    debugPrint('➡️ ROUTING TO /alarm (initial)');
+    debugPrint('➡️ ROUTING TO /alarm (initial/terminated)');
     openAlarmFromNoti(data: _payloadFromRemoteMessage(initialMessage));
   }
 
@@ -419,7 +452,6 @@ Future<void> main() async {
   );
 
   runApp(const MyApp());
-  _flushPendingNotificationNavigation();
 }
 
 class MyApp extends StatefulWidget {
@@ -442,6 +474,18 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
   void _handleSessionExpired() {
     debugPrint('🔒 Session expired → navigating to login');
+
+    // ── Guard: defer redirect if alarm flow is active ──
+    final currentRoute = AppRouteObserver.currentRouteName;
+    if (NotificationLaunchGuard.isHandlingNotificationOpen &&
+        NotificationLaunchGuard.isAlarmFlowRoute(currentRoute)) {
+      debugPrint(
+          '🔒 [Guard] Session expired but alarm flow active on $currentRoute '
+          '→ deferring redirect');
+      NotificationLaunchGuard.pendingSessionRedirect = true;
+      return;
+    }
+
     final ctx = navigatorKey.currentContext;
     if (ctx == null) return;
 
@@ -454,6 +498,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     AuthManager.accessToken = null;
 
     // Navigate to login and clear the stack
+    debugPrint('🔒 Pushing /login (stack trace follows)');
+    debugPrint(StackTrace.current.toString());
     navigatorKey.currentState?.pushNamedAndRemoveUntil(
       '/login',
       (route) => false,
@@ -575,6 +621,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       ),
       title: 'MediBuddy',
       navigatorKey: navigatorKey,
+      navigatorObservers: [appRouteObserver],
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
@@ -754,7 +801,7 @@ Future<void> _setupLocalNotifications() async {
   final launchDetails = await flnp.getNotificationAppLaunchDetails();
   if ((launchDetails?.didNotificationLaunchApp ?? false) &&
       launchDetails?.notificationResponse?.payload != null) {
-    _pendingNotificationPayload = launchDetails?.notificationResponse?.payload;
+    openAlarmFromNoti(payload: launchDetails?.notificationResponse?.payload);
   }
 
   // ✅ Android 8+ ต้องสร้าง channel
