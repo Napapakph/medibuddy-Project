@@ -77,26 +77,55 @@ class _AlarmScreenState extends State<AlarmScreen> {
 
   List<Map<String, dynamic>> _alarmItems() {
     final normalized = _normalizedPayload();
+    final itemsList = <Map<String, dynamic>>[];
 
-    // Check for "payload" field which might contain a JSON string of items
+    // 1) Direct check for JSON string array in 'payload'
     if (normalized['payload'] is String) {
       try {
         final decoded = jsonDecode(normalized['payload']);
         if (decoded is List) {
-          return decoded
-              .map((e) => Map<String, dynamic>.from(e as Map))
-              .toList();
+          final mapped =
+              decoded.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+          debugPrint(
+              '✅ Decoded grouped items from data["payload"] string. Length: ${mapped.length}');
+          itemsList.addAll(mapped);
         }
       } catch (e) {
-        debugPrint('Error parsing payload string: $e');
+        debugPrint('❌ Error parsing data["payload"] string: $e');
       }
     }
 
-    final fromItems = _parsePayloadItems(normalized['items']);
-    if (fromItems.isNotEmpty) return fromItems;
+    // 2) Check if parsing with _parsePayloadItems works (if it was already a list)
+    if (itemsList.isEmpty) {
+      final fromPayload = _parsePayloadItems(normalized['payload']);
+      if (fromPayload.isNotEmpty) {
+        debugPrint('✅ Decoded items from payload array.');
+        itemsList.addAll(fromPayload);
+      }
+    }
 
-    // Fallback: Check if payload is directly a list (rare)
-    return _parsePayloadItems(normalized['payload']);
+    // 3) Check if 'items' already contains a decoded list (from main.dart payload builder)
+    if (itemsList.isEmpty) {
+      final fromItems = _parsePayloadItems(normalized['items']);
+      if (fromItems.isNotEmpty) {
+        debugPrint('✅ Decoded items from "items" array.');
+        itemsList.addAll(fromItems);
+      }
+    }
+
+    // 4) Fallback: is it a single item itself?
+    if (itemsList.isEmpty) {
+      if (normalized['type'] == 'MEDICATION_REMINDER' ||
+          normalized['logId'] != null) {
+        debugPrint('ℹ️ Fallback: Treating root payload as a single item');
+        itemsList.add(normalized);
+      } else {
+        debugPrint(
+            '⚠️ Warning: No valid items found in payload! normalized=$normalized');
+      }
+    }
+
+    return itemsList;
   }
 
   int? _parseLogId(dynamic value) {

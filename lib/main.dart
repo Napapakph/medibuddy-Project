@@ -111,10 +111,38 @@ Map<String, dynamic> _payloadFromRemoteMessage(RemoteMessage message) {
     payload['items'] = items;
   }
 
-  debugPrint('🔔 onMessage payload to /alarm = $payload');
+  // Handle SUMMARY types
+  if (payload['type'] == 'MEDICATION_SUMMARY' ||
+      payload['type'] == 'SNOOZE_SUMMARY') {
+    final t = payload['title']?.toString().trim() ?? '';
+    final b = payload['body']?.toString().trim() ?? '';
+    final itemName = items.isNotEmpty
+        ? (items.first['body'] ?? items.first['medicineName'] ?? '')
+        : '';
+
+    if (t.isEmpty) {
+      payload['title'] = payload['type'] == 'SNOOZE_SUMMARY'
+          ? 'แจ้งเตือนเลื่อนยา'
+          : 'แจ้งเตือนยา';
+    }
+    if (b.isEmpty) {
+      final count = data['count'] ?? items.length;
+      if (count.toString() == '1' && itemName.toString().isNotEmpty) {
+        payload['body'] = itemName.toString();
+      } else {
+        payload['body'] = 'ถึงเวลาทานยา $count รายการ';
+      }
+    }
+    if (payload['scheduleTime'] == null) {
+      payload['scheduleTime'] = data['timestamp']?.toString() ??
+          (items.isNotEmpty ? items.first['scheduleTime']?.toString() : null);
+    }
+  }
+
+  debugPrint('🔔 payload ฝั่ง  mobile = $payload');
   debugPrint('🔔 onMessage raw data = ${message.data}');
   debugPrint(
-      '🔔 onMessage notification title=${message.notification?.title} body=${message.notification?.body}');
+      '🔔 payload ฝั่ง OS = title:${message.notification?.title} body:${message.notification?.body}');
   debugPrint(
       '🔔 onMessage payload items=${items.isNotEmpty} count=${items.length}');
   if (items.isNotEmpty) {
@@ -155,49 +183,8 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
   debugPrint('📩 FCM onBackgroundMessage received!');
 
-  final payload = _payloadFromRemoteMessage(message);
-  final title = payload['title']?.toString() ?? 'MediBuddy';
-  final body = payload['body']?.toString() ?? 'ได้เวลาทานยาแล้ว';
-
-  // พยายามจัดกลุ่มกรณีมีแจ้งเตือนมาในเวลาเดียวกันด้วย HashCode
-  String scheduleKey = payload['time']?.toString() ?? '??:??';
-  final rawSchedule = payload['scheduleTime'];
-  if (rawSchedule != null) {
-    final dt = DateTime.tryParse(rawSchedule.toString());
-    if (dt != null) {
-      final local = dt.toLocal();
-      final hh = local.hour.toString().padLeft(2, '0');
-      final mm = local.minute.toString().padLeft(2, '0');
-      scheduleKey = '$hh:$mm';
-    }
-  }
-  // ถ้าไม่มีเวลาเลย ก็ให้ใช้เวลาปัจจุบัน (ถึงจะหลุดกลุ่มแต่ก็ยังมี ID)
-  if (scheduleKey == '??:??') {
-    scheduleKey = DateTime.now().minute.toString();
-  }
-
-  // ป้องกัน hashCode เกิน 32-bit (สำหรับ Android IDs)
-  final notificationId = scheduleKey.hashCode & 0x7FFFFFFF;
-
-  await _setupLocalNotifications();
-
-  await flnp.show(
-    notificationId,
-    title,
-    body,
-    NotificationDetails(
-      android: AndroidNotificationDetails(
-        channel.id,
-        channel.name,
-        channelDescription: channel.description,
-        importance: Importance.max,
-        priority: Priority.high,
-        icon: '@mipmap/ic_launcher',
-        styleInformation: BigTextStyleInformation(body),
-      ),
-    ),
-    payload: jsonEncode(payload),
-  );
+  // OS จะจัดการเรื่องการโชว์แจ้งเตือนเองผ่านคีย์ "notification" ไม่ต้องรัน flnp.show()
+  debugPrint('📩 OS is handling background notification. Skipped flnp.show()');
 }
 
 void _handleLocalNotificationTap(String? payload) {
@@ -311,7 +298,7 @@ Future<void> main() async {
     // ✅ เรียกเฉพาะ Android เท่านั้น
     await _setupLocalNotifications();
 
-    // ⚡ บังคับขอสิทธิแจ้งเตือน Android 13+ (POST_NOTIFICATIONS) ให้เด้ง팝อัปให้ชัวร์
+    // ⚡ บังคับขอสิทธิแจ้งเตือน Android 13+ (POST_NOTIFICATIONS) ให้เด้งอัปให้ชัวร์
     await flnp
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>()
@@ -344,102 +331,12 @@ Future<void> main() async {
     openAlarmFromNoti(data: _payloadFromRemoteMessage(initialMessage));
   }
 
-// 🔔 Notification Grouping State
-  final Map<String, List<Map<String, dynamic>>> _notificationBuffer = {};
-  Timer? _debounceTimer;
-
-  void _scheduleGroupedNotification() {
-    _debounceTimer?.cancel();
-    _debounceTimer = Timer(const Duration(milliseconds: 1000), () async {
-      if (_notificationBuffer.isEmpty) return;
-
-      for (final scheduleTimeKey in _notificationBuffer.keys) {
-        final payloads = _notificationBuffer[scheduleTimeKey]!;
-        if (payloads.isEmpty) continue;
-
-        // Ensure unique logs using a Set to prevent duplicates
-        final uniqueLogs = <String, Map<String, dynamic>>{};
-        for (final p in payloads) {
-          final logId = p['logId']?.toString();
-          if (logId != null && logId.isNotEmpty) {
-            uniqueLogs[logId] = p;
-          } else {
-            // Fallback for logs without ID (should not happen normally)
-            uniqueLogs[DateTime.now().microsecondsSinceEpoch.toString()] = p;
-          }
-        }
-
-        final mergedList = uniqueLogs.values.toList();
-        if (mergedList.isEmpty) continue;
-
-        // Create merged payload
-        final first = mergedList.first;
-        final mergedPayload = Map<String, dynamic>.from(first);
-
-        // Override 'items' with list of all individual payloads
-        // The alarm screen is already built to handle list of items in 'payload' or 'items'
-        mergedPayload['items'] = mergedList;
-
-        // Construct Body Text
-        String bodyText;
-        String titleText = first['title'] ?? 'MediBuddy Reminder';
-
-        // Extract a pretty time string from key or payload for display
-        final displayTime = first['time'] ?? scheduleTimeKey;
-
-        if (mergedList.length == 1) {
-          bodyText = first['body'] ?? 'Time to take your medication';
-        } else {
-          final names = <String>{};
-          for (final p in mergedList) {
-            final b = p['body']?.toString() ?? '';
-
-            if (b.isNotEmpty)
-              names.add(b.replaceAll('ได้เวลาทานยา ', '').trim());
-          }
-
-          if (names.isNotEmpty) {
-            final nameList = names.take(3).join(', ');
-            final more =
-                names.length > 3 ? ' and ${names.length - 3} more' : '';
-            bodyText = 'ถึงเวลาทานยา: $nameList$more';
-          } else {
-            bodyText = 'ถึงเวลาทานยา ${mergedList.length} รายการ';
-          }
-
-          titleText = 'แจ้งเตือนยา ($displayTime)';
-        }
-
-        final jsonPayload = jsonEncode(mergedPayload);
-
-        await flnp.show(
-          scheduleTimeKey.hashCode & 0x7FFFFFFF,
-          titleText,
-          bodyText,
-          NotificationDetails(
-            android: AndroidNotificationDetails(
-              channel.id,
-              channel.name,
-              channelDescription: 'MediBuddy Notifications',
-              importance: Importance.max,
-              priority: Priority.high,
-              icon: '@mipmap/ic_launcher',
-              styleInformation: BigTextStyleInformation(bodyText),
-            ),
-          ),
-          payload: jsonPayload,
-        );
-      }
-      _notificationBuffer.clear();
-    });
-  }
-
   // ✅ 3. LISTENER สำหรับ FOREGROUND
   FirebaseMessaging.onMessage.listen((RemoteMessage msg) async {
-    debugPrint('📩 FCM onMessage (foreground) - Buffering');
+    debugPrint('📩 FCM onMessage (foreground)');
 
     final formattedPayload = _payloadFromRemoteMessage(msg);
-    // Parse key to HH:mm to group slight variations
+    // Parse key to HH:mm for notification ID
     String scheduleKey = formattedPayload['time'] ?? '??:??';
     final rawSchedule = formattedPayload['scheduleTime'];
     if (rawSchedule != null) {
@@ -452,13 +349,33 @@ Future<void> main() async {
       }
     }
 
-    if (_notificationBuffer.containsKey(scheduleKey)) {
-      _notificationBuffer[scheduleKey]!.add(formattedPayload);
-    } else {
-      _notificationBuffer[scheduleKey] = [formattedPayload];
+    // ถ้าไม่มีเวลาให้ใช้เวลาปัจจุบัน
+    if (scheduleKey == '??:??') {
+      scheduleKey = DateTime.now().minute.toString();
     }
 
-    _scheduleGroupedNotification();
+    // ✅ ONLY display flnp.show() when the app is in the FOREGROUND where OS does not show banners automatically.
+    final titleText = formattedPayload['title'] ?? 'MediBuddy Reminder';
+    final bodyText = formattedPayload['body'] ?? 'Time to take your medication';
+    final jsonString = jsonEncode(formattedPayload);
+
+    await flnp.show(
+      scheduleKey.hashCode & 0x7FFFFFFF, // Stable ID per minute
+      titleText,
+      bodyText,
+      NotificationDetails(
+        android: AndroidNotificationDetails(
+          channel.id,
+          channel.name,
+          channelDescription: channel.description,
+          importance: Importance.max,
+          priority: Priority.high,
+          icon: '@mipmap/ic_launcher',
+          styleInformation: BigTextStyleInformation(bodyText),
+        ),
+      ),
+      payload: jsonString,
+    );
   });
 
   await Supabase.initialize(
