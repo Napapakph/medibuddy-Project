@@ -207,20 +207,23 @@ class ProfileApi {
   }
 // ---------------------------------------------------------------------
 
-// Methods Delete Profile -----------------------------------------------
   Future<void> deleteProfile({
     String? accessToken,
     required int profileId,
+    String confirmation = 'CONFIRM',
   }) async {
     accessToken ??= await AuthManager.service.getAccessToken();
     if (accessToken == null) throw Exception('No access token');
 
     debugPrint(
-        'DELETE -> ${_dio.options.baseUrl}$_deletePath?profileId=$profileId');
+        'DELETE -> ${_dio.options.baseUrl}$_deletePath body: {profileId: $profileId, confirmation: $confirmation}');
 
     final res = await _dio.delete(
       _deletePath,
-      queryParameters: {'profileId': profileId},
+      data: {
+        'profileId': profileId,
+        'confirmation': confirmation,
+      },
       options: Options(
         headers: {'Authorization': 'Bearer $accessToken'},
       ),

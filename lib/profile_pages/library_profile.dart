@@ -751,6 +751,7 @@ class _LibraryProfileState extends State<LibraryProfile> {
       await api.deleteProfile(
         accessToken: token,
         profileId: profile.profileId,
+        confirmation: 'CONFIRM',
       );
 
       if (!mounted) return;
