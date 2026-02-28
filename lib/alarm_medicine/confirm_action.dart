@@ -39,8 +39,6 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
   List<Map<String, dynamic>> _profiles =
       []; // To store profile info for dropdown separate from logs if needed
 
-  final pid = AppState.instance.currentProfileId;
-
   @override
   void initState() {
     super.initState();
@@ -314,6 +312,79 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
   }
   */
 
+  /// Resolve a reliable profileId for /home navigation.
+  /// Priority: _selectedProfileId → _logs → widget.payload → guard → AppState
+  int? _resolveProfileIdForHome() {
+    // (1) Currently selected profile in the dropdown
+    if (_selectedProfileId != null && _selectedProfileId! > 0) {
+      debugPrint(
+          '🏠 [profileId] source=_selectedProfileId value=$_selectedProfileId');
+      return _selectedProfileId;
+    }
+
+    // (2) Derive from confirmed logs (last item)
+    if (_logs.isNotEmpty) {
+      final last = _logs.last;
+      debugPrint('🏠 [profileId] _logs.last runtimeType=${last.runtimeType}');
+
+      // Try direct key
+      final direct = _readInt(last['profileId']);
+      if (direct != null && direct > 0) {
+        debugPrint('🏠 [profileId] source=_logs.last[profileId] value=$direct');
+        return direct;
+      }
+
+      // Try nested profile map
+      final nested = _readMap(last['profile']);
+      final nestedId = _readInt(nested['profileId']);
+      if (nestedId != null && nestedId > 0) {
+        debugPrint(
+            '🏠 [profileId] source=_logs.last[profile][profileId] value=$nestedId');
+        return nestedId;
+      }
+    }
+
+    // (3) Derive from widget.payload profiles array
+    if (widget.payload != null) {
+      try {
+        dynamic profiles;
+        final raw = widget.payload!;
+        if (raw['profiles'] is List) {
+          profiles = raw['profiles'];
+        } else if (raw['profiles'] is String) {
+          profiles = jsonDecode(raw['profiles'] as String);
+        }
+        if (profiles is List && profiles.isNotEmpty) {
+          final lastProfile = profiles.last;
+          if (lastProfile is Map) {
+            final pId = _readInt(lastProfile['profileId']);
+            if (pId != null && pId > 0) {
+              debugPrint(
+                  '🏠 [profileId] source=payload.profiles.last value=$pId');
+              return pId;
+            }
+          }
+        }
+      } catch (e) {
+        debugPrint('🏠 [profileId] payload profiles parse error: $e');
+      }
+    }
+
+    // (4) Guard fallback
+    final guardId = NotificationLaunchGuard.lastActiveProfileIdBeforeOpen;
+    if (guardId != null && guardId > 0) {
+      debugPrint(
+          '🏠 [profileId] source=guard.lastActiveProfileIdBeforeOpen value=$guardId');
+      return guardId;
+    }
+
+    // (5) AppState last resort
+    final appStateId = AppState.instance.currentProfileId;
+    debugPrint(
+        '🏠 [profileId] source=AppState.currentProfileId value=$appStateId');
+    return appStateId;
+  }
+
   Future<void> _submitResponse({
     required int logId,
     required String responseStatus,
@@ -344,7 +415,9 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
         _responses[logId] = responseStatus;
       });
       if (_responses.length >= _logs.length && _logs.isNotEmpty) {
+        final resolvedId = _resolveProfileIdForHome();
         debugPrint('✅ ConfirmActionScreen success -> navigating to /home');
+        debugPrint('🏠 resolvedProfileId=$resolvedId');
         debugPrint(
             '📍 Current route before /home: ${AppRouteObserver.currentRouteName}');
         debugPrint(StackTrace.current.toString());
@@ -352,9 +425,7 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
           '/home',
           (route) => false,
           arguments: {
-            'profileId': pid,
-            'profileName': AppState.instance.currentProfileName,
-            'profileImage': AppState.instance.currentProfileImagePath,
+            'profileId': resolvedId,
           },
         );
 
