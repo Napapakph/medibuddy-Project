@@ -13,6 +13,7 @@ import '../widgets/bottomBar.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../add_medicine/create_medicine_profile.dart';
 import '../services/auth_manager.dart'; // Import
+import '../services/profile_api.dart';
 
 class Home extends StatefulWidget {
   final ProfileModel? selectedProfile;
@@ -67,7 +68,6 @@ class _Home extends State<Home> {
     int? resolvedProfileId;
     String? resolvedProfileName;
     String? resolvedProfileImagePath;
-    _profileId = resolvedProfileId ?? AppState.instance.currentProfileId;
 
     if (routeArgs is Map) {
       final rawId = routeArgs['profileId'];
@@ -90,15 +90,15 @@ class _Home extends State<Home> {
     resolvedProfileName ??= widget.selectedProfile?.username;
     resolvedProfileImagePath ??= widget.selectedProfile?.imagePath;
 
-    setState(() {
-      // 🔥 FIX: trigger UI rebuild after binding
+    // Assign _profileId AFTER resolution (was previously done before)
+    _profileId = resolvedProfileId ?? AppState.instance.currentProfileId;
 
-      _profileName =
-          (resolvedProfileName != null && resolvedProfileName.trim().isNotEmpty)
-              ? resolvedProfileName.trim()
-              : 'Profile'; // ✅ PROFILE_BIND
-      _profileImagePath =
-          (resolvedProfileImagePath ?? '').trim(); // ✅ PROFILE_BIND
+    final hasName =
+        resolvedProfileName != null && resolvedProfileName.trim().isNotEmpty;
+
+    setState(() {
+      _profileName = hasName ? resolvedProfileName!.trim() : 'Profile';
+      _profileImagePath = (resolvedProfileImagePath ?? '').trim();
       _profileBound = true; // ⚠️ GUARD
     });
 
@@ -107,6 +107,57 @@ class _Home extends State<Home> {
     debugPrint(
         '🧪 HOME routeArgs = ${ModalRoute.of(context)?.settings.arguments} '
         '(type=${ModalRoute.of(context)?.settings.arguments.runtimeType})');
+
+    // If we have a valid profileId but no name/image (cold start from confirm),
+    // fetch profile info from the API as a safe fallback.
+    if (!hasName && _profileId != null && _profileId! > 0) {
+      debugPrint(
+          '🏠 HOME: name missing for profileId=$_profileId → fetching from API');
+      _fetchProfileInfo(_profileId!);
+    }
+  }
+
+  /// Fetch profile name/image from the profile API when they are missing
+  /// (e.g. cold start notification → confirm → /home with only profileId).
+  Future<void> _fetchProfileInfo(int profileId) async {
+    try {
+      final token = await AuthManager.service.getAccessToken();
+      final api = ProfileApi();
+      final profiles = await api.fetchProfiles(accessToken: token);
+
+      if (!mounted) return;
+
+      Map<String, dynamic>? match;
+      for (final p in profiles) {
+        final pId = p['profileId'];
+        final parsed = pId is int ? pId : int.tryParse(pId?.toString() ?? '');
+        if (parsed == profileId) {
+          match = p;
+          break;
+        }
+      }
+
+      if (match != null) {
+        final name = (match['profileName'] ?? '').toString().trim();
+        final image = (match['profilePicture'] ?? match['profileImage'] ?? '')
+            .toString()
+            .trim();
+        debugPrint('🏠 HOME: fetched profile name="$name" image="$image"');
+        setState(() {
+          if (name.isNotEmpty) _profileName = name;
+          if (image.isNotEmpty) _profileImagePath = image;
+        });
+        // Also sync AppState so downstream screens have it
+        AppState.instance.setSelectedProfile(
+          profileId: profileId,
+          name: name.isNotEmpty ? name : null,
+          imagePath: image.isNotEmpty ? image : null,
+        );
+      }
+    } catch (e) {
+      debugPrint('🏠 HOME: _fetchProfileInfo error=$e');
+      // Non-fatal: we still show "Profile" as name
+    }
   }
 
   @override

@@ -416,8 +416,16 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
       });
       if (_responses.length >= _logs.length && _logs.isNotEmpty) {
         final resolvedId = _resolveProfileIdForHome();
+        // Derive optional name/image from already-loaded profiles
+        final resolvedName = resolvedId != null && resolvedId > 0
+            ? _profileName(resolvedId)
+            : null;
+        final resolvedImage = resolvedId != null && resolvedId > 0
+            ? _profileImage(resolvedId)
+            : null;
         debugPrint('✅ ConfirmActionScreen success -> navigating to /home');
-        debugPrint('🏠 resolvedProfileId=$resolvedId');
+        debugPrint(
+            '🏠 resolvedProfileId=$resolvedId name="$resolvedName" image="$resolvedImage"');
         debugPrint(
             '📍 Current route before /home: ${AppRouteObserver.currentRouteName}');
         debugPrint(StackTrace.current.toString());
@@ -426,6 +434,10 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
           (route) => false,
           arguments: {
             'profileId': resolvedId,
+            if (resolvedName != null && resolvedName.isNotEmpty)
+              'profileName': resolvedName,
+            if (resolvedImage != null && resolvedImage.isNotEmpty)
+              'profileImage': resolvedImage,
           },
         );
 
