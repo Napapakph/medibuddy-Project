@@ -152,21 +152,79 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
   }
 
   String _profileName(int profileId) {
-    if (_profiles.isEmpty) return '';
-    final profile = _profiles.firstWhere(
-        (p) => _readInt(p['profileId']) == profileId,
-        orElse: () => {});
-    return _readString(profile['profileName']);
+    // (1) API-loaded profiles (populated by _loadLogs)
+    if (_profiles.isNotEmpty) {
+      final profile = _profiles.firstWhere(
+          (p) => _readInt(p['profileId']) == profileId,
+          orElse: () => {});
+      final name = _readString(profile['profileName']);
+      if (name.isNotEmpty) return name;
+    }
+
+    // (2) Payload items fallback (always available, even on cold start)
+    for (final item in _extractPayloadItems()) {
+      if (_readInt(item['profileId']) == profileId) {
+        final name = _readString(item['profileName']);
+        if (name.isNotEmpty) return name;
+      }
+    }
+
+    // (3) AppState fallback
+    if (profileId == AppState.instance.currentProfileId) {
+      final name = (AppState.instance.currentProfileName ?? '').trim();
+      if (name.isNotEmpty) return name;
+    }
+
+    return '';
   }
 
   String _profileImage(int profileId) {
-    if (_profiles.isEmpty) return '';
-    final profile = _profiles.firstWhere(
-        (p) => _readInt(p['profileId']) == profileId,
-        orElse: () => {});
-    final img = _readString(profile['profileImage']);
-    if (img.isNotEmpty) return img;
-    return _readString(profile['profilePicture']);
+    // (1) API-loaded profiles
+    if (_profiles.isNotEmpty) {
+      final profile = _profiles.firstWhere(
+          (p) => _readInt(p['profileId']) == profileId,
+          orElse: () => {});
+      final img = _readString(profile['profileImage']);
+      if (img.isNotEmpty) return img;
+      final pic = _readString(profile['profilePicture']);
+      if (pic.isNotEmpty) return pic;
+    }
+
+    // (2) Payload items fallback
+    for (final item in _extractPayloadItems()) {
+      if (_readInt(item['profileId']) == profileId) {
+        final img = _readString(item['profileImage'] ?? item['profilePicture']);
+        if (img.isNotEmpty) return img;
+      }
+    }
+
+    // (3) AppState fallback
+    if (profileId == AppState.instance.currentProfileId) {
+      final img = (AppState.instance.currentProfileImagePath ?? '').trim();
+      if (img.isNotEmpty) return img;
+    }
+
+    return '';
+  }
+
+  /// Extract notification payload items for profile name/image fallback.
+  List<Map<String, dynamic>> _extractPayloadItems() {
+    if (widget.payload == null) return [];
+    try {
+      final raw = widget.payload!;
+      dynamic decoded;
+      if (raw['payload'] is String) {
+        decoded = jsonDecode(raw['payload'] as String);
+      } else if (raw['payload'] is List) {
+        decoded = raw['payload'];
+      } else if (raw['items'] is List) {
+        decoded = raw['items'];
+      }
+      if (decoded is List) {
+        return decoded.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+      }
+    } catch (_) {}
+    return [];
   }
 
   String _mapUnitToThai(String unit) {

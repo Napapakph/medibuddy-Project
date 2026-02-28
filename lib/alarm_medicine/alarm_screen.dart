@@ -1,3 +1,4 @@
+import 'dart:collection';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -7,6 +8,7 @@ import 'package:medibuddy/services/auth_manager.dart';
 import 'package:medibuddy/services/notification_launch_guard.dart';
 import 'package:medibuddy/services/app_route_observer.dart';
 import 'package:medibuddy/main.dart' show navigatorKey;
+import 'package:medibuddy/services/app_state.dart';
 
 class AlarmScreen extends StatefulWidget {
   final Map<String, dynamic>? payload;
@@ -137,6 +139,14 @@ class _AlarmScreenState extends State<AlarmScreen> {
     if (value == null) return null;
     if (value is int) return value;
     return int.tryParse(value.toString());
+  }
+
+  /// Safe int parser for profile ID detection (separate from _parseLogId)
+  int? _toInt(dynamic v) {
+    if (v == null) return null;
+    if (v is int) return v;
+    if (v is num) return v.toInt();
+    return int.tryParse(v.toString());
   }
 
   List<int> _extractLogIds() {
@@ -271,48 +281,111 @@ class _AlarmScreenState extends State<AlarmScreen> {
     return _normalizedPayload()['body']?.toString() ?? '';
   }
 
-  /// Build a summary list of profile → medicines from the payload items
+  /// Clean a raw medication name string:
+  /// remove Thai/English prefixes and trailing " for <profile>."
+  String _cleanMedName(String raw) {
+    var s = raw.trim();
+    // Thai prefix
+    s = s.replaceAll('ได้เวลาทานยา ', '').trim();
+    // English prefix
+    if (s.startsWith("It's time to take ")) {
+      s = s.substring("It's time to take ".length).trim();
+    }
+    // English trailing " for <profileName>."
+    final trailingMatch = RegExp(r'\s+for\s+.+\.$').firstMatch(s);
+    if (trailingMatch != null) {
+      s = s.substring(0, trailingMatch.start).trim();
+    }
+    return s;
+  }
+
+  /// Build a summary list from the payload items.
+  ///
+  /// - EMPTY:  placeholder text
+  /// - SINGLE: medication names only (no profile header)
+  /// - MULTI:  profile names only (no med details)
   List<Widget> _buildItemsSummaryWidgets() {
     final items = _alarmItems();
-    if (items.isEmpty) return [];
 
-    // Group items by profileName
-    final grouped = <String, List<String>>{};
-    for (final item in items) {
-      final profile = (item['profileName']?.toString() ?? '').trim();
-      final mediName =
-          (item['mediNickname'] ?? item['medicineName'] ?? item['body'] ?? '')
-              .toString()
-              .trim();
-      // Clean up mediName: remove common prefix
-      final cleanName = mediName.replaceAll('ได้เวลาทานยา ', '').trim();
-      final key = profile.isNotEmpty ? profile : 'ไม่ระบุ';
-      grouped.putIfAbsent(key, () => []);
-      if (cleanName.isNotEmpty && !grouped[key]!.contains(cleanName)) {
-        grouped[key]!.add(cleanName);
-      }
+    // ── EMPTY mode ──
+    if (items.isEmpty) {
+      debugPrint('🔔 [AlarmSummary] EMPTY itemsCount=0');
+      return [
+        const Padding(
+          padding: EdgeInsets.only(top: 8),
+          child: Text(
+            'แตะ Take เพื่อดูรายละเอียด',
+            style: TextStyle(fontSize: 14, color: Colors.black54),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      ];
     }
 
-    if (grouped.isEmpty) return [];
+    // ── Build profileId → displayName map from PAYLOAD (primary source) ──
+    final profileMap = LinkedHashMap<int, String>();
+    for (final item in items) {
+      final id = _toInt(item['profileId']);
+      if (id == null || id <= 0) continue;
+      if (profileMap.containsKey(id)) continue; // first occurrence wins
+
+      // Primary: payload item's profileName
+      final payloadName = (item['profileName']?.toString() ?? '').trim();
+      if (payloadName.isNotEmpty) {
+        profileMap[id] = payloadName;
+        continue;
+      }
+
+      // Fallback: AppState cache
+      final cachedName = AppState.instance.resolveProfileName(id);
+      profileMap[id] = cachedName; // resolveProfileName never returns empty
+    }
+
+    final isMulti = profileMap.length > 1;
+    final mode = isMulti ? 'MULTI_PROFILE' : 'SINGLE_PROFILE';
+    debugPrint('🔔 [AlarmSummary] mode=$mode itemsCount=${items.length} '
+        'profileMapCount=${profileMap.length} '
+        'cachedProfilesCount=${AppState.instance.cachedProfiles.length}');
 
     final widgets = <Widget>[];
 
-    for (final entry in grouped.entries) {
-      // Profile name header
-      widgets.add(
-        Padding(
-          padding: const EdgeInsets.only(top: 6),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.person, size: 16, color: Color(0xFF1F497D)),
-              const SizedBox(width: 4),
-            ],
+    if (isMulti) {
+      // ── MULTI mode: show only profile names (from payload, never blank) ──
+      debugPrint('🔔 [AlarmSummary] resolvedNames=$profileMap');
+
+      for (final entry in profileMap.entries) {
+        widgets.add(
+          Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.person, size: 16, color: Color(0xFF1F497D)),
+                const SizedBox(width: 4),
+                Flexible(
+                  child: Text(
+                    entry.value,
+                    style: const TextStyle(fontSize: 13, color: Colors.black54),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-      );
-      // Medicine names
-      for (final medi in entry.value) {
+        );
+      }
+    } else {
+      // ── SINGLE mode: show only medication names ──
+      final uniqueMeds = LinkedHashSet<String>();
+      for (final item in items) {
+        final raw =
+            (item['mediNickname'] ?? item['medicineName'] ?? item['body'] ?? '')
+                .toString();
+        var cleaned = _cleanMedName(raw);
+        if (cleaned.isEmpty) cleaned = 'ยา (ไม่ทราบชื่อ)';
+        uniqueMeds.add(cleaned);
+      }
+      for (final med in uniqueMeds) {
         widgets.add(
           Padding(
             padding: const EdgeInsets.only(left: 24, top: 2),
@@ -323,7 +396,7 @@ class _AlarmScreenState extends State<AlarmScreen> {
                 const SizedBox(width: 4),
                 Flexible(
                   child: Text(
-                    medi,
+                    med,
                     style: const TextStyle(fontSize: 13, color: Colors.black54),
                     overflow: TextOverflow.ellipsis,
                   ),

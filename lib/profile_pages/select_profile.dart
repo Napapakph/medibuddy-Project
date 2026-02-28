@@ -75,6 +75,8 @@ class _SelectProfileState extends State<SelectProfile> {
           selectedIndex = null;
         }
       });
+      // Sync to AppState cache for AlarmScreen profile name lookup
+      AppState.instance.setCachedProfiles(mapped);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

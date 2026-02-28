@@ -8,6 +8,7 @@ import '../services/profile_api.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:math';
 import '../services/auth_manager.dart'; // Import AuthManager
+import '../services/app_state.dart';
 
 class LibraryProfile extends StatefulWidget {
   const LibraryProfile({
@@ -101,6 +102,8 @@ class _LibraryProfileState extends State<LibraryProfile> {
           ..clear()
           ..addAll(loaded);
       });
+      // Sync to AppState cache for AlarmScreen profile name lookup
+      AppState.instance.setCachedProfiles(loaded);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
