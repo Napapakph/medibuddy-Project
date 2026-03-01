@@ -397,11 +397,14 @@ class _FollowingHistoryPageState extends State<FollowingHistoryPage> {
   Future<void> _pickDate({required bool isStart}) async {
     final initial = isStart ? _startDate : _endDate;
 
+    final firstDate = DateTime(2000);
+    final lastDate = DateTime.now().add(const Duration(days: 365));
+
     final picked = await showDatePicker(
       context: context,
       initialDate: initial,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
+      firstDate: firstDate,
+      lastDate: lastDate,
       locale: const Locale('th', 'TH'),
       builder: (context, child) {
         return Theme(
@@ -427,6 +430,7 @@ class _FollowingHistoryPageState extends State<FollowingHistoryPage> {
     if (picked == null) return;
 
     setState(() {
+      _isDateFilterUserSet = true;
       if (isStart) {
         _startDate = picked;
 
@@ -443,6 +447,9 @@ class _FollowingHistoryPageState extends State<FollowingHistoryPage> {
         }
       }
     });
+
+    // เรียก API เพื่อดู log ทันทีเมื่อเปลี่ยนวันที่
+    _loadHistory();
   }
 
   String _formatThaiDate(DateTime d) {
@@ -521,6 +528,12 @@ class _FollowingHistoryPageState extends State<FollowingHistoryPage> {
     final grouped = _groupByDate(items);
     final dateKeys = grouped.keys.toList()..sort((a, b) => b.compareTo(a));
     final ownerAvatar = _buildProfileImage(_ownerImage);
+
+    String formatThaiDateBE(DateTime date) {
+      final dayMonth = DateFormat('d MMMM', 'th_TH').format(date);
+      final buddhistYear = date.year + 543;
+      return '$dayMonth $buddhistYear';
+    }
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -659,8 +672,7 @@ class _FollowingHistoryPageState extends State<FollowingHistoryPage> {
                       Expanded(
                         child: _DateField(
                           label: '',
-                          value:
-                              DateFormat('d MMMM', 'th_TH').format(_startDate),
+                          value: formatThaiDateBE(_startDate),
                           onTap: () => _pickDate(isStart: true),
                         ),
                       ),
@@ -670,7 +682,7 @@ class _FollowingHistoryPageState extends State<FollowingHistoryPage> {
                       Expanded(
                         child: _DateField(
                           label: '',
-                          value: DateFormat('d MMMM', 'th_TH').format(_endDate),
+                          value: formatThaiDateBE(_endDate),
                           onTap: () => _pickDate(isStart: false),
                         ),
                       ),

@@ -295,6 +295,9 @@ class _FollowingRegimenPageState extends State<FollowingRegimenPage> {
       }
       _applyFilters();
     });
+
+    // เรียกดึงข้อมูลจาก API ทันทีหลังเลือกปฏิทิน
+    _loadData();
   }
 
   // ===== Grouping by schedule time =====
@@ -492,6 +495,12 @@ class _FollowingRegimenPageState extends State<FollowingRegimenPage> {
     final grouped = _groupByTimeList(_filteredRegimens);
     final timeKeys = grouped.keys.toList()..sort();
     final ownerAvatar = _buildProfileImage(_ownerImage);
+
+    String formatThaiDateBE(DateTime date) {
+      final dayMonth = DateFormat('d MMMM', 'th_TH').format(date);
+      final buddhistYear = date.year + 543;
+      return '$dayMonth $buddhistYear';
+    }
 
     return Scaffold(
       backgroundColor: Colors.white,
