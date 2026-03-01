@@ -106,7 +106,7 @@ class CustomAuthService implements AuthService {
       final res = await _dio.post('/api/auth/v2/register/merge', data: {
         'email': email,
         'otp': otp,
-        'password': password,
+        'newPassword': password,
       });
       final data = res.data;
       final accessToken = data['accessToken'];
