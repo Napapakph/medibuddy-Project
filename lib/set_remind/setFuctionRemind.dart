@@ -1651,7 +1651,7 @@ String mapMealRelation(MealTiming timing) {
     case MealTiming.afterMeal:
       return 'AFTER_MEAL';
     case MealTiming.betweenMeals:
-      return 'NONE';
+      return 'WITH_MEAL';
   }
 }
 

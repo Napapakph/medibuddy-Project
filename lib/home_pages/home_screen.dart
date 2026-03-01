@@ -477,10 +477,10 @@ class _Home extends State<Home> {
   String _mergeMealRelation(String current, String incoming) {
     final normalizedCurrent = current.trim().toUpperCase();
     final normalizedIncoming = incoming.trim().toUpperCase();
-    if (normalizedCurrent.isEmpty || normalizedCurrent == 'NONE') {
+    if (normalizedCurrent.isEmpty) {
       return incoming;
     }
-    if (normalizedIncoming.isEmpty || normalizedIncoming == 'NONE') {
+    if (normalizedIncoming.isEmpty) {
       return current;
     }
     return current;
@@ -489,14 +489,25 @@ class _Home extends State<Home> {
   String _mealTextFromRelation(String relation) {
     switch (relation.trim().toUpperCase()) {
       case 'AFTER_MEAL':
-        return '\u0E2B\u0E25\u0E31\u0E07\u0E2D\u0E32\u0E2B\u0E32\u0E23';
+        return 'หลังอาหาร';
       case 'BEFORE_MEAL':
-        return '\u0E01\u0E48\u0E2D\u0E19\u0E2D\u0E32\u0E2B\u0E32\u0E23';
-      case 'NONE':
-        return '';
+        return 'ก่อนอาหาร';
+      case 'WITH_MEAL':
+      case 'BETWEEN_MEALS':
+      case 'NONE': // Old data was saved as 'NONE' for betweenMeals
+        return 'พร้อมอาหาร';
       default:
         return '';
     }
+  }
+
+  String _getMealIconPath(String mealText) {
+    if (mealText == 'ก่อนอาหาร') return 'assets/before_meal.png';
+    if (mealText == 'หลังอาหาร') return 'assets/after_meal.png';
+    if (mealText == 'พร้อมอาหาร' || mealText == 'ระหว่างมื้อ') {
+      return 'assets/between_meal.png';
+    }
+    return '';
   }
 
   String _mapUnitToText(String unit) {
@@ -671,11 +682,23 @@ class _Home extends State<Home> {
                                     const SizedBox(height: 4),
                                     Row(
                                       children: [
-                                        const Icon(
-                                          Icons.restaurant_rounded,
-                                          size: 14,
-                                          color: Color(0xFF6FA8DC),
-                                        ),
+                                        Builder(builder: (context) {
+                                          final iconPath =
+                                              _getMealIconPath(reminder.meal);
+                                          if (iconPath.isNotEmpty) {
+                                            return Image.asset(
+                                              iconPath,
+                                              width: 14,
+                                              height: 14,
+                                              color: const Color(0xFF6FA8DC),
+                                            );
+                                          }
+                                          return const Icon(
+                                            Icons.restaurant_rounded,
+                                            size: 14,
+                                            color: Color(0xFF6FA8DC),
+                                          );
+                                        }),
                                         const SizedBox(width: 6),
                                         Text(
                                           reminder.meal,
