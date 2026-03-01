@@ -182,6 +182,49 @@ class LogApiService {
     }
   }
 
+  Future<void> updateMedicationLogNote({
+    required int logId,
+    required String note,
+    String? accessToken,
+  }) async {
+    if (logId <= 0) {
+      throw LogApiException('logId must be a positive integer.');
+    }
+
+    accessToken ??= await _getAccessToken();
+    final url = Uri.parse('${_baseUrl()}/api/mobile/v1/medication-log/note');
+
+    final body = <String, dynamic>{
+      'logId': logId,
+      'note': note.trim(),
+    };
+
+    debugPrint('medication-log note request=${jsonEncode(body)}');
+
+    final res = await _client.patch(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $accessToken',
+      },
+      body: jsonEncode(body),
+    );
+
+    debugPrint('medication-log note status=${res.statusCode}');
+    debugPrint('medication-log note body length=${res.body.length}');
+
+    if (res.statusCode < 200 || res.statusCode >= 300) {
+      final parsed = _readErrorMessage(res.body);
+      final friendly = _friendlyAuthError(res.statusCode);
+      final message = parsed ?? friendly;
+      throw LogApiException(
+        message ?? 'Update medication note failed (${res.statusCode}).',
+        statusCode: res.statusCode,
+      );
+    }
+  }
+
   String? _friendlyAuthError(int statusCode) {
     if (statusCode == 401) return 'Unauthorized. Please login again.';
     if (statusCode == 403) return 'Not allowed.';

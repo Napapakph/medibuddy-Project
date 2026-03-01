@@ -20,6 +20,7 @@ import 'package:community_material_icon/community_material_icon.dart';
 enum MedicineTakeStatus { take, skip, snooze, none }
 
 class MedicineHistoryItem {
+  final int logId;
   final DateTime takenAt;
   final String titleTh;
   final String titleEn;
@@ -35,6 +36,7 @@ class MedicineHistoryItem {
   final String enName;
 
   const MedicineHistoryItem({
+    required this.logId,
     required this.takenAt,
     required this.titleTh,
     required this.titleEn,
@@ -202,8 +204,10 @@ class _HistoryPageState extends State<HistoryPage> {
     final dose = _resolveDose(log);
     final unit = _resolveUnit(log);
     final note = _readString(log['note']);
+    final logId = _readInt(log['logId']) ?? 0;
 
     return MedicineHistoryItem(
+      logId: logId,
       takenAt: schedule ?? DateTime.now(),
       titleTh: mainTitle,
       titleEn: subtitle,
@@ -270,14 +274,50 @@ class _HistoryPageState extends State<HistoryPage> {
     });
   }
 
-  void _showNoteViewer(MedicineHistoryItem item) {
+  void _showNoteViewer(MedicineHistoryItem item) async {
     final note = item.note?.trim() ?? '';
     final nickname = item.nickname.isNotEmpty ? item.nickname : item.titleTh;
-    showCommentViewerBottomSheet(
-      context: context,
-      medicineNickname: nickname.isNotEmpty ? nickname : '-',
-      note: note,
-    );
+
+    bool? shouldEdit = false;
+
+    if (note.isEmpty) {
+      shouldEdit = true;
+    } else {
+      shouldEdit = await showCommentViewerBottomSheet(
+        context: context,
+        medicineNickname: nickname.isNotEmpty ? nickname : '-',
+        note: note,
+      );
+    }
+
+    if (shouldEdit == true && item.logId > 0) {
+      if (!mounted) return;
+      showCommentBottomSheet(
+        context: context,
+        medicineNickname: nickname.isNotEmpty ? nickname : '-',
+        initialText: note,
+        onSubmit: (newNote) async {
+          if (newNote == note) return;
+
+          try {
+            setState(() => _loading = true);
+            final api = LogApiService();
+            await api.updateMedicationLogNote(
+              logId: item.logId,
+              note: newNote,
+            );
+            await _loadHistory();
+          } catch (e) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('ไม่สามารถบันทึกคอมเมนต์ได้: $e')),
+              );
+              setState(() => _loading = false);
+            }
+          }
+        },
+      );
+    }
   }
 
   /// ===============================

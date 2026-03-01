@@ -27,12 +27,12 @@ Future<String?> showCommentBottomSheet({
 /// ============================
 /// Helper: Show comment viewer as a Modal Bottom Sheet
 /// ============================
-Future<void> showCommentViewerBottomSheet({
+Future<bool?> showCommentViewerBottomSheet({
   required BuildContext context,
   required String medicineNickname,
   required String note,
 }) {
-  return showModalBottomSheet<void>(
+  return showModalBottomSheet<bool>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
@@ -82,7 +82,7 @@ class _CommentPopupState extends State<CommentPopup> {
     super.dispose();
   }
 
-  bool get _canSubmit => _controller.text.trim().isNotEmpty;
+  bool get _canSubmit => true; // Always allow submission (to clear the note)
 
   void _handleCancel() {
     widget.onCancel?.call();
@@ -91,7 +91,6 @@ class _CommentPopupState extends State<CommentPopup> {
 
   void _handleSubmit() {
     final text = _controller.text.trim();
-    if (text.isEmpty) return;
     widget.onSubmit(text);
     Navigator.of(context).pop(text);
   }
@@ -296,20 +295,25 @@ class CommentViewer extends StatelessWidget {
               ),
               const SizedBox(height: 14),
               // Note content
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: SingleChildScrollView(
-                  child: Text(
-                    note,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: Color(0xFF1F497D),
-                      height: 1.5,
+              GestureDetector(
+                onTap: () {
+                  Navigator.of(context).pop(true);
+                },
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: SingleChildScrollView(
+                    child: Text(
+                      note,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Color(0xFF1F497D),
+                        height: 1.5,
+                      ),
                     ),
                   ),
                 ),
