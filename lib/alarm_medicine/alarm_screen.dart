@@ -510,8 +510,32 @@ class _AlarmScreenState extends State<AlarmScreen> {
 
       if (!mounted) return;
 
-      // After all succeed: navigate to /home
-      debugPrint('✅ Batch action success -> navigating to /home');
+      // Resolve profileId for /home navigation
+      int? fallbackProfileId;
+
+      // If payload has exactly ONE profileId, use it
+      final items = _alarmItems();
+      final uniqueIds = <int>{};
+      for (final item in items) {
+        final id = _toInt(item['profileId']);
+        if (id != null && id > 0) uniqueIds.add(id);
+      }
+      if (uniqueIds.length == 1) {
+        fallbackProfileId = uniqueIds.first;
+      }
+
+      // Otherwise, use lastSelectedProfileId from previous TAKE
+      fallbackProfileId ??= AppState.instance.lastSelectedProfileId;
+
+      // Final fallback: current profile
+      fallbackProfileId ??= AppState.instance.currentProfileId;
+
+      if (fallbackProfileId != null && fallbackProfileId > 0) {
+        AppState.instance.setSelectedProfile(profileId: fallbackProfileId);
+      }
+
+      debugPrint('✅ Batch action success -> navigating to /home '
+          'profileId=$fallbackProfileId');
       debugPrint(
           '📍 Current route before /home: ${AppRouteObserver.currentRouteName}');
       debugPrint(StackTrace.current.toString());
@@ -519,6 +543,9 @@ class _AlarmScreenState extends State<AlarmScreen> {
       Navigator.of(context, rootNavigator: true).pushNamedAndRemoveUntil(
         '/home',
         (route) => false,
+        arguments: {
+          if (fallbackProfileId != null) 'profileId': fallbackProfileId,
+        },
       );
 
       // Clear guard and handle deferred session redirect

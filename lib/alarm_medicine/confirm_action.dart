@@ -474,6 +474,11 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
       });
       if (_responses.length >= _logs.length && _logs.isNotEmpty) {
         final resolvedId = _resolveProfileIdForHome();
+        // Persist for SKIP/SNOOZE fallback
+        if (resolvedId != null && resolvedId > 0) {
+          AppState.instance.setLastSelectedProfileId(resolvedId);
+          AppState.instance.setSelectedProfile(profileId: resolvedId);
+        }
         // Derive optional name/image from already-loaded profiles
         final resolvedName = resolvedId != null && resolvedId > 0
             ? _profileName(resolvedId)

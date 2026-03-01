@@ -8,8 +8,15 @@ class AppState {
   String? currentProfileName;
   String? currentProfileImagePath;
 
+  /// Last profileId confirmed via TAKE flow (used as fallback for SKIP/SNOOZE)
+  int? lastSelectedProfileId;
+
   /// Cached profiles list for lookup (populated by profile screens)
   List<ProfileModel> cachedProfiles = [];
+
+  void setLastSelectedProfileId(int id) {
+    lastSelectedProfileId = id;
+  }
 
   void setSelectedProfile({
     required int profileId,
