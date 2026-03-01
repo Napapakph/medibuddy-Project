@@ -751,17 +751,17 @@ class _Home extends State<Home> {
           'MediBuddy',
           style: TextStyle(
               fontWeight: FontWeight.bold,
-              color: Color.fromARGB(255, 255, 255, 255),
+              color: const Color(0xFF1F497D),
               fontSize: 30),
         ),
-        backgroundColor: Color(0xFF1F497D),
+        backgroundColor: const Color(0xFFB7DAFF),
         centerTitle: true,
         leading: Builder(
           builder: (context) {
             return IconButton(
               icon: const Icon(
                 Icons.menu,
-                color: Color.fromARGB(255, 255, 255, 255),
+                color: const Color(0xFF1F497D),
               ),
               onPressed: () {
                 Scaffold.of(context).openDrawer();

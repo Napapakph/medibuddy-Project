@@ -187,6 +187,7 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
     setState(() {
       _frequencyMode = mode;
       if (_frequencyMode == FrequencyMode.everyHours) {
+        _frequencyPattern = FrequencyPattern.everyDay; // ล็อกเป็นทุกวัน
         _syncDoseCount(1);
       } else {
         _syncDoseCount(_timesPerDay);
@@ -391,12 +392,9 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
                   children: [
                     // Exit Button
                     Expanded(
-                      child: ElevatedButton(
+                      child: OutlinedButton(
                         onPressed: () => Navigator.of(context).pop(true),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              const Color.fromARGB(0, 255, 255, 255),
-                          foregroundColor: Colors.black,
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(20),
@@ -535,6 +533,13 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
       ),
     ];
 
+    final subtitles = [
+      'รูปแบบและความถี่การรับประทานยา',
+      'รายละเอียดเวลาการรับประทานยา',
+      'สรุปแผนการรับประทานยา',
+    ];
+    final currentSubtitle = subtitles[_stepIndex];
+
     return WillPopScope(
       onWillPop: _confirmExit,
       child: Scaffold(
@@ -550,7 +555,40 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
               }
             },
           ),
-          title: Text(pageTitle, style: const TextStyle(color: Colors.white)),
+          title: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
+                pageTitle,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+              SizedBox(height: 4),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.arrow_right_rounded,
+                    size: 20,
+                    color: Colors.white,
+                  ),
+                  Text(
+                    currentSubtitle,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
         backgroundColor: const Color.fromARGB(255, 255, 255, 255),
         body: SafeArea(
@@ -563,14 +601,14 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
                   children: steps
                       .map((step) => SingleChildScrollView(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 15, vertical: 20),
+                                horizontal: 8, vertical: 8),
                             child: step,
                           ))
                       .toList(),
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
                 child: Row(
                   children: [
                     _CircleNavButton(

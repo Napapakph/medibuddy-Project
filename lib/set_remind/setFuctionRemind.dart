@@ -237,15 +237,6 @@ Widget type_frequency({
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text(
-        subtitle,
-        style: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-          color: Color(0xFF1F497D),
-        ),
-      ),
-      const SizedBox(height: 8),
       Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
@@ -484,7 +475,7 @@ Widget type_frequency({
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'รูปแบบการรับประทานยา',
+              'รูปแบบและความถี่การรับประทานยา',
               style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
             ),
             const SizedBox(height: 8),
@@ -551,17 +542,45 @@ Widget type_frequency({
                   ),
                   const Text('ทุก', style: TextStyle(fontSize: 16)),
                   const SizedBox(width: 35),
-                  SizedBox(
+                  Container(
                     width: 72,
-                    child: TextField(
-                      controller: everyHoursController,
-                      enabled: frequencyMode == FrequencyMode.everyHours,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        filled: true,
-                        fillColor: Colors.white,
-                        isDense: true,
-                        border: OutlineInputBorder(borderSide: BorderSide.none),
+                    height: 48,
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    decoration: BoxDecoration(
+                      color: frequencyMode == FrequencyMode.everyHours
+                          ? Colors.white
+                          : Colors.grey.shade200, // disabled color
+                      borderRadius: BorderRadius.circular(
+                          8), // Match roughly the original border
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        isExpanded: true,
+                        value: const ['1', '2', '3', '4', '6', '8', '12']
+                                .contains(everyHoursController.text.trim())
+                            ? everyHoursController.text.trim()
+                            : '4',
+                        dropdownColor: Colors.white,
+                        icon: const Icon(Icons.arrow_drop_down,
+                            color: Colors.grey),
+                        items: const ['1', '2', '3', '4', '6', '8', '12']
+                            .map((val) => DropdownMenuItem<String>(
+                                  value: val,
+                                  child: Text(val,
+                                      style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w400)),
+                                ))
+                            .toList(),
+                        onChanged: frequencyMode == FrequencyMode.everyHours
+                            ? (String? newValue) {
+                                if (newValue != null) {
+                                  everyHoursController.text = newValue;
+                                  onFrequencyModeChanged(
+                                      FrequencyMode.everyHours);
+                                }
+                              }
+                            : null,
                       ),
                     ),
                   ),
@@ -619,7 +638,9 @@ Widget type_frequency({
 
             // บางวัน
             InkWell(
-              onTap: () => onFrequencyPatternChanged(FrequencyPattern.someDays),
+              onTap: frequencyMode == FrequencyMode.everyHours
+                  ? null
+                  : () => onFrequencyPatternChanged(FrequencyPattern.someDays),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
@@ -629,15 +650,25 @@ Widget type_frequency({
                     child: Radio<FrequencyPattern>(
                       value: FrequencyPattern.someDays,
                       groupValue: frequencyPattern,
-                      onChanged: (v) {
-                        if (v != null) onFrequencyPatternChanged(v);
-                      },
+                      onChanged: frequencyMode == FrequencyMode.everyHours
+                          ? null
+                          : (v) {
+                              if (v != null) onFrequencyPatternChanged(v);
+                            },
                       visualDensity:
                           const VisualDensity(horizontal: -4, vertical: -4),
                       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
                   ),
-                  const Text('บางวัน', style: TextStyle(fontSize: 16)),
+                  Text(
+                    'บางวัน',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: frequencyMode == FrequencyMode.everyHours
+                          ? Colors.grey
+                          : Colors.black,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -706,8 +737,10 @@ Widget type_frequency({
 
             // ทุก X หน่วย
             InkWell(
-              onTap: () =>
-                  onFrequencyPatternChanged(FrequencyPattern.everyInterval),
+              onTap: frequencyMode == FrequencyMode.everyHours
+                  ? null
+                  : () =>
+                      onFrequencyPatternChanged(FrequencyPattern.everyInterval),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
@@ -716,15 +749,25 @@ Widget type_frequency({
                     child: Radio<FrequencyPattern>(
                       value: FrequencyPattern.everyInterval,
                       groupValue: frequencyPattern,
-                      onChanged: (v) {
-                        if (v != null) onFrequencyPatternChanged(v);
-                      },
+                      onChanged: frequencyMode == FrequencyMode.everyHours
+                          ? null
+                          : (v) {
+                              if (v != null) onFrequencyPatternChanged(v);
+                            },
                       visualDensity:
                           const VisualDensity(horizontal: -4, vertical: -4),
                       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
                   ),
-                  const Text('ทุก', style: TextStyle(fontSize: 16)),
+                  Text(
+                    'ทุก',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: frequencyMode == FrequencyMode.everyHours
+                          ? Colors.grey
+                          : Colors.black,
+                    ),
+                  ),
                   const SizedBox(width: 8),
                   SizedBox(
                     width: 72,
@@ -806,7 +849,7 @@ Widget type_frequency({
                       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
                   ),
-                  const Text('ตลอดไป'),
+                  const Text('ตลอดไป', style: TextStyle(fontSize: 16)),
                 ],
               ),
             ),
@@ -904,18 +947,8 @@ Widget detail_time({
   }
 
   return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
+    crossAxisAlignment: CrossAxisAlignment.center,
     children: [
-      const SizedBox(height: 4),
-      Text(
-        subtitle,
-        style: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-          color: Color(0xFF1F497D),
-        ),
-      ),
-      const SizedBox(height: 16),
       Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
@@ -925,8 +958,8 @@ Widget detail_time({
         child: Row(
           children: [
             Container(
-              width: 56,
-              height: 56,
+              width: 80,
+              height: 80,
               decoration: BoxDecoration(
                 color: const Color(0xFFE3EAF6),
                 borderRadius: BorderRadius.circular(12),
@@ -966,7 +999,8 @@ Widget detail_time({
             const SizedBox(width: 12),
             Text(
               timeLabel,
-              style: const TextStyle(color: Color(0xFF1F497D)),
+              style: const TextStyle(
+                  color: Color(0xFF1F497D), fontWeight: FontWeight.w400),
             ),
           ],
         ),
@@ -1039,6 +1073,7 @@ Widget detail_time({
                     const SizedBox(width: 12),
                     SizedBox(
                       width: 56,
+                      height: 36,
                       child: TextFormField(
                         initialValue: dose.amount,
                         onChanged: (value) {
@@ -1115,16 +1150,6 @@ Widget summary_rejimen({
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      const SizedBox(height: 4),
-      Text(
-        subtitle,
-        style: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-          color: Color(0xFF1F497D),
-        ),
-      ),
-      const SizedBox(height: 16),
       Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
@@ -1232,21 +1257,21 @@ class _MealTimingRow extends StatelessWidget {
         _MealTimingOption(
           timing: MealTiming.beforeMeal,
           label: 'ก่อนอาหาร',
-          icon: Icons.restaurant,
+          assetPath: 'assets/before_meal.png',
           selected: value == MealTiming.beforeMeal,
           onTap: () => onChanged(MealTiming.beforeMeal),
         ),
         _MealTimingOption(
           timing: MealTiming.betweenMeals,
           label: 'ระหว่างมื้อ',
-          icon: Icons.restaurant_menu,
+          assetPath: 'assets/between_meal.png',
           selected: value == MealTiming.betweenMeals,
           onTap: () => onChanged(MealTiming.betweenMeals),
         ),
         _MealTimingOption(
           timing: MealTiming.afterMeal,
           label: 'หลังอาหาร',
-          icon: Icons.local_dining,
+          assetPath: 'assets/after_meal.png',
           selected: value == MealTiming.afterMeal,
           onTap: () => onChanged(MealTiming.afterMeal),
         ),
@@ -1258,33 +1283,45 @@ class _MealTimingRow extends StatelessWidget {
 class _MealTimingOption extends StatelessWidget {
   final MealTiming timing;
   final String label;
-  final IconData icon;
+  final String assetPath;
   final bool selected;
   final VoidCallback onTap;
 
   const _MealTimingOption({
     required this.timing,
     required this.label,
-    required this.icon,
+    required this.assetPath,
     required this.selected,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final color = selected ? const Color(0xFF1F497D) : const Color(0xFF9DB3D4);
+    final color = selected
+        ? const Color.fromARGB(255, 212, 131, 174)
+        : const Color(0xFF9DB3D4);
+    // Add opacity if not selected for a slightly lighter/faded look
+    final opacity = selected ? 1.0 : 0.6;
 
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
         child: Column(
           children: [
-            Icon(icon, color: color),
+            Opacity(
+              opacity: opacity,
+              child: Image.asset(
+                assetPath,
+                width: 24,
+                height: 24,
+                color: color,
+              ),
+            ),
             const SizedBox(height: 4),
             Text(
               label,
               style: TextStyle(
-                fontSize: 11,
+                fontSize: 13,
                 color: color,
               ),
             ),
@@ -1294,7 +1331,7 @@ class _MealTimingOption extends StatelessWidget {
                 width: 6,
                 height: 6,
                 decoration: const BoxDecoration(
-                  color: Color(0xFF1F497D),
+                  color: const Color.fromARGB(255, 212, 131, 174),
                   shape: BoxShape.circle,
                 ),
               ),
@@ -1312,20 +1349,25 @@ class MealTimingIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    IconData icon;
+    String assetPath;
     switch (timing) {
       case MealTiming.beforeMeal:
-        icon = Icons.restaurant;
+        assetPath = 'assets/before_meal.png';
         break;
       case MealTiming.betweenMeals:
-        icon = Icons.check_circle_outline;
+        assetPath = 'assets/between_meal.png';
         break;
       case MealTiming.afterMeal:
-        icon = Icons.local_dining;
+        assetPath = 'assets/after_meal.png';
         break;
     }
 
-    return Icon(icon, color: const Color(0xFF1F497D));
+    return Image.asset(
+      assetPath,
+      width: 24,
+      height: 24,
+      color: const Color(0xFF1F497D),
+    );
   }
 }
 

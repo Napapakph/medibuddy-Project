@@ -721,7 +721,7 @@ class _RemindListScreenState extends State<RemindListScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF2F4F8),
+                    color: const Color.fromARGB(255, 240, 248, 255),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
@@ -731,7 +731,7 @@ class _RemindListScreenState extends State<RemindListScreen> {
                         '${plan.regimenStartDate!.day}/${plan.regimenStartDate!.month}/${plan.regimenStartDate!.year + 543} - '
                         '${plan.regimenEndDate != null ? "${plan.regimenEndDate!.day}/${plan.regimenEndDate!.month}/${plan.regimenEndDate!.year + 543}" : "ตลอดไป"}',
                         style: const TextStyle(
-                          fontSize: 12,
+                          fontSize: 14,
                           color: Color(0xFF1F497D),
                           fontWeight: FontWeight.w600,
                         ),
@@ -745,11 +745,22 @@ class _RemindListScreenState extends State<RemindListScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: 64,
-                height: 64,
+                width: 100,
+                height: 100,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE3EAF6),
+                  color: const Color.fromARGB(255, 105, 133, 182),
                   borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: const Color.fromARGB(255, 154, 168, 185), // สีกรอบ
+                    width: 1, // ความหนากรอบ
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                   image: image != null
                       ? DecorationImage(image: image, fit: BoxFit.cover)
                       : null,
@@ -776,7 +787,7 @@ class _RemindListScreenState extends State<RemindListScreen> {
                     Text(
                       plan.frequencyLabel,
                       style: const TextStyle(
-                        fontSize: 12,
+                        fontSize: 14,
                         color: Color(0xFF1F497D),
                       ),
                     ),
@@ -784,7 +795,7 @@ class _RemindListScreenState extends State<RemindListScreen> {
                     Text(
                       'ระยะเวลา ${plan.durationLabel}',
                       style: const TextStyle(
-                        fontSize: 12,
+                        fontSize: 14,
                         color: Color(0xFF6B7C93),
                       ),
                     ),
@@ -792,7 +803,7 @@ class _RemindListScreenState extends State<RemindListScreen> {
                     Text(
                       _schedulePatternLabel(plan),
                       style: const TextStyle(
-                        fontSize: 12,
+                        fontSize: 14,
                         color: Color(0xFF6B7C93),
                       ),
                     ),
@@ -813,8 +824,9 @@ class _RemindListScreenState extends State<RemindListScreen> {
                       child: Text(
                         formatTime(dose.time),
                         style: const TextStyle(
-                          color: Color(0xFF1F497D),
+                          color: Color.fromARGB(255, 110, 151, 199),
                           fontWeight: FontWeight.w600,
+                          fontSize: 14,
                         ),
                       ),
                     ),
@@ -823,6 +835,10 @@ class _RemindListScreenState extends State<RemindListScreen> {
                       child: Text(
                         'ปริมาณ ${dose.amount} ${dose.unit}',
                         textAlign: TextAlign.end,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Color.fromARGB(255, 68, 74, 107),
+                        ),
                       ),
                     ),
                     const SizedBox(width: 8),
