@@ -409,7 +409,7 @@ class _CameraOcrPageState extends State<CameraOcrPage> {
                 style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 5),
             Expanded(
               child: Center(
                 child: OcrCameraFrame(

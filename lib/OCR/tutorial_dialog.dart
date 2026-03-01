@@ -90,138 +90,155 @@ class _TutorialDialogState extends State<TutorialDialog> {
       backgroundColor: Colors.white,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+        child: Stack(
           children: [
-            const Text(
-              'วิธีใช้งาน',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                pageData['title'],
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                if (_currentPage > 0)
-                  GestureDetector(
-                    onTap: _prevPage,
-                    child: const Icon(Icons.arrow_back_ios,
-                        size: 30, color: Colors.black87),
-                  )
-                else
-                  const SizedBox(width: 30),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(1),
-                    border: Border.all(
-                      color: const Color(0xFF1F497D),
-                      width: 1,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 8,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Image.asset(
-                    pageData['image'],
-                    height: 250,
-                    fit: BoxFit.contain,
-                  ),
-                ),
-                if (_currentPage < _pages.length - 1)
-                  GestureDetector(
-                    onTap: _nextPage,
-                    child: const Icon(Icons.arrow_forward_ios,
-                        size: 30, color: Colors.black87),
-                  )
-                else
-                  const SizedBox(width: 30),
-              ],
-            ),
-            const SizedBox(height: 16),
             Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: (pageData['points'] as List<String>)
-                  .map(
-                    (point) => Padding(
-                      padding: const EdgeInsets.only(bottom: 4.0),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('• ',
-                              style: TextStyle(
-                                  fontSize: 14, fontWeight: FontWeight.bold)),
-                          Expanded(
-                            child: Text(
-                              point,
-                              style: const TextStyle(
-                                  fontSize: 14, color: Colors.black87),
-                            ),
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'วิธีใช้งาน',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    pageData['title'],
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (_currentPage > 0)
+                      GestureDetector(
+                        onTap: _prevPage,
+                        child: const Icon(Icons.arrow_back_ios,
+                            size: 30, color: Colors.black87),
+                      )
+                    else
+                      const SizedBox(width: 30),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(1),
+                        border: Border.all(
+                          color: const Color(0xFF1F497D),
+                          width: 1,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
                           ),
                         ],
                       ),
+                      child: Image.asset(
+                        pageData['image'],
+                        height: 250,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
+                    if (_currentPage < _pages.length - 1)
+                      GestureDetector(
+                        onTap: _nextPage,
+                        child: const Icon(Icons.arrow_forward_ios,
+                            size: 30, color: Colors.black87),
+                      )
+                    else
+                      const SizedBox(width: 30),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: (pageData['points'] as List<String>)
+                      .map(
+                        (point) => Padding(
+                          padding: const EdgeInsets.only(bottom: 4.0),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text('• ',
+                                  style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold)),
+                              Expanded(
+                                child: Text(
+                                  point,
+                                  style: const TextStyle(
+                                      fontSize: 14, color: Colors.black87),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                      .toList(),
+                ),
+                const SizedBox(height: 24),
+                if (isLastPage)
+                  ElevatedButton(
+                    onPressed: _onUnderstand,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF1F497D),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 32, vertical: 12),
+                    ),
+                    child: const Text(
+                      'เข้าใจแล้ว!',
+                      style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold),
                     ),
                   )
-                  .toList(),
+                else
+                  ElevatedButton(
+                    onPressed: _nextPage,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.grey.shade400,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 32, vertical: 12),
+                    ),
+                    child: const Text(
+                      'ต่อไป',
+                      style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold),
+                    ),
+                  ),
+              ],
             ),
-            const SizedBox(height: 24),
-            if (isLastPage)
-              ElevatedButton(
-                onPressed: _onUnderstand,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF1F497D),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                ),
-                child: const Text(
-                  'เข้าใจแล้ว!',
-                  style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold),
-                ),
-              )
-            else
-              ElevatedButton(
-                onPressed: _nextPage,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.grey.shade400,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                ),
-                child: const Text(
-                  'ต่อไป',
-                  style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold),
-                ),
+            Positioned(
+              right: -8,
+              top: -8,
+              child: IconButton(
+                icon: const Icon(Icons.close, color: Colors.grey),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
               ),
+            ),
           ],
         ),
       ),

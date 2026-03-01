@@ -26,11 +26,37 @@ class FindMedicinePage extends StatefulWidget {
 
 class _FindMedicinePageState extends State<FindMedicinePage> {
   final TextEditingController _searchController = TextEditingController();
+  final PageController _tutorialPageController = PageController();
+  int _currentPage = 0;
+  final List<String> _pages = [
+    'assets/tutorial_1.jpg',
+    'assets/tutorial_2.jpg',
+    'assets/tutorial_3.jpg',
+  ];
 
   @override
   void dispose() {
     _searchController.dispose();
+    _tutorialPageController.dispose();
     super.dispose();
+  }
+
+  void _nextPage() {
+    if (_currentPage < _pages.length - 1) {
+      _tutorialPageController.nextPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeIn,
+      );
+    }
+  }
+
+  void _prevPage() {
+    if (_currentPage > 0) {
+      _tutorialPageController.previousPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeIn,
+      );
+    }
   }
 
   /// 🔹 ค้นหาด้วยการพิมพ์
@@ -123,7 +149,7 @@ class _FindMedicinePageState extends State<FindMedicinePage> {
       backgroundColor: const Color.fromARGB(255, 227, 242, 255),
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           child: ListView(
             keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             children: [
@@ -185,7 +211,7 @@ class _FindMedicinePageState extends State<FindMedicinePage> {
               ),
               const SizedBox(height: 10),
               SizedBox(
-                height: 350,
+                height: 400,
                 child: GestureDetector(
                   onTap: () => TutorialDialog.show(context, forceShow: true),
                   child: Container(
@@ -230,37 +256,54 @@ class _FindMedicinePageState extends State<FindMedicinePage> {
                             padding: const EdgeInsets.symmetric(
                                 vertical: 8, horizontal: 16),
                             child: Container(
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(8),
-                                border: Border.all(
-                                  color: const Color(0xFF1F497D),
-                                  width: 1,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.05),
-                                    blurRadius: 4,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(8),
-                                child: PageView(
+                                child: Stack(
                                   children: [
-                                    Image.asset(
-                                      'assets/tutorial_1.jpg',
-                                      fit: BoxFit.contain,
+                                    PageView(
+                                      controller: _tutorialPageController,
+                                      onPageChanged: (index) {
+                                        setState(() {
+                                          _currentPage = index;
+                                        });
+                                      },
+                                      children: _pages.map((path) {
+                                        return Image.asset(
+                                          path,
+                                          fit: BoxFit.contain,
+                                        );
+                                      }).toList(),
                                     ),
-                                    Image.asset(
-                                      'assets/tutorial_2.jpg',
-                                      fit: BoxFit.contain,
-                                    ),
-                                    Image.asset(
-                                      'assets/tutorial_3.jpg',
-                                      fit: BoxFit.contain,
-                                    ),
+                                    if (_currentPage > 0)
+                                      Align(
+                                        alignment: Alignment.centerLeft,
+                                        child: Padding(
+                                          padding:
+                                              const EdgeInsets.only(left: 8),
+                                          child: GestureDetector(
+                                            onTap: _prevPage,
+                                            child: const Icon(
+                                                Icons.arrow_back_ios,
+                                                size: 30,
+                                                color: Colors.black87),
+                                          ),
+                                        ),
+                                      ),
+                                    if (_currentPage < _pages.length - 1)
+                                      Align(
+                                        alignment: Alignment.centerRight,
+                                        child: Padding(
+                                          padding:
+                                              const EdgeInsets.only(right: 8),
+                                          child: GestureDetector(
+                                            onTap: _nextPage,
+                                            child: const Icon(
+                                                Icons.arrow_forward_ios,
+                                                size: 30,
+                                                color: Colors.black87),
+                                          ),
+                                        ),
+                                      ),
                                   ],
                                 ),
                               ),
@@ -280,7 +323,7 @@ class _FindMedicinePageState extends State<FindMedicinePage> {
                                 'แตะเพื่อดูรายละเอียด',
                                 style: TextStyle(
                                   color: Color(0xFF7A869A),
-                                  fontSize: 12,
+                                  fontSize: 14,
                                 ),
                               ),
                             ],
@@ -293,7 +336,7 @@ class _FindMedicinePageState extends State<FindMedicinePage> {
               ),
               const SizedBox(height: 10),
               Align(
-                alignment: Alignment.centerRight,
+                alignment: Alignment.bottomRight,
                 child: ElevatedButton(
                   onPressed: _skipSearch,
                   style: ElevatedButton.styleFrom(

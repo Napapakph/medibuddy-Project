@@ -525,7 +525,7 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
     final imageProvider = _buildMedicineImage(item.imagePath);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
+      margin: const EdgeInsets.only(bottom: 6),
       padding: const EdgeInsets.all(5),
       decoration: BoxDecoration(
         color: const Color.fromARGB(255, 255, 255, 255),
@@ -671,7 +671,7 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
                         return item.mediType!;
                       }(),
                       style: const TextStyle(
-                        fontSize: 12,
+                        fontSize: 14,
                         color: Color(0xFF1F497D),
                       ),
                     ),
@@ -716,7 +716,7 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
                           horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
                         // สีเขียวอมฟ้าตามรูป (Teal-ish)
-                        color: const Color.fromARGB(255, 168, 200, 241),
+                        color: const Color.fromARGB(255, 205, 225, 253),
                         borderRadius: BorderRadius.circular(24),
                       ),
                       child: Row(
@@ -894,17 +894,26 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
                                     child: _isLoading
                                         ? const Center()
                                         : _sortedItems.isNotEmpty
-                                            ? ListView.builder(
-                                                itemCount: _sortedItems.length,
-                                                itemBuilder: (context, index) {
-                                                  // Find the actual index in the original `_items` array
-                                                  final sortedItem =
-                                                      _sortedItems[index];
-                                                  final actualIndex = _items
-                                                      .indexOf(sortedItem);
-                                                  return _buildMedicineCard(
-                                                      context, actualIndex);
-                                                },
+                                            ? Scrollbar(
+                                                thickness: 6,
+                                                radius:
+                                                    const Radius.circular(8),
+                                                trackVisibility: true,
+                                                //thumbVisibility: true,
+                                                child: ListView.builder(
+                                                  itemCount:
+                                                      _sortedItems.length,
+                                                  itemBuilder:
+                                                      (context, index) {
+                                                    // Find the actual index in the original `_items` array
+                                                    final sortedItem =
+                                                        _sortedItems[index];
+                                                    final actualIndex = _items
+                                                        .indexOf(sortedItem);
+                                                    return _buildMedicineCard(
+                                                        context, actualIndex);
+                                                  },
+                                                ),
                                               )
                                             : _errorMessage.isNotEmpty
                                                 ? Center(
@@ -929,7 +938,7 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
                                                   ),
                                   ),
                                 ),
-                                SizedBox(height: maxWidth * 0.05),
+                                SizedBox(height: maxWidth * 0.01),
                                 SizedBox(
                                   width: 150,
                                   child: ElevatedButton.icon(
