@@ -58,6 +58,7 @@ class AppDrawer extends StatelessWidget {
     return Drawer(
       backgroundColor: const Color.fromARGB(255, 245, 250, 255),
       child: SafeArea(
+        top: false,
         child: LayoutBuilder(
           builder: (context, constraints) {
             final w = constraints.maxWidth;

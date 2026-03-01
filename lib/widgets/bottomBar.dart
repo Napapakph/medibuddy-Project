@@ -19,120 +19,163 @@ class BottomBar extends StatelessWidget {
     final bool isFollowing = currentRoute == '/following';
     final bool isMedicine = currentRoute == '/list_medicine';
 
-    return SizedBox(
-      height: 70,
-      child: Stack(
-        clipBehavior: Clip.none,
-        alignment: Alignment.bottomCenter,
-        children: [
-          // Background Bar
-          Container(
-            height: 70,
-
-            padding: const EdgeInsets.only(
-                bottom: 24, left: 24, right: 24, top: 5), // ⭐ เพิ่มตรงนี้
-            decoration: const BoxDecoration(
-              color: Color(0xFF1F497D),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                IconButton(
-                  onPressed: () {
-                    Navigator.pushNamed(
-                      context,
-                      '/following',
-                    );
-                  },
-                  icon: AnimatedScale(
-                    scale: isFollowing ? 1.1 : 1.0,
-                    duration: const Duration(milliseconds: 200),
-                    child: AnimatedOpacity(
-                      opacity: isFollowing ? 1.0 : 0.6,
-                      duration: const Duration(milliseconds: 200),
-                      child: Icon(
-                        MdiIcons.heartCircle,
-                        color: Colors.white,
-                        size: 50,
+    return SafeArea(
+      bottom: false,
+      top: false,
+      child: SizedBox(
+        height: 90,
+        child: Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.bottomCenter,
+          children: [
+            // Bottom Bar Container
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: Container(
+                height: 80,
+                decoration: const BoxDecoration(
+                  color: Color(0xFF1F497D),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 10,
+                      offset: Offset(0, -4),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    // FOLLOWING
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.pushNamed(context, '/following');
+                        },
+                        behavior: HitTestBehavior.opaque,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            AnimatedScale(
+                              scale: isFollowing ? 1.1 : 1.0,
+                              duration: const Duration(milliseconds: 200),
+                              child: Icon(
+                                MdiIcons.heartCircle,
+                                color: isFollowing
+                                    ? Colors.white
+                                    : const Color.fromARGB(118, 255, 255, 255),
+                                size: 45,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                ),
 
-                // Spacer for Home Button
-                const SizedBox(width: 100),
+                    // Spacer for Center Floating Button
+                    const SizedBox(width: 80),
 
-                // LIST MEDICINE
-                IconButton(
-                  onPressed: () {
-                    if (pid == null) {
-                      debugPrint(
-                          '⚠️ MainBottomBar: profileId is null → go SelectProfile');
-                      Navigator.pushReplacementNamed(
-                          context, '/select_profile');
-                      return;
-                    }
-
-                    Navigator.pushNamed(
-                      context,
-                      '/list_medicine',
-                      arguments: {'profileId': pid},
-                    );
-
-                    debugPrint('💊 MainBottomBar: open list_medicine pid=$pid');
-                  },
-                  icon: AnimatedScale(
-                    scale: isMedicine ? 1.1 : 1.0,
-                    duration: const Duration(milliseconds: 200),
-                    child: AnimatedOpacity(
-                      opacity: isMedicine ? 1.0 : 0.6,
-                      duration: const Duration(milliseconds: 200),
-                      child: const Icon(
-                        IcoFontIcons.pills,
-                        color: Colors.white,
-                        size: 50,
+                    // LIST MEDICINE
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          if (pid == null) {
+                            debugPrint(
+                                '⚠️ MainBottomBar: profileId is null → go SelectProfile');
+                            Navigator.pushReplacementNamed(
+                                context, '/select_profile');
+                            return;
+                          }
+                          Navigator.pushNamed(
+                            context,
+                            '/list_medicine',
+                            arguments: {'profileId': pid},
+                          );
+                          debugPrint(
+                              '💊 MainBottomBar: open list_medicine pid=$pid');
+                        },
+                        behavior: HitTestBehavior.opaque,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            AnimatedScale(
+                              scale: isMedicine ? 1.1 : 1.0,
+                              duration: const Duration(milliseconds: 200),
+                              child: Icon(
+                                IcoFontIcons.pills,
+                                color: isMedicine
+                                    ? Colors.white
+                                    : const Color.fromARGB(118, 255, 255, 255),
+                                size: 45,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
 
-          // HOME (Floating)
-          Positioned(
-            bottom: 0,
-            child: GestureDetector(
-              onTap: () {
-                Navigator.pushReplacementNamed(
-                  context,
-                  '/home',
-                  arguments: {
-                    'profileId': pid,
-                    'profileName': AppState.instance.currentProfileName,
-                    'profileImage': AppState.instance.currentProfileImagePath,
-                  },
-                );
-              },
-              child: AnimatedScale(
-                scale: isHome ? 1.1 : 1.0,
-                duration: const Duration(milliseconds: 200),
-                child: Container(
-                  width: 60,
-                  height: 60,
-                  child: AnimatedOpacity(
-                    opacity: isHome ? 1.0 : 0.6,
-                    duration: const Duration(milliseconds: 200),
-                    child: Image.asset(
-                      'assets/cat_home.png',
+            // HOME (Center Floating Button)
+            Positioned(
+              bottom: 20, // Elevated position
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.pushReplacementNamed(
+                    context,
+                    '/home',
+                    arguments: {
+                      'profileId': pid,
+                      'profileName': AppState.instance.currentProfileName,
+                      'profileImage': AppState.instance.currentProfileImagePath,
+                    },
+                  );
+                },
+                child: AnimatedScale(
+                  scale: isHome ? 1.2 : 1.0,
+                  duration: const Duration(milliseconds: 200),
+                  child: Container(
+                    width: 64,
+                    height: 64,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF6FA8DC), Color(0xFF1F497D)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF1F497D).withOpacity(0.4),
+                          blurRadius: 10,
+                          spreadRadius: 2,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    padding: const EdgeInsets.all(12),
+                    child: AnimatedOpacity(
+                      opacity: isHome ? 1.0 : 0.85,
+                      duration: const Duration(milliseconds: 200),
+                      child: Image.asset(
+                        'assets/cat_home.png',
+                        fit: BoxFit.contain,
+                        color: isHome
+                            ? Color.fromARGB(255, 255, 255, 255)
+                            : const Color.fromARGB(118, 255, 255, 255),
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
-          const SizedBox(height: 30),
-        ],
+          ],
+        ),
       ),
     );
   }
