@@ -324,6 +324,7 @@ Future<void> main() async {
     debugPrint('Firebase init: skipped (non-android)');
   }
 
+
   if (isAndroid && firebaseReady) {
     debugPrint('DeviceTokenService: init listener');
     // ✅ เรียกเฉพาะ Android เท่านั้น

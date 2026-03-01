@@ -5,6 +5,10 @@ import 'login_screen.dart';
 // import '../services/authen_login.dart'; // Removed unused import
 // import '../services/sync_user.dart'; // Removed unused import
 import '../services/auth_manager.dart';
+import '../services/authen_api_v2.dart';
+import '../profile_pages/create_profile_screen.dart';
+import '../profile_pages/select_profile.dart';
+import '../services/profile_api.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 final supabase = Supabase.instance.client;
@@ -37,7 +41,6 @@ class _SignupScreenState extends State<SignupScreen> {
     super.dispose();
   }
 
-  // final LoginWithGoogle _googleAuth = LoginWithGoogle(); // Removed unused field
   //---------------- Login with Google Sign in-------------------------------------
 
   bool containsUnsafeChar(String value) {
@@ -202,7 +205,7 @@ class _SignupScreenState extends State<SignupScreen> {
     final email = _email.text.trim();
     final password = _password.text.trim();
 
-    setState(() => _isLoading = true); // เริ่มหมุนโหลด
+    setState(() => _isLoading = true);
     try {
       final status = await AuthManager.service.checkEmailStatus(email);
       if (!mounted) return;
@@ -219,55 +222,159 @@ class _SignupScreenState extends State<SignupScreen> {
       );
       return;
     }
-    // เรียกไปหา Supabase ผ่าน AuthAPI
-    final error = await AuthManager.service.register(
-      email: email,
-      password: password,
-    );
-    if (!mounted) return;
 
-    setState(() => _isLoading = false);
-    if (!mounted) return;
-    if (error == null) {
-      // ✅ สมัครสำเร็จ
+    // Use structured register to detect 409/merge
+    final service = AuthManager.service;
+    if (service is CustomAuthService) {
+      final result =
+          await service.registerWithResult(email: email, password: password);
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+
+      if (result.success) {
+        // Normal register success → OTP verification
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('กรอกรหัสยืนยัน OTP')),
+        );
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => OTPScreen(email: email)),
+        );
+        return;
+      }
+
+      if (result.requiresMerge) {
+        // Show merge confirmation dialog
+        await _showMergeConfirmDialog(
+          email: email,
+          password: password,
+          message: result.backendMessage ?? '',
+        );
+        return;
+      }
+
+      // Generic error or already-registered
+      if (result.errorMessage != null &&
+          _isAlreadyRegisteredError(result.errorMessage!)) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => OTPScreen(email: email)),
+        );
+        return;
+      }
+
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('กรอกรหัสยืนยัน OTP'),
-        ),
+        SnackBar(content: Text(result.errorMessage ?? 'Registration failed')),
       );
+    } else {
+      // Fallback for non-CustomAuthService (e.g. Supabase)
+      final error =
+          await AuthManager.service.register(email: email, password: password);
+      if (!mounted) return;
+      setState(() => _isLoading = false);
 
-      // จะไปหน้า OTP ต่อก็ได้ ถ้าระบบต้องการยืนยัน
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => OTPScreen(email: email)),
-        //หน้า OTP จะรู้แล้วว่า OTP นี้เป็นของอีเมลไหน
+      if (error == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('กรอกรหัสยืนยัน OTP')),
+        );
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => OTPScreen(email: email)),
+        );
+        return;
+      }
+
+      if (_isAlreadyRegisteredError(error)) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => OTPScreen(email: email)),
+        );
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error)),
       );
-      return;
     }
-    bool _isAlreadyRegisteredError(String error) {
-      final msg = error.toLowerCase();
-      const keywords = ['already', 'exists', 'registered'];
-      return keywords.any(msg.contains);
-    }
-
-    if (_isAlreadyRegisteredError(error)) {
-      // optional: ส่ง OTP ใหม่
-      // await Supabase.instance.client.auth.resend(type: OtpType.signup, email: email);
-
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => OTPScreen(email: email)),
-      );
-      return;
-    }
-
-// error อื่น ๆ
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(error)),
-    );
   }
 
-  //---------------- Login with Google Sign in-------------------------------------
+  bool _isAlreadyRegisteredError(String error) {
+    final msg = error.toLowerCase();
+    const keywords = ['already', 'exists', 'registered'];
+    return keywords.any(msg.contains);
+  }
+
+  Future<void> _showMergeConfirmDialog({
+    required String email,
+    required String password,
+    required String message,
+  }) async {
+    if (!mounted) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return AlertDialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          backgroundColor: Colors.white,
+          title: const Text(
+            'เชื่อมบัญชี Google',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+          ),
+          content: Text(
+            message,
+            style: const TextStyle(fontSize: 15, color: Colors.black87),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('ไม่',
+                  style: TextStyle(color: Colors.grey, fontSize: 16)),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF1F497D),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+              ),
+              child: const Text('ใช่', style: TextStyle(fontSize: 16)),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    // User confirmed → request OTP then navigate to merge OTP screen
+    setState(() => _isLoading = true);
+    try {
+      final service = AuthManager.service as CustomAuthService;
+      await service.requestOtp(email);
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => OTPScreen(
+            email: email,
+            isMergeMode: true,
+            mergePassword: password,
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('ส่ง OTP ไม่สำเร็จ: $e')),
+      );
+    }
+  }
 
 //---------------- Login with Google Sign in-------------------------------------
   Future<void> _handleGoogleLogin() async {
@@ -276,6 +383,11 @@ class _SignupScreenState extends State<SignupScreen> {
 
     try {
       await AuthManager.service.signInWithGoogle(); // ✅ Use AuthManager
+      // ✅ เพิ่ม manual check & navigate สำหรับ custom API ที่เสร็จสมบูรณ์ทันที
+      if (AuthManager.accessToken != null) {
+        if (!mounted) return;
+        await _checkAndNavigate(token: AuthManager.accessToken);
+      }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -284,6 +396,43 @@ class _SignupScreenState extends State<SignupScreen> {
     } finally {
       if (!mounted) return;
       setState(() => _isGoogleLoading = false);
+    }
+  }
+
+  Future<void> _checkAndNavigate({String? token}) async {
+    try {
+      token ??= await AuthManager.service.getAccessToken(); // ✅ Support both
+
+      if (token == null) {
+        if (mounted) setState(() => _isLoading = false); // ✅ Reveal form
+        return;
+      }
+
+      final api = ProfileApi();
+      final profiles = await api.fetchProfiles(accessToken: token);
+
+      if (!mounted) return;
+
+      if (profiles.isNotEmpty) {
+        // มีโปรไฟล์แล้ว -> ไปหน้า Library
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const SelectProfile()),
+          (route) => false, // Clear Login screen from stack
+        );
+      } else {
+        // ยังไม่มี -> ไปหน้าสร้าง Profile
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const ProfileScreen()),
+        );
+      }
+    } catch (e) {
+      debugPrint('Check profile error: $e');
+      if (mounted) {
+        await AuthManager.service.logout();
+        setState(() => _isLoading = false);
+      }
     }
   }
 

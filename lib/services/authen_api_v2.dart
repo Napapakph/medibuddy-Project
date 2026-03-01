@@ -6,6 +6,30 @@ import '../main.dart'; // ✅ Import globalDeviceTokenService
 import 'token_manager.dart';
 import 'auth_interceptor.dart';
 
+/// Structured result from register() to distinguish success, merge-required, and generic error.
+class RegisterResult {
+  final bool success;
+  final bool requiresMerge;
+  final String? errorMessage;
+  final String? backendMessage;
+
+  const RegisterResult.ok()
+      : success = true,
+        requiresMerge = false,
+        errorMessage = null,
+        backendMessage = null;
+
+  const RegisterResult.error(this.errorMessage)
+      : success = false,
+        requiresMerge = false,
+        backendMessage = null;
+
+  const RegisterResult.merge({required this.backendMessage})
+      : success = false,
+        requiresMerge = true,
+        errorMessage = null;
+}
+
 class CustomAuthService implements AuthService {
   final Dio _dio = Dio();
 
@@ -26,16 +50,88 @@ class CustomAuthService implements AuthService {
   @override
   Future<String?> register(
       {required String email, required String password}) async {
+    final result = await registerWithResult(email: email, password: password);
+    if (result.success) return null;
+    if (result.requiresMerge) return result.backendMessage;
+    return result.errorMessage;
+  }
+
+  /// Structured register — surfaces 409 merge requirement.
+  Future<RegisterResult> registerWithResult(
+      {required String email, required String password}) async {
     try {
       await _dio.post('/api/auth/v2/register', data: {
         'email': email,
         'password': password,
       });
-      return null; // Success
+      return const RegisterResult.ok();
     } on DioException catch (e) {
-      return e.response?.data?['message'] ?? e.message ?? 'Registration failed';
+      if (e.response?.statusCode == 409) {
+        final data = e.response?.data;
+        if (data is Map && data['requiresMerge'] == true) {
+          return RegisterResult.merge(
+            backendMessage: data['message']?.toString() ??
+                'อีเมลนี้เชื่อมกับบัญชี Google อยู่แล้ว',
+          );
+        }
+      }
+      return RegisterResult.error(e.response?.data?['message']?.toString() ??
+          e.message ??
+          'Registration failed');
     } catch (e) {
-      return 'เกิดข้อผิดพลาด: $e';
+      return RegisterResult.error('เกิดข้อผิดพลาด: $e');
+    }
+  }
+
+  /// Request OTP for email verification or merge flow.
+  Future<Map<String, dynamic>> requestOtp(String email) async {
+    try {
+      final res = await _dio.post('/api/auth/v2/otp/request', data: {
+        'email': email,
+      });
+      return Map<String, dynamic>.from(res.data ?? {});
+    } on DioException catch (e) {
+      throw Exception(
+          e.response?.data?['message']?.toString() ?? 'OTP request failed');
+    }
+  }
+
+  /// Merge Google account with email/password (set password for Google-only account).
+  Future<AuthResponse> registerMerge({
+    required String email,
+    required String otp,
+    required String password,
+  }) async {
+    try {
+      final res = await _dio.post('/api/auth/v2/register/merge', data: {
+        'email': email,
+        'otp': otp,
+        'password': password,
+      });
+      final data = res.data;
+      final accessToken = data['accessToken'];
+      final refreshToken = data['refreshToken'];
+
+      if (accessToken != null) {
+        await TokenManager.setSession(
+          accessToken: accessToken,
+          refreshToken: refreshToken,
+        );
+        globalDeviceTokenService.registerDeviceToken(force: true);
+      }
+
+      return AuthResponse(
+        accessToken: accessToken ?? '',
+        refreshToken: refreshToken,
+        user: data['user'],
+      );
+    } on DioException catch (e) {
+      final data = e.response?.data;
+      final errorCode = data is Map ? data['error']?.toString() : null;
+      final msg = data is Map
+          ? data['message']?.toString() ?? 'Merge failed'
+          : 'Merge failed';
+      throw MergeException(code: errorCode ?? 'UNKNOWN', message: msg);
     }
   }
 
@@ -131,13 +227,7 @@ class CustomAuthService implements AuthService {
 
   @override
   Future<void> resendOtp(String email) async {
-    // Not defined in user request, possibly not supported or uses register endpoint again?
-    // Throw unimplemented or just ignore for now.
-    // Or maybe just call register again?
-    // await register(email: email, password: "..."); // We don't have password here.
-
-    // Throwing exception to notify UI
-    throw Exception('Resend OTP not supported in V2 yet');
+    await requestOtp(email);
   }
 
   @override
@@ -174,9 +264,12 @@ class CustomAuthService implements AuthService {
       }
 
       // ส่ง idToken ไปยัง Backend API
-      final res = await _dio.post('/api/auth/v2/google-login', data: {
-        'idToken': idToken,
-      });
+      final res = await _dio.post(
+        '/api/auth/v2/google-login',
+        data: {
+          'idToken': idToken,
+        },
+      );
 
       final data = res.data;
       final accessToken = data['accessToken'];
@@ -243,4 +336,14 @@ class CustomAuthService implements AuthService {
       throw Exception('Connection error');
     }
   }
+}
+
+/// Typed exception for merge API errors.
+class MergeException implements Exception {
+  final String code;
+  final String message;
+  const MergeException({required this.code, required this.message});
+
+  @override
+  String toString() => 'MergeException($code): $message';
 }
