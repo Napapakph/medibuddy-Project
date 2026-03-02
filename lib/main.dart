@@ -21,7 +21,7 @@ import 'profile_pages/library_profile.dart';
 import 'add_medicine/medicine_list_screen.dart';
 import 'export_pdf/history.dart';
 import 'OCR/camera_ocr.dart';
-import 'services/sync_user.dart';
+import 'services/old_service/sync_user.dart';
 import 'services/token_manager.dart';
 import 'dart:async';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';

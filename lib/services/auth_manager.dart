@@ -1,7 +1,7 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'auth_service.dart';
-import 'supabase_auth_service.dart';
-import 'authen_api_v2.dart';
+import 'old_service/supabase_auth_service.dart';
+import 'authen_api.dart';
 
 class AuthManager {
   static late AuthService service;

@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthResponse;
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'auth_service.dart';
-import 'auth_manager.dart'; // Import
+import '../auth_service.dart';
+import '../auth_manager.dart'; // Import
 
 class SupabaseAuthService implements AuthService {
   final SupabaseClient _supabase = Supabase.instance.client;

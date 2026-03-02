@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_otp_text_field/flutter_otp_text_field.dart';
 import 'login_screen.dart';
 import '../services/auth_manager.dart';
-import '../services/authen_api_v2.dart';
+import '../services/authen_api.dart';
 
 class OTPScreen extends StatefulWidget {
   const OTPScreen({
