@@ -180,7 +180,7 @@ class AppDrawer extends StatelessWidget {
                           _DrawerMenuItem(
                             icon: const Icon(Icons.person_add_alt_rounded,
                                 size: 28, color: _iconColor),
-                            title: 'ผู้ใช้โปรไฟล์',
+                            title: 'โปรไฟล์ผู้ใช้',
                             onTap: () => _go(context, '/library_profile'),
                           ),
                           _DrawerMenuItem(
@@ -201,7 +201,7 @@ class AppDrawer extends StatelessWidget {
 
                     // ========== Logout ==========
                     Padding(
-                      padding: EdgeInsets.only(right: 20),
+                      padding: EdgeInsets.only(bottom: 20, left: 100),
                       child: SizedBox(
                         height: 48,
                         child: ElevatedButton(

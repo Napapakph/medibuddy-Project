@@ -26,7 +26,7 @@ import 'services/token_manager.dart';
 import 'dart:async';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'add_medicine/medicine_search_page.dart';
+import 'search_medicine/medicine_search_page.dart';
 import 'user_request/user_request_screen.dart';
 import 'alarm_medicine/alarm_screen.dart';
 import 'set_remind/setRemind_screen.dart';
