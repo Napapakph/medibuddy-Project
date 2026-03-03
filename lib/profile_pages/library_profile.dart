@@ -773,7 +773,7 @@ class _LibraryProfileState extends State<LibraryProfile> {
   }
 //--------------------------------------------------------------------
 
-  // เพิ่มโปรไฟล์ ---------------------------------------------------------
+  // เพิ่มโปรไฟล์ -showDialog--------------------------------------------------------
   void _addProfile() {
     final TextEditingController nameCtrl = TextEditingController();
 
@@ -785,7 +785,7 @@ class _LibraryProfileState extends State<LibraryProfile> {
     final maxHeight = size.height;
     final avatarSize = maxWidth * 0.35;
 
-    showDialog(
+    (
       context: context,
       builder: (dialogContext) {
         String? errorMessage; // เพิ่มตัวแปรเก็บ error message
@@ -866,20 +866,23 @@ class _LibraryProfileState extends State<LibraryProfile> {
                       : () async {
                           final newName = nameCtrl.text.trim();
                           if (newName.isEmpty) {
-                            setStateDialog(() {
-                              errorMessage = 'กรุณากรอกชื่อโปรไฟล์';
-                            });
+                            setStateDialog(
+                              () {
+                                errorMessage = 'กรุณากรอกชื่อโปรไฟล์';
+                              },
+                            );
                             return;
                           }
-
                           // เช็คชื่อซ้ำ
                           final isDuplicate =
                               profiles.any((p) => p.username == newName);
                           if (isDuplicate) {
-                            setStateDialog(() {
-                              errorMessage =
-                                  'ชื่อโปรไฟล์นี้มีอยู่แล้ว กรุณาตั้งชื่อใหม่';
-                            });
+                            setStateDialog(
+                              () {
+                                errorMessage =
+                                    'ชื่อโปรไฟล์นี้มีอยู่แล้ว กรุณาตั้งชื่อใหม่';
+                              },
+                            );
                             return;
                           }
 
@@ -896,10 +899,12 @@ class _LibraryProfileState extends State<LibraryProfile> {
                                 .pop(); // ปิด dialog ก่อน
                           } catch (e) {
                             if (!mounted) return;
-                            setStateDialog(() {
-                              errorMessage = 'เพิ่มโปรไฟล์ไม่สำเร็จ: $e';
-                              isLoading = false;
-                            });
+                            setStateDialog(
+                              () {
+                                errorMessage = 'เพิ่มโปรไฟล์ไม่สำเร็จ: $e';
+                                isLoading = false;
+                              },
+                            );
                           }
                         },
                   child: isLoading
