@@ -616,11 +616,15 @@ class _RemindListScreenState extends State<RemindListScreen> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
-          titlePadding: EdgeInsets.zero, // ⭐ สำคัญมาก
+          titlePadding: EdgeInsets.zero,
           title: Container(
             padding: const EdgeInsets.symmetric(vertical: 16),
             decoration: const BoxDecoration(
-              color: Color(0xFF1F497D), // สีพื้นหลัง title
+              gradient: LinearGradient(
+                colors: [Color(0xFFD6E9FC), Color(0xFFEAF3FD)],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
               borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(20),
                 topRight: Radius.circular(20),
@@ -630,8 +634,9 @@ class _RemindListScreenState extends State<RemindListScreen> {
               child: Text(
                 'ลบแจ้งเตือน',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: Color(0xFF2B4C7E),
                   fontWeight: FontWeight.bold,
+                  fontSize: 18,
                 ),
               ),
             ),
@@ -702,12 +707,18 @@ class _RemindListScreenState extends State<RemindListScreen> {
     final isDeleting = _deletingPlanIds.contains(plan.id);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color.fromARGB(255, 255, 255, 255),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFD6E3F3)),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF7BAEE5).withOpacity(0.10),
+            offset: const Offset(0, 3),
+            blurRadius: 10,
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -721,8 +732,8 @@ class _RemindListScreenState extends State<RemindListScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: const Color.fromARGB(255, 240, 248, 255),
-                    borderRadius: BorderRadius.circular(8),
+                    color: const Color(0xFFE8F1FB),
+                    borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -731,8 +742,8 @@ class _RemindListScreenState extends State<RemindListScreen> {
                         '${plan.regimenStartDate!.day}/${plan.regimenStartDate!.month}/${plan.regimenStartDate!.year + 543} - '
                         '${plan.regimenEndDate != null ? "${plan.regimenEndDate!.day}/${plan.regimenEndDate!.month}/${plan.regimenEndDate!.year + 543}" : "ตลอดไป"}',
                         style: const TextStyle(
-                          fontSize: 14,
-                          color: Color(0xFF1F497D),
+                          fontSize: 13,
+                          color: Color(0xFF5A81BB),
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -748,16 +759,16 @@ class _RemindListScreenState extends State<RemindListScreen> {
                 width: 100,
                 height: 100,
                 decoration: BoxDecoration(
-                  color: const Color.fromARGB(255, 105, 133, 182),
-                  borderRadius: BorderRadius.circular(12),
+                  color: const Color(0xFFF2F5F9),
+                  borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: const Color.fromARGB(255, 154, 168, 185), // สีกรอบ
-                    width: 1, // ความหนากรอบ
+                    color: const Color(0xFFE4EAF0),
+                    width: 1,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 4,
+                      color: const Color(0xFF7BAEE5).withOpacity(0.08),
+                      blurRadius: 6,
                       offset: const Offset(0, 2),
                     ),
                   ],
@@ -766,7 +777,8 @@ class _RemindListScreenState extends State<RemindListScreen> {
                       : null,
                 ),
                 child: image == null
-                    ? const Icon(Icons.medication, color: Color(0xFF1F497D))
+                    ? const Icon(Icons.medication,
+                        size: 40, color: Color(0xFF7BAEE5))
                     : null,
               ),
               const SizedBox(width: 12),
@@ -777,8 +789,9 @@ class _RemindListScreenState extends State<RemindListScreen> {
                     Text(
                       plan.medicine.nickname_medi,
                       style: const TextStyle(
-                        fontSize: 15,
+                        fontSize: 16,
                         fontWeight: FontWeight.w700,
+                        color: Color(0xFF2B4C7E),
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -788,7 +801,7 @@ class _RemindListScreenState extends State<RemindListScreen> {
                       plan.frequencyLabel,
                       style: const TextStyle(
                         fontSize: 14,
-                        color: Color(0xFF1F497D),
+                        color: Color(0xFF5A81BB),
                       ),
                     ),
                     const SizedBox(height: 2),
@@ -860,20 +873,37 @@ class _RemindListScreenState extends State<RemindListScreen> {
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(
-                        Icons.delete,
+                        Icons.delete_outline_rounded,
                         size: 18,
                       ),
-                label: Text(isDeleting ? 'กำลังลบ...' : 'ลบแจ้งเตือน'),
+                label: Text(
+                  isDeleting ? 'กำลังลบ...' : 'ลบแจ้งเตือน',
+                  style: TextStyle(color: Color.fromARGB(255, 98, 131, 182)),
+                ),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color.fromARGB(255, 115, 141, 179),
+                  side: const BorderSide(
+                      color: Color.fromARGB(255, 157, 187, 225)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                ),
               ),
               const SizedBox(width: 12),
-              const Spacer(), // 👈 ดันปุ่มถัดไปไปชิดขวา
+              const Spacer(),
               ElevatedButton.icon(
                 onPressed: isDeleting ? null : () => _editPlan(plan),
-                icon: const Icon(Icons.edit, size: 18),
+                icon: const Icon(Icons.edit_rounded, size: 18),
                 label: const Text('แก้ไขแจ้งเตือน'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF1F497D),
+                  backgroundColor: const Color.fromARGB(255, 90, 129, 187),
                   foregroundColor: Colors.white,
+                  elevation: 2,
+                  shadowColor:
+                      const Color.fromARGB(255, 42, 80, 135).withOpacity(0.3),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24),
+                  ),
                 ),
               ),
             ],
@@ -887,17 +917,36 @@ class _RemindListScreenState extends State<RemindListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xFFB7DAFF),
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color.fromARGB(255, 234, 244, 255),
+                Color.fromARGB(255, 193, 222, 255),
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
         centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_rounded,
+              color: Color(0xFF5A81BB)),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: const Text(
           'รายการแจ้งเตือนทานยา',
           style: TextStyle(
-            color: Color(0xFF1F497D),
-            fontWeight: FontWeight.bold,
+            color: Color(0xFF2B4C7E),
+            fontWeight: FontWeight.w700,
+            fontSize: 20,
+            letterSpacing: 0.3,
           ),
         ),
       ),
-      backgroundColor: const Color.fromARGB(255, 227, 242, 255),
+      backgroundColor: const Color(0xFFF0F6FF),
       body: SafeArea(
         child: Stack(
           children: [
@@ -911,17 +960,27 @@ class _RemindListScreenState extends State<RemindListScreen> {
                         DropdownButtonFormField<MedicineItem?>(
                           value: _isAllSelected ? null : _selectedMedicine,
                           isExpanded: true,
-                          hint: const Text('เลือกรายการยา'),
+                          hint: const Text(
+                            'เลือกรายการยา',
+                            style: TextStyle(color: Color(0xFFA0B0C4)),
+                          ),
                           dropdownColor: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(20),
                           decoration: InputDecoration(
                             filled: true,
                             fillColor: Colors.white,
                             contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 10),
+                                horizontal: 18, vertical: 14),
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(20),
                               borderSide: BorderSide.none,
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(20),
+                              borderSide: const BorderSide(
+                                color: Color(0xFFE4EAF0),
+                                width: 1,
+                              ),
                             ),
                           ),
                           items: [
@@ -930,8 +989,8 @@ class _RemindListScreenState extends State<RemindListScreen> {
                               child: Text(
                                 'ทั้งหมด',
                                 style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF1F497D),
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFF2B4C7E),
                                 ),
                               ),
                             ),
@@ -964,8 +1023,9 @@ class _RemindListScreenState extends State<RemindListScreen> {
                         const Text(
                           'รายละเอียดการรับประทานยา',
                           style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
+                            fontSize: 17,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF2B4C7E),
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -983,19 +1043,29 @@ class _RemindListScreenState extends State<RemindListScreen> {
                         const SizedBox(height: 12),
                         SizedBox(
                           width: double.infinity,
+                          height: 52,
                           child: ElevatedButton(
                             onPressed: _addPlan,
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF1F497D),
+                              backgroundColor:
+                                  const Color.fromARGB(255, 90, 129, 187),
+                              foregroundColor: Colors.white,
+                              elevation: 4,
+                              shadowColor:
+                                  const Color.fromARGB(255, 42, 80, 135)
+                                      .withOpacity(0.4),
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20),
+                                borderRadius: BorderRadius.circular(28),
                               ),
                             ),
                             child: const Text(
                               'เพิ่มการแจ้งเตือน',
-                              style:
-                                  TextStyle(color: Colors.white, fontSize: 16),
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 17,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ),
@@ -1020,10 +1090,13 @@ class _RemindListScreenState extends State<RemindListScreen> {
                           height: 180,
                           repeat: true,
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 2),
                         const Text(
                           'กำลังโหลด…',
-                          style: TextStyle(color: Colors.white),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
                         ),
                       ],
                     ),

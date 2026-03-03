@@ -1366,7 +1366,7 @@ class MealTimingIcon extends StatelessWidget {
       assetPath,
       width: 24,
       height: 24,
-      color: const Color(0xFF1F497D),
+      color: const Color.fromARGB(255, 95, 140, 195),
     );
   }
 }
