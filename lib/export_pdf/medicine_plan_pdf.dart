@@ -1,5 +1,4 @@
 ﻿import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -56,6 +55,8 @@ class _MedicationPlanScreenState extends State<MedicationPlanScreen> {
 
   @override
   void dispose() {
+    _startDate = DateTime.now();
+    _endDate = DateTime.now();
     _keywordController.dispose();
     super.dispose();
   }
@@ -360,9 +361,8 @@ class _MedicationPlanScreenState extends State<MedicationPlanScreen> {
   }
 
   Future<Uint8List> _buildMedicationPlanPdf(List<_PlanGroup> groups) async {
-    final fontData =
-        await rootBundle.load('assets/fonts/Kodchasan-Regular.ttf');
-    final boldData = await rootBundle.load('assets/fonts/Kodchasan-Bold.ttf');
+    final fontData = await rootBundle.load('assets/fonts/Mali-Regular.ttf');
+    final boldData = await rootBundle.load('assets/fonts/Mali-Bold.ttf');
     final baseFont = pw.Font.ttf(fontData);
     final boldFont = pw.Font.ttf(boldData);
 
@@ -403,6 +403,7 @@ class _MedicationPlanScreenState extends State<MedicationPlanScreen> {
                 'ยา: ${group.displayName}',
                 style: pw.TextStyle(font: boldFont, fontSize: 14),
               ),
+              pw.SizedBox(height: 4),
               if (group.subName != null && group.subName!.isNotEmpty)
                 pw.Text(
                   'ชื่อสามัญ: ${group.subName}',
@@ -579,7 +580,7 @@ class _MedicationPlanScreenState extends State<MedicationPlanScreen> {
               child: Text(
                 '${_formatDate(date)}',
                 style: const TextStyle(
-                  fontSize: 12,
+                  fontSize: 15,
                   color: Color(0xFF1F497D),
                   fontWeight: FontWeight.w600,
                 ),
@@ -833,10 +834,30 @@ class _MedicationPlanScreenState extends State<MedicationPlanScreen> {
                                 ),
                               ],
                             ),
+                            const SizedBox(height: 12),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: _loading ? null : _fetchPlans,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF1F497D),
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 10),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                ),
+                                child: const Text(
+                                  'ค้นหา',
+                                  style: TextStyle(
+                                      color: Colors.white, fontSize: 16),
+                                ),
+                              ),
+                            ),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 5),
                       Expanded(
                         child: Container(
                           padding: const EdgeInsets.all(12),
