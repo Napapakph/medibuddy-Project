@@ -8,13 +8,13 @@ import 'request_medicine_screen.dart';
 import 'package:lottie/lottie.dart';
 import '../set_remind/remind_list_screen.dart';
 
-class AddMedicinePage extends StatefulWidget {
+class LinkMedicinePage extends StatefulWidget {
   final MedicineDraft draft;
   final int profileId;
   final bool isEdit;
   final MedicineItem? initialItem;
 
-  const AddMedicinePage({
+  const LinkMedicinePage({
     super.key,
     required this.draft,
     required this.profileId,
@@ -23,10 +23,10 @@ class AddMedicinePage extends StatefulWidget {
   });
 
   @override
-  State<AddMedicinePage> createState() => _AddMedicinePageState();
+  State<LinkMedicinePage> createState() => _LinkMedicinePageState();
 }
 
-class _AddMedicinePageState extends State<AddMedicinePage> {
+class _LinkMedicinePageState extends State<LinkMedicinePage> {
   final MedicineApi _api = MedicineApi();
   List<MedicineItem> _existingMedicines = [];
   final List<MedicineCatalogItem> _items = [];
@@ -510,10 +510,6 @@ class _AddMedicinePageState extends State<AddMedicinePage> {
                         final hasAny = filtered.isNotEmpty;
                         final exact = _hasExactMatch(filtered);
 
-                        // เงื่อนไขตามที่เดียร์ต้องการ:
-                        // - ถ้าไม่มีชื่อใกล้เคียงเลย: แสดงแค่แมว (no list)
-                        // - ถ้ามี list: แสดง list ด้านบน + แมวด้านล่าง
-                        // - ถ้าค้นหาแล้ว "ไม่ตรงชื่อ" (ไม่มี exact match): ให้เห็นโซนส่งคำร้องชัด ๆ
                         final onlyHelper = !hasAny;
                         final showRequestHint = !exact || !hasAny;
 
