@@ -240,7 +240,7 @@ Widget type_frequency({
       Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: const Color(0xFFF2F4F8),
+          color: const Color.fromARGB(183, 240, 247, 255),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(
@@ -303,7 +303,7 @@ Widget type_frequency({
       Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: const Color(0xFFF2F4F8),
+          color: const Color.fromARGB(183, 240, 247, 255),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
@@ -369,7 +369,7 @@ Widget type_frequency({
       Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: const Color(0xFFF2F4F8),
+          color: const Color.fromARGB(183, 240, 247, 255),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
@@ -468,7 +468,7 @@ Widget type_frequency({
       Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: const Color(0xFFF2F4F8),
+          color: const Color.fromARGB(183, 240, 247, 255),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
@@ -496,6 +496,15 @@ Widget type_frequency({
                       visualDensity:
                           const VisualDensity(horizontal: -4, vertical: -4),
                       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      fillColor: MaterialStateColor.resolveWith(
+                        (states) {
+                          if (states.contains(MaterialState.selected)) {
+                            return const Color.fromARGB(255, 109, 165, 210);
+                          }
+                          return Colors.grey;
+                        },
+                      ),
+                      focusColor: const Color.fromARGB(255, 109, 165, 210),
                     ),
                   ),
                   const Text('จำนวน', style: TextStyle(fontSize: 16)),
@@ -538,6 +547,15 @@ Widget type_frequency({
                       visualDensity:
                           const VisualDensity(horizontal: -4, vertical: -4),
                       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      fillColor: MaterialStateColor.resolveWith(
+                        (states) {
+                          if (states.contains(MaterialState.selected)) {
+                            return const Color.fromARGB(255, 109, 165, 210);
+                          }
+                          return Colors.grey;
+                        },
+                      ),
+                      focusColor: const Color.fromARGB(255, 109, 165, 210),
                     ),
                   ),
                   const Text('ทุก', style: TextStyle(fontSize: 16)),
@@ -599,7 +617,7 @@ Widget type_frequency({
       Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: const Color(0xFFF2F4F8),
+          color: const Color.fromARGB(183, 240, 247, 255),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
@@ -629,6 +647,15 @@ Widget type_frequency({
                       visualDensity:
                           const VisualDensity(horizontal: -4, vertical: -4),
                       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      fillColor: MaterialStateColor.resolveWith(
+                        (states) {
+                          if (states.contains(MaterialState.selected)) {
+                            return const Color.fromARGB(255, 109, 165, 210);
+                          }
+                          return Colors.grey;
+                        },
+                      ),
+                      focusColor: const Color.fromARGB(255, 109, 165, 210),
                     ),
                   ),
                   const Text('ทุกวัน', style: TextStyle(fontSize: 16)),
@@ -658,6 +685,15 @@ Widget type_frequency({
                       visualDensity:
                           const VisualDensity(horizontal: -4, vertical: -4),
                       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      fillColor: MaterialStateColor.resolveWith(
+                        (states) {
+                          if (states.contains(MaterialState.selected)) {
+                            return const Color.fromARGB(255, 109, 165, 210);
+                          }
+                          return Colors.grey;
+                        },
+                      ),
+                      focusColor: const Color.fromARGB(255, 109, 165, 210),
                     ),
                   ),
                   Text(
@@ -694,14 +730,16 @@ Widget type_frequency({
                             ? Colors.grey // 🚫 disabled
                             : isSelected
                                 ? Colors.white // ✅ selected
-                                : const Color(0xFF1F497D), // ⬜ unselected
+                                : const Color.fromARGB(
+                                    255, 75, 125, 186), // ⬜ unselected
                         fontWeight: FontWeight.w600,
                       ),
                     ),
 
                     selected: isSelected,
                     disabledColor: Colors.white, // ⭐ กันชมพูอ่อนตอน disabled
-                    selectedColor: const Color(0xFF1F497D), // สีตอนเลือก
+                    selectedColor:
+                        const Color.fromARGB(255, 124, 166, 218), // สีตอนเลือก
 
                     backgroundColor: !isEnabled
                         ? const Color.fromARGB(
@@ -713,7 +751,8 @@ Widget type_frequency({
                       color: !isEnabled
                           ? const Color(0xFFE0E0E0) // 🚫 disabled
                           : isSelected
-                              ? const Color(0xFF1F497D) // ✅ selected
+                              ? const Color.fromARGB(
+                                  255, 80, 135, 202) // ✅ selected
                               : const Color(0xFFBBD3F5), // ⬜ unselected
                     ),
 
@@ -757,6 +796,15 @@ Widget type_frequency({
                       visualDensity:
                           const VisualDensity(horizontal: -4, vertical: -4),
                       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      fillColor: MaterialStateColor.resolveWith(
+                        (states) {
+                          if (states.contains(MaterialState.selected)) {
+                            return const Color.fromARGB(255, 109, 165, 210);
+                          }
+                          return Colors.grey;
+                        },
+                      ),
+                      focusColor: const Color.fromARGB(255, 109, 165, 210),
                     ),
                   ),
                   Text(
@@ -819,7 +867,7 @@ Widget type_frequency({
       Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: const Color(0xFFF2F4F8),
+          color: const Color.fromARGB(183, 240, 247, 255),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
@@ -847,6 +895,15 @@ Widget type_frequency({
                       visualDensity:
                           const VisualDensity(horizontal: -4, vertical: -4),
                       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      fillColor: MaterialStateColor.resolveWith(
+                        (states) {
+                          if (states.contains(MaterialState.selected)) {
+                            return const Color.fromARGB(255, 109, 165, 210);
+                          }
+                          return Colors.grey;
+                        },
+                      ),
+                      focusColor: const Color.fromARGB(255, 109, 165, 210),
                     ),
                   ),
                   const Text('ตลอดไป', style: TextStyle(fontSize: 16)),
@@ -868,6 +925,15 @@ Widget type_frequency({
                     visualDensity:
                         const VisualDensity(horizontal: -4, vertical: -4),
                     materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    fillColor: MaterialStateColor.resolveWith(
+                      (states) {
+                        if (states.contains(MaterialState.selected)) {
+                          return const Color.fromARGB(255, 109, 165, 210);
+                        }
+                        return Colors.grey;
+                      },
+                    ),
+                    focusColor: const Color.fromARGB(255, 109, 165, 210),
                   ),
                 ),
                 SizedBox(
@@ -952,7 +1018,7 @@ Widget detail_time({
       Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: const Color(0xFFF2F4F8),
+          color: const Color.fromARGB(236, 250, 251, 255),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(
@@ -963,6 +1029,16 @@ Widget detail_time({
               decoration: BoxDecoration(
                 color: const Color(0xFFE3EAF6),
                 borderRadius: BorderRadius.circular(12),
+                border:
+                    Border.all(color: const Color.fromARGB(255, 161, 196, 236)),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color.fromARGB(255, 129, 163, 221)
+                        .withOpacity(0.1),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
                 image: avatarImage != null
                     ? DecorationImage(image: avatarImage, fit: BoxFit.cover)
                     : null,
@@ -990,17 +1066,20 @@ Widget detail_time({
       Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: const Color(0xFFF2F4F8),
+          color: const Color.fromARGB(236, 250, 251, 255),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(
           children: [
-            const Text('จำนวน', style: TextStyle(fontWeight: FontWeight.w600)),
+            const Text('จำนวน',
+                style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
             const SizedBox(width: 12),
             Text(
               timeLabel,
               style: const TextStyle(
-                  color: Color(0xFF1F497D), fontWeight: FontWeight.w400),
+                  color: Color(0xFF1F497D),
+                  fontWeight: FontWeight.w400,
+                  fontSize: 16),
             ),
           ],
         ),
@@ -1051,6 +1130,7 @@ Widget detail_time({
                         onTap: enabledTimes ? () => pickTime(index) : null,
                         borderRadius: BorderRadius.circular(12),
                         child: Container(
+                          alignment: Alignment.center,
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 10),
                           decoration: BoxDecoration(
@@ -1073,9 +1153,10 @@ Widget detail_time({
                     const SizedBox(width: 12),
                     SizedBox(
                       width: 56,
-                      height: 36,
+                      height: 40,
                       child: TextFormField(
                         initialValue: dose.amount,
+                        textAlign: TextAlign.center,
                         onChanged: (value) {
                           onDoseChanged(
                             index,
@@ -1153,7 +1234,7 @@ Widget summary_rejimen({
       Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: const Color(0xFFF2F4F8),
+          color: const Color.fromARGB(236, 250, 251, 255),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(
@@ -1164,6 +1245,7 @@ Widget summary_rejimen({
               decoration: BoxDecoration(
                 color: const Color(0xFFE3EAF6),
                 borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFD6E3F3)),
                 image: avatarImage != null
                     ? DecorationImage(image: avatarImage, fit: BoxFit.cover)
                     : null,
@@ -1298,7 +1380,7 @@ class _MealTimingOption extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = selected
-        ? const Color.fromARGB(255, 212, 131, 174)
+        ? const Color.fromARGB(255, 219, 150, 187)
         : const Color(0xFF9DB3D4);
     // Add opacity if not selected for a slightly lighter/faded look
     final opacity = selected ? 1.0 : 0.6;

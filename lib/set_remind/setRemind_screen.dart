@@ -359,7 +359,10 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
       barrierDismissible: false,
       builder: (context) {
         return Dialog(
-          backgroundColor: const Color.fromARGB(255, 232, 232, 241),
+          backgroundColor: const Color(0xFFF0F6FF),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
           elevation: 0,
           child: Padding(
             padding: const EdgeInsets.all(10),
@@ -380,7 +383,7 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       fontSize: 16,
-                      color: Colors.black, // or Color(0xFF1F497D)
+                      color: Color(0xFF2B4C7E),
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -394,17 +397,20 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
                     Expanded(
                       child: OutlinedButton(
                         onPressed: () => Navigator.of(context).pop(true),
-                        style: ElevatedButton.styleFrom(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: const Color(0xFF5A81BB),
+                          side: const BorderSide(
+                              color: Color.fromARGB(255, 142, 175, 218)),
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(24),
                           ),
                           elevation: 0,
                         ),
                         child: const Text(
                           'ออก',
                           style: TextStyle(
-                              fontSize: 18, decorationColor: Colors.white),
+                              fontSize: 18, fontWeight: FontWeight.w600),
                         ),
                       ),
                     ),
@@ -414,18 +420,21 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
                       child: ElevatedButton(
                         onPressed: () => Navigator.of(context).pop(false),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF1F497D),
+                          backgroundColor:
+                              const Color.fromARGB(255, 90, 129, 187),
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: BorderRadius.circular(24),
                           ),
-                          elevation: 0,
+                          elevation: 2,
+                          shadowColor: const Color.fromARGB(255, 42, 80, 135)
+                              .withOpacity(0.3),
                         ),
                         child: const Text(
                           'อยู่ต่อ',
                           style: TextStyle(
-                              fontSize: 18, decorationColor: Colors.white),
+                              fontSize: 18, fontWeight: FontWeight.w600),
                         ),
                       ),
                     ),
@@ -544,10 +553,22 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
       onWillPop: _confirmExit,
       child: Scaffold(
         appBar: AppBar(
-          backgroundColor: const Color(0xFF1F497D),
-          iconTheme: const IconThemeData(color: Colors.white),
+          elevation: 0,
+          flexibleSpace: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Color.fromARGB(255, 234, 244, 255),
+                  Color.fromARGB(255, 174, 212, 255),
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+            ),
+          ),
+          iconTheme: const IconThemeData(color: Color(0xFF5A81BB)),
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
+            icon: const Icon(Icons.arrow_back_ios_rounded),
             onPressed: () async {
               final confirm = await _confirmExit();
               if (confirm && mounted) {
@@ -555,6 +576,7 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
               }
             },
           ),
+          centerTitle: true,
           title: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -562,27 +584,29 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
               Text(
                 pageTitle,
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF2B4C7E),
+                  letterSpacing: 0.3,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Row(
                 mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Icon(
                     Icons.arrow_right_rounded,
-                    size: 20,
-                    color: Colors.white,
+                    size: 18,
+                    color: Color(0xFF7BAEE5),
                   ),
                   Text(
                     currentSubtitle,
                     style: const TextStyle(
                       fontSize: 16,
-                      color: Colors.white,
+                      color: Color.fromARGB(255, 255, 255, 255),
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],
@@ -590,7 +614,7 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
             ],
           ),
         ),
-        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
+        backgroundColor: const Color.fromARGB(255, 211, 229, 255),
         body: SafeArea(
           child: Column(
             children: [
@@ -601,7 +625,7 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
                   children: steps
                       .map((step) => SingleChildScrollView(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 8),
+                                horizontal: 12, vertical: 12),
                             child: step,
                           ))
                       .toList(),
@@ -621,11 +645,17 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
                           ? ElevatedButton(
                               onPressed: _saving ? null : _savePlan,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF1F497D),
+                                backgroundColor:
+                                    const Color.fromARGB(255, 90, 129, 187),
+                                foregroundColor: Colors.white,
+                                elevation: 4,
+                                shadowColor:
+                                    const Color.fromARGB(255, 42, 80, 135)
+                                        .withOpacity(0.4),
                                 padding:
                                     const EdgeInsets.symmetric(vertical: 14),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
+                                  borderRadius: BorderRadius.circular(28),
                                 ),
                               ),
                               child: _saving
@@ -638,7 +668,10 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
                                   : const Text(
                                       'บันทึกข้อมูล',
                                       style: TextStyle(
-                                          color: Colors.white, fontSize: 16),
+                                        color: Colors.white,
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
                             )
                           : Align(
@@ -674,11 +707,26 @@ class _CircleNavButton extends StatelessWidget {
       child: Container(
         width: 56,
         height: 56,
-        decoration: const BoxDecoration(
-          color: Color(0xFF8FB9E9),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [
+              Color.fromARGB(255, 177, 217, 255),
+              Color.fromARGB(255, 143, 190, 236),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
           shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: const Color.fromARGB(255, 81, 133, 196).withOpacity(0.3),
+              blurRadius: 8,
+              spreadRadius: 1,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
-        child: Icon(icon, color: Colors.white),
+        child: Icon(icon, color: Colors.white, size: 24),
       ),
     );
   }
