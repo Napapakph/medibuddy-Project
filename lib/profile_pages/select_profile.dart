@@ -138,7 +138,6 @@ class _SelectProfileState extends State<SelectProfile> {
           ),
         ),
       ),
-      drawer: const AppDrawer(),
       body: Stack(
         children: [
           SafeArea(
