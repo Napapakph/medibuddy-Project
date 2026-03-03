@@ -66,7 +66,7 @@ class _FindMedicinePageState extends State<FindMedicinePage> {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => AddMedicinePage(
+        builder: (_) => LinkMedicinePage(
           profileId: widget.profileId,
           draft: widget.draft.copyWith(
             searchQuery_medi: keyword,
@@ -88,11 +88,21 @@ class _FindMedicinePageState extends State<FindMedicinePage> {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => const CameraOcrPage(),
+        builder: (_) => CameraOcrPage(
+          draft: widget.draft,
+          profileId: widget.profileId,
+          isEdit: widget.isEdit,
+          initialItem: widget.initialItem,
+        ),
       ),
     );
 
     if (!mounted) return;
+
+    if (result is MedicineItem) {
+      Navigator.pop(context, result);
+      return;
+    }
 
     // CameraOcrPage ควร pop กลับมาด้วย String (ข้อความ OCR)
     if (result is String && result.trim().isNotEmpty) {
