@@ -1,5 +1,5 @@
 import 'dart:io';
-
+import '../add_medicine/link_medicine.dart';
 import 'package:flutter/material.dart';
 import '../widgets/medicine_step_timeline.dart';
 import '../Model/medicine_model.dart';
@@ -7,12 +7,18 @@ import '../Model/medicine_model.dart';
 // หน้าจอแสดงข้อความ "สแกนสำเร็จ!" สั้น ๆ ก่อนเด้งไปหน้าแก้ไขผลลัพธ์
 class OcrSuccessPage extends StatefulWidget {
   final MedicineDraft draft;
+  final int profileId;
+  final bool isEdit;
+  final MedicineItem? initialItem;
 
   const OcrSuccessPage({
     super.key,
     required this.imageFile,
     required this.recognizedText,
     required this.draft,
+    required this.profileId,
+    required this.isEdit,
+    required this.initialItem,
   });
 
   final File imageFile;
@@ -34,6 +40,10 @@ class _OcrSuccessPageState extends State<OcrSuccessPage> {
           builder: (_) => OcrResultPage(
             imageFile: widget.imageFile,
             recognizedText: widget.recognizedText,
+            draft: widget.draft,
+            profileId: widget.profileId,
+            isEdit: widget.isEdit,
+            initialItem: widget.initialItem,
           ),
         ),
       );
@@ -91,10 +101,18 @@ class OcrResultPage extends StatefulWidget {
     super.key,
     required this.imageFile,
     required this.recognizedText,
+    required this.draft,
+    required this.profileId,
+    required this.isEdit,
+    required this.initialItem,
   });
 
   final File imageFile;
   final String recognizedText;
+  final MedicineDraft draft;
+  final int profileId;
+  final bool isEdit;
+  final MedicineItem? initialItem;
 
   @override
   State<OcrResultPage> createState() => _OcrResultPageState();
@@ -145,7 +163,7 @@ class _OcrResultPageState extends State<OcrResultPage> {
             Text(
               '> ค้นหายา',
               style: TextStyle(
-                fontSize: 12,
+                fontSize: 14,
                 color: Colors.white,
               ),
             ),
@@ -219,7 +237,7 @@ class _OcrResultPageState extends State<OcrResultPage> {
                   onPressed: () {
                     final text = _controller.text.trim();
                     if (text.isEmpty) return;
-                    Navigator.of(context).pop(text);
+                    _goNextBySerch();
                   },
                   icon: const Icon(Icons.search, color: Colors.white),
                   label: const Text(
@@ -237,6 +255,29 @@ class _OcrResultPageState extends State<OcrResultPage> {
         ),
       ),
     );
+  }
+
+  Future<void> _goNextBySerch() async {
+    final keyword = _controller.text.trim();
+
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => LinkMedicinePage(
+          profileId: widget.profileId,
+          draft: widget.draft.copyWith(
+            searchQuery_medi: keyword,
+          ),
+          isEdit: widget.isEdit,
+          initialItem: widget.initialItem,
+        ),
+      ),
+    );
+
+    if (!mounted) return;
+    if (result is MedicineItem) {
+      Navigator.pop(context, result);
+    }
   }
 }
 

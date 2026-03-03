@@ -20,7 +20,6 @@ import 'home_pages/home_screen.dart';
 import 'profile_pages/library_profile.dart';
 import 'add_medicine/medicine_list_screen.dart';
 import 'export_pdf/history.dart';
-import 'OCR/camera_ocr.dart';
 import 'services/old_service/sync_user.dart';
 import 'services/token_manager.dart';
 import 'dart:async';
@@ -725,8 +724,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
           case '/history':
             return MaterialPageRoute(builder: (_) => const HistoryPage());
-          case '/camera_ocr':
-            return MaterialPageRoute(builder: (_) => const CameraOcrPage());
           case '/search_medicine':
             final args = settings.arguments; // ✅ PROFILE_ID: accept Map or int
             int profileId = 0; // ⚠️ NOTE: default when args missing

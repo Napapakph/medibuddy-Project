@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart'; // สำหรับ debugPrint
 import 'package:flutter/material.dart';
@@ -9,9 +8,21 @@ import 'ocr_image_cropper.dart';
 import 'ocr_result_page.dart';
 import 'ocr_text_service.dart';
 import 'tutorial_dialog.dart';
+import '../Model/medicine_model.dart';
 
 class CameraOcrPage extends StatefulWidget {
-  const CameraOcrPage({super.key});
+  final MedicineDraft draft;
+  final int profileId;
+  final bool isEdit;
+  final MedicineItem? initialItem;
+
+  const CameraOcrPage({
+    super.key,
+    required this.draft,
+    required this.profileId,
+    this.isEdit = false,
+    this.initialItem,
+  });
 
   @override
   State<CameraOcrPage> createState() => _CameraOcrPageState();
@@ -222,9 +233,6 @@ class _CameraOcrPageState extends State<CameraOcrPage> {
     }
 
     try {
-      // ✅📸 สำคัญ: อย่าตั้ง _isProcessing=true ที่นี่
-      // เพราะ _processImage() จะเป็นคนตั้งเอง
-      // (ถ้าตั้งที่นี่ _processImage จะโดน if (_isProcessing) return ตัดทิ้ง)
       _log('✅📸 await initFuture seq=$seq...');
       await initFuture;
 
@@ -315,12 +323,21 @@ class _CameraOcrPageState extends State<CameraOcrPage> {
       final result = await Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => OcrResultPage(
+          builder: (_) => OcrSuccessPage(
             imageFile: croppedImage,
             recognizedText: extractedText,
+            draft: widget.draft,
+            profileId: widget.profileId,
+            isEdit: widget.isEdit,
+            initialItem: widget.initialItem,
           ),
         ),
       );
+      if (result is MedicineItem) {
+        if (!mounted) return;
+        Navigator.pop(context, result);
+        return;
+      }
       if (result is String && result.trim().isNotEmpty) {
         if (!mounted) return;
         Navigator.pop(context, result.trim());
@@ -406,10 +423,10 @@ class _CameraOcrPageState extends State<CameraOcrPage> {
               child: Text(
                 'ถ่ายรูปเพื่อสแกนชื่อยา\nที่ต้องรับประทาน',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
               ),
             ),
-            const SizedBox(height: 5),
+            const SizedBox(height: 1),
             Expanded(
               child: Center(
                 child: OcrCameraFrame(
