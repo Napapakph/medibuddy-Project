@@ -204,8 +204,6 @@ class CustomAuthService implements AuthService {
   @override
   Future<void> logout() async {
     try {
-      // Note: Backend logout not implemented with stored token here due to removal of storage read
-      // but if a `/logout` API requires the refresh token, it should be handled before TokenManager.clear()
       await _dio.post('/api/auth/v2/logout');
     } catch (_) {}
     await TokenManager.clear();
@@ -219,9 +217,6 @@ class CustomAuthService implements AuthService {
 
   @override
   Future<String> checkEmailStatus(String email) async {
-    // V2 doesn't have check-email, assume 'new' to proceed to register
-    // or we could implementation V1 check here if desired.
-    // For now returning 'new' to let register handle it.
     return 'new';
   }
 
@@ -233,12 +228,12 @@ class CustomAuthService implements AuthService {
   @override
   Future<void> signInWithGoogle() async {
     try {
-      // ดึงค่า Web Client ID (ที่นำมาจาก Google Cloud Console) จาก .env
+      //ดึงค่า Web Client ID (ที่นำมาจาก Google Cloud Console) จาก .env
       final serverClientId = dotenv.env['GOOGLE_SERVER_CLIENT_ID'];
 
       final GoogleSignIn googleSignIn = GoogleSignIn(
         serverClientId:
-            serverClientId, // สำคัญมากสำหรับระบบที่ไม่ได้ใช้ Firebase เป็นตัวกลาง
+            serverClientId, //สำคัญมากสำหรับระบบที่ไม่ได้ใช้ Firebase เป็นตัวกลาง
         scopes: [
           'email',
           'profile',

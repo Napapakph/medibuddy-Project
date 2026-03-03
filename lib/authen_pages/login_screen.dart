@@ -1,8 +1,5 @@
 import '../services/auth_manager.dart'; // import 'package:flutter/material.dart';
 import 'package:flutter/material.dart';
-// import '../services/sync_user.dart'; // Removed unused import
-
-// ... imports remain the same
 import 'package:lottie/lottie.dart';
 import 'signup_screen.dart';
 import '../widgets/login_button.dart';
@@ -25,7 +22,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
-  // final _googleAuth = LoginWithGoogle(); // Removed unused field
   bool _isGoogleLoading = false;
   String? _lastEmail; // เก็บอีเมลล่าสุดที่ใช้ล็อกอินสำเร็จ
   String? _lastPassword; // เก็บรหัสผ่านล่าสุดที่ใช้ล็อกอินสำเร็จ
@@ -50,10 +46,8 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
       setState(() => _isLoading = false);
 
-      // NEW LOGIC: Check profile first
-
       if (!mounted) return;
-      // if (_navigated) return; // ยอมให้ทำงานทับกันได้ แต่ปกติ _handleLogin จะมี token ที่ชัวร์กว่า
+
       _navigated = true;
       await _checkAndNavigate(token: accessToken);
     } catch (e) {
@@ -64,12 +58,10 @@ class _LoginScreenState extends State<LoginScreen> {
         SnackBar(content: Text('อีเมลหรือรหัสผ่านไม่ถูกต้อง')),
       );
     }
-    debugPrint(
-        '-----Supabase Authenticated ------: ${supabase.auth.currentUser}');
-    debugPrint(
-        '-----Supabase Token ------: ${supabase.auth.currentSession?.accessToken}');
-  }
 
+    debugPrint(
+        '-----Get Token ------: ${AuthManager.service.getAccessToken()}');
+  }
 //---------------- Login with Username/Password----------------------------------
 
 //---------------- Login with Google Sign in-------------------------------------
@@ -95,6 +87,7 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() => _isGoogleLoading = false);
     }
   }
+//---------------- Login with Google Sign in-------------------------------------
 
   void _restorePreviousEmail() {
     if (_lastEmail != null && _lastPassword != null) {

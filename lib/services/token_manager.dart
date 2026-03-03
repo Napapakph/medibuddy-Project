@@ -4,7 +4,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-
 import 'auth_manager.dart'; // To update AuthManager.accessToken globally if needed
 import 'package:flutter/widgets.dart';
 
@@ -98,8 +97,6 @@ class TokenManager {
   /// Get valid access token. Will trigger proactive refresh if expiring soon.
   static Future<String?> getValidAccessToken() async {
     if (_accessToken == null) {
-      // If we don't have an access token in memory, but we have a refresh token,
-      // we must refresh immediately.
       await refreshIfNeeded(force: true);
       return _accessToken;
     }
@@ -119,7 +116,6 @@ class TokenManager {
 
   /// Refreshes token if not already refreshing (Single-Flight Pattern)
   static Future<void> refreshIfNeeded({bool force = false}) async {
-    // If a refresh is already in progress, just await it.
     if (_refreshFuture != null) {
       debugPrint('⏳ TokenManager: Waiting for existing refresh to complete...');
       await _refreshFuture;
