@@ -860,7 +860,7 @@ class _Home extends State<Home> {
                                   thaiBuddhistDate,
                                   style: const TextStyle(
                                     fontSize: 18,
-                                    color: Color(0xFF6B8DB0),
+                                    color: Color.fromARGB(255, 81, 124, 167),
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -1153,7 +1153,7 @@ class _Home extends State<Home> {
                 children: [
                   const ModalBarrier(
                     dismissible: false,
-                    color: Colors.black26,
+                    color: Color.fromARGB(84, 196, 219, 240),
                   ),
                   Column(
                     mainAxisSize: MainAxisSize.min,
@@ -1164,10 +1164,10 @@ class _Home extends State<Home> {
                         height: 180,
                         repeat: true,
                       ),
-                      const SizedBox(height: 8),
                       const Text(
                         'กำลังโหลด…',
-                        style: TextStyle(color: Colors.white),
+                        style:
+                            TextStyle(color: Color.fromARGB(255, 93, 139, 197)),
                       ),
                     ],
                   ),

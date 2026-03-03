@@ -785,6 +785,7 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
         actions: [
           PopupMenuButton<_SortOption>(
             icon: const Icon(Icons.sort_rounded, color: Color(0xFF5A81BB)),
+            color: Colors.white,
             tooltip: 'เรียงลำดับ',
             onSelected: (option) {
               setState(() {

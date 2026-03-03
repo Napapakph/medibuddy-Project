@@ -840,7 +840,8 @@ class _MedicationPlanScreenState extends State<MedicationPlanScreen> {
                               child: ElevatedButton(
                                 onPressed: _loading ? null : _fetchPlans,
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF1F497D),
+                                  backgroundColor:
+                                      const Color.fromARGB(255, 90, 129, 187),
                                   padding:
                                       const EdgeInsets.symmetric(vertical: 10),
                                   shape: RoundedRectangleBorder(
@@ -909,7 +910,8 @@ class _MedicationPlanScreenState extends State<MedicationPlanScreen> {
                         child: ElevatedButton(
                           onPressed: _exporting ? null : _exportPdf,
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF1F497D),
+                            backgroundColor:
+                                const Color.fromARGB(255, 90, 129, 187),
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(24),
