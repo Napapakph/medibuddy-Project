@@ -3,8 +3,9 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+//import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/request_api.dart';
+import '../services/auth_manager.dart';
 
 class UserRequestScreen extends StatefulWidget {
   const UserRequestScreen({super.key});
@@ -41,7 +42,7 @@ class _UserRequestScreenState extends State<UserRequestScreen> {
   }
 
   String? _getToken() {
-    return Supabase.instance.client.auth.currentSession?.accessToken;
+    return AuthManager.accessToken;
   }
 
   Future<void> _pickImage(ImageSource source) async {
