@@ -127,8 +127,12 @@ class _MedicationPlanScreenState extends State<MedicationPlanScreen> {
   ) {
     final start = _tryParseDate(item.startDate);
     if (start == null) return true;
-    final end = _tryParseDate(item.endDate) ?? start;
-    return !end.isBefore(rangeStart) && !start.isAfter(rangeEnd);
+    final end = _tryParseDate(item.endDate);
+
+    if (end != null && end.isBefore(rangeStart)) return false;
+    if (start.isAfter(rangeEnd)) return false;
+
+    return true;
   }
 
   DateTime? _tryParseDate(String? value) {
@@ -290,6 +294,7 @@ class _MedicationPlanScreenState extends State<MedicationPlanScreen> {
         _endDate = _startDate;
       }
     });
+    _fetchPlans();
   }
 
   Future<void> _pickEndDate() async {
@@ -325,6 +330,7 @@ class _MedicationPlanScreenState extends State<MedicationPlanScreen> {
         _startDate = _endDate;
       }
     });
+    _fetchPlans();
   }
 
   Future<void> _exportPdf() async {
@@ -438,7 +444,7 @@ class _MedicationPlanScreenState extends State<MedicationPlanScreen> {
   String _rangeText(DateTime? start, DateTime? end) {
     if (start == null) return '';
     final startText = _formatDate(start);
-    if (end == null) return 'เริ่ม $startText';
+    if (end == null) return '$startText - ตลอดไป';
     final endText = _formatDate(end);
     if (startText == endText) return 'เริ่ม $startText';
     return 'ช่วงวันที่ $startText - $endText';
@@ -827,26 +833,6 @@ class _MedicationPlanScreenState extends State<MedicationPlanScreen> {
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 12),
-                            SizedBox(
-                              width: double.infinity,
-                              child: ElevatedButton(
-                                onPressed: _loading ? null : _fetchPlans,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF1F497D),
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 12),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                ),
-                                child: const Text(
-                                  'ค้นหา',
-                                  style: TextStyle(
-                                      color: Colors.white, fontSize: 16),
-                                ),
-                              ),
-                            ),
                           ],
                         ),
                       ),
@@ -960,13 +946,18 @@ class _PlanGroupAccumulator {
     required this.imagePath,
   });
 
+  bool _hasForever = false;
+
   void updateDates({DateTime? start, DateTime? end}) {
     if (start != null) {
       if (startDate == null || start.isBefore(startDate!)) {
         startDate = start;
       }
     }
-    if (end != null) {
+    if (end == null) {
+      _hasForever = true;
+      endDate = null;
+    } else if (!_hasForever) {
       if (endDate == null || end.isAfter(endDate!)) {
         endDate = end;
       }
