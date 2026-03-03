@@ -114,195 +114,268 @@ class _SelectProfileState extends State<SelectProfile> {
     final canConfirm = !_loading && selectedProfile != null;
 
     return Scaffold(
+      backgroundColor: const Color.fromARGB(255, 224, 238, 255),
       appBar: AppBar(
         title: const Text(
           'MediBuddy',
           style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF1F497D),
-            fontSize: 30,
+            fontWeight: FontWeight.w800,
+            color: Color(0xFF2B4C7E),
+            fontSize: 28,
+            letterSpacing: 0.5,
           ),
         ),
-        backgroundColor: const Color(0xFFB7DAFF),
         centerTitle: true,
+        backgroundColor: Color.fromARGB(255, 191, 223, 255),
+        iconTheme: const IconThemeData(color: Color(0xFF5C7A99)),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFFEBF4FF), Color.fromARGB(255, 186, 221, 255)],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
       ),
-      backgroundColor: const Color.fromARGB(255, 255, 255, 255),
       drawer: const AppDrawer(),
       body: Stack(
         children: [
           SafeArea(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final maxWidth = constraints.maxWidth;
-                final maxHeight = constraints.maxHeight;
-
-                return Column(
-                  children: [
-                    Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.only(bottom: maxHeight * 0.03),
-                      color: const Color(0xFFB7DAFF),
-                      child: Column(
-                        children: [
-                          Text(
-                            thaiBuddhistDate,
-                            style: const TextStyle(
-                              fontSize: 18,
-                              color: Color(0xFF1F497D),
-                            ),
+            child: Column(
+              children: [
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.only(bottom: 15),
+                  decoration: const BoxDecoration(
+                    color: Color.fromARGB(255, 186, 221, 255),
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(32),
+                      bottomRight: Radius.circular(32),
+                    ),
+                  ),
+                  child: Center(
+                    child: Text(
+                      thaiBuddhistDate,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        color: Color(0xFF6B8DB0),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Expanded(
+                  child: Container(
+                    margin:
+                        const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF4F9FF),
+                      borderRadius: BorderRadius.circular(32),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFFCDE0F5).withOpacity(0.5),
+                          blurRadius: 24,
+                          offset: const Offset(0, 12),
+                        ),
+                      ],
+                      border: Border.all(
+                        color: Colors.white,
+                        width: 2,
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const Text(
+                          'เลือกผู้ใช้งาน...',
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF2B4C7E),
                           ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(height: maxHeight * 0.05),
-                    Padding(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: maxWidth * 0.05),
-                      child: const Text(
-                        'เลือกผู้ใช้งาน...',
-                        style: TextStyle(
-                          fontSize: 30,
-                          fontWeight: FontWeight.bold,
+                          textAlign: TextAlign.center,
                         ),
-                      ),
-                    ),
-                    SizedBox(height: maxHeight * 0.03),
-                    Expanded(
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 20),
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade100,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: profiles.isEmpty
-                            ? Center(
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Text('ยังไม่มีโปรไฟล์'),
-                                    const SizedBox(height: 12),
-                                    ElevatedButton(
-                                      onPressed: _loadProfiles,
-                                      child: const Text('โหลดใหม่'),
-                                    ),
-                                  ],
-                                ),
-                              )
-                            : ListView.builder(
-                                itemCount: profiles.length,
-                                itemBuilder: (context, index) {
-                                  final profile = profiles[index];
-                                  final isSelected = selectedIndex == index;
+                        const SizedBox(height: 24),
+                        Expanded(
+                          child: profiles.isEmpty && !_loading
+                              ? Center(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Text(
+                                        'ยังไม่มีโปรไฟล์',
+                                        style: TextStyle(
+                                            color: Color(0xFF5C7A99),
+                                            fontSize: 16),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      ElevatedButton(
+                                        onPressed: _loadProfiles,
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor:
+                                              const Color(0xFF7BAEE5),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(20),
+                                          ),
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 24, vertical: 12),
+                                        ),
+                                        child: const Text('โหลดใหม่',
+                                            style:
+                                                TextStyle(color: Colors.white)),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              : ListView.builder(
+                                  itemCount: profiles.length,
+                                  itemBuilder: (context, index) {
+                                    final profile = profiles[index];
+                                    final isSelected = selectedIndex == index;
 
-                                  return GestureDetector(
-                                    onTap: () {
-                                      setState(() {
-                                        selectedIndex = index;
-                                      });
+                                    return Padding(
+                                      padding:
+                                          const EdgeInsets.only(bottom: 16),
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          setState(() {
+                                            selectedIndex = index;
+                                          });
 
-                                      // ✅ จุดสำคัญ: บอก AppState ว่าเลือกโปรไฟล์ไหน
-                                      AppState.instance.setSelectedProfile(
-                                        profileId: profile.profileId,
-                                        name: profile.username,
-                                        imagePath: profile.imagePath,
-                                      );
-
-                                      debugPrint(
-                                        '✅ Selected profile: '
-                                        'id=${profile.profileId}, '
-                                        'name=${profile.username}, '
-                                        'image=${profile.imagePath}',
-                                      );
-                                    },
-                                    child: Container(
-                                      margin: const EdgeInsets.only(bottom: 12),
-                                      padding: const EdgeInsets.all(10),
-                                      decoration: BoxDecoration(
-                                        color: isSelected
-                                            ? Colors.blue.shade50
-                                            : Colors.white,
-                                        borderRadius: BorderRadius.circular(16),
-                                        border: Border.all(
-                                          color: isSelected
-                                              ? Colors.blue
-                                              : Colors.transparent,
-                                          width: 2,
+                                          AppState.instance.setSelectedProfile(
+                                            profileId: profile.profileId,
+                                            name: profile.username,
+                                            imagePath: profile.imagePath,
+                                          );
+                                        },
+                                        child: AnimatedContainer(
+                                          duration:
+                                              const Duration(milliseconds: 200),
+                                          padding: const EdgeInsets.all(12),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            borderRadius:
+                                                BorderRadius.circular(20),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: isSelected
+                                                    ? const Color(0xFF7BAEE5)
+                                                        .withOpacity(0.4)
+                                                    : const Color(0xFFE2EAF2)
+                                                        .withOpacity(0.5),
+                                                blurRadius: isSelected ? 12 : 8,
+                                                offset: const Offset(0, 4),
+                                              ),
+                                            ],
+                                            border: Border.all(
+                                              color: isSelected
+                                                  ? const Color(0xFF7BAEE5)
+                                                  : Colors.transparent,
+                                              width: 2,
+                                            ),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              CircleAvatar(
+                                                radius: 32,
+                                                backgroundColor:
+                                                    const Color(0xFFF0F7FF),
+                                                backgroundImage:
+                                                    _buildProfileImage(
+                                                  profile.imagePath,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 20),
+                                              Expanded(
+                                                child: Text(
+                                                  profile.username,
+                                                  style: TextStyle(
+                                                    fontSize: 20,
+                                                    fontWeight: isSelected
+                                                        ? FontWeight.bold
+                                                        : FontWeight.w600,
+                                                    color:
+                                                        const Color(0xFF2B4C7E),
+                                                  ),
+                                                ),
+                                              ),
+                                              if (isSelected)
+                                                const Icon(
+                                                  Icons.check_circle_rounded,
+                                                  color: Color(0xFF7BAEE5),
+                                                  size: 28,
+                                                ),
+                                            ],
+                                          ),
                                         ),
                                       ),
-                                      child: Row(
-                                        children: [
-                                          CircleAvatar(
-                                            radius: 30,
-                                            backgroundImage: _buildProfileImage(
-                                              profile.imagePath,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 16),
-                                          Expanded(
-                                            child: Text(
-                                              profile.username,
-                                              style: const TextStyle(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                      ),
-                    ),
-                    SizedBox(height: maxHeight * 0.03),
-                    Padding(
-                      padding: EdgeInsets.only(bottom: maxHeight * 0.02),
-                      child: ElevatedButton(
-                        onPressed: canConfirm
-                            ? () {
-                                AppState.instance.currentProfileId =
-                                    selectedProfile.profileId;
-                                final pid = selectedProfile.profileId;
-                                Navigator.pushReplacementNamed(
-                                  context,
-                                  '/home',
-                                  arguments: {
-                                    'profileId': pid,
-                                    'profileName': selectedProfile.username,
-                                    'profileImage': selectedProfile.imagePath,
+                                    );
                                   },
-                                );
-
-                                debugPrint(
-                                    '================= check select ProfileID ==================');
-                                debugPrint(
-                                    'Selected Profile ID: ${selectedProfile.profileId}');
-                              }
-                            : null,
-                        style: ElevatedButton.styleFrom(
-                          padding: EdgeInsets.symmetric(
-                            vertical: maxHeight * 0.02,
-                            horizontal: maxWidth * 0.1,
-                          ),
-                          backgroundColor: const Color(0xFF1F497D),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(24),
-                          ),
+                                ),
                         ),
-                        child: const Text(
-                          'ยืนยัน',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                          ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+                  child: SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: canConfirm
+                          ? () {
+                              AppState.instance.currentProfileId =
+                                  selectedProfile.profileId;
+                              final pid = selectedProfile.profileId;
+                              Navigator.pushReplacementNamed(
+                                context,
+                                '/home',
+                                arguments: {
+                                  'profileId': pid,
+                                  'profileName': selectedProfile.username,
+                                  'profileImage': selectedProfile.imagePath,
+                                },
+                              );
+
+                              debugPrint(
+                                  '================= check select ProfileID ==================');
+                              debugPrint(
+                                  'Selected Profile ID: ${selectedProfile.profileId}');
+                            }
+                          : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:
+                            const Color.fromARGB(255, 152, 190, 231),
+                        disabledBackgroundColor: const Color(0xFFD6E9FC),
+                        shadowColor: const Color(0xFF7BAEE5).withOpacity(0.5),
+                        elevation: canConfirm ? 8 : 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(28),
+                        ),
+                      ),
+                      child: Text(
+                        'ยืนยัน',
+                        style: TextStyle(
+                          color: canConfirm
+                              ? Colors.white
+                              : const Color(0xFF9ABAE0),
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.0,
                         ),
                       ),
                     ),
-                  ],
-                );
-              },
+                  ),
+                ),
+                const SizedBox(height: 20),
+              ],
             ),
           ),
           if (_loading)
@@ -314,21 +387,27 @@ class _SelectProfileState extends State<SelectProfile> {
                     dismissible: false,
                     color: Colors.black26,
                   ),
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Lottie.asset(
-                        'assets/lottie/loader_cat.json',
-                        width: 180,
-                        height: 180,
-                        repeat: true,
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'กำลังโหลด…',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ],
+                  Container(
+                    padding: const EdgeInsets.all(5),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Lottie.asset(
+                          'assets/lottie/loader_cat.json',
+                          width: 180,
+                          height: 180,
+                          repeat: true,
+                        ),
+                        const SizedBox(height: 2),
+                        const Text(
+                          'กำลังโหลด…',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),

@@ -769,32 +769,31 @@ class _Home extends State<Home> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color.fromARGB(255, 224, 238, 255),
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'MediBuddy',
           style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFF1F497D),
-              fontSize: 30),
+            fontWeight: FontWeight.w800,
+            color: Color(0xFF2B4C7E),
+            fontSize: 28,
+            letterSpacing: 0.5,
+          ),
         ),
-        backgroundColor: const Color(0xFFB7DAFF),
         centerTitle: true,
-        leading: Builder(
-          builder: (context) {
-            return IconButton(
-              icon: const Icon(
-                Icons.menu,
-                color: const Color(0xFF1F497D),
-              ),
-              onPressed: () {
-                Scaffold.of(context).openDrawer();
-              },
-            );
-          },
+        backgroundColor: Color.fromARGB(255, 191, 223, 255),
+        iconTheme: const IconThemeData(color: Color(0xFF5C7A99)),
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFFEBF4FF), Color.fromARGB(255, 186, 221, 255)],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
         ),
       ),
       drawer: const AppDrawer(),
-      backgroundColor: const Color.fromARGB(255, 255, 255, 255),
       bottomNavigationBar: const BottomBar(
         currentRoute: '/home',
       ),
@@ -826,58 +825,60 @@ class _Home extends State<Home> {
                     children: [
                       Container(
                         width: double.infinity,
-                        color: const Color(0xFFB7DAFF), // สีฟ้าของเดียร์
-                        child: Column(
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                if (_currentPageIndex > 0)
-                                  IconButton(
-                                    icon: const Icon(
-                                        Icons.arrow_back_ios_rounded,
-                                        size: 18),
-                                    color: const Color(0xFF1F497D),
-                                    onPressed: () {
-                                      _pageController.previousPage(
-                                        duration:
-                                            const Duration(milliseconds: 300),
-                                        curve: Curves.easeOut,
-                                      );
-                                    },
-                                  )
-                                else
-                                  const SizedBox(width: 48, height: 48),
-                                // Date Text
-                                InkWell(
-                                  onTap: () =>
-                                      _pickDisplayedDate(displayedDate),
-                                  child: Text(
-                                    thaiBuddhistDate,
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      color: Color(0xFF1F497D),
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                                // Right Arrow (Next Day)
+                        padding: const EdgeInsets.only(bottom: 5),
+                        decoration: const BoxDecoration(
+                          color: Color.fromARGB(255, 186, 221, 255),
+                          borderRadius: BorderRadius.only(
+                            bottomLeft: Radius.circular(32),
+                            bottomRight: Radius.circular(32),
+                          ),
+                        ),
+                        child: Center(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              if (_currentPageIndex > 0)
                                 IconButton(
-                                  icon: const Icon(
-                                      Icons.arrow_forward_ios_rounded,
+                                  icon: const Icon(Icons.arrow_back_ios_rounded,
                                       size: 18),
-                                  color: const Color(0xFF1F497D),
+                                  color: const Color(0xFF6B8DB0),
                                   onPressed: () {
-                                    _pageController.nextPage(
+                                    _pageController.previousPage(
                                       duration:
                                           const Duration(milliseconds: 300),
                                       curve: Curves.easeOut,
                                     );
                                   },
+                                )
+                              else
+                                const SizedBox(width: 48, height: 48),
+                              // Date Text
+                              InkWell(
+                                onTap: () => _pickDisplayedDate(displayedDate),
+                                child: Text(
+                                  thaiBuddhistDate,
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    color: Color(0xFF6B8DB0),
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
-                              ],
-                            ),
-                          ],
+                              ),
+                              // Right Arrow (Next Day)
+                              IconButton(
+                                icon: const Icon(
+                                    Icons.arrow_forward_ios_rounded,
+                                    size: 18),
+                                color: const Color(0xFF6B8DB0),
+                                onPressed: () {
+                                  _pageController.nextPage(
+                                    duration: const Duration(milliseconds: 300),
+                                    curve: Curves.easeOut,
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                       Expanded(
@@ -999,7 +1000,8 @@ class _Home extends State<Home> {
                                         return Container(
                                           padding: const EdgeInsets.all(8),
                                           decoration: BoxDecoration(
-                                            color: const Color(0xFFE8F2FF),
+                                            color: const Color.fromARGB(
+                                                255, 245, 250, 255),
                                             borderRadius:
                                                 BorderRadius.circular(20),
                                           ),
