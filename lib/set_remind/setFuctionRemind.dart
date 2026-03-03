@@ -1199,7 +1199,7 @@ Widget summary_rejimen({
       ),
       const SizedBox(height: 16),
       Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(15),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
@@ -1208,7 +1208,7 @@ Widget summary_rejimen({
         child: Column(
           children: doses.map((dose) {
             return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 6),
+              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 10),
               child: Row(
                 children: [
                   SizedBox(
@@ -1229,7 +1229,7 @@ Widget summary_rejimen({
                       textAlign: TextAlign.end,
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 25),
                   MealTimingIcon(timing: dose.mealTiming),
                 ],
               ),
