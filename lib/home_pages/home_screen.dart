@@ -673,7 +673,7 @@ class _Home extends State<Home> {
                                   Text(
                                     reminder.name,
                                     style: const TextStyle(
-                                      fontSize: 15,
+                                      fontSize: 16,
                                       fontWeight: FontWeight.w700,
                                       color: Color(0xFF333333),
                                     ),
@@ -688,8 +688,8 @@ class _Home extends State<Home> {
                                           if (iconPath.isNotEmpty) {
                                             return Image.asset(
                                               iconPath,
-                                              width: 14,
-                                              height: 14,
+                                              width: 16,
+                                              height: 16,
                                               color: const Color(0xFF6FA8DC),
                                             );
                                           }
@@ -724,7 +724,8 @@ class _Home extends State<Home> {
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 8, vertical: 4),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFFF0F6FF),
+                                      color: const Color.fromARGB(
+                                          255, 229, 239, 255),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Text(

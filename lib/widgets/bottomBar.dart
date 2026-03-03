@@ -36,7 +36,7 @@ class BottomBar extends StatelessWidget {
               child: Container(
                 height: 80,
                 decoration: const BoxDecoration(
-                  color: Color(0xFF1F497D),
+                  color: Color.fromARGB(255, 165, 207, 249),
                   borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
                   boxShadow: [
                     BoxShadow(
@@ -145,13 +145,17 @@ class BottomBar extends StatelessWidget {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       gradient: const LinearGradient(
-                        colors: [Color(0xFF6FA8DC), Color(0xFF1F497D)],
+                        colors: [
+                          Color.fromARGB(255, 177, 217, 255),
+                          Color.fromARGB(255, 143, 190, 236)
+                        ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF1F497D).withOpacity(0.4),
+                          color: const Color.fromARGB(255, 81, 133, 196)
+                              .withOpacity(0.4),
                           blurRadius: 10,
                           spreadRadius: 2,
                           offset: const Offset(0, 4),

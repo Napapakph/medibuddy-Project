@@ -525,16 +525,16 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
     final imageProvider = _buildMedicineImage(item.imagePath);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 6),
-      padding: const EdgeInsets.all(5),
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: const Color.fromARGB(255, 255, 255, 255),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            offset: const Offset(0, 2),
-            blurRadius: 4,
+            color: const Color(0xFF7BAEE5).withOpacity(0.10),
+            offset: const Offset(0, 3),
+            blurRadius: 10,
           ),
         ],
       ),
@@ -548,20 +548,20 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
               width: 80,
               height: 110,
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: const Color(0xFFF2F5F9),
                 shape: BoxShape.rectangle,
-                border: Border.all(color: Colors.grey.shade300),
-                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: const Color(0xFFE4EAF0)),
+                borderRadius: BorderRadius.circular(16),
               ),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(16),
                 child: imageProvider != null
                     ? Image(
                         image: imageProvider,
                         fit: BoxFit.cover,
                       )
                     : const Icon(Icons.medication,
-                        size: 48, color: Color(0xFF1F497D)),
+                        size: 48, color: Color(0xFF7BAEE5)),
               ),
             ),
           ),
@@ -583,7 +583,7 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF1F497D),
+                          color: Color(0xFF2B4C7E),
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -598,7 +598,7 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
                           borderRadius: BorderRadius.circular(16)),
                       icon: const Icon(
                         Icons.more_horiz,
-                        color: Color(0xFF1F497D),
+                        color: Color(0xFF8A9BB5),
                       ),
                       onSelected: (value) {
                         if (value == 'edit') {
@@ -615,7 +615,7 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
                           child: Row(
                             children: [
                               Icon(Icons.info_outline,
-                                  color: Color(0xFF1F497D), size: 20),
+                                  color: Color(0xFF6B8DB0), size: 20),
                               SizedBox(width: 8),
                               Text('ข้อมูลยา'),
                             ],
@@ -626,7 +626,7 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
                           child: Row(
                             children: [
                               Icon(Icons.edit,
-                                  color: Color(0xFF1F497D), size: 20),
+                                  color: Color(0xFF6B8DB0), size: 20),
                               SizedBox(width: 8),
                               Text('แก้ไข'),
                             ],
@@ -658,10 +658,10 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
                   const SizedBox(height: 4),
                   Container(
                     padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                     decoration: BoxDecoration(
-                      color: const Color.fromARGB(255, 230, 239, 253),
-                      borderRadius: BorderRadius.circular(8),
+                      color: const Color(0xFFE8F1FB),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
                       () {
@@ -671,8 +671,9 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
                         return item.mediType!;
                       }(),
                       style: const TextStyle(
-                        fontSize: 14,
-                        color: Color(0xFF1F497D),
+                        fontSize: 13,
+                        color: Color(0xFF5A81BB),
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ),
@@ -715,20 +716,21 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
-                        // สีเขียวอมฟ้าตามรูป (Teal-ish)
-                        color: const Color.fromARGB(255, 205, 225, 253),
+                        color: const Color(0xFFD6E9FC),
                         borderRadius: BorderRadius.circular(24),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: const [
-                          Icon(Icons.alarm, color: Color(0xFF1F497D), size: 18),
+                          Icon(Icons.alarm_rounded,
+                              color: Color(0xFF5A81BB), size: 18),
                           SizedBox(width: 6),
                           Text(
                             'ตั้งแจ้งเตือน',
                             style: TextStyle(
-                              color: Color(0xFF1F497D),
-                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF5A81BB),
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
                             ),
                           ),
                         ],
@@ -747,29 +749,42 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 222, 237, 255),
+      backgroundColor: const Color(0xFFF0F6FF),
       appBar: AppBar(
-        backgroundColor: Color(0xFF1F497D),
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color.fromARGB(255, 234, 244, 255),
+                Color.fromARGB(255, 193, 222, 255)
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
         centerTitle: true,
         title: const Text(
           'รายการยาของฉัน',
           style: TextStyle(
-            color: Color.fromARGB(255, 255, 255, 255),
-            fontWeight: FontWeight.bold,
+            color: Color(0xFF2B4C7E),
+            fontWeight: FontWeight.w700,
+            fontSize: 20,
+            letterSpacing: 0.3,
           ),
         ),
         leading: Builder(
           builder: (context) {
             return IconButton(
-              icon: const Icon(Icons.menu,
-                  color: Color.fromARGB(255, 255, 255, 255)),
+              icon: const Icon(Icons.menu_rounded, color: Color(0xFF5A81BB)),
               onPressed: () => Scaffold.of(context).openDrawer(),
             );
           },
         ),
         actions: [
           PopupMenuButton<_SortOption>(
-            icon: const Icon(Icons.sort, color: Colors.white),
+            icon: const Icon(Icons.sort_rounded, color: Color(0xFF5A81BB)),
             tooltip: 'เรียงลำดับ',
             onSelected: (option) {
               setState(() {
@@ -784,7 +799,7 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
                     Icon(
                       Icons.access_time_rounded,
                       color: _currentSort == _SortOption.defaultOrder
-                          ? const Color(0xFF1F497D)
+                          ? const Color(0xFF5A81BB)
                           : Colors.grey,
                     ),
                     const SizedBox(width: 8),
@@ -792,7 +807,7 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
                       'เพิ่มล่าสุด (เริ่มต้น)',
                       style: TextStyle(
                         color: _currentSort == _SortOption.defaultOrder
-                            ? const Color(0xFF1F497D)
+                            ? const Color(0xFF5A81BB)
                             : Colors.black87,
                         fontWeight: _currentSort == _SortOption.defaultOrder
                             ? FontWeight.bold
@@ -809,7 +824,7 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
                     Icon(
                       Icons.sort_by_alpha_rounded,
                       color: _currentSort == _SortOption.byName
-                          ? const Color(0xFF1F497D)
+                          ? const Color(0xFF5A81BB)
                           : Colors.grey,
                     ),
                     const SizedBox(width: 8),
@@ -817,7 +832,7 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
                       'เรียงตามชื่อ (A-Z)',
                       style: TextStyle(
                         color: _currentSort == _SortOption.byName
-                            ? const Color(0xFF1F497D)
+                            ? const Color(0xFF5A81BB)
                             : Colors.black87,
                         fontWeight: _currentSort == _SortOption.byName
                             ? FontWeight.bold
@@ -843,8 +858,8 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
               },
               icon: const Icon(
                 CommunityMaterialIcons.file_pdf_box,
-                color: Color.fromARGB(255, 255, 255, 255),
-                size: 33,
+                color: Color(0xFF5A81BB),
+                size: 30,
               ),
             ),
           ),
@@ -878,18 +893,10 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
                               children: [
                                 Expanded(
                                   child: Container(
-                                    padding: const EdgeInsets.all(2),
+                                    padding: const EdgeInsets.all(4),
                                     decoration: BoxDecoration(
-                                      color: const Color.fromARGB(
-                                          0, 255, 255, 255),
-                                      borderRadius: BorderRadius.circular(16),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withOpacity(0.08),
-                                          blurRadius: 8,
-                                          offset: const Offset(0, 4),
-                                        ),
-                                      ],
+                                      color: Colors.transparent,
+                                      borderRadius: BorderRadius.circular(20),
                                     ),
                                     child: _isLoading
                                         ? const Center()
@@ -940,24 +947,32 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
                                 ),
                                 SizedBox(height: maxWidth * 0.015),
                                 SizedBox(
-                                  width: 150,
+                                  width: 170,
+                                  height: 52,
                                   child: ElevatedButton.icon(
                                     onPressed: _addMedicine,
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color(0xFF1F497D),
+                                      backgroundColor: const Color.fromARGB(
+                                          255, 90, 129, 187),
+                                      foregroundColor: Colors.white,
+                                      elevation: 4,
+                                      shadowColor:
+                                          const Color.fromARGB(255, 42, 80, 135)
+                                              .withOpacity(0.4),
                                       padding: const EdgeInsets.symmetric(
                                           vertical: 14),
                                       shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(24),
+                                        borderRadius: BorderRadius.circular(28),
                                       ),
                                     ),
-                                    icon: Icon(IcoFontIcons.uiAdd,
-                                        color: Colors.white),
+                                    icon: const Icon(IcoFontIcons.uiAdd,
+                                        color: Colors.white, size: 20),
                                     label: const Text(
-                                      ' เพิ่มยา',
+                                      'เพิ่มยา',
                                       style: TextStyle(
                                         color: Colors.white,
-                                        fontSize: 18,
+                                        fontSize: 17,
+                                        fontWeight: FontWeight.w600,
                                       ),
                                     ),
                                   ),
@@ -990,10 +1005,13 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
                           height: 180,
                           repeat: true,
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 2),
                         const Text(
                           'กำลังโหลด…',
-                          style: TextStyle(color: Colors.white),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                          ),
                         ),
                       ],
                     ),
