@@ -938,7 +938,7 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
                                                   ),
                                   ),
                                 ),
-                                SizedBox(height: maxWidth * 0.01),
+                                SizedBox(height: maxWidth * 0.015),
                                 SizedBox(
                                   width: 150,
                                   child: ElevatedButton.icon(
