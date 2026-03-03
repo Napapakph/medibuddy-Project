@@ -89,19 +89,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        iconTheme: const IconThemeData(color: Colors.white),
-        title:
-            const Text('โปรไฟล์ของฉัน', style: TextStyle(color: Colors.white)),
-        backgroundColor: Color(0xFF1F497D),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.help_outline, color: Colors.white),
-            onPressed: () => TutorialDialog.show(context, forceShow: true),
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color.fromARGB(255, 234, 244, 255),
+                Color.fromARGB(255, 193, 222, 255),
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
           ),
-        ],
+        ),
+        iconTheme: const IconThemeData(color: Color(0xFF5A81BB)),
+        centerTitle: true,
+        title: const Text(
+          'โปรไฟล์ของฉัน',
+          style: TextStyle(
+            color: Color(0xFF2B4C7E),
+            fontWeight: FontWeight.w700,
+            fontSize: 20,
+            letterSpacing: 0.3,
+          ),
+        ),
       ),
       resizeToAvoidBottomInset: false,
-      backgroundColor: const Color.fromARGB(255, 227, 242, 255),
+      backgroundColor: const Color(0xFFF0F6FF),
       body: SafeArea(child: LayoutBuilder(builder: (context, constraints) {
         final maxWidth = constraints.maxWidth;
         final maxHeight = constraints.maxHeight;
@@ -253,17 +267,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               padding: EdgeInsets.symmetric(
                                   vertical: maxHeight * 0.02,
                                   horizontal: maxWidth * 0.03),
-                              backgroundColor: Color(0xFF1F497D),
-                              foregroundColor: Colors.black87,
+                              backgroundColor:
+                                  const Color.fromARGB(255, 90, 129, 187),
+                              foregroundColor: Colors.white,
+                              elevation: 4,
+                              shadowColor:
+                                  const Color.fromARGB(255, 42, 80, 135)
+                                      .withOpacity(0.4),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(20),
+                                borderRadius: BorderRadius.circular(28),
                               ),
                             ),
                             child: const Text(
                               'บันทึกข้อมูล',
                               style: TextStyle(
-                                  fontSize: 16,
-                                  color: Color.fromARGB(255, 255, 255, 255)),
+                                fontSize: 17,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
                             ),
                           ),
                         ),
@@ -323,13 +344,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
           width: cameraSize,
           height: cameraSize,
           decoration: BoxDecoration(
-            color: const Color(0xFF1F497D),
+            color: const Color.fromARGB(255, 90, 129, 187),
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color:
-                    const Color.fromARGB(255, 100, 100, 100).withOpacity(0.50),
-                blurRadius: size * 0.03, // ใช้สัดส่วนให้เงาไม่เพี้ยน
+                color: const Color.fromARGB(255, 42, 80, 135).withOpacity(0.30),
+                blurRadius: size * 0.03,
                 offset: Offset(0, size * 0.01),
               ),
             ],

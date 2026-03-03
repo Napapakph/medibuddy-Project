@@ -135,14 +135,32 @@ class _LibraryProfileState extends State<LibraryProfile> {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
-        iconTheme: const IconThemeData(color: Colors.white),
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color.fromARGB(255, 234, 244, 255),
+                Color.fromARGB(255, 193, 222, 255),
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
+        iconTheme: const IconThemeData(color: Color(0xFF5A81BB)),
+        centerTitle: true,
         title: const Text(
           'โปรไฟล์ผู้ใช้',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(
+            color: Color(0xFF2B4C7E),
+            fontWeight: FontWeight.w700,
+            fontSize: 20,
+            letterSpacing: 0.3,
+          ),
         ),
-        backgroundColor: const Color(0xFF1F497D),
       ),
-      backgroundColor: const Color.fromARGB(255, 227, 242, 255),
+      backgroundColor: const Color(0xFFF0F6FF),
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -170,7 +188,7 @@ class _LibraryProfileState extends State<LibraryProfile> {
                           maxWidth * 0.01,
                           maxHeight * 0.00,
                           maxWidth * 0.02,
-                          maxHeight * 0.126,
+                          maxHeight * 0.06,
                         ),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
@@ -182,11 +200,12 @@ class _LibraryProfileState extends State<LibraryProfile> {
                               child: Container(
                                 decoration: BoxDecoration(
                                   color: Colors.white,
-                                  borderRadius: BorderRadius.circular(16),
+                                  borderRadius: BorderRadius.circular(20),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(0.08),
-                                      blurRadius: 6,
+                                      color: const Color(0xFF7BAEE5)
+                                          .withOpacity(0.10),
+                                      blurRadius: 10,
                                       offset: const Offset(0, 3),
                                     ),
                                   ],
@@ -247,23 +266,25 @@ class _LibraryProfileState extends State<LibraryProfile> {
                                                     horizontal: maxWidth * 0.05,
                                                   ),
                                                   decoration: BoxDecoration(
-                                                    color: const Color.fromARGB(
-                                                        136, 203, 219, 240),
+                                                    color:
+                                                        const Color(0xFFE8F1FB),
                                                     borderRadius:
                                                         BorderRadius.circular(
-                                                            20),
+                                                            24),
                                                   ),
                                                   child: Align(
                                                     alignment:
                                                         Alignment.centerLeft,
-
                                                     child: Text(
                                                       profile.username,
                                                       style: const TextStyle(
                                                         fontSize: 18,
-                                                        color: Colors.black,
+                                                        color:
+                                                            Color(0xFF2B4C7E),
+                                                        fontWeight:
+                                                            FontWeight.w500,
                                                       ),
-                                                    ), // ⭐ บังคับให้ชิดซ้าย),
+                                                    ),
                                                   ),
                                                 ),
                                                 trailing: Row(
@@ -273,28 +294,39 @@ class _LibraryProfileState extends State<LibraryProfile> {
                                                     InkWell(
                                                       onTap: () =>
                                                           _editProfile(index),
-                                                      child: Padding(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              20),
+                                                      child: const Padding(
                                                         padding:
-                                                            EdgeInsets.all(1),
-                                                        // เล็กมาก! ปรับได้
-                                                        child: Icon(Icons.edit,
-                                                            size: 25,
-                                                            color: Colors
-                                                                .blueGrey),
+                                                            EdgeInsets.all(4),
+                                                        child: Icon(
+                                                            Icons.edit_rounded,
+                                                            size: 30,
+                                                            color: Color(
+                                                                0xFF7BAEE5)),
                                                       ),
                                                     ),
+                                                    const SizedBox(width: 4),
                                                     InkWell(
                                                       onTap: () =>
                                                           _confirmDeleteProfile(
                                                               index),
-                                                      child: Padding(
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              20),
+                                                      child: const Padding(
                                                         padding:
-                                                            EdgeInsets.all(1),
+                                                            EdgeInsets.all(4),
                                                         child: Icon(
                                                             Icons.delete,
-                                                            size: 25,
-                                                            color: Colors
-                                                                .redAccent),
+                                                            size: 30,
+                                                            color:
+                                                                Color.fromARGB(
+                                                                    255,
+                                                                    210,
+                                                                    105,
+                                                                    105)),
                                                       ),
                                                     ),
                                                   ],
@@ -311,28 +343,41 @@ class _LibraryProfileState extends State<LibraryProfile> {
                   ),
                   Align(
                     alignment: Alignment.bottomCenter,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF1F497D),
-                        padding: EdgeInsets.symmetric(
-                          horizontal: maxWidth * 0.06,
-                          vertical: maxHeight * 0.02,
+                    child: SizedBox(
+                      width: 220,
+                      height: 52,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              const Color.fromARGB(255, 90, 129, 187),
+                          foregroundColor: Colors.white,
+                          elevation: 4,
+                          shadowColor: const Color.fromARGB(255, 42, 80, 135)
+                              .withOpacity(0.4),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: maxWidth * 0.06,
+                            vertical: maxHeight * 0.02,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(28),
+                          ),
                         ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
+                        onPressed: _addProfile,
+                        child: const Text(
+                          'เพิ่มโปรไฟล์ใหม่',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 17,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      ),
-                      onPressed: _addProfile,
-                      child: const Text(
-                        'เพิ่มโปรไฟล์ใหม่',
-                        style: TextStyle(color: Colors.white, fontSize: 16),
                       ),
                     ),
                   ),
                   Align(
                     alignment: Alignment.bottomRight,
                     child: Padding(
-                      padding: EdgeInsets.fromLTRB(0, 0, maxWidth * 0.02, 0),
+                      padding: EdgeInsets.fromLTRB(0, 0, maxWidth * 0.01, 0),
                       child: IconButton(
                         onPressed: () {
                           Navigator.push(
@@ -341,9 +386,9 @@ class _LibraryProfileState extends State<LibraryProfile> {
                             //หน้า OTP จะรู้แล้วว่า OTP นี้เป็นของอีเมลไหน
                           );
                         },
-                        icon: Icon(Icons.navigate_next_outlined),
+                        icon: const Icon(Icons.navigate_next_outlined),
                         iconSize: maxWidth * 0.15,
-                        color: Color(0xFF1F497D),
+                        color: const Color(0xFF5A81BB),
                       ),
                     ),
                   ),
@@ -389,7 +434,10 @@ class _LibraryProfileState extends State<LibraryProfile> {
                 horizontal: 30.0,
                 vertical: 24.0,
               ),
-              backgroundColor: const Color(0xFFF5F5F5),
+              backgroundColor: const Color(0xFFF0F6FF),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
               content: SingleChildScrollView(
                 child: SizedBox(
                   width: double.maxFinite,
@@ -564,7 +612,7 @@ class _LibraryProfileState extends State<LibraryProfile> {
         const double buttonSize = 70.0;
         const double buttonFontSize = 26.0;
         const Color numButtonColor = Colors.white;
-        const Color numTextColor = Color(0xFF1F497D);
+        const Color numTextColor = Color(0xFF5A81BB);
         const Color delButtonColor = Color(0xFFFFEBEE);
         const Color delIconColor = Colors.red;
 
@@ -588,9 +636,9 @@ class _LibraryProfileState extends State<LibraryProfile> {
             }
 
             return AlertDialog(
-              backgroundColor: const Color(0xFFF5F5F5),
+              backgroundColor: const Color(0xFFF0F6FF),
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20)),
+                  borderRadius: BorderRadius.circular(24)),
               title: const Text('ยืนยันรหัสลบโปรไฟล์'),
               content: SizedBox(
                 width: double.maxFinite,
@@ -645,7 +693,7 @@ class _LibraryProfileState extends State<LibraryProfile> {
                           fontWeight: FontWeight.bold,
                           color: enteredCode == randomCode
                               ? Colors.green
-                              : const Color(0xFF1F497D),
+                              : const Color(0xFF5A81BB),
                         ),
                       ),
                     ),
@@ -804,7 +852,10 @@ class _LibraryProfileState extends State<LibraryProfile> {
                 horizontal: 30,
                 vertical: 24.0,
               ),
-              backgroundColor: const Color(0xFFF5F5F5),
+              backgroundColor: const Color(0xFFF0F6FF),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
               content: SingleChildScrollView(
                 child: SizedBox(
                   width: double.maxFinite,

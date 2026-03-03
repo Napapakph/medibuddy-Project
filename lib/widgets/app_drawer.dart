@@ -81,7 +81,7 @@ class AppDrawer extends StatelessWidget {
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            Color(0xFF6FA8DC), // ฟ้าเข้มด้านบน
+                            Color.fromARGB(255, 180, 215, 255), // ฟ้าเข้มด้านบน
                             Color(0xFFBFE1FF), // ฟ้าอ่อนกลาง
                             Color(0xFFF5FAFF), // เกือบขาวด้านล่าง
                           ],

@@ -20,15 +20,32 @@ class _MyBuddyState extends State<MyBuddy> {
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      backgroundColor: const Color.fromARGB(255, 235, 246, 255),
+      backgroundColor: const Color(0xFFF0F6FF),
       appBar: AppBar(
-        iconTheme: const IconThemeData(color: Colors.white),
-        title: Text(
-          'บัดดี้ของคุณ',
-          style: TextStyle(color: Colors.white),
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color.fromARGB(255, 234, 244, 255),
+                Color.fromARGB(255, 193, 222, 255),
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
         ),
-        backgroundColor: const Color(0xFF1F497D),
+        iconTheme: const IconThemeData(color: Color(0xFF5A81BB)),
         centerTitle: true,
+        title: const Text(
+          'บัดดี้ของคุณ',
+          style: TextStyle(
+            color: Color(0xFF2B4C7E),
+            fontWeight: FontWeight.w700,
+            fontSize: 20,
+            letterSpacing: 0.3,
+          ),
+        ),
       ),
       body: SafeArea(
         child: LayoutBuilder(
@@ -54,7 +71,7 @@ class _MyBuddyState extends State<MyBuddy> {
                               'ผู้ช่วยคุณคือ . . .',
                               style: TextStyle(
                                 fontSize: 30,
-                                color: Color.fromARGB(255, 123, 187, 255),
+                                color: Color(0xFF7BAEE5),
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -69,7 +86,7 @@ class _MyBuddyState extends State<MyBuddy> {
                               'Meow',
                               style: TextStyle(
                                 fontSize: 30,
-                                color: Color(0xFF1F497D),
+                                color: Color(0xFF2B4C7E),
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -96,9 +113,9 @@ class _MyBuddyState extends State<MyBuddy> {
                             ),
                           );
                         },
-                        icon: Icon(Icons.navigate_next_outlined),
+                        icon: const Icon(Icons.navigate_next_outlined),
                         iconSize: maxWidth * 0.13,
-                        color: Color(0xFF1F497D),
+                        color: const Color(0xFF5A81BB),
                       ),
                     ),
                   ),
@@ -124,7 +141,7 @@ class _MyBuddyState extends State<MyBuddy> {
           width: size,
           height: size, // ใช้ size เดียวกัน จะได้เป็นวงกลมจริง ๆ
           decoration: const BoxDecoration(
-            color: Color(0xFFB7DAFF),
+            color: Color(0xFFDAEBFF),
             shape: BoxShape.circle,
           ),
         ),
