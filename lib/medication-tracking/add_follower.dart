@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:medibuddy/services/auth_manager.dart'; // import 'package:medibuddy/services/auth_session.dart';
+import 'package:medibuddy/services/token_manager.dart';
 import 'package:medibuddy/services/follow_api.dart';
 import 'package:medibuddy/services/profile_api.dart';
 
@@ -83,7 +84,7 @@ class _AddFollowerScreenState extends State<AddFollowerScreen> {
         _foundUsers = [];
       });
 // ค้นหาผู้ใช้ตามอีเมล
-      final accessToken = AuthManager.accessToken;
+      final accessToken = await TokenManager.getValidAccessToken();
       if (accessToken == null) {
         throw Exception('No access token');
       }
@@ -156,11 +157,11 @@ class _AddFollowerScreenState extends State<AddFollowerScreen> {
             height: 46,
             padding: const EdgeInsets.symmetric(horizontal: 16),
             decoration: BoxDecoration(
-              color: _softSurface,
+              color: const Color.fromARGB(255, 255, 255, 255),
               borderRadius: BorderRadius.circular(28),
               boxShadow: const [
                 BoxShadow(
-                  color: Color(0x14000000),
+                  color: Color.fromARGB(255, 211, 231, 255),
                   blurRadius: 10,
                   offset: Offset(0, 4),
                 ),
@@ -179,7 +180,7 @@ class _AddFollowerScreenState extends State<AddFollowerScreen> {
         ),
         const SizedBox(width: 10),
         Material(
-          color: _primaryBlue,
+          color: const Color(0xFF5A81BB),
           shape: const CircleBorder(),
           child: InkWell(
             customBorder: const CircleBorder(),
@@ -222,11 +223,11 @@ class _AddFollowerScreenState extends State<AddFollowerScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: _softSurface,
+          color: const Color.fromARGB(255, 250, 253, 255),
           borderRadius: BorderRadius.circular(22),
           boxShadow: const [
             BoxShadow(
-              color: Color(0x12000000),
+              color: Color.fromARGB(255, 210, 225, 255),
               blurRadius: 8,
               offset: Offset(0, 4),
             ),
@@ -279,7 +280,7 @@ class _AddFollowerScreenState extends State<AddFollowerScreen> {
               width: 32,
               height: 32,
               decoration: const BoxDecoration(
-                color: _primaryBlue,
+                color: const Color(0xFF5A81BB),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -320,6 +321,7 @@ class _AddFollowerScreenState extends State<AddFollowerScreen> {
             fontWeight: FontWeight.w700,
             fontSize: 18,
           ),
+          textAlign: TextAlign.center,
         ),
         foregroundColor: const Color(0xFF5A81BB),
       ),
@@ -445,7 +447,7 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
 
 // โหลดโปรไฟล์ของผู้ใช้ปัจจุบัน
   Future<void> _loadMyProfiles() async {
-    final accessToken = AuthManager.accessToken;
+    final accessToken = await TokenManager.getValidAccessToken();
     if (accessToken == null) {
       setState(() {
         _myProfiles = [];
@@ -515,7 +517,7 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
     }
 
     try {
-      final accessToken = AuthManager.accessToken;
+      final accessToken = await TokenManager.getValidAccessToken();
       if (accessToken == null) {
         throw Exception('No access token');
       }
@@ -625,7 +627,7 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
               height: 40,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: _softPill,
+                color: const Color.fromARGB(255, 255, 255, 255),
                 borderRadius: BorderRadius.circular(18),
               ),
               child: Text(
@@ -752,7 +754,7 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
                         controller: _nicknameController,
                         textAlign: TextAlign.center,
                         decoration: InputDecoration(
-                          hintText: 'ตั้งชื่อที่นี่...',
+                          labelText: "ชื่อผู้ติดตาม",
                           hintStyle: TextStyle(color: Colors.grey.shade400),
                           filled: true,
                           fillColor: Colors.white,
@@ -877,8 +879,8 @@ class _SpeechBubble extends StatelessWidget {
           width: 200,
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: const Color(0xFFE8F1FB),
-            border: Border.all(color: const Color(0xFFB7DAFF)),
+            color: const Color.fromARGB(255, 255, 255, 255),
+            border: Border.all(color: const Color.fromARGB(255, 255, 255, 255)),
             borderRadius: BorderRadius.circular(16),
           ),
           child: Text(

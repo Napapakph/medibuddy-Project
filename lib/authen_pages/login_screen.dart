@@ -574,7 +574,6 @@ class _LoginScreenState extends State<LoginScreen> {
         return Dialog(
           child: Container(
             decoration: BoxDecoration(
-              color: const Color(0xFFEAF2FB), // ⭐ สีพื้นหลัง
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
@@ -583,6 +582,14 @@ class _LoginScreenState extends State<LoginScreen> {
                   offset: const Offset(0, 8),
                 ),
               ],
+              gradient: LinearGradient(
+                colors: [
+                  Color.fromARGB(255, 234, 244, 255),
+                  Color.fromARGB(255, 193, 222, 255)
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
             ),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 400),
@@ -620,6 +627,13 @@ class _LoginScreenState extends State<LoginScreen> {
                         filled: true,
                         fillColor: const Color.fromARGB(255, 255, 255, 255),
                         labelText: 'Email',
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: Color(0xFFBFD3E6), // ฟ้าอ่อน
+                            width: 1.2,
+                          ),
+                        ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -676,7 +690,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       },
                       child: const Text('ส่งอีเมลรีเซ็ต'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF1F497D),
+                        backgroundColor:
+                            const Color.fromARGB(255, 90, 129, 187),
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(24),

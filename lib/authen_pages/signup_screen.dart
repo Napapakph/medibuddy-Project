@@ -523,7 +523,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                 decoration: InputDecoration(
                                   labelText: 'อีเมล',
                                   labelStyle: const TextStyle(
-                                    color: Color(0xFFA0B0C4),
+                                    color: Color.fromARGB(255, 67, 85, 107),
                                     fontSize: 15,
                                   ),
                                   filled: true,
@@ -567,7 +567,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                 decoration: InputDecoration(
                                   labelText: 'รหัสผ่าน',
                                   labelStyle: const TextStyle(
-                                    color: Color(0xFFA0B0C4),
+                                    color: Color.fromARGB(255, 67, 85, 107),
                                     fontSize: 15,
                                   ),
                                   filled: true,
@@ -629,7 +629,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                 decoration: InputDecoration(
                                   labelText: 'ยืนยันรหัสผ่าน',
                                   labelStyle: const TextStyle(
-                                    color: Color(0xFFA0B0C4),
+                                    color: Color.fromARGB(255, 67, 85, 107),
                                     fontSize: 15,
                                   ),
                                   filled: true,

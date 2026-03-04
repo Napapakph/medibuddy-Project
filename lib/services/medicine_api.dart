@@ -8,7 +8,7 @@ import 'package:http_parser/http_parser.dart';
 import 'package:mime/mime.dart';
 import 'package:path/path.dart' as p;
 import 'package:medibuddy/Model/medicine_model.dart';
-import 'auth_manager.dart'; // Import AuthManager
+import 'token_manager.dart';
 import 'custom_http_client.dart'; // Import CustomHttpClient
 
 class MedicineApi {
@@ -32,11 +32,7 @@ class MedicineApi {
   }
 
   Future<String> _getAccessToken() async {
-    // Check global variable first
-    if (AuthManager.accessToken != null) return AuthManager.accessToken!;
-
-    // Fallback to service (which might check storage)
-    final token = await AuthManager.service.getAccessToken();
+    final token = await TokenManager.getValidAccessToken();
     if (token != null && token.isNotEmpty) return token;
 
     throw Exception('No access token. Please login again.');
