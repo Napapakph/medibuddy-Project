@@ -273,6 +273,7 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
               child: const Text('ไม่ใช่'),
             ),
           ],
+          backgroundColor: Colors.white,
         );
       },
     );

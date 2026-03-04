@@ -262,14 +262,14 @@ class _FollowingRegimenPageState extends State<FollowingRegimenPage> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.light(
-              primary: Color(0xFF2B4C7E),
+              primary: Color(0xFF5A81BB),
               onPrimary: Colors.white,
               onSurface: Color(0xFF2B4C7E),
             ),
             dialogBackgroundColor: Colors.white,
             textButtonTheme: TextButtonThemeData(
               style: TextButton.styleFrom(
-                foregroundColor: const Color(0xFF2B4C7E),
+                foregroundColor: const Color(0xFF5A81BB),
                 textStyle: const TextStyle(fontWeight: FontWeight.w700),
               ),
             ),

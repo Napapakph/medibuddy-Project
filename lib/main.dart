@@ -617,6 +617,53 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         fontFamily: 'Mali',
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF5A81BB),
+          brightness: Brightness.light,
+          primary: const Color(0xFF5A81BB),
+          onPrimary: Colors.white,
+          surface: Colors.white,
+          onSurface: const Color(0xFF2B4C7E),
+        ),
+        datePickerTheme: DatePickerThemeData(
+          backgroundColor: Colors.white,
+          headerBackgroundColor: const Color(0xFF5A81BB),
+          headerForegroundColor: Colors.white,
+          dayForegroundColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) return Colors.white;
+            if (states.contains(WidgetState.disabled))
+              return const Color(0xFFB7CCDF);
+            return const Color(0xFF2B4C7E);
+          }),
+          dayBackgroundColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected))
+              return const Color(0xFF5A81BB);
+            return null;
+          }),
+          todayForegroundColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) return Colors.white;
+            return const Color(0xFF5A81BB);
+          }),
+          todayBackgroundColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected))
+              return const Color(0xFF5A81BB);
+            return null;
+          }),
+          todayBorder: const BorderSide(color: Color(0xFF5A81BB), width: 1.5),
+          yearForegroundColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected)) return Colors.white;
+            return const Color(0xFF2B4C7E);
+          }),
+          yearBackgroundColor: WidgetStateProperty.resolveWith((states) {
+            if (states.contains(WidgetState.selected))
+              return const Color(0xFF5A81BB);
+            return null;
+          }),
+          rangeSelectionBackgroundColor: const Color(0xFFDDE9F7),
+          surfaceTintColor: Colors.transparent,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        ),
       ),
       title: 'MediBuddy',
       navigatorKey: navigatorKey,

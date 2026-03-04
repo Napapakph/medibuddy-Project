@@ -410,14 +410,14 @@ class _FollowingHistoryPageState extends State<FollowingHistoryPage> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.light(
-              primary: Color(0xFF2B4C7E), // ✅ สีหัวปฏิทิน + วันที่เลือก
+              primary: Color(0xFF5A81BB), // ✅ สีหัวปฏิทิน + วันที่เลือก
               onPrimary: Colors.white, // ✅ สีตัวอักษรบนหัวปฏิทิน
               onSurface: Color(0xFF2B4C7E), // ✅ สีตัวเลขวันปกติ
             ),
             dialogBackgroundColor: Colors.white,
             textButtonTheme: TextButtonThemeData(
               style: TextButton.styleFrom(
-                foregroundColor: Color(0xFF2B4C7E), // ✅ สีปุ่ม CANCEL/OK
+                foregroundColor: Color(0xFF5A81BB), // ✅ สีปุ่ม CANCEL/OK
                 textStyle: const TextStyle(fontWeight: FontWeight.w700),
               ),
             ),

@@ -464,7 +464,7 @@ class _LibraryProfileState extends State<LibraryProfile> {
                         controller: editNameCtrl,
                         decoration: InputDecoration(
                           labelText: 'ชื่อโปรไฟล์',
-                          fillColor: const Color.fromARGB(255, 237, 237, 237),
+                          fillColor: const Color.fromARGB(255, 255, 255, 255),
                           filled: true,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(20),
@@ -593,6 +593,7 @@ class _LibraryProfileState extends State<LibraryProfile> {
               child: const Text('ยกเลิก'),
             ),
           ],
+          backgroundColor: Colors.white,
         );
       },
     );

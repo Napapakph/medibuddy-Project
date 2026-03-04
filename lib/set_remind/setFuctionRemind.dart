@@ -256,7 +256,7 @@ Widget type_frequency({
                     : null,
               ),
               child: image == null
-                  ? const Icon(Icons.medication, color: Color(0xFF1F497D))
+                  ? const Icon(Icons.medication, color: Color(0xFF5A81BB))
                   : null,
             ),
             const SizedBox(width: 12),
@@ -325,9 +325,9 @@ Widget type_frequency({
                     return Theme(
                       data: Theme.of(context).copyWith(
                         colorScheme: const ColorScheme.light(
-                          primary: Color(0xFF1F497D),
+                          primary: Color(0xFF5A81BB),
                           onPrimary: Colors.white,
-                          onSurface: Color(0xFF1F497D),
+                          onSurface: Color(0xFF2B4C7E),
                         ),
                       ),
                       child: child!,
@@ -348,7 +348,7 @@ Widget type_frequency({
                 child: Row(
                   children: [
                     const Icon(Icons.calendar_today,
-                        color: Color(0xFF1F497D), size: 20),
+                        color: Color(0xFF5A81BB), size: 20),
                     const SizedBox(width: 10),
                     Text(
                       '${regimenStartDate.day}/${regimenStartDate.month}/${regimenStartDate.year}',
@@ -396,9 +396,9 @@ Widget type_frequency({
                     return Theme(
                       data: Theme.of(context).copyWith(
                         colorScheme: const ColorScheme.light(
-                          primary: Color(0xFF1F497D),
+                          primary: Color(0xFF5A81BB),
                           onPrimary: Colors.white,
-                          onSurface: Color(0xFF1F497D),
+                          onSurface: Color(0xFF2B4C7E),
                         ),
                       ),
                       child: child!,
@@ -423,7 +423,7 @@ Widget type_frequency({
                 child: Row(
                   children: [
                     const Icon(Icons.calendar_today,
-                        color: Color(0xFF1F497D), size: 20),
+                        color: Color(0xFF5A81BB), size: 20),
                     const SizedBox(width: 10),
                     Text(
                       regimenEndDate != null

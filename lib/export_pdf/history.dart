@@ -345,14 +345,14 @@ class _HistoryPageState extends State<HistoryPage> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.light(
-              primary: Color(0xFF1F497D),
+              primary: Color(0xFF5A81BB),
               onPrimary: Colors.white,
-              onSurface: Color(0xFF1F497D),
+              onSurface: Color(0xFF2B4C7E),
             ),
             dialogBackgroundColor: Colors.white,
             textButtonTheme: TextButtonThemeData(
               style: TextButton.styleFrom(
-                foregroundColor: Color(0xFF1F497D),
+                foregroundColor: Color(0xFF5A81BB),
                 textStyle: TextStyle(fontWeight: FontWeight.w700),
               ),
             ),

@@ -272,14 +272,14 @@ class _MedicationPlanScreenState extends State<MedicationPlanScreen> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.light(
-              primary: Color(0xFF1F497D),
+              primary: Color(0xFF5A81BB),
               onPrimary: Colors.white,
-              onSurface: Color(0xFF1F497D),
+              onSurface: Color(0xFF2B4C7E),
             ),
             dialogBackgroundColor: Colors.white,
             textButtonTheme: TextButtonThemeData(
               style: TextButton.styleFrom(
-                foregroundColor: Color(0xFF1F497D),
+                foregroundColor: Color(0xFF5A81BB),
                 textStyle: TextStyle(fontWeight: FontWeight.w700),
               ),
             ),
@@ -308,14 +308,14 @@ class _MedicationPlanScreenState extends State<MedicationPlanScreen> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.light(
-              primary: Color(0xFF1F497D),
+              primary: Color(0xFF5A81BB),
               onPrimary: Colors.white,
-              onSurface: Color(0xFF1F497D),
+              onSurface: Color(0xFF2B4C7E),
             ),
             dialogBackgroundColor: Colors.white,
             textButtonTheme: TextButtonThemeData(
               style: TextButton.styleFrom(
-                foregroundColor: Color(0xFF1F497D),
+                foregroundColor: Color(0xFF5A81BB),
                 textStyle: TextStyle(fontWeight: FontWeight.w700),
               ),
             ),
@@ -574,14 +574,14 @@ class _MedicationPlanScreenState extends State<MedicationPlanScreen> {
         child: Row(
           children: [
             const Icon(Icons.calendar_today,
-                size: 18, color: Color(0xFF1F497D)),
+                size: 18, color: Color(0xFF5A81BB)),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
                 '${_formatDate(date)}',
                 style: const TextStyle(
                   fontSize: 15,
-                  color: Color(0xFF1F497D),
+                  color: Color(0xFF2B4C7E),
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -621,7 +621,7 @@ class _MedicationPlanScreenState extends State<MedicationPlanScreen> {
                       : null,
                 ),
                 child: imageProvider == null
-                    ? const Icon(Icons.medication, color: Color(0xFF1F497D))
+                    ? const Icon(Icons.medication, color: Color(0xFF5A81BB))
                     : null,
               ),
               const SizedBox(width: 12),
@@ -679,7 +679,7 @@ class _MedicationPlanScreenState extends State<MedicationPlanScreen> {
                         child: Text(
                           '${time.time} น.',
                           style: const TextStyle(
-                            color: Color(0xFF1F497D),
+                            color: Color(0xFF2B4C7E),
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -707,11 +707,11 @@ class _MedicationPlanScreenState extends State<MedicationPlanScreen> {
       appBar: AppBar(
         backgroundColor: const Color(0xFFB7DAFF),
         centerTitle: true,
-        iconTheme: const IconThemeData(color: Color(0xFF1F497D)),
+        iconTheme: const IconThemeData(color: Color(0xFF5A81BB)),
         title: const Text(
           'แผนการรับประทานยา',
           style: TextStyle(
-            color: Color(0xFF1F497D),
+            color: Color(0xFF2B4C7E),
             fontWeight: FontWeight.bold,
           ),
         ),
