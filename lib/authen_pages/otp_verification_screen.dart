@@ -202,7 +202,7 @@ class _OTPScreenState extends State<OTPScreen> {
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
             child:
-                const Text('ตกลง', style: TextStyle(color: Color(0xFF1F497D))),
+                const Text('ตกลง', style: TextStyle(color: Color(0xFF5A81BB))),
           ),
         ],
       ),
@@ -212,14 +212,32 @@ class _OTPScreenState extends State<OTPScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF0F6FF),
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color.fromARGB(255, 234, 244, 255),
+                Color.fromARGB(255, 193, 222, 255)
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
+          icon: const Icon(Icons.arrow_back_ios_rounded,
+              color: Color(0xFF5A81BB)),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text(widget.isMergeMode ? 'เชื่อมบัญชี' : 'ลงทะเบียน'),
+        title: Text(
+          widget.isMergeMode ? 'เชื่อมบัญชี' : 'ลงทะเบียน',
+          style: const TextStyle(
+              color: Color(0xFF2B4C7E), fontWeight: FontWeight.w700),
+        ),
       ),
       body: SafeArea(
         child: LayoutBuilder(builder: (context, constraints) {
@@ -251,7 +269,7 @@ class _OTPScreenState extends State<OTPScreen> {
                     SizedBox(height: maxHeight * 0.04),
                     OtpTextField(
                       numberOfFields: 6,
-                      borderColor: const Color(0xFF512DA8),
+                      borderColor: const Color(0xFF5A81BB),
                       borderRadius: BorderRadius.circular(12),
                       fieldHeight: maxHeight * 0.08,
                       fieldWidth: maxWidth * 0.12,
@@ -290,7 +308,7 @@ class _OTPScreenState extends State<OTPScreen> {
                         onPressed: _isLoading ? null : _confirmOTP,
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 20),
-                          backgroundColor: const Color(0xFF1F497D),
+                          backgroundColor: const Color(0xFF5A81BB),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(24),
                           ),

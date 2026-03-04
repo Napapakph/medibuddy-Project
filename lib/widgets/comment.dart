@@ -101,7 +101,7 @@ class _CommentPopupState extends State<CommentPopup> {
     return Container(
       padding: EdgeInsets.only(bottom: bottomInset),
       decoration: const BoxDecoration(
-        color: Color.fromARGB(255, 240, 240, 255),
+        color: const Color(0xFFF0F6FF),
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: SafeArea(
@@ -132,7 +132,7 @@ class _CommentPopupState extends State<CommentPopup> {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
-                        color: Color(0xFF1F497D),
+                        color: Color(0xFF2B4C7E),
                       ),
                     ),
                   ),
@@ -191,7 +191,7 @@ class _CommentPopupState extends State<CommentPopup> {
                 child: ElevatedButton(
                   onPressed: _canSubmit ? _handleSubmit : null,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1F497D),
+                    backgroundColor: const Color(0xFF5A81BB),
                     disabledBackgroundColor: const Color(0xFFB7DAFF),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 14),
@@ -233,7 +233,7 @@ class CommentViewer extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        color: Color.fromARGB(255, 240, 240, 255),
+        color: const Color(0xFFF0F6FF),
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       child: SafeArea(
@@ -264,7 +264,7 @@ class CommentViewer extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
-                        color: Color(0xFF1F497D),
+                        color: Color(0xFF2B4C7E),
                       ),
                     ),
                   ),
@@ -311,7 +311,7 @@ class CommentViewer extends StatelessWidget {
                       note,
                       style: const TextStyle(
                         fontSize: 14,
-                        color: Color(0xFF1F497D),
+                        color: Color(0xFF2B4C7E),
                         height: 1.5,
                       ),
                     ),
@@ -373,9 +373,9 @@ class _CommentInlineState extends State<CommentInline> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color.fromARGB(255, 240, 240, 255),
+        color: const Color(0xFFF0F6FF),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color.fromARGB(255, 132, 145, 204)),
+        border: Border.all(color: const Color(0xFFB7DAFF)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -389,7 +389,7 @@ class _CommentInlineState extends State<CommentInline> {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
-                    color: Color(0xFF1F497D),
+                    color: Color(0xFF2B4C7E),
                   ),
                 ),
               ),
@@ -453,7 +453,7 @@ class _CommentInlineState extends State<CommentInline> {
             child: ElevatedButton(
               onPressed: _handleSubmit,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF1F497D),
+                backgroundColor: const Color(0xFF5A81BB),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(

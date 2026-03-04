@@ -138,21 +138,34 @@ class _ForgetPassword extends State<ForgetPassword> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1F497D),
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color.fromARGB(255, 234, 244, 255),
+                Color.fromARGB(255, 193, 222, 255)
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
         title: const Text(
           'ลืมรหัสผ่าน',
-          style: TextStyle(color: Colors.white),
+          style:
+              TextStyle(color: Color(0xFF2B4C7E), fontWeight: FontWeight.w700),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          color: Colors.white,
+          icon: const Icon(Icons.arrow_back_ios_rounded),
+          color: const Color(0xFF5A81BB),
           onPressed: () {
             Navigator.pop(context);
           },
         ),
       ),
       resizeToAvoidBottomInset: false,
-      backgroundColor: const Color.fromARGB(255, 229, 242, 255),
+      backgroundColor: const Color(0xFFF0F6FF),
       body: SafeArea(child: LayoutBuilder(
         builder: (context, constraints) {
           final maxWidth = constraints.maxWidth;
