@@ -184,7 +184,7 @@ class _OcrResultPageState extends State<OcrResultPage> {
             Text(
               '> ค้นหายา',
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 16,
                 color: Color(0xFF5A81BB),
               ),
             ),

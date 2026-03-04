@@ -68,6 +68,16 @@ class BottomBar extends StatelessWidget {
                                     ? Colors.white
                                     : const Color.fromARGB(118, 255, 255, 255),
                                 size: 45,
+                                shadows: [
+                                  BoxShadow(
+                                    color:
+                                        const Color.fromARGB(255, 102, 143, 194)
+                                            .withOpacity(0.4),
+                                    blurRadius: 10,
+                                    spreadRadius: 2,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
@@ -110,6 +120,16 @@ class BottomBar extends StatelessWidget {
                                     ? Colors.white
                                     : const Color.fromARGB(118, 255, 255, 255),
                                 size: 45,
+                                shadows: [
+                                  BoxShadow(
+                                    color:
+                                        const Color.fromARGB(255, 102, 143, 194)
+                                            .withOpacity(0.4),
+                                    blurRadius: 10,
+                                    spreadRadius: 2,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
                               ),
                             ),
                           ],

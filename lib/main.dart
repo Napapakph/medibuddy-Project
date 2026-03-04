@@ -610,7 +610,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     super.dispose();
   }
 
-
   @override
   Widget build(BuildContext context) {
     // TODO: implement build

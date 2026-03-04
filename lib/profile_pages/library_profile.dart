@@ -834,7 +834,7 @@ class _LibraryProfileState extends State<LibraryProfile> {
     final maxHeight = size.height;
     final avatarSize = maxWidth * 0.35;
 
-    (
+    showDialog(
       context: context,
       builder: (dialogContext) {
         String? errorMessage; // เพิ่มตัวแปรเก็บ error message
@@ -887,7 +887,7 @@ class _LibraryProfileState extends State<LibraryProfile> {
                         controller: nameCtrl,
                         decoration: InputDecoration(
                           labelText: 'ชื่อโปรไฟล์',
-                          fillColor: const Color.fromARGB(255, 237, 237, 237),
+                          fillColor: const Color.fromARGB(255, 255, 255, 255),
                           filled: true,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(20),

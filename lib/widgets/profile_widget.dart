@@ -33,13 +33,13 @@ class ProfileWidget extends StatelessWidget {
 
     return CircleAvatar(
       radius: radius,
-      backgroundColor: const Color(0xFFE9EEF3),
+      backgroundColor: const Color.fromARGB(255, 255, 255, 255),
       backgroundImage: image,
       child: image == null
           ? Icon(
               Icons.person,
               size: radius * 0.7,
-              color: Colors.white,
+              color: const Color.fromARGB(255, 188, 201, 219),
             )
           : null,
     );

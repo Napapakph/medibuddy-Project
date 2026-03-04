@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui' as ui;
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart'; // สำหรับ debugPrint
 import 'package:flutter/material.dart';
@@ -191,6 +192,143 @@ class _CameraOcrPageState extends State<CameraOcrPage> {
     );
   }
 
+  // ---------- validation ----------
+  void _showValidationDialog(String message) {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.0),
+          ),
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          child: Container(
+            padding: const EdgeInsets.all(24.0),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color.fromARGB(255, 234, 244, 255), Colors.white],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(20.0),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF5A81BB).withOpacity(0.15),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.info_outline_rounded,
+                  color: Color(0xFF5A81BB),
+                  size: 48,
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'แจ้งเตือน',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF2B4C7E),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Color(0xFF5A81BB),
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF5A81BB),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(24.0),
+                      ),
+                    ),
+                    child: const Text(
+                      'ตกลง',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<bool> _validateOcrImage(File file) async {
+    try {
+      final bytes = await file.readAsBytes();
+      final sizeInBytes = bytes.length;
+      final sizeInMB = sizeInBytes / (1024 * 1024);
+      final extension = file.path.split('.').last.toLowerCase();
+
+      final ui.Image image = await decodeImageFromList(bytes);
+      final width = image.width;
+      final height = image.height;
+      image.dispose();
+
+      debugPrint('----------------------------------------');
+      debugPrint('DEBUG OCR IMAGE INFO:');
+      debugPrint('Resolution: $width x $height');
+      debugPrint('File Size: $sizeInBytes bytes');
+      debugPrint('File Size (MB): ${sizeInMB.toStringAsFixed(2)} MB');
+      debugPrint('Extension: $extension');
+      debugPrint('----------------------------------------');
+
+      if (extension != 'jpg' && extension != 'jpeg' && extension != 'png') {
+        _showValidationDialog(
+            'ระบบรองรับเฉพาะไฟล์รูปภาพ JPG, JPEG, และ PNG เท่านั้น');
+        return false;
+      }
+
+      if (sizeInMB > 3.0) {
+        _showValidationDialog('ขนาดไฟล์เกิน 3 MB');
+        return false;
+      }
+
+      final minDim = width < height ? width : height;
+      final maxDim = width > height ? width : height;
+      if (minDim < 720 || maxDim < 1280) {
+        _showValidationDialog(
+            'ความละเอียดภาพไม่เพียงพอ ต้องการความละเอียดตั้งแต่ 1280x720 ขึ้นไป');
+        return false;
+      }
+
+      return true;
+    } catch (e) {
+      debugPrint('Image validation error: $e');
+      _showValidationDialog('เกิดข้อผิดพลาดในการตรวจสอบไฟล์รูปภาพ');
+      return false;
+    }
+  }
+
   // ---------- actions ----------
   Future<void> _pickFromGallery() async {
     if (_isProcessing) {
@@ -290,6 +428,13 @@ class _CameraOcrPageState extends State<CameraOcrPage> {
     if (_isProcessing) {
       _log('✅📸 processImage ABORTED (source=$source): isProcessing=true');
       _snack('ถูกกันไว้เพราะกำลังประมวลผลอยู่');
+      return;
+    }
+
+    // 1) Validate Image Before processing
+    final isValid = await _validateOcrImage(imageFile);
+    if (!isValid) {
+      _log('processImage cancelled due to validation failure (source=$source)');
       return;
     }
 
