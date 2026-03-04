@@ -600,9 +600,9 @@ class _MedicationPlanScreenState extends State<MedicationPlanScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFFF2F4F8),
+        color: const Color.fromARGB(255, 241, 246, 255),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFD6E3F3)),
+        border: Border.all(color: const Color.fromARGB(255, 192, 220, 255)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

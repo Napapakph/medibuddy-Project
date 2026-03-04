@@ -67,14 +67,29 @@ class _RequestMedicinePageState extends State<RequestMedicinePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1F497D),
-        iconTheme: const IconThemeData(color: Colors.white),
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color.fromARGB(255, 234, 244, 255),
+                Color.fromARGB(255, 193, 222, 255)
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
+        iconTheme: const IconThemeData(color: Color(0xFF5A81BB)),
         title: const Text(
           'ส่งคำร้องขอเพิ่มยา',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(
+              color: Color(0xFF2B4C7E),
+              fontWeight: FontWeight.w700,
+              fontSize: 18),
         ),
       ),
-      backgroundColor: const Color.fromARGB(255, 227, 242, 255),
+      backgroundColor: const Color(0xFFF0F6FF),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
@@ -86,7 +101,7 @@ class _RequestMedicinePageState extends State<RequestMedicinePage> {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF1F497D),
+                  color: Color(0xFF2B4C7E),
                 ),
               ),
               const SizedBox(height: 8),
@@ -105,7 +120,7 @@ class _RequestMedicinePageState extends State<RequestMedicinePage> {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF1F497D),
+                  color: Color(0xFF2B4C7E),
                 ),
               ),
               const SizedBox(height: 8),
@@ -163,7 +178,7 @@ class _RequestMedicinePageState extends State<RequestMedicinePage> {
                 child: ElevatedButton(
                   onPressed: _saving ? null : _submitRequest,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1F497D),
+                    backgroundColor: const Color(0xFF5A81BB),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
@@ -210,7 +225,7 @@ class _ImageCircleButton extends StatelessWidget {
         width: 40,
         height: 40,
         decoration: const BoxDecoration(
-          color: Color(0xFF1F497D),
+          color: Color(0xFF5A81BB),
           shape: BoxShape.circle,
         ),
         child: Icon(icon, color: Colors.white, size: 20),

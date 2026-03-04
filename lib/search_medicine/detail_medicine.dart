@@ -84,7 +84,7 @@ class _MedicineDetailLoaderState extends State<_MedicineDetailLoader> {
               const Text(
                 'กำลังโหลด…',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: Color.fromARGB(255, 93, 139, 197),
                   fontSize: 16,
                   decoration: TextDecoration.none,
                 ),
@@ -178,8 +178,8 @@ class DetailMedicineSheet extends StatelessWidget {
       backgroundColor: Colors.transparent,
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFFEAF0F7),
-          borderRadius: BorderRadius.circular(18),
+          color: const Color(0xFFF0F6FF),
+          borderRadius: BorderRadius.circular(24),
         ),
         child: Stack(
           children: [
@@ -199,7 +199,8 @@ class DetailMedicineSheet extends StatelessWidget {
                       'รายละเอียดยา',
                       style: TextStyle(
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFF1F497D),
+                        fontSize: 16,
+                        color: Color(0xFF2B4C7E),
                       ),
                     ),
                   ),
@@ -278,9 +279,17 @@ class DetailMedicineSheet extends StatelessWidget {
                 child: Container(
                   width: 36,
                   height: 36,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF1F497D),
+                  decoration: BoxDecoration(
+                    color: const Color.fromARGB(255, 90, 129, 187),
                     shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color.fromARGB(255, 81, 133, 196)
+                            .withOpacity(0.3),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: const Icon(Icons.close, color: Colors.white, size: 20),
                 ),
@@ -320,15 +329,15 @@ class _SectionCard extends StatelessWidget {
               title,
               style: const TextStyle(
                 fontWeight: FontWeight.w700,
-                color: Color(0xFF1F497D),
+                color: Color(0xFF2B4C7E),
               ),
             ),
             const SizedBox(height: 8),
             Text(
               body,
               style: const TextStyle(
-                color: Colors.black87,
-                height: 1.25,
+                color: Color(0xFF4A6A8A),
+                height: 1.3,
               ),
             ),
           ],

@@ -129,28 +129,53 @@ class _MedicineSearchPageState extends State<MedicineSearchPage> {
             controller: _searchController,
             onSubmitted: (_) => _onSearch(),
             decoration: InputDecoration(
-              hintText: 'ชื่อสามัญทางภาษาไทย/อังกฤษ หรือชื่อการค้า',
+              labelText: 'ชื่อสามัญทางภาษาไทย/อังกฤษ หรือชื่อการค้า',
+              hintStyle:
+                  const TextStyle(color: Color(0xFF8A9BB5), fontSize: 14),
               filled: true,
-              fillColor: const Color(0xFFF2F4F8),
+              fillColor: const Color.fromARGB(255, 249, 252, 255),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(22),
+                borderRadius: BorderRadius.circular(24),
                 borderSide: BorderSide.none,
               ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(24),
+                borderSide: const BorderSide(color: Color(0xFFE4EAF0)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(24),
+                borderSide: const BorderSide(color: Color(0xFF7BAEE5)),
+              ),
               contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
             ),
           ),
         ),
         const SizedBox(width: 10),
         InkWell(
           onTap: _onSearch,
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(24),
           child: Container(
-            width: 44,
-            height: 44,
+            width: 48,
+            height: 48,
             decoration: BoxDecoration(
-              color: const Color(0xFF1F497D),
-              borderRadius: BorderRadius.circular(22),
+              gradient: const LinearGradient(
+                colors: [
+                  Color.fromARGB(255, 143, 190, 236),
+                  Color.fromARGB(255, 90, 129, 187),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color:
+                      const Color.fromARGB(255, 81, 133, 196).withOpacity(0.3),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: const Icon(Icons.search, color: Colors.white),
           ),
@@ -171,10 +196,17 @@ class _MedicineSearchPageState extends State<MedicineSearchPage> {
       borderRadius: BorderRadius.circular(16),
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: const Color(0xFFF2F4F8),
-          borderRadius: BorderRadius.circular(16),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF7BAEE5).withOpacity(0.08),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -184,19 +216,20 @@ class _MedicineSearchPageState extends State<MedicineSearchPage> {
               width: 64,
               height: 64,
               decoration: BoxDecoration(
-                color: const Color(0xFFE1E8F5),
-                borderRadius: BorderRadius.circular(12),
+                color: const Color(0xFFF2F5F9),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFE4EAF0)),
               ),
               child: imageUrl.isEmpty
-                  ? const Icon(Icons.medication, color: Color(0xFF1F497D))
+                  ? const Icon(Icons.medication, color: Color(0xFF7BAEE5))
                   : ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(16),
                       child: Image.network(
                         imageUrl,
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) {
                           return const Icon(Icons.medication,
-                              color: Color(0xFF1F497D));
+                              color: Color(0xFF7BAEE5));
                         },
                       ),
                     ),
@@ -211,16 +244,17 @@ class _MedicineSearchPageState extends State<MedicineSearchPage> {
                   const Text(
                     'ชื่อการค้า :',
                     style: TextStyle(
-                      color: Colors.redAccent,
+                      color: Color.fromARGB(255, 198, 110, 110),
                       fontWeight: FontWeight.w700,
+                      fontSize: 13,
                     ),
                   ),
                   Text(
                     '$trade\n$en',
                     style: const TextStyle(
                       fontSize: 13.5,
-                      height: 1.2,
-                      color: Colors.black,
+                      height: 1.3,
+                      color: Color(0xFF2B4C7E),
                     ),
                   ),
                   const SizedBox(height: 6),
@@ -228,7 +262,7 @@ class _MedicineSearchPageState extends State<MedicineSearchPage> {
                     th,
                     style: const TextStyle(
                       fontSize: 12,
-                      color: Color(0xFF7A869A),
+                      color: Color(0xFF8A9BB5),
                     ),
                   ),
                 ],
@@ -243,10 +277,25 @@ class _MedicineSearchPageState extends State<MedicineSearchPage> {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF5D83C8),
+                  gradient: const LinearGradient(
+                    colors: [
+                      Color.fromARGB(255, 143, 190, 236),
+                      Color.fromARGB(255, 90, 129, 187),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                   borderRadius: BorderRadius.circular(22),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color.fromARGB(255, 81, 133, 196)
+                          .withOpacity(0.25),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
-                child: const Icon(Icons.pets, color: Colors.white),
+                child: const Icon(Icons.pets, color: Colors.white, size: 22),
               ),
             ),
           ],
@@ -293,10 +342,23 @@ class _MedicineSearchPageState extends State<MedicineSearchPage> {
     return Scaffold(
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1F497D),
-        iconTheme: const IconThemeData(color: Colors.white),
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color.fromARGB(255, 234, 244, 255),
+                Color.fromARGB(255, 193, 222, 255),
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
+        iconTheme: const IconThemeData(color: Color(0xFF5A81BB)),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_ios_rounded,
+              color: Color(0xFF5A81BB)),
           onPressed: () {
             Navigator.pushReplacementNamed(
               context,
@@ -309,12 +371,18 @@ class _MedicineSearchPageState extends State<MedicineSearchPage> {
             );
           },
         ),
+        centerTitle: true,
         title: const Text(
           'ค้นหาข้อมูลยา',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(
+            color: Color(0xFF2B4C7E),
+            fontWeight: FontWeight.w700,
+            fontSize: 20,
+            letterSpacing: 0.3,
+          ),
         ),
       ),
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF0F6FF),
       body: SafeArea(
         child: Stack(
           children: [
@@ -334,7 +402,8 @@ class _MedicineSearchPageState extends State<MedicineSearchPage> {
                   alignment: Alignment.center,
                   children: [
                     const ModalBarrier(
-                        dismissible: false, color: Colors.black26),
+                        dismissible: false,
+                        color: Color.fromARGB(84, 196, 219, 240)),
                     Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -344,9 +413,11 @@ class _MedicineSearchPageState extends State<MedicineSearchPage> {
                           height: 180,
                           repeat: true,
                         ),
-                        const SizedBox(height: 8),
                         const Text('กำลังโหลด…',
-                            style: TextStyle(color: Colors.white)),
+                            style: TextStyle(
+                              color: Color.fromARGB(255, 93, 139, 197),
+                              fontSize: 16,
+                            )),
                       ],
                     ),
                   ],
@@ -410,8 +481,8 @@ class _MedicineDetailsDialog extends StatelessWidget {
       backgroundColor: Colors.transparent,
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFFEAF0F7),
-          borderRadius: BorderRadius.circular(18),
+          color: const Color(0xFFF0F6FF),
+          borderRadius: BorderRadius.circular(24),
         ),
         child: Stack(
           children: [
@@ -431,7 +502,8 @@ class _MedicineDetailsDialog extends StatelessWidget {
                       'รายละเอียดยา',
                       style: TextStyle(
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFF1F497D),
+                        fontSize: 16,
+                        color: Color(0xFF2B4C7E),
                       ),
                     ),
                   ),
@@ -505,9 +577,17 @@ class _MedicineDetailsDialog extends StatelessWidget {
                 child: Container(
                   width: 36,
                   height: 36,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF1F497D),
+                  decoration: BoxDecoration(
+                    color: const Color.fromARGB(255, 90, 129, 187),
                     shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color.fromARGB(255, 81, 133, 196)
+                            .withOpacity(0.3),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
                   child: const Icon(Icons.close, color: Colors.white, size: 20),
                 ),
@@ -547,15 +627,15 @@ class _SectionCard extends StatelessWidget {
               title,
               style: const TextStyle(
                 fontWeight: FontWeight.w700,
-                color: Color(0xFF1F497D),
+                color: Color(0xFF2B4C7E),
               ),
             ),
             const SizedBox(height: 8),
             Text(
               body,
               style: const TextStyle(
-                color: Colors.black87,
-                height: 1.25,
+                color: Color(0xFF4A6A8A),
+                height: 1.3,
               ),
             ),
           ],

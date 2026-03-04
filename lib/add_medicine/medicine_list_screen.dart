@@ -292,7 +292,7 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
         const double buttonSize = 70.0;
         const double buttonFontSize = 26.0;
         const Color numButtonColor = Colors.white;
-        const Color numTextColor = Color(0xFF1F497D);
+        const Color numTextColor = Color(0xFF5A81BB);
         const Color delButtonColor = Color(0xFFFFEBEE);
         const Color delIconColor = Colors.red;
 
@@ -316,9 +316,9 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
             }
 
             return AlertDialog(
-              backgroundColor: const Color(0xFFF5F5F5),
+              backgroundColor: const Color(0xFFF0F6FF),
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(20)),
+                  borderRadius: BorderRadius.circular(24)),
               title: const Text('ยืนยันลบรายการยา'),
               content: SizedBox(
                 width: double.maxFinite,
@@ -373,7 +373,7 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
                           fontWeight: FontWeight.bold,
                           color: enteredCode == randomCode
                               ? Colors.green
-                              : const Color(0xFF1F497D),
+                              : const Color(0xFF5A81BB),
                         ),
                       ),
                     ),

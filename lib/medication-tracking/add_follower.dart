@@ -6,10 +6,10 @@ import 'package:medibuddy/services/auth_manager.dart'; // import 'package:medibu
 import 'package:medibuddy/services/follow_api.dart';
 import 'package:medibuddy/services/profile_api.dart';
 
-const Color _primaryBlue = Color(0xFF1F497D);
-const Color _softSurface = Color(0xFFF1F4F7);
-const Color _softPill = Color(0xFFDCE2E8);
-const Color _accentBlue = Color(0xFF8FB6E5);
+const Color _primaryBlue = Color(0xFF2B4C7E);
+const Color _softSurface = Color(0xFFF0F6FF);
+const Color _softPill = Color(0xFFE8F1FB);
+const Color _accentBlue = Color(0xFF7BAEE5);
 
 String _resolveImageUrl(String? raw) {
   final value = (raw ?? '').trim();
@@ -297,12 +297,31 @@ class _AddFollowerScreenState extends State<AddFollowerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: const Color(0xFFF0F6FF),
       appBar: AppBar(
-        title: const Text('เพิ่มผู้ติดตาม'),
-        backgroundColor: _primaryBlue,
-        foregroundColor: Colors.white,
         elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color.fromARGB(255, 234, 244, 255),
+                Color.fromARGB(255, 193, 222, 255),
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
+        iconTheme: const IconThemeData(color: Color(0xFF5A81BB)),
+        title: const Text(
+          'เพิ่มผู้ติดตาม',
+          style: TextStyle(
+            color: Color(0xFF2B4C7E),
+            fontWeight: FontWeight.w700,
+            fontSize: 18,
+          ),
+        ),
+        foregroundColor: const Color(0xFF5A81BB),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -647,12 +666,31 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
     final avatarUrl = _readAvatarUrl(widget.user);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: const Color(0xFFF0F6FF),
       appBar: AppBar(
-        title: Text(widget.isEdit ? 'แก้ไขผู้ติดตาม' : 'เพิ่มผู้ติดตาม'),
-        backgroundColor: _primaryBlue,
-        foregroundColor: Colors.white,
         elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color.fromARGB(255, 234, 244, 255),
+                Color.fromARGB(255, 193, 222, 255),
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
+        iconTheme: const IconThemeData(color: Color(0xFF5A81BB)),
+        title: Text(
+          widget.isEdit ? 'แก้ไขผู้ติดตาม' : 'เพิ่มผู้ติดตาม',
+          style: const TextStyle(
+            color: Color(0xFF2B4C7E),
+            fontWeight: FontWeight.w700,
+            fontSize: 18,
+          ),
+        ),
+        foregroundColor: const Color(0xFF5A81BB),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(16, 5, 16, 5),
@@ -805,7 +843,7 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
           child: ElevatedButton(
             onPressed: _confirmInvite,
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF1F497D),
+              backgroundColor: const Color(0xFF5A81BB),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(22),
               ),
@@ -839,14 +877,17 @@ class _SpeechBubble extends StatelessWidget {
           width: 200,
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border.all(color: Colors.black54),
+            color: const Color(0xFFE8F1FB),
+            border: Border.all(color: const Color(0xFFB7DAFF)),
             borderRadius: BorderRadius.circular(16),
           ),
           child: Text(
             text,
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 12),
+            style: const TextStyle(
+              fontSize: 12,
+              color: Color(0xFF2B4C7E),
+            ),
           ),
         ),
         CustomPaint(
@@ -862,11 +903,11 @@ class _TrianglePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.black54
+      ..color = const Color(0xFFB7DAFF)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1;
     final fill = Paint()
-      ..color = Colors.white
+      ..color = const Color(0xFFE8F1FB)
       ..style = PaintingStyle.fill;
 
     final path = Path()

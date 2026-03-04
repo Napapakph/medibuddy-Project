@@ -182,7 +182,14 @@ class _FollowerScreenState extends State<FollowerScreen> {
             }
 
             return AlertDialog(
-              title: const Text('แก้ไขผู้ติดตาม'),
+              backgroundColor: const Color(0xFFF0F6FF),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              title: const Text(
+                'แก้ไขผู้ติดตาม',
+                style: TextStyle(color: Color(0xFF2B4C7E)),
+              ),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -324,16 +331,20 @@ class _FollowerScreenState extends State<FollowerScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: const [
-          Icon(Icons.people_outline, size: 64, color: Colors.grey),
+          Icon(Icons.people_outline, size: 64, color: Color(0xFF8A9BB5)),
           SizedBox(height: 12),
           Text(
             'ยังไม่มีผู้ติดตาม',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF2B4C7E),
+            ),
           ),
           SizedBox(height: 6),
           Text(
             'กดปุ่ม "เพิ่มผู้ติดตาม" เพื่อส่งคำเชิญ',
-            style: TextStyle(color: Colors.grey),
+            style: TextStyle(color: Color(0xFF8A9BB5)),
           ),
         ],
       ),
@@ -391,19 +402,35 @@ class _FollowerScreenState extends State<FollowerScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('ยืนยันการลบ'),
-        content: Text('ลบ $followerName ออกจากผู้ติดตาม?'),
+        backgroundColor: const Color(0xFFF0F6FF),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+        ),
+        title: const Text(
+          'ยืนยันการลบ',
+          style: TextStyle(color: Color(0xFF2B4C7E)),
+        ),
+        content: Text(
+          'ลบ $followerName ออกจากผู้ติดตาม?',
+          style: const TextStyle(color: Color(0xFF5A81BB)),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('ยกเลิก'),
+            child: const Text(
+              'ยกเลิก',
+              style: TextStyle(color: Color(0xFF5A81BB)),
+            ),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
               _deleteFollower(followerId);
             },
-            child: const Text('ลบ', style: TextStyle(color: Colors.red)),
+            child: const Text(
+              'ลบ',
+              style: TextStyle(color: Color(0xFFC66E6E)),
+            ),
           ),
         ],
       ),
@@ -449,18 +476,35 @@ class _FollowerScreenState extends State<FollowerScreen> {
         _goHome();
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFFF5F5F5),
+        backgroundColor: const Color(0xFFF0F6FF),
         appBar: AppBar(
+          elevation: 0,
+          flexibleSpace: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Color.fromARGB(255, 234, 244, 255),
+                  Color.fromARGB(255, 193, 222, 255),
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+            ),
+          ),
+          iconTheme: const IconThemeData(color: Color(0xFF5A81BB)),
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            icon: const Icon(Icons.arrow_back_ios_rounded,
+                color: Color(0xFF5A81BB)),
             onPressed: _goHome,
           ),
           title: const Text(
             'ผู้ติดตาม',
-            style: TextStyle(color: Colors.white),
+            style: TextStyle(
+              color: Color(0xFF2B4C7E),
+              fontWeight: FontWeight.w700,
+              fontSize: 18,
+            ),
           ),
-          backgroundColor: const Color(0xFF1F497D),
-          elevation: 0,
         ),
         body: content,
         bottomNavigationBar: Column(
@@ -469,29 +513,45 @@ class _FollowerScreenState extends State<FollowerScreen> {
             SafeArea(
               minimum: const EdgeInsets.fromLTRB(16, 8, 16, 40),
               child: SizedBox(
-                height: 46,
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (_) => const AddFollowerScreen()),
-                    );
-                  },
-                  icon: const Icon(Icons.person_add),
-                  label: const Text(
-                    'เพิ่มผู้ติดตาม',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
+                height: 48,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF3B6FB5), Color(0xFF5A81BB)],
                     ),
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x337BAEE5),
+                        blurRadius: 12,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
                   ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1F497D),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24),
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const AddFollowerScreen()),
+                      );
+                    },
+                    icon: const Icon(Icons.person_add),
+                    label: const Text(
+                      'เพิ่มผู้ติดตาม',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      foregroundColor: Colors.white,
+                      shadowColor: Colors.transparent,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(24),
+                      ),
                     ),
                   ),
                 ),

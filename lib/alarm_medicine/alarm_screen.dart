@@ -315,7 +315,7 @@ class _AlarmScreenState extends State<AlarmScreen> {
           padding: EdgeInsets.only(top: 8),
           child: Text(
             'แตะ Take เพื่อดูรายละเอียด',
-            style: TextStyle(fontSize: 14, color: Colors.black54),
+            style: TextStyle(fontSize: 14, color: Color(0xFF8A9BB5)),
             textAlign: TextAlign.center,
           ),
         ),
@@ -360,12 +360,13 @@ class _AlarmScreenState extends State<AlarmScreen> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.person, size: 16, color: Color(0xFF1F497D)),
+                const Icon(Icons.person, size: 16, color: Color(0xFF2B4C7E)),
                 const SizedBox(width: 4),
                 Flexible(
                   child: Text(
                     entry.value,
-                    style: const TextStyle(fontSize: 13, color: Colors.black54),
+                    style:
+                        const TextStyle(fontSize: 13, color: Color(0xFF5A81BB)),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -392,12 +393,14 @@ class _AlarmScreenState extends State<AlarmScreen> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.medication, size: 14, color: Colors.black54),
+                const Icon(Icons.medication,
+                    size: 14, color: Color(0xFF5A81BB)),
                 const SizedBox(width: 4),
                 Flexible(
                   child: Text(
                     med,
-                    style: const TextStyle(fontSize: 13, color: Colors.black54),
+                    style:
+                        const TextStyle(fontSize: 13, color: Color(0xFF5A81BB)),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -426,6 +429,7 @@ class _AlarmScreenState extends State<AlarmScreen> {
           fontSize: 56,
           fontWeight: FontWeight.bold,
           letterSpacing: 1,
+          color: Color(0xFF2B4C7E),
         ),
       ),
       if (title.isNotEmpty) ...[
@@ -435,6 +439,7 @@ class _AlarmScreenState extends State<AlarmScreen> {
           style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w800,
+            color: Color(0xFF2B4C7E),
           ),
           textAlign: TextAlign.center,
         ),
@@ -446,7 +451,7 @@ class _AlarmScreenState extends State<AlarmScreen> {
         const SizedBox(height: 4),
         Text(
           body,
-          style: const TextStyle(fontSize: 14, color: Colors.black54),
+          style: const TextStyle(fontSize: 14, color: Color(0xFF8A9BB5)),
           textAlign: TextAlign.center,
         ),
       ],
@@ -585,7 +590,7 @@ class _AlarmScreenState extends State<AlarmScreen> {
     final body = _bodyText();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F2EA),
+      backgroundColor: const Color.fromARGB(255, 228, 241, 255),
       body: SafeArea(
         child: Stack(
           children: [
@@ -593,7 +598,11 @@ class _AlarmScreenState extends State<AlarmScreen> {
               children: [
                 const Text(
                   'MediBuddy',
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF2B4C7E),
+                  ),
                 ),
 
                 // ✅ ส่วนหัว/รายละเอียด scroll ได้ตามเดิม
@@ -622,9 +631,11 @@ class _AlarmScreenState extends State<AlarmScreen> {
             ),
             if (_submitting)
               Container(
-                color: Colors.black.withOpacity(0.5),
+                color: const Color.fromARGB(84, 196, 219, 240),
                 child: const Center(
-                  child: CircularProgressIndicator(),
+                  child: CircularProgressIndicator(
+                    color: Color(0xFF5A81BB),
+                  ),
                 ),
               ),
           ],
@@ -813,7 +824,7 @@ class _PillSlideActionState extends State<PillSlideAction>
                     left: inset,
                     child: _TargetIcon(
                       icon: Icons.close,
-                      color: Colors.red,
+                      color: const Color(0xFFD98A8A),
                       active: isSkip,
                       size: iconSize,
                       label: 'Skip',
@@ -823,7 +834,7 @@ class _PillSlideActionState extends State<PillSlideAction>
                     top: inset,
                     child: _TargetIcon(
                       icon: Icons.snooze,
-                      color: Colors.black87,
+                      color: const Color(0xFF8A9BB5),
                       active: isSnooze,
                       size: iconSize,
                       label: 'Snooze',
@@ -833,7 +844,7 @@ class _PillSlideActionState extends State<PillSlideAction>
                     right: inset,
                     child: _TargetIcon(
                       icon: Icons.check,
-                      color: Colors.green,
+                      color: const Color(0xFF6EB89C),
                       active: isTake,
                       size: iconSize,
                       label: 'Take',
@@ -922,11 +933,11 @@ class _PillThumb extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(height / 2),
-        border: Border.all(color: Colors.black12, width: 1.5),
+        border: Border.all(color: const Color(0xFFB7DAFF), width: 1.5),
         boxShadow: const [
           BoxShadow(
-            color: Colors.black26,
-            blurRadius: 6,
+            color: Color(0x1A7BAEE5),
+            blurRadius: 8,
             offset: Offset(0, 2),
           ),
         ],

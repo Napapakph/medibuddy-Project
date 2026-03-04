@@ -132,7 +132,7 @@ class _TutorialDialogState extends State<TutorialDialog> {
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(1),
                         border: Border.all(
-                          color: const Color(0xFF1F497D),
+                          color: const Color(0xFFB7DAFF),
                           width: 1,
                         ),
                         boxShadow: [
@@ -191,7 +191,7 @@ class _TutorialDialogState extends State<TutorialDialog> {
                   ElevatedButton(
                     onPressed: _onUnderstand,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF1F497D),
+                      backgroundColor: const Color(0xFF5A81BB),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20),
                       ),

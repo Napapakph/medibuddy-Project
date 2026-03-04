@@ -346,8 +346,9 @@ class _FollowingScreenState extends State<FollowingScreen>
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
+      backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (ctx) {
         return StatefulBuilder(
@@ -365,6 +366,7 @@ class _FollowingScreenState extends State<FollowingScreen>
                       style: const TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 18,
+                        color: Color.fromARGB(255, 64, 103, 154),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -375,7 +377,7 @@ class _FollowingScreenState extends State<FollowingScreen>
                         vertical: 12,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color.fromARGB(255, 219, 231, 252),
+                        color: const Color.fromARGB(255, 220, 235, 255),
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: SingleChildScrollView(
@@ -405,7 +407,7 @@ class _FollowingScreenState extends State<FollowingScreen>
                                   decoration: BoxDecoration(
                                     color: isSelected
                                         ? const Color.fromARGB(
-                                            84, 154, 200, 255)
+                                            162, 255, 255, 255)
                                         : const Color.fromARGB(
                                             0, 231, 244, 255),
                                     borderRadius: BorderRadius.circular(12),
@@ -415,10 +417,10 @@ class _FollowingScreenState extends State<FollowingScreen>
                                     children: [
                                       ClipOval(
                                         child: Container(
-                                          width: 46,
-                                          height: 46,
+                                          width: 50,
+                                          height: 50,
                                           color: const Color.fromARGB(
-                                              255, 134, 164, 202),
+                                              255, 255, 255, 255),
                                           child: avatarUrl.isNotEmpty
                                               ? Image.network(
                                                   avatarUrl,
@@ -509,7 +511,7 @@ class _FollowingScreenState extends State<FollowingScreen>
                           }
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF1F497D),
+                          backgroundColor: const Color(0xFF5A81BB),
                           foregroundColor: Colors.white,
                           elevation: 0,
                           shape: RoundedRectangleBorder(
@@ -567,7 +569,14 @@ class _FollowingScreenState extends State<FollowingScreen>
             }
 
             return AlertDialog(
-              title: const Text('แก้ไขคนที่กำลังติดตาม'),
+              backgroundColor: const Color(0xFFF0F6FF),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(24),
+              ),
+              title: const Text(
+                'แก้ไขคนที่กำลังติดตาม',
+                style: TextStyle(color: Color(0xFF2B4C7E)),
+              ),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -723,19 +732,35 @@ class _FollowingScreenState extends State<FollowingScreen>
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('ยืนยันการลบ'),
-        content: Text('เลิกติดตาม $name ?'),
+        backgroundColor: const Color(0xFFF0F6FF),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+        ),
+        title: const Text(
+          'ยืนยันการลบ',
+          style: TextStyle(color: Color(0xFF2B4C7E)),
+        ),
+        content: Text(
+          'เลิกติดตาม $name ?',
+          style: const TextStyle(color: Color(0xFF5A81BB)),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('ยกเลิก'),
+            child: const Text(
+              'ยกเลิก',
+              style: TextStyle(color: Color(0xFF5A81BB)),
+            ),
           ),
           TextButton(
             onPressed: () async {
               Navigator.pop(ctx);
               await _removeFollowing(relationshipId);
             },
-            child: const Text('ลบ', style: TextStyle(color: Colors.red)),
+            child: const Text(
+              'ลบ',
+              style: TextStyle(color: Color(0xFFC66E6E)),
+            ),
           ),
         ],
       ),
@@ -780,28 +805,45 @@ class _FollowingScreenState extends State<FollowingScreen>
         _goHome();
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFFF5F5F5),
+        backgroundColor: const Color(0xFFF0F6FF),
         drawer: const AppDrawer(),
         bottomNavigationBar: const BottomBar(currentRoute: '/following'),
         appBar: AppBar(
+          elevation: 0,
+          flexibleSpace: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Color.fromARGB(255, 234, 244, 255),
+                  Color.fromARGB(255, 193, 222, 255),
+                ],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+            ),
+          ),
+          iconTheme: const IconThemeData(color: Color(0xFF5A81BB)),
+          foregroundColor: const Color(0xFF2B4C7E),
           title: const Text(
             'กำลังติดตาม',
-            style: TextStyle(color: Colors.white),
+            style: TextStyle(
+              color: Color(0xFF2B4C7E),
+              fontWeight: FontWeight.w700,
+              fontSize: 18,
+            ),
           ),
-          backgroundColor: const Color(0xFF1F497D),
-          elevation: 0,
-          foregroundColor: Colors.white, // To make drawer icon white
           bottom: TabBar(
             controller: _tabController,
-            labelColor: Colors.white,
-            unselectedLabelColor: Colors.white70,
-            indicatorColor: Colors.white,
+            labelColor: const Color(0xFF2B4C7E),
+            unselectedLabelColor: const Color(0xFF8A9BB5),
+            indicatorColor: const Color(0xFF5A81BB),
+            indicatorWeight: 3,
             labelStyle: const TextStyle(
-              fontSize: 18,
+              fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
             unselectedLabelStyle: const TextStyle(
-              fontSize: 16,
+              fontSize: 15,
               fontWeight: FontWeight.normal,
             ),
             tabs: const [
@@ -831,7 +873,15 @@ class _FollowingScreenState extends State<FollowingScreen>
                     children: [
                       // ======== TAB 1: กำลังติดตาม ========
                       _following.isEmpty
-                          ? const Center(child: Text('ยังไม่ติดตามใคร'))
+                          ? const Center(
+                              child: Text(
+                                'ยังไม่ติดตามใคร',
+                                style: TextStyle(
+                                  color: Color(0xFF8A9BB5),
+                                  fontSize: 16,
+                                ),
+                              ),
+                            )
                           : ListView.builder(
                               itemCount: _following.length,
                               itemBuilder: (context, index) {
@@ -862,7 +912,15 @@ class _FollowingScreenState extends State<FollowingScreen>
 
                       // ======== TAB 2: คำเชิญ ========
                       _invitations.isEmpty
-                          ? const Center(child: Text('ไม่มีคำเชิญ'))
+                          ? const Center(
+                              child: Text(
+                                'ไม่มีคำเชิญ',
+                                style: TextStyle(
+                                  color: Color(0xFF8A9BB5),
+                                  fontSize: 16,
+                                ),
+                              ),
+                            )
                           : ListView.builder(
                               itemCount: _invitations.length,
                               itemBuilder: (context, index) {
@@ -945,7 +1003,7 @@ class _FollowingScreenState extends State<FollowingScreen>
                                                   _handleInvitation(id, true),
                                               style: ElevatedButton.styleFrom(
                                                 backgroundColor:
-                                                    const Color(0xFF1F497D),
+                                                    const Color(0xFF5A81BB),
                                                 foregroundColor: Colors.white,
                                                 padding:
                                                     const EdgeInsets.symmetric(
@@ -970,7 +1028,7 @@ class _FollowingScreenState extends State<FollowingScreen>
                   children: [
                     const ModalBarrier(
                       dismissible: false,
-                      color: Colors.black26,
+                      color: Color.fromARGB(84, 196, 219, 240),
                     ),
                     Column(
                       mainAxisSize: MainAxisSize.min,
@@ -984,7 +1042,10 @@ class _FollowingScreenState extends State<FollowingScreen>
                         const SizedBox(height: 8),
                         const Text(
                           'กำลังโหลด…',
-                          style: TextStyle(color: Colors.white),
+                          style: TextStyle(
+                            color: Color.fromARGB(255, 93, 139, 197),
+                            fontSize: 16,
+                          ),
                         ),
                       ],
                     ),

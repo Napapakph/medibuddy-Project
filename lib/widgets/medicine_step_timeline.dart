@@ -10,7 +10,7 @@ class MedicineStepTimeline extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const activeColor = Color(0xFF1F497D);
+    const activeColor = const Color(0xFF5A81BB);
     const inactiveColor = Color(0xFFD6DFEA);
     const inactiveIcon = Color(0xFF8FA3BF);
 
@@ -32,7 +32,7 @@ class MedicineStepTimeline extends StatelessWidget {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: isActive ? activeColor : inactiveColor,
+            color: isActive ? const Color(0xFF5A81BB) : inactiveColor,
             shape: BoxShape.circle,
           ),
           child: Icon(
@@ -47,7 +47,9 @@ class MedicineStepTimeline extends StatelessWidget {
           Expanded(
             child: Container(
               height: 3,
-              color: (step < currentStep) ? activeColor : inactiveColor,
+              color: (step < currentStep)
+                  ? const Color(0xFF5A81BB)
+                  : inactiveColor,
             ),
           ),
         );

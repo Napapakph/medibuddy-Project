@@ -277,11 +277,24 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1F497D),
-        iconTheme: const IconThemeData(color: Colors.white),
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color.fromARGB(255, 234, 244, 255),
+                Color.fromARGB(255, 193, 222, 255)
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
+        iconTheme: const IconThemeData(color: Color(0xFF5A81BB)),
         title: const Text(
           'เพิ่มยา',
-          style: TextStyle(color: Colors.white),
+          style:
+              TextStyle(color: Color(0xFF2B4C7E), fontWeight: FontWeight.w700),
         ),
         actions: [
           IconButton(
@@ -302,11 +315,11 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
                 mediId: mediId,
               );
             },
-            icon: const Icon(Icons.info_outline, color: Colors.white),
+            icon: const Icon(Icons.info_outline, color: Color(0xFF5A81BB)),
           ),
         ],
       ),
-      backgroundColor: const Color.fromARGB(255, 227, 242, 255),
+      backgroundColor: const Color(0xFFF0F6FF),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
@@ -444,7 +457,7 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
                 child: ElevatedButton(
                   onPressed: _saving ? null : _saveMedicine,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1F497D),
+                    backgroundColor: const Color(0xFF5A81BB),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),

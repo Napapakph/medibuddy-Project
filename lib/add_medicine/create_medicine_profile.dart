@@ -119,8 +119,20 @@ class _CreateNameMedicinePageState extends State<CreateNameMedicinePage> {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        backgroundColor: const Color(0xFF1F497D),
-        iconTheme: const IconThemeData(color: Colors.white),
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color.fromARGB(255, 234, 244, 255),
+                Color.fromARGB(255, 193, 222, 255)
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
+        iconTheme: const IconThemeData(color: Color(0xFF5A81BB)),
         title: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -128,13 +140,13 @@ class _CreateNameMedicinePageState extends State<CreateNameMedicinePage> {
             Text(
               pageTitle,
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: Color(0xFF2B4C7E),
               ),
             ),
-            SizedBox(height: 4),
+            const SizedBox(height: 4),
             Row(
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
@@ -142,13 +154,13 @@ class _CreateNameMedicinePageState extends State<CreateNameMedicinePage> {
                 Icon(
                   Icons.arrow_right_rounded,
                   size: 20,
-                  color: Colors.white,
+                  color: Color(0xFF5A81BB),
                 ),
                 Text(
                   'กำหนดชื่อและรูปภาพยา',
                   style: TextStyle(
                     fontSize: 16,
-                    color: Colors.white,
+                    color: Color(0xFF5A81BB),
                   ),
                 ),
               ],
@@ -156,7 +168,7 @@ class _CreateNameMedicinePageState extends State<CreateNameMedicinePage> {
           ],
         ),
       ),
-      backgroundColor: const Color.fromARGB(255, 227, 242, 255),
+      backgroundColor: const Color(0xFFF0F6FF),
       body: SafeArea(
         child: LayoutBuilder(
           builder: (context, constraints) {
@@ -178,7 +190,7 @@ class _CreateNameMedicinePageState extends State<CreateNameMedicinePage> {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF1F497D),
+                      color: Color(0xFF2B4C7E),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -200,7 +212,7 @@ class _CreateNameMedicinePageState extends State<CreateNameMedicinePage> {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: Color(0xFF1F497D),
+                      color: Color(0xFF2B4C7E),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -274,7 +286,9 @@ class _CreateNameMedicinePageState extends State<CreateNameMedicinePage> {
                       style: ElevatedButton.styleFrom(
                         shape: const CircleBorder(),
                         padding: const EdgeInsets.all(16),
-                        backgroundColor: const Color(0xFF1F497D),
+                        backgroundColor: const Color(0xFF5A81BB),
+                        elevation: 4,
+                        shadowColor: const Color(0x337BAEE5),
                       ),
                       child: _saving
                           ? const SizedBox(
@@ -319,7 +333,7 @@ class _ImageCircleButton extends StatelessWidget {
         width: 40,
         height: 40,
         decoration: const BoxDecoration(
-          color: Color(0xFF1F497D),
+          color: Color(0xFF5A81BB),
           shape: BoxShape.circle,
         ),
         child: Icon(icon, color: Colors.white, size: 20),

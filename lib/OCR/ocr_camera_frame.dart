@@ -107,7 +107,7 @@ class OcrCameraFrame extends StatelessWidget {
               child: const Center(
                 child: CircularProgressIndicator(
                   valueColor: AlwaysStoppedAnimation<Color>(
-                    Color(0xFF1F497D),
+                    Color(0xFF5A81BB),
                   ),
                 ),
               ),
@@ -161,7 +161,7 @@ class OcrCameraFrame extends StatelessWidget {
       width: 4,
       height: 60,
       decoration: BoxDecoration(
-        color: const Color(0xFF707070),
+        color: const Color(0xFF5A81BB),
         borderRadius: BorderRadius.circular(4),
       ),
     );
@@ -175,8 +175,8 @@ class OcrCameraFrame extends StatelessWidget {
     return InkWell(
       onTap: onTap, // ถ้า null = ปุ่มกดไม่ได้
       borderRadius: BorderRadius.circular(24),
-      splashColor: const Color(0xFF1F497D).withValues(alpha: 0.1),
-      highlightColor: const Color(0xFF1F497D).withValues(alpha: 0.05),
+      splashColor: const Color(0xFF5A81BB).withValues(alpha: 0.1),
+      highlightColor: const Color(0xFF5A81BB).withValues(alpha: 0.05),
       child: child,
     );
   }
@@ -190,7 +190,7 @@ class OcrCameraFrame extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: const Color(0xFFB0BEC8),
+          color: const Color(0xFFB7DAFF),
           width: 1.5,
         ),
         boxShadow: [
@@ -204,7 +204,7 @@ class OcrCameraFrame extends StatelessWidget {
       child: const Icon(
         Icons.photo_library_outlined,
         size: 24,
-        color: Color(0xFF1F497D),
+        color: Color(0xFF5A81BB),
       ),
     );
   }
@@ -215,11 +215,11 @@ class OcrCameraFrame extends StatelessWidget {
     required VoidCallback? onTap,
   }) {
     // สีหลักของปุ่มตอน active
-    final Color activeColor = const Color(0xFF1F497D);
+    final Color activeColor = const Color(0xFF5A81BB);
 
     // ถ้า enabled=false จะเปลี่ยนสีให้ดู disabled
-    final Color borderColor = enabled ? activeColor : const Color(0xFFB0BEC8);
-    final Color iconColor = enabled ? activeColor : const Color(0xFFB0BEC8);
+    final Color borderColor = enabled ? activeColor : const Color(0xFFB7DAFF);
+    final Color iconColor = enabled ? activeColor : const Color(0xFFB7DAFF);
 
     return InkWell(
       // ✅📸 ถ้า enabled=false จะ set onTap=null ทำให้ “กดไม่ได้”
@@ -266,7 +266,7 @@ class OcrCameraFrame extends StatelessWidget {
         shape: BoxShape.circle,
         color: Colors.white,
         border: Border.all(
-          color: const Color(0xFFB0BEC8),
+          color: const Color(0xFFB7DAFF),
           width: 1.5,
         ),
         boxShadow: [
@@ -280,7 +280,7 @@ class OcrCameraFrame extends StatelessWidget {
       child: const Icon(
         Icons.cameraswitch,
         size: 26,
-        color: Color(0xFF1F497D),
+        color: Color(0xFF5A81BB),
       ),
     );
   }

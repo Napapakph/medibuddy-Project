@@ -262,14 +262,14 @@ class _FollowingRegimenPageState extends State<FollowingRegimenPage> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.light(
-              primary: Color(0xFF1F497D),
+              primary: Color(0xFF2B4C7E),
               onPrimary: Colors.white,
-              onSurface: Color(0xFF1F497D),
+              onSurface: Color(0xFF2B4C7E),
             ),
             dialogBackgroundColor: Colors.white,
             textButtonTheme: TextButtonThemeData(
               style: TextButton.styleFrom(
-                foregroundColor: const Color(0xFF1F497D),
+                foregroundColor: const Color(0xFF2B4C7E),
                 textStyle: const TextStyle(fontWeight: FontWeight.w700),
               ),
             ),
@@ -325,7 +325,7 @@ class _FollowingRegimenPageState extends State<FollowingRegimenPage> {
   }
 
   // ===== UI Constants =====
-  static const _primary = Color(0xFF1F497D);
+  static const _primary = Color(0xFF2B4C7E);
 
   String _formatMealRelation(String? relation) {
     if (relation == null) return '';
@@ -480,7 +480,7 @@ class _FollowingRegimenPageState extends State<FollowingRegimenPage> {
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF1F497D),
+                  color: Color(0xFF2B4C7E),
                 ),
               ),
             ),
@@ -503,20 +503,37 @@ class _FollowingRegimenPageState extends State<FollowingRegimenPage> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF0F6FF),
       appBar: AppBar(
-        backgroundColor: _primary,
         elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color.fromARGB(255, 234, 244, 255),
+                Color.fromARGB(255, 193, 222, 255),
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
+        iconTheme: const IconThemeData(color: Color(0xFF5A81BB)),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_ios_rounded,
+              color: Color(0xFF5A81BB)),
           onPressed: () => Navigator.pop(context),
         ),
+        centerTitle: true,
         title: const Text(
           'แผนการทานยา',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+          style: TextStyle(
+            color: Color(0xFF2B4C7E),
+            fontWeight: FontWeight.w700,
+            fontSize: 18,
+          ),
           textAlign: TextAlign.center,
         ),
-        centerTitle: true,
       ),
       body: Stack(
         children: [
@@ -526,14 +543,14 @@ class _FollowingRegimenPageState extends State<FollowingRegimenPage> {
                 // ===== Owner profile header =====
                 Container(
                   width: double.infinity,
-                  color: _primary,
+                  color: const Color.fromARGB(255, 193, 222, 255),
                   padding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   child: Row(
                     children: [
                       CircleAvatar(
                         radius: 28,
-                        backgroundColor: const Color(0xFF2C3137),
+                        backgroundColor: const Color(0xFF8FB6E5),
                         backgroundImage: ownerAvatar,
                         child: ownerAvatar == null
                             ? const Icon(Icons.person,
@@ -548,7 +565,7 @@ class _FollowingRegimenPageState extends State<FollowingRegimenPage> {
                             Text(
                               _ownerName,
                               style: const TextStyle(
-                                color: Colors.white,
+                                color: Color(0xFF2B4C7E),
                                 fontSize: 16,
                                 fontWeight: FontWeight.w700,
                               ),
@@ -557,7 +574,7 @@ class _FollowingRegimenPageState extends State<FollowingRegimenPage> {
                             Text(
                               'โปรไฟล์: $_profileLabel',
                               style: const TextStyle(
-                                color: Colors.white70,
+                                color: Color(0xFF5A81BB),
                                 fontSize: 13,
                               ),
                             ),
@@ -570,7 +587,7 @@ class _FollowingRegimenPageState extends State<FollowingRegimenPage> {
 
                 // ===== Search & Filter Toolbar =====
                 Container(
-                  color: _primary,
+                  color: const Color.fromARGB(255, 193, 222, 255),
                   padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
                   child: Row(
                     children: [
@@ -722,7 +739,7 @@ class _FollowingRegimenPageState extends State<FollowingRegimenPage> {
                 children: [
                   const ModalBarrier(
                     dismissible: false,
-                    color: Colors.black26,
+                    color: Color.fromARGB(84, 196, 219, 240),
                   ),
                   Column(
                     mainAxisSize: MainAxisSize.min,
@@ -733,10 +750,12 @@ class _FollowingRegimenPageState extends State<FollowingRegimenPage> {
                         height: 180,
                         repeat: true,
                       ),
-                      const SizedBox(height: 8),
                       const Text(
                         'กำลังโหลด…',
-                        style: TextStyle(color: Colors.white),
+                        style: TextStyle(
+                          color: Color.fromARGB(255, 93, 139, 197),
+                          fontSize: 16,
+                        ),
                       ),
                     ],
                   ),
@@ -761,7 +780,7 @@ class _DateField extends StatelessWidget {
     required this.onTap,
   });
 
-  static const _primary = Color(0xFF1F497D);
+  static const _primary = Color(0xFF2B4C7E);
 
   @override
   Widget build(BuildContext context) {

@@ -141,17 +141,33 @@ class _UserRequestScreenState extends State<UserRequestScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1F497D),
-        iconTheme: const IconThemeData(color: Colors.white),
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color.fromARGB(255, 234, 244, 255),
+                Color.fromARGB(255, 193, 222, 255),
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
+        iconTheme: const IconThemeData(color: Color(0xFF5A81BB)),
         title: const Text(
           'ข้อเสนอแนะ',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(
+            color: Color(0xFF2B4C7E),
+            fontWeight: FontWeight.w700,
+            fontSize: 18,
+          ),
         ),
       ),
-      backgroundColor: const Color.fromARGB(255, 227, 242, 255),
+      backgroundColor: const Color(0xFFF0F6FF),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -167,7 +183,7 @@ class _UserRequestScreenState extends State<UserRequestScreen> {
                       'หมวดหมู่',
                       style: TextStyle(
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF1F497D),
+                          color: Color(0xFF2B4C7E),
                           fontSize: 18),
                     ),
                     const SizedBox(height: 8),
@@ -319,7 +335,7 @@ class _UserRequestScreenState extends State<UserRequestScreen> {
                                   width: 44,
                                   height: 44,
                                   decoration: const BoxDecoration(
-                                    color: Color(0xFF1F497D),
+                                    color: Color(0xFF5A81BB),
                                     shape: BoxShape.circle,
                                   ),
                                   child: const Icon(
@@ -358,32 +374,52 @@ class _UserRequestScreenState extends State<UserRequestScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 24),
               Center(
                 child: SizedBox(
                   width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _submitting ? null : _submit,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF1F497D),
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24),
+                  height: 52,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF3B6FB5), Color(0xFF5A81BB)],
                       ),
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0x337BAEE5),
+                          blurRadius: 12,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
                     ),
-                    child: _submitting
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
+                    child: ElevatedButton(
+                      onPressed: _submitting ? null : _submit,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.transparent,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                      ),
+                      child: _submitting
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Text(
+                              'ส่ง',
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600),
                             ),
-                          )
-                        : const Text(
-                            'ส่ง',
-                            style: TextStyle(color: Colors.white, fontSize: 16),
-                          ),
+                    ),
                   ),
                 ),
               ),

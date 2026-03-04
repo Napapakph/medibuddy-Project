@@ -54,41 +54,50 @@ class _OcrSuccessPageState extends State<OcrSuccessPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1F497D),
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 140,
-              height: 140,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: const Color(0xFFE8F0F8),
-                border: Border.all(
+      backgroundColor: Colors.transparent,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF2B4C7E), Color(0xFF5A81BB)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 140,
+                height: 140,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFFE8F0F8),
+                  border: Border.all(
+                    color: Colors.white,
+                    width: 4,
+                  ),
+                ),
+                child: const Center(
+                  child: Icon(
+                    Icons.check,
+                    size: 72,
+                    color: Color(0xFF2B4C7E),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              const Text(
+                'สแกน\nสำเร็จ!',
+                textAlign: TextAlign.center,
+                style: TextStyle(
                   color: Colors.white,
-                  width: 4,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-              child: const Center(
-                child: Icon(
-                  Icons.check,
-                  size: 72,
-                  color: Color(0xFF1F497D),
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              'สแกน\nสำเร็จ!',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -139,12 +148,24 @@ class _OcrResultPageState extends State<OcrResultPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF0F6FF),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1F497D),
         elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color.fromARGB(255, 234, 244, 255),
+                Color.fromARGB(255, 193, 222, 255)
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_ios_rounded,
+              color: Color(0xFF5A81BB)),
           onPressed: () => Navigator.of(context).pop(),
         ),
         centerTitle: true,
@@ -156,7 +177,7 @@ class _OcrResultPageState extends State<OcrResultPage> {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: Color(0xFF2B4C7E),
               ),
             ),
             SizedBox(height: 4),
@@ -164,7 +185,7 @@ class _OcrResultPageState extends State<OcrResultPage> {
               '> ค้นหายา',
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.white,
+                color: Color(0xFF5A81BB),
               ),
             ),
           ],
@@ -186,7 +207,7 @@ class _OcrResultPageState extends State<OcrResultPage> {
               Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF2F5F9),
+                  color: const Color.fromARGB(255, 255, 255, 255),
                   borderRadius: BorderRadius.circular(24),
                 ),
                 padding: const EdgeInsets.all(16),
@@ -215,7 +236,7 @@ class _OcrResultPageState extends State<OcrResultPage> {
                 maxLines: 3,
                 decoration: InputDecoration(
                   filled: true,
-                  fillColor: const Color(0xFFF2F5F9),
+                  fillColor: const Color.fromARGB(255, 255, 255, 255),
                   hintText: 'ผลลัพธ์ที่สแกนได้จะแสดงที่นี่',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
@@ -228,7 +249,7 @@ class _OcrResultPageState extends State<OcrResultPage> {
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1F497D),
+                    backgroundColor: const Color(0xFF5A81BB),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(24),
                     ),
@@ -302,14 +323,14 @@ class _CircleIconButton extends StatelessWidget {
           shape: BoxShape.circle,
           color: Colors.white,
           border: Border.all(
-            color: const Color(0xFF1F497D),
+            color: const Color(0xFF5A81BB),
             width: 2,
           ),
         ),
         child: Icon(
           icon,
           size: 20,
-          color: const Color(0xFF1F497D),
+          color: const Color(0xFF5A81BB),
         ),
       ),
     );

@@ -1002,7 +1002,7 @@ class _Home extends State<Home> {
                                           padding: const EdgeInsets.all(8),
                                           decoration: BoxDecoration(
                                             color: const Color.fromARGB(
-                                                255, 245, 250, 255),
+                                                255, 255, 255, 255),
                                             borderRadius:
                                                 BorderRadius.circular(20),
                                           ),
@@ -1012,8 +1012,9 @@ class _Home extends State<Home> {
                                                     // Background Overlay
                                                     Container(
                                                       decoration: BoxDecoration(
-                                                        color: Colors.black
-                                                            .withOpacity(0.05),
+                                                        color: const Color
+                                                            .fromARGB(
+                                                            255, 239, 247, 255),
                                                         borderRadius:
                                                             BorderRadius
                                                                 .circular(20),
@@ -1030,8 +1031,12 @@ class _Home extends State<Home> {
                                                             Icons
                                                                 .medication_liquid_rounded,
                                                             size: 80,
-                                                            color: const Color(
-                                                                    0xFF1F497D)
+                                                            color: const Color
+                                                                    .fromARGB(
+                                                                    255,
+                                                                    107,
+                                                                    152,
+                                                                    207)
                                                                 .withOpacity(
                                                                     0.5),
                                                           ),
@@ -1041,10 +1046,9 @@ class _Home extends State<Home> {
                                                             'เพิ่มรายการยาที่ต้องกินก่อน',
                                                             style: TextStyle(
                                                               fontSize: 18,
-                                                              color: const Color(
-                                                                      0xFF1F497D)
-                                                                  .withOpacity(
-                                                                      0.7),
+                                                              color: const Color
+                                                                  .fromARGB(255,
+                                                                  90, 129, 187),
                                                               fontWeight:
                                                                   FontWeight
                                                                       .w600,
@@ -1081,8 +1085,12 @@ class _Home extends State<Home> {
                                                                 ElevatedButton
                                                                     .styleFrom(
                                                               backgroundColor:
-                                                                  const Color(
-                                                                      0xFF1F497D),
+                                                                  const Color
+                                                                      .fromARGB(
+                                                                      255,
+                                                                      90,
+                                                                      129,
+                                                                      187),
                                                               foregroundColor:
                                                                   Colors.white,
                                                               padding:

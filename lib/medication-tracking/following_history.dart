@@ -410,14 +410,14 @@ class _FollowingHistoryPageState extends State<FollowingHistoryPage> {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: const ColorScheme.light(
-              primary: Color(0xFF1F497D), // ✅ สีหัวปฏิทิน + วันที่เลือก
+              primary: Color(0xFF2B4C7E), // ✅ สีหัวปฏิทิน + วันที่เลือก
               onPrimary: Colors.white, // ✅ สีตัวอักษรบนหัวปฏิทิน
-              onSurface: Color(0xFF1F497D), // ✅ สีตัวเลขวันปกติ
+              onSurface: Color(0xFF2B4C7E), // ✅ สีตัวเลขวันปกติ
             ),
             dialogBackgroundColor: Colors.white,
             textButtonTheme: TextButtonThemeData(
               style: TextButton.styleFrom(
-                foregroundColor: Color(0xFF1F497D), // ✅ สีปุ่ม CANCEL/OK
+                foregroundColor: Color(0xFF2B4C7E), // ✅ สีปุ่ม CANCEL/OK
                 textStyle: const TextStyle(fontWeight: FontWeight.w700),
               ),
             ),
@@ -520,7 +520,7 @@ class _FollowingHistoryPageState extends State<FollowingHistoryPage> {
   }
 
   // ===== UI =====
-  static const _primary = Color(0xFF1F497D);
+  static const _primary = Color(0xFF2B4C7E);
 
   @override
   Widget build(BuildContext context) {
@@ -536,20 +536,37 @@ class _FollowingHistoryPageState extends State<FollowingHistoryPage> {
     }
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF0F6FF),
       appBar: AppBar(
-        backgroundColor: _primary,
         elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color.fromARGB(255, 234, 244, 255),
+                Color.fromARGB(255, 193, 222, 255),
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
+        iconTheme: const IconThemeData(color: Color(0xFF5A81BB)),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_ios_rounded,
+              color: Color(0xFF5A81BB)),
           onPressed: () => Navigator.pop(context),
         ),
+        centerTitle: true,
         title: const Text(
           'ประวัติ\nการรับประทานยา',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+          style: TextStyle(
+            color: Color(0xFF2B4C7E),
+            fontWeight: FontWeight.w700,
+            fontSize: 18,
+          ),
           textAlign: TextAlign.center,
         ),
-        centerTitle: true,
       ),
       body: Stack(
         children: [
@@ -559,14 +576,14 @@ class _FollowingHistoryPageState extends State<FollowingHistoryPage> {
                 // ===== Owner profile header =====
                 Container(
                   width: double.infinity,
-                  color: _primary,
+                  color: const Color.fromARGB(255, 193, 222, 255),
                   padding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   child: Row(
                     children: [
                       CircleAvatar(
                         radius: 28,
-                        backgroundColor: const Color(0xFF2C3137),
+                        backgroundColor: const Color(0xFF8FB6E5),
                         backgroundImage: ownerAvatar,
                         child: ownerAvatar == null
                             ? const Icon(Icons.person,
@@ -581,7 +598,7 @@ class _FollowingHistoryPageState extends State<FollowingHistoryPage> {
                             Text(
                               _ownerName,
                               style: const TextStyle(
-                                color: Colors.white,
+                                color: Color(0xFF2B4C7E),
                                 fontSize: 16,
                                 fontWeight: FontWeight.w700,
                               ),
@@ -590,7 +607,7 @@ class _FollowingHistoryPageState extends State<FollowingHistoryPage> {
                             Text(
                               'โปรไฟล์: $_profileLabel',
                               style: const TextStyle(
-                                color: Colors.white70,
+                                color: Color(0xFF5A81BB),
                                 fontSize: 13,
                               ),
                             ),
@@ -603,7 +620,7 @@ class _FollowingHistoryPageState extends State<FollowingHistoryPage> {
 
                 // ===== Search & Filter Toolbar =====
                 Container(
-                  color: _primary,
+                  color: const Color.fromARGB(255, 193, 222, 255),
                   padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
                   child: Row(
                     children: [
@@ -727,9 +744,9 @@ class _FollowingHistoryPageState extends State<FollowingHistoryPage> {
                                             horizontal: 100, vertical: 6),
                                         decoration: BoxDecoration(
                                           color: const Color.fromARGB(
-                                              255, 236, 238, 243),
+                                              255, 220, 235, 255),
                                           borderRadius:
-                                              BorderRadius.circular(10),
+                                              BorderRadius.circular(14),
                                         ),
                                         child: Text(
                                           _formatThaiDate(dayKey),
@@ -737,7 +754,7 @@ class _FollowingHistoryPageState extends State<FollowingHistoryPage> {
                                           style: const TextStyle(
                                             fontSize: 16,
                                             fontWeight: FontWeight.w700,
-                                            color: _primary,
+                                            color: Color(0xFF2B4C7E),
                                           ),
                                         ),
                                       ),
@@ -788,7 +805,7 @@ class _FollowingHistoryPageState extends State<FollowingHistoryPage> {
                 children: [
                   const ModalBarrier(
                     dismissible: false,
-                    color: Colors.black26,
+                    color: Color.fromARGB(84, 196, 219, 240),
                   ),
                   Column(
                     mainAxisSize: MainAxisSize.min,
@@ -799,10 +816,12 @@ class _FollowingHistoryPageState extends State<FollowingHistoryPage> {
                         height: 180,
                         repeat: true,
                       ),
-                      const SizedBox(height: 8),
                       const Text(
                         'กำลังโหลด…',
-                        style: TextStyle(color: Colors.white),
+                        style: TextStyle(
+                          color: Color.fromARGB(255, 93, 139, 197),
+                          fontSize: 16,
+                        ),
                       ),
                     ],
                   ),
@@ -827,7 +846,7 @@ class _DateField extends StatelessWidget {
     required this.onTap,
   });
 
-  static const _primary = Color(0xFF1F497D);
+  static const _primary = Color(0xFF2B4C7E);
 
   @override
   Widget build(BuildContext context) {
@@ -885,7 +904,7 @@ class _HistoryRow extends StatelessWidget {
     this.showTime = true,
   });
 
-  static const _primary = Color(0xFF1F497D);
+  static const _primary = Color(0xFF2B4C7E);
 
   Color _statusBarColor() {
     switch (item.status) {

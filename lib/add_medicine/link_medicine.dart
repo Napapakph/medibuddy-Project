@@ -240,13 +240,13 @@ class _LinkMedicinePageState extends State<LinkMedicinePage> {
                 TextButton(
                   onPressed: () => Navigator.pop(ctx, 0), // ยกเลิก
                   child: const Text('ยกเลิก',
-                      style: TextStyle(color: Colors.grey)),
+                      style: TextStyle(color: Color(0xFF8A9BB5))),
                 ),
                 TextButton(
                   onPressed: () => Navigator.pop(ctx, 1), // ตั้งเวลาใหม่
                   child: const Text(
                     'ตั้งเวลาใหม่',
-                    style: TextStyle(color: Color(0xFF1F497D)),
+                    style: TextStyle(color: Color(0xFF2B4C7E)),
                   ),
                 ),
               ],
@@ -386,7 +386,7 @@ class _LinkMedicinePageState extends State<LinkMedicinePage> {
                     border: Border.all(color: const Color(0xFFD2E6FF)),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF1F497D)
+                        color: const Color(0xFF5A81BB)
                             .withOpacity(0.12), // ⭐ สีเงา
                         blurRadius: 5, // ความฟุ้ง
                         spreadRadius: 1, // การกระจาย
@@ -402,7 +402,7 @@ class _LinkMedicinePageState extends State<LinkMedicinePage> {
                           style: const TextStyle(
                             fontSize: 16,
                             height: 1.25,
-                            color: Color(0xFF1F497D),
+                            color: Color(0xFF2B4C7E),
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -415,7 +415,7 @@ class _LinkMedicinePageState extends State<LinkMedicinePage> {
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
-                            color: const Color(0xFF1F497D),
+                            color: const Color(0xFF2B4C7E),
                             borderRadius: BorderRadius.circular(28),
                           ),
                           child: const Icon(
@@ -444,8 +444,20 @@ class _LinkMedicinePageState extends State<LinkMedicinePage> {
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        backgroundColor: const Color(0xFF1F497D),
-        iconTheme: const IconThemeData(color: Colors.white),
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color.fromARGB(255, 234, 244, 255),
+                Color.fromARGB(255, 193, 222, 255)
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
+        iconTheme: const IconThemeData(color: Color(0xFF5A81BB)),
         title: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -453,13 +465,13 @@ class _LinkMedicinePageState extends State<LinkMedicinePage> {
             Text(
               pageTitle,
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: Color(0xFF2B4C7E),
               ),
             ),
-            SizedBox(height: 4),
+            const SizedBox(height: 4),
             Row(
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
@@ -467,13 +479,13 @@ class _LinkMedicinePageState extends State<LinkMedicinePage> {
                 Icon(
                   Icons.arrow_right_rounded,
                   size: 20,
-                  color: Colors.white,
+                  color: Color(0xFF5A81BB),
                 ),
                 Text(
                   'ตัวเลือกจากผลการค้นหา',
                   style: TextStyle(
                     fontSize: 16,
-                    color: Colors.white,
+                    color: Color(0xFF5A81BB),
                   ),
                 ),
               ],
@@ -481,7 +493,7 @@ class _LinkMedicinePageState extends State<LinkMedicinePage> {
           ],
         ),
       ),
-      backgroundColor: const Color.fromARGB(255, 227, 242, 255),
+      backgroundColor: const Color(0xFFF0F6FF),
       body: SafeArea(
         child: Stack(
           children: [
@@ -594,7 +606,7 @@ class _LinkMedicinePageState extends State<LinkMedicinePage> {
                                               BorderRadius.circular(16),
                                           border: Border.all(
                                             color: isSelected
-                                                ? const Color(0xFF1F497D)
+                                                ? const Color(0xFF2B4C7E)
                                                 : const Color(0xFFE0E6EF),
                                             width: isSelected ? 2 : 1,
                                           ),
@@ -622,7 +634,7 @@ class _LinkMedicinePageState extends State<LinkMedicinePage> {
                                               child: imagePath.isEmpty
                                                   ? const Icon(
                                                       Icons.medication,
-                                                      color: Color(0xFF1F497D),
+                                                      color: Color(0xFF2B4C7E),
                                                     )
                                                   : ClipRRect(
                                                       borderRadius:
@@ -656,7 +668,7 @@ class _LinkMedicinePageState extends State<LinkMedicinePage> {
                                                           return const Icon(
                                                             Icons.medication,
                                                             color: Color(
-                                                                0xFF1F497D),
+                                                                0xFF2B4C7E),
                                                           );
                                                         },
                                                       ),
@@ -690,7 +702,7 @@ class _LinkMedicinePageState extends State<LinkMedicinePage> {
                                             if (isSelected)
                                               const Icon(
                                                 Icons.check_circle,
-                                                color: Color(0xFF1F497D),
+                                                color: Color(0xFF2B4C7E),
                                               ),
                                           ],
                                         ),
@@ -721,7 +733,7 @@ class _LinkMedicinePageState extends State<LinkMedicinePage> {
                     child: ElevatedButton(
                       onPressed: _selectedItem == null ? null : _goNext,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF1F497D),
+                        backgroundColor: const Color(0xFF5A81BB),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20),
@@ -743,7 +755,7 @@ class _LinkMedicinePageState extends State<LinkMedicinePage> {
                   children: [
                     const ModalBarrier(
                       dismissible: false,
-                      color: Colors.black26,
+                      color: Color(0x54C4DBEF),
                     ),
                     Column(
                       mainAxisSize: MainAxisSize.min,
@@ -757,7 +769,7 @@ class _LinkMedicinePageState extends State<LinkMedicinePage> {
                         const SizedBox(height: 8),
                         const Text(
                           'กำลังโหลด…',
-                          style: TextStyle(color: Colors.white),
+                          style: TextStyle(color: Color(0xFF2B4C7E)),
                         ),
                       ],
                     ),

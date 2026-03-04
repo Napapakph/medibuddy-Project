@@ -119,8 +119,20 @@ class _FindMedicinePageState extends State<FindMedicinePage> {
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
         centerTitle: true,
-        backgroundColor: const Color(0xFF1F497D),
-        iconTheme: const IconThemeData(color: Colors.white),
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color.fromARGB(255, 234, 244, 255),
+                Color.fromARGB(255, 193, 222, 255)
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
+        iconTheme: const IconThemeData(color: Color(0xFF5A81BB)),
         title: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -128,13 +140,13 @@ class _FindMedicinePageState extends State<FindMedicinePage> {
             Text(
               pageTitle,
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: Color(0xFF2B4C7E),
               ),
             ),
-            SizedBox(height: 4),
+            const SizedBox(height: 4),
             Row(
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
@@ -142,13 +154,13 @@ class _FindMedicinePageState extends State<FindMedicinePage> {
                 Icon(
                   Icons.arrow_right_rounded,
                   size: 20,
-                  color: Colors.white,
+                  color: Color(0xFF5A81BB),
                 ),
                 Text(
                   'ค้นหาข้อมูลยาที่เกี่ยวข้อง',
                   style: TextStyle(
                     fontSize: 16,
-                    color: Colors.white,
+                    color: Color(0xFF5A81BB),
                   ),
                 ),
               ],
@@ -156,7 +168,7 @@ class _FindMedicinePageState extends State<FindMedicinePage> {
           ],
         ),
       ),
-      backgroundColor: const Color.fromARGB(255, 227, 242, 255),
+      backgroundColor: const Color(0xFFF0F6FF),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -170,7 +182,7 @@ class _FindMedicinePageState extends State<FindMedicinePage> {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF1F497D),
+                  color: Color(0xFF2B4C7E),
                 ),
               ),
               const SizedBox(height: 8),
@@ -185,7 +197,7 @@ class _FindMedicinePageState extends State<FindMedicinePage> {
                     borderSide: BorderSide.none,
                   ),
                   suffixIcon:
-                      const Icon(Icons.search, color: Color(0xFF1F497D)),
+                      const Icon(Icons.search, color: Color(0xFF5A81BB)),
                 ),
               ),
               const SizedBox(height: 10),
@@ -194,7 +206,7 @@ class _FindMedicinePageState extends State<FindMedicinePage> {
                   ElevatedButton.icon(
                     onPressed: _goNextBySerch,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF1F497D),
+                      backgroundColor: const Color(0xFF5A81BB),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -207,8 +219,8 @@ class _FindMedicinePageState extends State<FindMedicinePage> {
                   OutlinedButton.icon(
                     onPressed: _scanByCamera,
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFF1F497D),
-                      side: const BorderSide(color: Color(0xFF1F497D)),
+                      foregroundColor: const Color(0xFF5A81BB),
+                      side: const BorderSide(color: Color(0xFF5A81BB)),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -254,7 +266,7 @@ class _FindMedicinePageState extends State<FindMedicinePage> {
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF1F497D),
+                              color: Color(0xFF2B4C7E),
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -350,7 +362,7 @@ class _FindMedicinePageState extends State<FindMedicinePage> {
                 child: ElevatedButton(
                   onPressed: _skipSearch,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1F497D),
+                    backgroundColor: const Color(0xFF5A81BB),
                     padding: const EdgeInsets.symmetric(
                         horizontal: 10, vertical: 10),
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,

@@ -376,12 +376,24 @@ class _CameraOcrPageState extends State<CameraOcrPage> {
     final frameHeight = size.height * 0.68;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF0F6FF),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1F497D),
         elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color.fromARGB(255, 234, 244, 255),
+                Color.fromARGB(255, 193, 222, 255)
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_ios_rounded,
+              color: Color(0xFF5A81BB)),
           onPressed: () {
             if (Navigator.of(context).canPop()) {
               Navigator.of(context).pop();
@@ -397,19 +409,19 @@ class _CameraOcrPageState extends State<CameraOcrPage> {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: Color(0xFF2B4C7E),
               ),
             ),
             SizedBox(height: 2),
             Text(
               '> สแกนชื่อของยา',
-              style: TextStyle(fontSize: 12, color: Colors.white),
+              style: TextStyle(fontSize: 16, color: Color(0xFF5A81BB)),
             ),
           ],
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.help_outline, color: Colors.white),
+            icon: const Icon(Icons.help_outline, color: Color(0xFF5A81BB)),
             onPressed: () => TutorialDialog.show(context, forceShow: true),
           ),
         ],
@@ -423,7 +435,10 @@ class _CameraOcrPageState extends State<CameraOcrPage> {
               child: Text(
                 'ถ่ายรูปเพื่อสแกนชื่อยา\nที่ต้องรับประทาน',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Color(0xFF2B4C7E)),
               ),
             ),
             const SizedBox(height: 1),

@@ -31,15 +31,15 @@ class FollowUserCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
-      elevation: 2,
-      color: const Color.fromARGB(255, 232, 236, 241),
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      elevation: 0,
+      color: Colors.white,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: const BorderSide(color: Color(0xFFE0E6EF)),
+        borderRadius: BorderRadius.circular(20),
       ),
+      shadowColor: const Color.fromARGB(40, 122, 174, 229),
       child: Padding(
-        padding: const EdgeInsets.all(10),
+        padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             // === Top Section: Name (Left) | Edit, Delete (Right) ===
@@ -53,7 +53,7 @@ class FollowUserCard extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF1F497D),
+                        color: Color(0xFF2B4C7E),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -62,14 +62,19 @@ class FollowUserCard extends StatelessWidget {
                 ),
                 IconButton(
                   onPressed: onEdit,
-                  icon: const Icon(Icons.edit, color: Color(0xFF1F497D)),
+                  icon: const Icon(
+                    Icons.edit_rounded,
+                    color: Color(0xFF5A81BB),
+                    size: 25,
+                  ),
                   tooltip: 'แก้ไข',
                   constraints: const BoxConstraints(),
                   padding: const EdgeInsets.all(2),
                 ),
                 IconButton(
                   onPressed: onDelete,
-                  icon: const Icon(Icons.delete, color: Colors.red),
+                  icon: const Icon(Icons.delete,
+                      color: Color(0xFFC66E6E), size: 25),
                   tooltip: 'ลบ',
                   constraints: const BoxConstraints(),
                   padding: const EdgeInsets.all(2),
@@ -128,7 +133,7 @@ class FollowUserCard extends StatelessWidget {
                   ElevatedButton.icon(
                     onPressed: onDetail_1,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF1F497D),
+                      backgroundColor: const Color(0xFF5A81BB),
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 8),
@@ -144,7 +149,7 @@ class FollowUserCard extends StatelessWidget {
                     ElevatedButton.icon(
                       onPressed: onDetail_2,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF1F497D),
+                        backgroundColor: const Color(0xFF5A81BB),
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 8),

@@ -590,7 +590,7 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
                       : null,
                 ),
                 child: imageProvider == null
-                    ? const Icon(Icons.medication, color: Color(0xFF1F497D))
+                    ? const Icon(Icons.medication, color: Color(0xFF2B4C7E))
                     : null,
               ),
               const SizedBox(width: 12),
@@ -603,7 +603,7 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFF1F497D),
+                        color: Color(0xFF2B4C7E),
                       ),
                     ),
                     if (subtitle.isNotEmpty) ...[
@@ -653,7 +653,7 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
                   ),
                   child: const Icon(
                     Icons.chat_bubble_outline,
-                    color: Color(0xFF1F497D),
+                    color: Color(0xFF2B4C7E),
                     size: 18,
                   ),
                 ),
@@ -698,7 +698,7 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
                             responseStatus: 'TAKE',
                           ),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1F497D),
+                    backgroundColor: const Color(0xFF5A81BB),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(
@@ -772,20 +772,33 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
     final hasMultipleProfiles = _groupedLogs.keys.length > 1;
 
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 217, 235, 255),
+      backgroundColor: const Color(0xFFF0F6FF),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1F497D),
         elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                Color.fromARGB(255, 234, 244, 255),
+                Color.fromARGB(255, 193, 222, 255),
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+          ),
+        ),
+        iconTheme: const IconThemeData(color: Color(0xFF5A81BB)),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back,
-              color: Color.fromARGB(255, 255, 255, 255)),
+          icon: const Icon(Icons.arrow_back_ios_rounded,
+              color: Color(0xFF5A81BB)),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
           'รายการยาที่ต้องรับประทาน',
           style: TextStyle(
-            color: Color.fromARGB(255, 255, 255, 255),
+            color: Color(0xFF2B4C7E),
             fontWeight: FontWeight.w700,
+            fontSize: 18,
           ),
         ),
       ),
@@ -816,9 +829,9 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
                                     height: 80,
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
-                                      color: Colors.grey.shade200,
+                                      color: const Color(0xFFD6E3F3),
                                       border: Border.all(
-                                          color: Colors.grey.shade300,
+                                          color: const Color(0xFFB7DAFF),
                                           width: 1.5),
                                       image: profileImgProvider != null
                                           ? DecorationImage(
@@ -828,7 +841,7 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
                                     ),
                                     child: profileImgProvider == null
                                         ? const Icon(Icons.person,
-                                            size: 40, color: Colors.grey)
+                                            size: 40, color: Color(0xFF8A9BB5))
                                         : null,
                                   ),
                                   const SizedBox(height: 8),
@@ -837,14 +850,15 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
                                     style: const TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
-                                      color: Color(0xFF1F497D),
+                                      color: Color(0xFF2B4C7E),
                                     ),
                                   ),
                                   if (timeText.isNotEmpty)
                                     Text(
                                       'เวลา $timeText น.',
                                       style: const TextStyle(
-                                          fontSize: 14, color: Colors.grey),
+                                          fontSize: 14,
+                                          color: Color(0xFF8A9BB5)),
                                     ),
                                   if (hasMultipleProfiles) ...[
                                     const SizedBox(height: 12),
@@ -868,13 +882,13 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
                                           icon: const Icon(
                                             Icons.keyboard_arrow_down_rounded,
                                             size: 24,
-                                            color: Color(0xFF1F497D),
+                                            color: Color(0xFF2B4C7E),
                                           ),
                                           dropdownColor: Colors.white,
                                           borderRadius:
                                               BorderRadius.circular(12),
                                           style: const TextStyle(
-                                            color: Color(0xFF1F497D),
+                                            color: Color(0xFF2B4C7E),
                                             fontSize: 15,
                                             fontWeight: FontWeight.w600,
                                           ),
@@ -967,7 +981,7 @@ class _CommentSheetContentState extends State<_CommentSheetContent> {
     return Container(
       padding: EdgeInsets.only(bottom: bottomInset),
       decoration: const BoxDecoration(
-        color: Color.fromARGB(255, 240, 240, 255),
+        color: Color(0xFFF0F6FF),
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: SafeArea(
@@ -984,7 +998,7 @@ class _CommentSheetContentState extends State<_CommentSheetContent> {
                   height: 4,
                   margin: const EdgeInsets.only(bottom: 14),
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade400,
+                    color: const Color(0xFFB7DAFF),
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -998,7 +1012,7 @@ class _CommentSheetContentState extends State<_CommentSheetContent> {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
-                        color: Color(0xFF1F497D),
+                        color: Color(0xFF2B4C7E),
                       ),
                     ),
                   ),
@@ -1009,7 +1023,7 @@ class _CommentSheetContentState extends State<_CommentSheetContent> {
                       height: 30,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Colors.grey.shade300,
+                        color: const Color(0xFFD6E3F3),
                       ),
                       child: const Icon(Icons.close,
                           size: 16, color: Color.fromARGB(255, 55, 66, 93)),
@@ -1060,7 +1074,7 @@ class _CommentSheetContentState extends State<_CommentSheetContent> {
                 child: ElevatedButton(
                   onPressed: widget.onSubmit,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1F497D),
+                    backgroundColor: const Color(0xFF5A81BB),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
