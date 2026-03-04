@@ -128,7 +128,8 @@ class _CommentPopupState extends State<CommentPopup> {
                 children: [
                   const Expanded(
                     child: Text(
-                      'คอมเม้น',
+                      'บันทึกช่วยจำ',
+                      textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
@@ -143,10 +144,10 @@ class _CommentPopupState extends State<CommentPopup> {
                       height: 30,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Colors.grey.shade300,
+                        color: const Color.fromARGB(255, 255, 255, 255),
                       ),
                       child: const Icon(Icons.close,
-                          size: 16, color: Color(0xFF5D4037)),
+                          size: 16, color: Color.fromARGB(255, 35, 64, 127)),
                     ),
                   ),
                 ],
@@ -154,9 +155,9 @@ class _CommentPopupState extends State<CommentPopup> {
               const SizedBox(height: 8),
               // Medicine name
               Text(
-                widget.medicineNickname,
+                "รายการยา : " + widget.medicineNickname,
                 style: const TextStyle(
-                  fontSize: 14,
+                  fontSize: 16,
                   color: Color.fromARGB(255, 74, 128, 196),
                   fontWeight: FontWeight.w600,
                 ),
