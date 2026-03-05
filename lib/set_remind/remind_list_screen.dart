@@ -368,7 +368,7 @@ class _RemindListScreenState extends State<RemindListScreen> {
         return MealTiming.beforeMeal;
       case 'AFTER_MEAL':
         return MealTiming.afterMeal;
-      case 'NONE':
+      case 'WITH_MEAL':
         return MealTiming.betweenMeals;
       default:
         return MealTiming.afterMeal;
