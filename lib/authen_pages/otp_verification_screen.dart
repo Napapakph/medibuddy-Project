@@ -125,7 +125,8 @@ class _OTPScreenState extends State<OTPScreen> {
       if (!mounted) return;
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        MaterialPageRoute(
+            builder: (_) => const LoginScreen(skipAutoNavigateOnce: true)),
       );
     } catch (e) {
       if (!mounted) return;
@@ -161,7 +162,8 @@ class _OTPScreenState extends State<OTPScreen> {
       );
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
+        MaterialPageRoute(
+            builder: (_) => const LoginScreen(skipAutoNavigateOnce: true)),
       );
     } on MergeException catch (e) {
       if (!mounted) return;
@@ -269,11 +271,25 @@ class _OTPScreenState extends State<OTPScreen> {
                     SizedBox(height: maxHeight * 0.04),
                     OtpTextField(
                       numberOfFields: 6,
-                      borderColor: const Color(0xFF5A81BB),
-                      borderRadius: BorderRadius.circular(12),
+                      showFieldAsBox: true,
+
+                      // 🔵 สีพื้นหลังละมุน
+                      fillColor: const Color(0xFFF3F8FF),
+
+                      // 🔘 ขอบตอนปกติ
+                      enabledBorderColor: const Color(0xFFD6E4FF),
+
+                      // 🔵 ขอบตอนโฟกัส
+                      focusedBorderColor: const Color(0xFF5A81BB),
+
+                      // ⚪ ขอบตอน disabled
+                      disabledBorderColor: const Color(0xFFE0E0E0),
+
+                      borderRadius: BorderRadius.circular(14),
+
                       fieldHeight: maxHeight * 0.08,
                       fieldWidth: maxWidth * 0.12,
-                      showFieldAsBox: true,
+
                       onSubmit: (String verificationCode) {
                         _otp.text = verificationCode;
                       },

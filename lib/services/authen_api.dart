@@ -75,6 +75,7 @@ class CustomAuthService implements AuthService {
           );
         }
       }
+      globalDeviceTokenService.registerDeviceToken(force: true);
       return RegisterResult.error(e.response?.data?['message']?.toString() ??
           e.message ??
           'Registration failed');
@@ -153,6 +154,7 @@ class CustomAuthService implements AuthService {
           accessToken: accessToken,
           refreshToken: refreshToken,
         );
+        globalDeviceTokenService.registerDeviceToken(force: true);
       }
 
       return AuthResponse(

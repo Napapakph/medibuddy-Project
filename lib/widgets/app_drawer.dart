@@ -5,6 +5,7 @@ import '../services/auth_manager.dart';
 import '../services/app_state.dart';
 import 'package:icofont_flutter/icofont_flutter.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -39,9 +40,16 @@ class AppDrawer extends StatelessWidget {
   }
 
   Future<void> logout(BuildContext context) async {
+    // 1️⃣ clear auth session (accessToken / refreshToken)
     await AuthManager.service.logout();
 
+    // 2️⃣ clear saved profile
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('lastProfileId');
+
     if (!context.mounted) return;
+
+    // 3️⃣ navigate back to login and clear navigation stack
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (_) => const LoginScreen()),

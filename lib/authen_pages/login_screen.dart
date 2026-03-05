@@ -9,10 +9,13 @@ import '../profile_pages/create_profile_screen.dart';
 import '../profile_pages/select_profile.dart';
 import '../services/profile_api.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../services/app_state.dart';
 import 'dart:async';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  const LoginScreen({super.key, this.skipAutoNavigateOnce = false});
+  final bool skipAutoNavigateOnce;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -79,9 +82,6 @@ class _LoginScreenState extends State<LoginScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Google Login ไม่สำเร็จ: $e')),
-      );
     } finally {
       if (!mounted) return;
       setState(() => _isGoogleLoading = false);
@@ -106,7 +106,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
     // Auto-login check (For Custom Auth & Supabase initial state)
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _checkAndNavigate();
+      if (!widget.skipAutoNavigateOnce) {
+        _checkAndNavigate();
+      } else {
+        if (mounted) setState(() => _isLoading = false); // โชว์ฟอร์ม login เลย
+      }
     });
 
     _authSub = Supabase.instance.client.auth.onAuthStateChange.listen((data) {
@@ -159,8 +163,45 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (!mounted) return;
 
+      final prefs = await SharedPreferences.getInstance();
+      final lastProfileId = prefs.getString('lastProfileId');
+
       if (profiles.isNotEmpty) {
-        // มีโปรไฟล์แล้ว -> ไปหน้า Library
+        if (lastProfileId != null) {
+          try {
+            final selectedProfile = profiles.firstWhere(
+              (p) => p['profileId'].toString() == lastProfileId,
+            );
+
+            final pid =
+                int.tryParse(selectedProfile['profileId'].toString()) ?? 0;
+            final pname = (selectedProfile['profileName'] ?? '').toString();
+            final pimg = (selectedProfile['profilePicture'] ?? '').toString();
+
+            AppState.instance.setSelectedProfile(
+              profileId: pid,
+              name: pname,
+              imagePath: pimg,
+            );
+            AppState.instance.currentProfileId = pid;
+
+            Navigator.pushReplacementNamed(
+              context,
+              '/home',
+              arguments: {
+                'profileId': pid,
+                'profileName': pname,
+                'profileImage': pimg,
+              },
+            );
+            return;
+          } catch (e) {
+            // Profile with lastProfileId not found in fetched profiles
+            debugPrint('Last profile not found in profiles list: $e');
+          }
+        }
+
+        // มีโปรไฟล์แล้ว -> ไปหน้า SelectProfile
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (_) => const SelectProfile()),
@@ -360,7 +401,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                       },
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor:
-                                      const Color.fromARGB(255, 90, 129, 187),
+                                      const Color.fromRGBO(90, 129, 187, 1),
                                   disabledBackgroundColor:
                                       const Color.fromARGB(255, 55, 90, 143)
                                           .withOpacity(0.6),

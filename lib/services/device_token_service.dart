@@ -135,11 +135,12 @@ class DeviceTokenService {
     return '';
   }
 
+//-------------------------------- device token --------------------------------
   Future<void> registerDeviceToken({
     String? accessToken,
     bool force = false,
 
-    // ✅ เพิ่ม: ส่ง userId เข้ามาเพื่อ “จำว่าล่าสุดส่งให้ user ไหน”
+    // ✅ เพิ่ม: ส่ง userId เข้ามาเพื่อ “จำว่าล่าสุดส่งใ ห้ user ไหน”
     String? currentUserId,
   }) async {
     debugPrint('DeviceTokenService: registerDeviceToken called');

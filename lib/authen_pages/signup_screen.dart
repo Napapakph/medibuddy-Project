@@ -248,7 +248,8 @@ class _SignupScreenState extends State<SignupScreen> {
         await _showMergeConfirmDialog(
           email: email,
           password: password,
-          message: result.backendMessage ?? '',
+          message:
+              'อีเมลนี้ เชื่อมโยงกับบัญชี Google \nคุณต้องการตั้งรหัสผ่านเพื่อเข้าสู่ระบบด้วยอีเมลด้วยหรือไม่ ?',
         );
         return;
       }

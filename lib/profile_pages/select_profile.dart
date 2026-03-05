@@ -7,6 +7,7 @@ import '../Model/profile_model.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../services/app_state.dart';
 import '../services/auth_manager.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // ถ้าคุณมีหน้า login จริง ๆ ให้ import แล้วเปลี่ยน route ได้
 // import 'login.dart';
@@ -34,6 +35,16 @@ class _SelectProfileState extends State<SelectProfile> {
   Future<String?> _getAccessToken() async {
     // ใช้ AuthManager แทน Supabase โดยตรง
     return await AuthManager.service.getAccessToken();
+  }
+
+  Future<void> saveLastProfile(String profileId) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('lastProfileId', profileId);
+  }
+
+  Future<String?> getLastProfileId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('lastProfileId');
   }
 
   Future<void> _loadProfiles() async {
@@ -329,10 +340,11 @@ class _SelectProfileState extends State<SelectProfile> {
                     height: 56,
                     child: ElevatedButton(
                       onPressed: canConfirm
-                          ? () {
+                          ? () async {
                               AppState.instance.currentProfileId =
                                   selectedProfile.profileId;
                               final pid = selectedProfile.profileId;
+                              await saveLastProfile(pid.toString());
                               Navigator.pushReplacementNamed(
                                 context,
                                 '/home',

@@ -170,7 +170,7 @@ class _Home extends State<Home> {
     final p = path.trim(); // 🔥 FIX: trim
 
     if (p.isEmpty || p.toLowerCase() == 'null') {
-      return const AssetImage('assets/cat_profile.png');
+      return const AssetImage('assets/default_profile.png');
     }
 
     if (p.startsWith('http://') || p.startsWith('https://')) {
