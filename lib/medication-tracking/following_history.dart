@@ -225,7 +225,7 @@ class _FollowingHistoryPageState extends State<FollowingHistoryPage> {
       dose: dose,
       unit: unit,
       status: status,
-      note: note.isNotEmpty ? null : note,
+      note: note.isNotEmpty ? note : null,
       nickname: safeNickname,
       tradeName: safeTrade,
       thName: safeTh,
