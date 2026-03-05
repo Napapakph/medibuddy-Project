@@ -466,13 +466,14 @@ class _AlarmScreenState extends State<AlarmScreen> {
     debugPrint('▶️ _onGreen called: TAKE -> opening confirm');
     final logIds = _extractLogIds();
     if (logIds.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Missing logId in notification payload')),
-      );
+      debugPrint('ไม่เจอ logId ใน notification payload');
       return;
     }
     // Mark user action BEFORE opening confirm screen
     NotificationLaunchGuard.markUserAction();
+    //เป็นเมธอดที่ใช้บันทึกสถานะว่าผู้ใช้ได้ดำเนินการตอบสนองต่อการแจ้งเตือนแล้ว
+    //เพื่อป้องกันไม่ให้ระบบประมวลผลการแจ้งเตือนเดิมซ้ำ
+    //หรือเปิดหน้าจอแจ้งเตือนซ้อนกันหลายครั้ง
     _openConfirmAction(logIds: logIds);
   }
 
