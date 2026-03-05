@@ -1,10 +1,12 @@
 import 'dart:io';
+
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/material.dart';
 import 'package:medibuddy/Model/medicine_model.dart';
 import 'package:medibuddy/widgets/medicine_step_timeline.dart';
 import 'package:medibuddy/services/medicine_api.dart';
 import '../search_medicine/detail_medicine.dart';
+import '../add_medicine/medicine_list_screen.dart';
 
 class SummaryMedicinePage extends StatefulWidget {
   final MedicineDraft draft;
@@ -215,11 +217,12 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
       );
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('บันทึกยาสำเร็จ')),
-      );
 
-      Navigator.pop(context, savedItem);
+      Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+              builder: (context) =>
+                  ListMedicinePage(profileId: widget.profileId)));
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

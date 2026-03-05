@@ -221,7 +221,23 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
       );
     } catch (e) {
       if (!mounted) return;
-
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Text('ไม่มีรายละเอียด'),
+          content: const Text('ไม่พบรายการยาที่เกี่ยวข้องผูกกับรายการยาของคุณ'),
+          backgroundColor: Colors.white,
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('ตกลง',
+                  style: TextStyle(color: Color(0xFF5A81BB))),
+            ),
+          ],
+        ),
+      );
       debugPrint('❌ โหลดรายละเอียดไม่สำเร็จ: $e');
     }
   }
