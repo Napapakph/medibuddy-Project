@@ -52,7 +52,7 @@ class ReminderPlan {
   final int timesPerDay;
   final int everyHours;
   final FrequencyPattern frequencyPattern;
-  final Set<int> weekdays;
+  final Set<String> weekdays;
   final int everyCount;
   final String everyUnit;
   final DurationMode durationMode;
@@ -89,7 +89,7 @@ class ReminderPlan {
     int? timesPerDay,
     int? everyHours,
     FrequencyPattern? frequencyPattern,
-    Set<int>? weekdays,
+    Set<String>? weekdays,
     int? everyCount,
     String? everyUnit,
     DurationMode? durationMode,
@@ -205,8 +205,8 @@ Widget type_frequency({
   required TextEditingController everyHoursController,
   required FrequencyPattern frequencyPattern,
   required ValueChanged<FrequencyPattern> onFrequencyPatternChanged,
-  required Set<int> selectedWeekdays,
-  required ValueChanged<Set<int>> onWeekdaysChanged,
+  required Set<String> selectedWeekdays,
+  required ValueChanged<Set<String>> onWeekdaysChanged,
   required TextEditingController everyCountController,
   required String everyUnit,
   required ValueChanged<String?> onEveryUnitChanged,
@@ -501,13 +501,18 @@ Widget type_frequency({
                           if (states.contains(MaterialState.selected)) {
                             return const Color.fromARGB(255, 109, 165, 210);
                           }
-                          return Colors.grey;
+                          return const Color.fromARGB(255, 193, 193, 193);
                         },
                       ),
                       focusColor: const Color.fromARGB(255, 109, 165, 210),
                     ),
                   ),
-                  const Text('จำนวน', style: TextStyle(fontSize: 16)),
+                  Text('จำนวน',
+                      style: TextStyle(
+                          fontSize: 16,
+                          color: frequencyMode == FrequencyMode.timesPerDay
+                              ? Colors.black
+                              : const Color.fromARGB(210, 189, 189, 189))),
                   const SizedBox(width: 8),
                   SizedBox(
                     width: 72,
@@ -524,7 +529,12 @@ Widget type_frequency({
                     ),
                   ),
                   const SizedBox(width: 8),
-                  const Text('ครั้งต่อวัน', style: TextStyle(fontSize: 16)),
+                  Text('ครั้งต่อวัน',
+                      style: TextStyle(
+                          fontSize: 16,
+                          color: frequencyMode == FrequencyMode.timesPerDay
+                              ? Colors.black
+                              : const Color.fromARGB(210, 189, 189, 189))),
                 ],
               ),
             ),
@@ -552,13 +562,18 @@ Widget type_frequency({
                           if (states.contains(MaterialState.selected)) {
                             return const Color.fromARGB(255, 109, 165, 210);
                           }
-                          return Colors.grey;
+                          return const Color.fromARGB(210, 189, 189, 189);
                         },
                       ),
                       focusColor: const Color.fromARGB(255, 109, 165, 210),
                     ),
                   ),
-                  const Text('ทุก', style: TextStyle(fontSize: 16)),
+                  Text('ทุก',
+                      style: TextStyle(
+                          fontSize: 16,
+                          color: frequencyMode == FrequencyMode.everyHours
+                              ? Colors.black
+                              : const Color.fromARGB(210, 189, 189, 189))),
                   const SizedBox(width: 35),
                   Container(
                     width: 72,
@@ -603,7 +618,12 @@ Widget type_frequency({
                     ),
                   ),
                   const SizedBox(width: 8),
-                  const Text('ชั่วโมง', style: TextStyle(fontSize: 16)),
+                  Text('ชั่วโมง',
+                      style: TextStyle(
+                          fontSize: 16,
+                          color: frequencyMode == FrequencyMode.everyHours
+                              ? Colors.black
+                              : const Color.fromARGB(210, 189, 189, 189))),
                 ],
               ),
             ),
@@ -652,13 +672,18 @@ Widget type_frequency({
                           if (states.contains(MaterialState.selected)) {
                             return const Color.fromARGB(255, 109, 165, 210);
                           }
-                          return Colors.grey;
+                          return const Color.fromARGB(210, 206, 206, 206);
                         },
                       ),
                       focusColor: const Color.fromARGB(255, 109, 165, 210),
                     ),
                   ),
-                  const Text('ทุกวัน', style: TextStyle(fontSize: 16)),
+                  Text('ทุกวัน',
+                      style: TextStyle(
+                          fontSize: 16,
+                          color: frequencyPattern == FrequencyPattern.everyDay
+                              ? Colors.black
+                              : const Color.fromARGB(210, 189, 189, 189))),
                 ],
               ),
             ),
@@ -690,7 +715,7 @@ Widget type_frequency({
                           if (states.contains(MaterialState.selected)) {
                             return const Color.fromARGB(255, 109, 165, 210);
                           }
-                          return Colors.grey;
+                          return const Color.fromARGB(210, 189, 189, 189);
                         },
                       ),
                       focusColor: const Color.fromARGB(255, 109, 165, 210),
@@ -702,7 +727,9 @@ Widget type_frequency({
                       fontSize: 16,
                       color: frequencyMode == FrequencyMode.everyHours
                           ? Colors.grey
-                          : Colors.black,
+                          : (frequencyPattern == FrequencyPattern.someDays
+                              ? Colors.black
+                              : const Color.fromARGB(210, 189, 189, 189)),
                     ),
                   ),
                 ],
@@ -716,7 +743,16 @@ Widget type_frequency({
                 spacing: 3,
                 runSpacing: 4,
                 children: List.generate(7, (index) {
-                  final dayIndex = index + 1;
+                  const dayNames = [
+                    'MON',
+                    'TUE',
+                    'WED',
+                    'THU',
+                    'FRI',
+                    'SAT',
+                    'SUN'
+                  ];
+                  final dayIndex = dayNames[index];
                   final isSelected = selectedWeekdays.contains(dayIndex);
                   final isEnabled =
                       frequencyPattern == FrequencyPattern.someDays;
@@ -727,7 +763,8 @@ Widget type_frequency({
                       weekDayLabels[index],
                       style: TextStyle(
                         color: !isEnabled
-                            ? Colors.grey // 🚫 disabled
+                            ? const Color.fromARGB(
+                                255, 108, 108, 108) // 🚫 disabled
                             : isSelected
                                 ? Colors.white // ✅ selected
                                 : const Color.fromARGB(
@@ -737,19 +774,19 @@ Widget type_frequency({
                     ),
 
                     selected: isSelected,
-                    disabledColor: Colors.white, // ⭐ กันชมพูอ่อนตอน disabled
-                    selectedColor:
-                        const Color.fromARGB(255, 124, 166, 218), // สีตอนเลือก
+                    disabledColor: const Color.fromARGB(138, 227, 232, 240),
+                    selectedColor: const Color.fromARGB(255, 124, 166, 218),
 
                     backgroundColor: !isEnabled
                         ? const Color.fromARGB(
-                            255, 255, 255, 255) // 🚫 disabled
+                            255, 227, 227, 227) // 🚫 disabled
                         : const Color(0xFFEAF2FB), // ⬜ ยังไม่เลือก
 
                     side: BorderSide(
                       width: 1,
                       color: !isEnabled
-                          ? const Color(0xFFE0E0E0) // 🚫 disabled
+                          ? const Color.fromARGB(
+                              255, 209, 209, 209) // 🚫 disabled
                           : isSelected
                               ? const Color.fromARGB(
                                   255, 80, 135, 202) // ✅ selected
@@ -758,7 +795,7 @@ Widget type_frequency({
 
                     onSelected: isEnabled
                         ? (value) {
-                            final updated = Set<int>.from(selectedWeekdays);
+                            final updated = Set<String>.from(selectedWeekdays);
                             if (value) {
                               updated.add(dayIndex);
                             } else {
@@ -801,7 +838,7 @@ Widget type_frequency({
                           if (states.contains(MaterialState.selected)) {
                             return const Color.fromARGB(255, 109, 165, 210);
                           }
-                          return Colors.grey;
+                          return const Color.fromARGB(210, 189, 189, 189);
                         },
                       ),
                       focusColor: const Color.fromARGB(255, 109, 165, 210),
@@ -813,7 +850,9 @@ Widget type_frequency({
                       fontSize: 16,
                       color: frequencyMode == FrequencyMode.everyHours
                           ? Colors.grey
-                          : Colors.black,
+                          : (frequencyPattern == FrequencyPattern.everyInterval
+                              ? Colors.black
+                              : const Color.fromARGB(210, 189, 189, 189)),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -900,13 +939,18 @@ Widget type_frequency({
                           if (states.contains(MaterialState.selected)) {
                             return const Color.fromARGB(255, 109, 165, 210);
                           }
-                          return Colors.grey;
+                          return const Color.fromARGB(210, 189, 189, 189);
                         },
                       ),
                       focusColor: const Color.fromARGB(255, 109, 165, 210),
                     ),
                   ),
-                  const Text('ตลอดไป', style: TextStyle(fontSize: 16)),
+                  Text('ตลอดไป',
+                      style: TextStyle(
+                          fontSize: 16,
+                          color: durationMode == DurationMode.forever
+                              ? Colors.black
+                              : const Color.fromARGB(210, 189, 189, 189))),
                 ],
               ),
             ),
@@ -1220,6 +1264,7 @@ Widget summary_rejimen({
   required FrequencyMode frequencyMode,
   required int timesPerDay,
   required int everyHours,
+  TimeOfDay? startTime,
   required List<ReminderDose> doses,
 }) {
   final avatarImage = buildMedicineImage(selectedMedicine?.imagePath ?? '');
@@ -1296,7 +1341,10 @@ Widget summary_rejimen({
                   SizedBox(
                     width: 80,
                     child: Text(
-                      formatTime(dose.time),
+                      frequencyMode == FrequencyMode.everyHours &&
+                              startTime != null
+                          ? formatTime(startTime)
+                          : formatTime(dose.time),
                       style: const TextStyle(
                         color: Color(0xFF1F497D),
                         fontWeight: FontWeight.w600,
@@ -1457,7 +1505,7 @@ class RegimenCreateInput {
   final String scheduleType; // DAILY/WEEKLY/INTERVAL/CYCLE
   final DateTime startDateUtc;
   final DateTime? endDateUtc;
-  final List<int>? daysOfWeek;
+  final List<String>? daysOfWeek;
   final int? intervalDays;
   final int? cycleOnDays;
   final int? cycleBreakDays;
@@ -1486,33 +1534,35 @@ String mapRegimenScheduleType(FrequencyPattern pattern) {
   }
 }
 
-List<String> toWeekdayCodes(Set<int> weekdays) {
-  const mapping = <int, String>{
-    1: 'MON',
-    2: 'TUE',
-    3: 'WED',
-    4: 'THU',
-    5: 'FRI',
-    6: 'SAT',
-    7: 'SUN',
-  };
+List<String> toWeekdayCodes(Set<String> weekdays) {
+  const order = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+  final ordered = weekdays.toList()
+    ..sort((a, b) => order.indexOf(a).compareTo(order.indexOf(b)));
 
-  final ordered = weekdays.toList()..sort();
-  final codes = <String>[];
-  for (final day in ordered) {
-    final code = mapping[day];
-    if (code != null) codes.add(code);
-  }
-  return codes;
+  return ordered.where((day) => order.contains(day)).toList();
 }
 
-Set<int> parseDaysOfWeekRaw(String? raw) {
+Set<String> parseDaysOfWeekRaw(String? raw) {
   if (raw == null || raw.trim().isEmpty) return {};
   final items = raw.split(',');
-  final result = <int>{};
+  final result = <String>{};
+  const validDays = {'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'};
+  const numMapping = {
+    '1': 'MON',
+    '2': 'TUE',
+    '3': 'WED',
+    '4': 'THU',
+    '5': 'FRI',
+    '6': 'SAT',
+    '7': 'SUN',
+  };
+
   for (final item in items) {
-    final value = int.tryParse(item.trim());
-    if (value != null && value >= 1 && value <= 7) {
+    var value = item.trim().toUpperCase();
+    if (numMapping.containsKey(value)) {
+      value = numMapping[value]!;
+    }
+    if (validDays.contains(value)) {
       result.add(value);
     }
   }
@@ -1547,7 +1597,7 @@ ReminderPlan fromRegimenDetail({
 
   final weekdays = pattern == FrequencyPattern.someDays
       ? parseDaysOfWeekRaw(detail.daysOfWeekRaw)
-      : <int>{};
+      : <String>{};
 
   final doses = detail.times.map((time) {
     return ReminderDose(

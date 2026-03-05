@@ -279,7 +279,7 @@ class _RemindListScreenState extends State<RemindListScreen> {
 
     final weekdays = pattern == FrequencyPattern.someDays
         ? parseDaysOfWeekRaw(item.daysOfWeekRaw)
-        : <int>{};
+        : <String>{};
 
     final doses = item.times
         .map(
@@ -406,18 +406,20 @@ class _RemindListScreenState extends State<RemindListScreen> {
         return 'ความถี่: ทุกวัน';
       case FrequencyPattern.someDays:
         if (plan.weekdays.isEmpty) return 'ความถี่: บางวัน';
-        final labels = <int, String>{
-          1: 'จ.',
-          2: 'อ.',
-          3: 'พ.',
-          4: 'พฤ.',
-          5: 'ศ.',
-          6: 'ส.',
-          7: 'อา.',
+        final labels = <String, String>{
+          'MON': 'จ',
+          'TUE': 'อ',
+          'WED': 'พ',
+          'THU': 'พฤ',
+          'FRI': 'ศ',
+          'SAT': 'ส',
+          'SUN': 'อา',
         };
-        final days = plan.weekdays.toList()..sort();
-        final text = days.map((d) => labels[d] ?? d.toString()).join(', ');
-        return 'ความถี่: บางวัน ($text)';
+        const order = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+        final days = plan.weekdays.toList()
+          ..sort((a, b) => order.indexOf(a).compareTo(order.indexOf(b)));
+        final text = days.map((d) => labels[d] ?? d).join(', ');
+        return 'ความถี่: $text';
       case FrequencyPattern.everyInterval:
         final count = plan.everyCount < 1 ? 1 : plan.everyCount;
         final unit = plan.everyUnit.trim().isEmpty ? 'วัน' : plan.everyUnit;

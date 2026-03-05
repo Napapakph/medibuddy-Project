@@ -48,7 +48,7 @@ class RegimenApiService {
     required String scheduleType, // DAILY/WEEKLY/INTERVAL/CYCLE
     required DateTime startDateUtc,
     DateTime? endDateUtc, // only DAILY
-    List<int>? daysOfWeek, // only WEEKLY
+     List<String>? daysOfWeek,// only WEEKLY
     int? intervalDays, // only INTERVAL
     int? cycleOnDays, // only CYCLE
     int? cycleBreakDays, // only CYCLE
@@ -471,7 +471,7 @@ class RegimenApiService {
     required String scheduleType,
     required DateTime startDateUtc,
     DateTime? endDateUtc,
-    List<int>? daysOfWeek,
+    List<String>? daysOfWeek,
     int? intervalDays,
     int? cycleOnDays,
     int? cycleBreakDays,

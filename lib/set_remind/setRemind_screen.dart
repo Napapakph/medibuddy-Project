@@ -31,7 +31,7 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
   FrequencyPattern _frequencyPattern = FrequencyPattern.everyDay;
   DurationMode _durationMode = DurationMode.forever;
 
-  final Set<int> _selectedWeekdays = {1, 2, 3, 4, 5, 6, 7};
+  final Set<String> _selectedWeekdays = {};
 
   int _timesPerDay = 3;
   int _everyHours = 6;
@@ -274,7 +274,7 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
       timesPerDay: _timesPerDay,
       everyHours: _everyHours,
       frequencyPattern: _frequencyPattern,
-      weekdays: Set<int>.from(_selectedWeekdays),
+      weekdays: Set<String>.from(_selectedWeekdays),
       everyCount: _everyCount,
       everyUnit: _everyUnit,
       durationMode: _durationMode,
@@ -538,6 +538,7 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
         frequencyMode: _frequencyMode,
         timesPerDay: _timesPerDay,
         everyHours: _everyHours,
+        startTime: _startTime,
         doses: _doses,
       ),
     ];

@@ -50,7 +50,7 @@ class MedicineRegimenResponse {
   final String scheduleType; // DAILY/WEEKLY/INTERVAL/CYCLE
   final String startDate;
   final String? endDate;
-  final List<int>? daysOfWeek;
+  final String? daysOfWeekRaw;
   final int? intervalDays;
   final int? cycleOnDays;
   final int? cycleBreakDays;
@@ -63,7 +63,7 @@ class MedicineRegimenResponse {
     required this.scheduleType,
     required this.startDate,
     this.endDate,
-    this.daysOfWeek,
+    this.daysOfWeekRaw,
     this.intervalDays,
     this.cycleOnDays,
     this.cycleBreakDays,
@@ -78,7 +78,13 @@ class MedicineRegimenResponse {
       scheduleType: json['scheduleType'] ?? '',
       startDate: json['startDate'] ?? '',
       endDate: json['endDate'],
-      daysOfWeek: (json['daysOfWeek'] as List?)?.map((e) => e as int).toList(),
+      daysOfWeekRaw: () {
+        final rawDays = json['daysOfWeek'];
+        if (rawDays is String) return rawDays;
+        if (rawDays is List) return rawDays.join(',');
+        if (rawDays != null) return rawDays.toString();
+        return null;
+      }(),
       intervalDays: json['intervalDays'],
       cycleOnDays: json['cycleOnDays'],
       cycleBreakDays: json['cycleBreakDays'],
@@ -144,8 +150,8 @@ class MedicineRegimenDetailResponse {
     if (medicineListJson is Map<String, dynamic>) {
       medicineList = MedicineListDetail.fromJson(medicineListJson);
     } else if (medicineListJson is Map) {
-      medicineList =
-          MedicineListDetail.fromJson(Map<String, dynamic>.from(medicineListJson));
+      medicineList = MedicineListDetail.fromJson(
+          Map<String, dynamic>.from(medicineListJson));
     }
 
     return MedicineRegimenDetailResponse(
@@ -204,7 +210,8 @@ class MedicineListDetail {
     if (medicineJson is Map<String, dynamic>) {
       medicine = MedicineDetail.fromJson(medicineJson);
     } else if (medicineJson is Map) {
-      medicine = MedicineDetail.fromJson(Map<String, dynamic>.from(medicineJson));
+      medicine =
+          MedicineDetail.fromJson(Map<String, dynamic>.from(medicineJson));
     }
 
     return MedicineListDetail(
@@ -277,7 +284,8 @@ class MedicineRegimenListResponse {
       if (item is Map<String, dynamic>) {
         parsed.add(MedicineRegimenItem.fromJson(item));
       } else if (item is Map) {
-        parsed.add(MedicineRegimenItem.fromJson(Map<String, dynamic>.from(item)));
+        parsed
+            .add(MedicineRegimenItem.fromJson(Map<String, dynamic>.from(item)));
       }
     }
 
@@ -341,8 +349,8 @@ class MedicineRegimenItem {
     if (medicineListJson is Map<String, dynamic>) {
       medicineList = MedicineListDetail.fromJson(medicineListJson);
     } else if (medicineListJson is Map) {
-      medicineList =
-          MedicineListDetail.fromJson(Map<String, dynamic>.from(medicineListJson));
+      medicineList = MedicineListDetail.fromJson(
+          Map<String, dynamic>.from(medicineListJson));
     }
 
     return MedicineRegimenItem(
