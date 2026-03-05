@@ -221,9 +221,8 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('❌ โหลดรายละเอียดไม่สำเร็จ: $e')),
-      );
+
+      debugPrint('❌ โหลดรายละเอียดไม่สำเร็จ: $e');
     }
   }
 
@@ -245,9 +244,7 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
       await _loadMedicines();
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('ลบรายการยาไม่สำเร็จ: $e')),
-      );
+      debugPrint('❌ ลบรายการยาไม่สำเร็จ: $e');
     }
   }
 

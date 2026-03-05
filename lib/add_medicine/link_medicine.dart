@@ -269,9 +269,6 @@ class _LinkMedicinePageState extends State<LinkMedicinePage> {
               );
             } catch (e) {
               debugPrint('❌ Navigation to RemindListScreen failed: $e');
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('เกิดข้อผิดพลาดในการเปิดหน้า: $e')),
-              );
             }
           }
           // ไม่ว่าจะเลือกอะไร ก็หยุดการทำงาน ไม่ไปต่อ (เพราะซ้ำ)
@@ -326,9 +323,6 @@ class _LinkMedicinePageState extends State<LinkMedicinePage> {
       }
     } catch (e, stack) {
       debugPrint('❌ _goNext CRITICAL error: $e\n$stack');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('เกิดข้อผิดพลาด: $e')),
-      );
     }
   }
 

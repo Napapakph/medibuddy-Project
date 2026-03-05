@@ -67,9 +67,6 @@ class _CreateNameMedicinePageState extends State<CreateNameMedicinePage> {
   Future<void> _goNext() async {
     final name = _nameController.text.trim();
     if (name.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('กรุณาตั้งชื่อยา')),
-      );
       return;
     }
 
@@ -198,7 +195,6 @@ class _CreateNameMedicinePageState extends State<CreateNameMedicinePage> {
                     controller: _nameController,
                     decoration: InputDecoration(
                       hintText: 'ชื่อยา',
-                      errorText: "กรุณาตั้งชื่อยา",
                       filled: true,
                       fillColor: const Color.fromARGB(255, 255, 255, 255),
                       border: OutlineInputBorder(
