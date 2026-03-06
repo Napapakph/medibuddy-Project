@@ -803,7 +803,7 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
             ),
             const SizedBox(height: 10),
             const Text(
-              'อนุญาตให้ดูประวัติการทานยา',
+              'อนุญาตให้ดูประวัติการรับทานยา',
               style: TextStyle(
                 fontWeight: FontWeight.w700,
                 fontSize: 16,

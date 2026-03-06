@@ -475,7 +475,7 @@ Widget type_frequency({
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'รูปแบบและความถี่การรับประทานยา',
+              'รูปแบบการรับประทานยา',
               style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
             ),
             const SizedBox(height: 8),

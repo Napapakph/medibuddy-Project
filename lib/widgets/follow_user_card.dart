@@ -11,8 +11,8 @@ class FollowUserCard extends StatelessWidget {
     this.onEdit,
     this.onDetail_1,
     this.onDetail_2,
-    this.actionLabel_1 = 'ดูประวัติการทานยา',
-    this.actionLabel_2 = 'ดูแผนการทานยา',
+    this.actionLabel_1 = 'ดูประวัติการกินยา',
+    this.actionLabel_2 = 'ดูแผนการกินยา',
     this.actionIcon = Icons.history,
   });
 

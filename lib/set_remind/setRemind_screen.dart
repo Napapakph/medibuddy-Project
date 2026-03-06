@@ -600,13 +600,13 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
                   const Icon(
                     Icons.arrow_right_rounded,
                     size: 18,
-                    color: Color(0xFF7BAEE5),
+                    color: Color(0xFF2B4C7E),
                   ),
                   Text(
                     currentSubtitle,
                     style: const TextStyle(
                       fontSize: 16,
-                      color: Color.fromARGB(255, 255, 255, 255),
+                      color: Color(0xFF2B4C7E),
                       fontWeight: FontWeight.w500,
                     ),
                   ),

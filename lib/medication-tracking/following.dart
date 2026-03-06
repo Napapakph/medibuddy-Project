@@ -519,7 +519,9 @@ class _FollowingScreenState extends State<FollowingScreen>
                           ),
                         ),
                         child: Text(
-                          isRegimen ? 'ดูแผนการทานยา' : 'ดูประวัติการทานยา',
+                          isRegimen
+                              ? 'ดูแผนการทานยา'
+                              : 'ดูประวัติการรับประทานยา',
                           style: const TextStyle(
                               fontSize: 16, fontWeight: FontWeight.bold),
                           maxLines: 1,

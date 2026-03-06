@@ -579,7 +579,7 @@ class _LibraryProfileState extends State<LibraryProfile> {
         return AlertDialog(
           title: const Text('ลบโปรไฟล์'),
           content: Text(
-              'ต้องการลบโปรไฟล์ "${profile.username}" หรือไม่?\n\nถ้าลบ รายการยาที่สร้าง รวมถึงประวัติการทายาทั้งหมดที่ผ่านมาจะหายทั้งหมด ยืนยันการลบหรือไม่'),
+              'ต้องการลบโปรไฟล์ "${profile.username}" หรือไม่?\n\nถ้าลบ รายการยาที่สร้าง รวมถึงประวัติการรับประทานยาทั้งหมดที่ผ่านมาจะหายทั้งหมด ยืนยันการลบหรือไม่'),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),

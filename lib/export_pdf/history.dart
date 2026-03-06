@@ -512,9 +512,6 @@ class _HistoryPageState extends State<HistoryPage> {
   }
 
   Future<void> _exportPdf() async {
-    // ScaffoldMessenger.of(context).showSnackBar(
-    //   const SnackBar(content: Text('ห้ไส่งออก'),
-    // );
     if (!mounted) return;
     final items = List<MedicineHistoryItem>.from(_filteredItems);
     if (items.isEmpty) {
@@ -529,75 +526,127 @@ class _HistoryPageState extends State<HistoryPage> {
     final dateRangeText = _formatDateRangeForPdf(_startDate, _endDate);
 
     try {
+      final regularFontData =
+          await rootBundle.load('assets/fonts/Mali-Regular.ttf');
+      final boldFontData = await rootBundle.load('assets/fonts/Mali-Bold.ttf');
+      final regularFont = pw.Font.ttf(regularFontData);
+      final boldFont = pw.Font.ttf(boldFontData);
+
       final pdf = pw.Document();
       pdf.addPage(
         pw.MultiPage(
           pageFormat: PdfPageFormat.a4,
-          margin: const pw.EdgeInsets.all(24),
+          margin: const pw.EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+          theme: pw.ThemeData.withFont(
+            base: regularFont,
+            bold: boldFont,
+          ),
           build: (context) {
             final widgets = <pw.Widget>[
-              pw.Text(
-                'ประวัติการรับประทานยา',
-                style: pw.TextStyle(fontSize: 20),
+              pw.Center(
+                child: pw.Text(
+                  'Medication History',
+                  style: pw.TextStyle(
+                    fontSize: 20,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                ),
               ),
-              pw.SizedBox(height: 8),
-              pw.Text(
-                dateRangeText,
-                style: pw.TextStyle(fontSize: 12),
+              pw.SizedBox(height: 4),
+              pw.Center(
+                child: pw.Text(
+                  'MediBuddy',
+                  style: const pw.TextStyle(fontSize: 14),
+                ),
               ),
               pw.SizedBox(height: 16),
+              pw.Center(
+                child: pw.Text(
+                  'Date range:',
+                  style: const pw.TextStyle(fontSize: 12),
+                ),
+              ),
+              pw.SizedBox(height: 4),
+              pw.Center(
+                child: pw.Text(
+                  dateRangeText,
+                  style: const pw.TextStyle(fontSize: 12),
+                ),
+              ),
+              pw.SizedBox(height: 24),
             ];
 
             for (final day in dateKeys) {
               final dayItems =
                   List<MedicineHistoryItem>.from(grouped[day] ?? [])
                     ..sort((a, b) => b.takenAt.compareTo(a.takenAt));
+
+              final dateStr = DateFormat('EEEE d MMM yyyy').format(day);
+
               widgets.addAll([
                 pw.Text(
-                  _formatThaiDate(day),
-                  style: pw.TextStyle(fontSize: 14),
+                  dateStr,
+                  style: pw.TextStyle(
+                    fontSize: 12,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
                 ),
-                pw.SizedBox(height: 6),
-                ...dayItems.expand((item) {
-                  final timeText = _formatTime(item.takenAt);
-                  final quantity = _quantityLabelForPdf(item);
-                  final status = _statusLabelForPdf(item.status);
-                  final note = item.note?.trim() ?? '';
-
-                  final rows = <pw.Widget>[
-                    pw.Text(
-                      '$timeText - ${item.titleTh}',
-                      style: pw.TextStyle(fontSize: 12),
-                    ),
-                    pw.Text(
-                      quantity,
-                      style: pw.TextStyle(fontSize: 12),
-                    ),
-                  ];
-
-                  if (status.isNotEmpty) {
-                    rows.add(
-                      pw.Text(
-                        status,
-                        style: pw.TextStyle(fontSize: 12),
-                      ),
-                    );
-                  }
-
-                  if (note.isNotEmpty) {
-                    rows.add(
-                      pw.Text(
-                        note,
-                        style: pw.TextStyle(fontSize: 12),
-                      ),
-                    );
-                  }
-
-                  rows.add(pw.SizedBox(height: 6));
-                  return rows;
-                }),
-                pw.Divider(),
+                pw.SizedBox(height: 4),
+                pw.Divider(thickness: 0.5),
                 pw.SizedBox(height: 8),
+                pw.TableHelper.fromTextArray(
+                  border: pw.TableBorder.all(width: 0.5),
+                  headerDecoration:
+                      const pw.BoxDecoration(color: PdfColors.grey200),
+                  headerStyle: pw.TextStyle(
+                      fontSize: 11, fontWeight: pw.FontWeight.bold),
+                  cellStyle: const pw.TextStyle(fontSize: 10),
+                  cellPadding: const pw.EdgeInsets.all(6),
+                  columnWidths: {
+                    0: const pw.FixedColumnWidth(60),
+                    1: const pw.FlexColumnWidth(),
+                    2: const pw.FixedColumnWidth(60),
+                    3: const pw.FixedColumnWidth(70),
+                    4: const pw.FlexColumnWidth(),
+                  },
+                  headers: ['Time', 'Medicine', 'Dose', 'Status', 'Note'],
+                  data: dayItems.map((item) {
+                    final timeText = DateFormat('HH:mm').format(item.takenAt);
+                    final doseText = item.dose != null
+                        ? '${item.dose} ${item.unit ?? ''}'.trim()
+                        : '${item.amount} tablets';
+
+                    String statusText;
+                    switch (item.status) {
+                      case MedicineTakeStatus.take:
+                        statusText = 'Taken';
+                        break;
+                      case MedicineTakeStatus.skip:
+                        statusText = 'Skipped';
+                        break;
+                      case MedicineTakeStatus.snooze:
+                        statusText = 'Snoozed';
+                        break;
+                      case MedicineTakeStatus.none:
+                        statusText = 'Pending';
+                        break;
+                    }
+
+                    final medicineName =
+                        item.titleEn.isNotEmpty ? item.titleEn : item.titleTh;
+                    final noteText =
+                        item.note?.isEmpty ?? true ? '-' : item.note;
+
+                    return [
+                      timeText,
+                      medicineName,
+                      doseText,
+                      statusText,
+                      noteText,
+                    ];
+                  }).toList(),
+                ),
+                pw.SizedBox(height: 24),
               ]);
             }
 
@@ -639,19 +688,6 @@ class _HistoryPageState extends State<HistoryPage> {
     return '$startText - $endText';
   }
 
-  String _statusLabelForPdf(MedicineTakeStatus status) {
-    switch (status) {
-      case MedicineTakeStatus.take:
-        return 'กินแล้ว';
-      case MedicineTakeStatus.skip:
-        return 'ข้าม';
-      case MedicineTakeStatus.snooze:
-        return 'เลื่อนเตือน';
-      case MedicineTakeStatus.none:
-        return '';
-    }
-  }
-
   String _mapUnitToThai(String unit) {
     final normalized = unit.trim().toLowerCase();
     switch (normalized) {
@@ -668,15 +704,6 @@ class _HistoryPageState extends State<HistoryPage> {
       default:
         return unit.trim().isEmpty ? 'เม็ด' : unit;
     }
-  }
-
-  String _quantityLabelForPdf(MedicineHistoryItem item) {
-    final dose = item.dose;
-    if (dose != null && dose > 0) {
-      final unitLabel = _mapUnitToThai(item.unit ?? '');
-      return '$dose $unitLabel';
-    }
-    return '${item.amount} เม็ด';
   }
 
   @override

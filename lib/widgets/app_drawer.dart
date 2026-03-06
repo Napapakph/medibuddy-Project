@@ -165,7 +165,7 @@ class AppDrawer extends StatelessWidget {
                           _DrawerMenuItem(
                             icon: const Icon(Icons.history,
                                 size: 28, color: _iconColor),
-                            title: 'ประวัติการทานยา',
+                            title: 'ประวัติการรับประทานยา',
                             onTap: () => _go(context, '/history'),
                           ),
                           _DrawerMenuItem(

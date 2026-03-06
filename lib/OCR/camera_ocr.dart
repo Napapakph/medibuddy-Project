@@ -4,6 +4,7 @@ import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart'; // สำหรับ debugPrint
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'ocr_camera_frame.dart';
 import 'ocr_image_cropper.dart';
 import 'ocr_result_page.dart';
@@ -282,7 +283,7 @@ class _CameraOcrPageState extends State<CameraOcrPage> {
     );
   }
 
-  Future<bool> _validateOcrImage(File file) async {
+  Future<File?> _validateOcrImage(File file) async {
     try {
       final bytes = await file.readAsBytes();
       final sizeInBytes = bytes.length;
@@ -305,12 +306,7 @@ class _CameraOcrPageState extends State<CameraOcrPage> {
       if (extension != 'jpg' && extension != 'jpeg' && extension != 'png') {
         _showValidationDialog(
             'ระบบรองรับเฉพาะไฟล์รูปภาพ JPG, JPEG, และ PNG เท่านั้น');
-        return false;
-      }
-
-      if (sizeInMB > 3.0) {
-        _showValidationDialog('ขนาดไฟล์เกิน 3 MB');
-        return false;
+        return null;
       }
 
       final minDim = width < height ? width : height;
@@ -318,14 +314,47 @@ class _CameraOcrPageState extends State<CameraOcrPage> {
       if (minDim < 720 || maxDim < 1280) {
         _showValidationDialog(
             'ความละเอียดภาพไม่เพียงพอ ต้องการความละเอียดตั้งแต่ 1280x720 ขึ้นไป');
-        return false;
+        return null;
       }
 
-      return true;
+      if (sizeInMB > 3.0) {
+        debugPrint('File size exceeds 3MB, attempting to compress...');
+        final targetPath =
+            file.path.replaceFirst(RegExp(r'\.[a-zA-Z]+$'), '_compressed.jpg');
+        XFile? result = await FlutterImageCompress.compressAndGetFile(
+          file.absolute.path,
+          targetPath,
+          quality: 80,
+        );
+
+        if (result != null) {
+          final newFile = File(result.path);
+          final newBytes = await newFile.readAsBytes();
+          final newSizeInMB = newBytes.length / (1024 * 1024);
+          debugPrint('----------------------------------------');
+          debugPrint('DEBUG OCR IMAGE COMPRESSED:');
+          debugPrint('New File Size: ${newBytes.length} bytes');
+          debugPrint(
+              'New File Size (MB): ${newSizeInMB.toStringAsFixed(2)} MB');
+          debugPrint('----------------------------------------');
+
+          if (newSizeInMB > 3.0) {
+            _showValidationDialog(
+                'ขนาดไฟล์เกิน 3 MB ไม่สามารถลดขนาดให้ต่ำกว่ากำหนดได้');
+            return null;
+          }
+          return newFile;
+        } else {
+          _showValidationDialog('ขนาดไฟล์เกิน 3 MB ไม่สามารถลดขนาดได้');
+          return null;
+        }
+      }
+
+      return file;
     } catch (e) {
       debugPrint('Image validation error: $e');
       _showValidationDialog('เกิดข้อผิดพลาดในการตรวจสอบไฟล์รูปภาพ');
-      return false;
+      return null;
     }
   }
 
@@ -432,11 +461,12 @@ class _CameraOcrPageState extends State<CameraOcrPage> {
     }
 
     // 1) Validate Image Before processing
-    final isValid = await _validateOcrImage(imageFile);
-    if (!isValid) {
+    final validFile = await _validateOcrImage(imageFile);
+    if (validFile == null) {
       _log('processImage cancelled due to validation failure (source=$source)');
       return;
     }
+    imageFile = validFile;
 
     _log('processImage start (source=$source, path=${imageFile.path})');
     setState(() => _isProcessing = true);

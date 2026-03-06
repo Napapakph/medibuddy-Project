@@ -272,7 +272,7 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
         return AlertDialog(
           title: const Text('ยืนยันที่จะลบรายการยาใช่มั้ย'),
           content: const Text(
-              'ข้อมูลประวัติการทานยาทั้งหมดที่เกี่ยวข้องจะหายไป ต้องการลบจริงๆใช่มั้ย'),
+              'ข้อมูลประวัติการรับประทานยาทั้งหมดที่เกี่ยวข้องจะหายไป ต้องการลบจริงๆใช่มั้ย'),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, true),

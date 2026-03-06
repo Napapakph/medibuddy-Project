@@ -129,7 +129,7 @@ class _MedicineSearchPageState extends State<MedicineSearchPage> {
             controller: _searchController,
             onSubmitted: (_) => _onSearch(),
             decoration: InputDecoration(
-              labelText: 'ชื่อสามัญทางภาษาไทย/อังกฤษ หรือชื่อการค้า',
+              labelText: 'ชื่อสามัญภาษาไทย/อังกฤษ หรือชื่อการค้า',
               hintStyle:
                   const TextStyle(color: Color(0xFF8A9BB5), fontSize: 14),
               filled: true,
@@ -188,6 +188,7 @@ class _MedicineSearchPageState extends State<MedicineSearchPage> {
     final trade = _safe(item.mediTradeName);
     final en = _safe(item.mediEnName);
     final th = _safe(item.mediThName);
+    final type = _safe(item.mediType);
 
     final imageUrl = _toFullImageUrl(item.mediPicture ?? '');
 
@@ -263,6 +264,14 @@ class _MedicineSearchPageState extends State<MedicineSearchPage> {
                     style: const TextStyle(
                       fontSize: 12,
                       color: Color(0xFF8A9BB5),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    '${type}',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Color.fromARGB(255, 176, 128, 138),
                     ),
                   ),
                 ],
