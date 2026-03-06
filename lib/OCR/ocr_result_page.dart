@@ -3,6 +3,7 @@ import '../add_medicine/link_medicine.dart';
 import 'package:flutter/material.dart';
 import '../widgets/medicine_step_timeline.dart';
 import '../Model/medicine_model.dart';
+import 'ocr_global.dart';
 
 // หน้าจอแสดงข้อความ "สแกนสำเร็จ!" สั้น ๆ ก่อนเด้งไปหน้าแก้ไขผลลัพธ์
 class OcrSuccessPage extends StatefulWidget {
@@ -135,11 +136,13 @@ class _OcrResultPageState extends State<OcrResultPage> {
   void initState() {
     super.initState();
     _controller = TextEditingController(text: widget.recognizedText);
+    globalOcrImage = widget.imageFile;
   }
 
   // ลบ controller ตอนออกจากหน้านี้
   @override
   void dispose() {
+    globalOcrImage = null;
     _controller.dispose();
     super.dispose();
   }

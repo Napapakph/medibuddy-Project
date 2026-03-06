@@ -3,6 +3,8 @@ import '../services/request_api.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../OCR/ocr_global.dart';
+import '../services/auth_manager.dart';
 
 class RequestMedicinePage extends StatefulWidget {
   final String medicineName;
@@ -20,6 +22,14 @@ class _RequestMedicinePageState extends State<RequestMedicinePage> {
   String _imagePath = '';
   bool _saving = false;
 
+  @override
+  void initState() {
+    super.initState();
+    if (globalOcrImage != null) {
+      _imagePath = globalOcrImage!.path;
+    }
+  }
+
   Future<void> _pickImage(ImageSource source) async {
     final picker = ImagePicker();
     final image = await picker.pickImage(source: source);
@@ -30,8 +40,8 @@ class _RequestMedicinePageState extends State<RequestMedicinePage> {
     });
   }
 
-  String? _getToken() {
-    return Supabase.instance.client.auth.currentSession?.accessToken;
+  Future<String?> _getToken() async {
+    return await AuthManager.service.getAccessToken();
   }
 
   Future<void> _submitRequest() async {
@@ -51,6 +61,7 @@ class _RequestMedicinePageState extends State<RequestMedicinePage> {
       );
 
       if (!mounted) return;
+      globalOcrImage = null;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('ส่งคำร้องเรียบร้อยแล้ว')),
       );
@@ -140,7 +151,7 @@ class _RequestMedicinePageState extends State<RequestMedicinePage> {
                             File(_imagePath),
                             width: double.infinity,
                             height: double.infinity,
-                            fit: BoxFit.cover,
+                            fit: BoxFit.scaleDown,
                           ),
                         )
                       else

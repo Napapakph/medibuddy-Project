@@ -7,6 +7,7 @@ import 'package:medibuddy/widgets/medicine_step_timeline.dart';
 import 'package:medibuddy/services/medicine_api.dart';
 import '../search_medicine/detail_medicine.dart';
 import '../add_medicine/medicine_list_screen.dart';
+import '../OCR/ocr_global.dart';
 
 class SummaryMedicinePage extends StatefulWidget {
   final MedicineDraft draft;
@@ -217,6 +218,7 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
       );
 
       if (!mounted) return;
+      globalOcrImage = null;
 
       Navigator.pushReplacement(
           context,
