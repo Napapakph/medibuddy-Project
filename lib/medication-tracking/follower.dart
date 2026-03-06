@@ -59,7 +59,7 @@ class _FollowerScreenState extends State<FollowerScreen> {
   }
 
   String _readFollowerName(Map<String, dynamic> follower) {
-    final name = (follower['name'] ??
+    final name = (follower['viewerNickname'] ??
             follower['nickname'] ??
             follower['displayName'] ??
             follower['profileName'] ??
@@ -82,7 +82,7 @@ class _FollowerScreenState extends State<FollowerScreen> {
   }
 
   String _readFollowerAvatarPath(Map<String, dynamic> follower) {
-    return (follower['accountPicture'] ?? '').toString().trim();
+    return (follower['viewerPicture'] ?? '').toString().trim();
   }
 
   ImageProvider? buildProfileImage(String imagePath) {
@@ -104,10 +104,6 @@ class _FollowerScreenState extends State<FollowerScreen> {
 
   List<int> _readFollowerProfileIds(Map<String, dynamic> follower) {
     final candidates = [
-      follower['profileIds'],
-      follower['profiles'],
-      follower['allowedProfiles'],
-      follower['viewerProfileIds'],
       follower['sharedProfiles'], // <--- Add checking this key
     ];
     final ids = <int>{};

@@ -77,15 +77,11 @@ class _OTPScreenState extends State<OTPScreen> {
       }
       if (!mounted) return;
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('ส่ง OTP ใหม่แล้ว')),
-      );
+      debugPrint('ส่ง OTP ใหม่แล้ว');
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Resend OTP failed: $e')),
-      );
+      debugPrint('เกิดข้อผิดพลาด: $e');
     }
   }
 
@@ -93,9 +89,7 @@ class _OTPScreenState extends State<OTPScreen> {
     final verificationCode = _otp.text.trim();
 
     if (verificationCode.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('กรุณากรอก OTP')),
-      );
+      debugPrint('กรุณากรอก OTP');
       return;
     }
 
@@ -274,7 +268,8 @@ class _OTPScreenState extends State<OTPScreen> {
                       showFieldAsBox: true,
 
                       // 🔵 สีพื้นหลังละมุน
-                      fillColor: const Color(0xFFF3F8FF),
+                      fillColor: const Color.fromARGB(255, 255, 255, 255),
+                      filled: true,
 
                       // 🔘 ขอบตอนปกติ
                       enabledBorderColor: const Color(0xFFD6E4FF),

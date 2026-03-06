@@ -182,19 +182,34 @@ class _CreateNameMedicinePageState extends State<CreateNameMedicinePage> {
                 children: [
                   const MedicineStepTimeline(currentStep: 1),
                   SizedBox(height: maxHeight * 0.03),
-                  const Text(
-                    'ตั้งชื่อยา',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF2B4C7E),
+                  RichText(
+                    text: const TextSpan(
+                      text: 'ตั้งชื่อยา ',
+                      style: TextStyle(
+                        color: Color(0xFF1F2E45),
+                        fontSize: 16,
+                      ),
+                      children: [
+                        TextSpan(
+                          text: '*',
+                          style: TextStyle(color: Colors.red),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 8),
-                  TextField(
+                  TextFormField(
                     controller: _nameController,
                     decoration: InputDecoration(
-                      hintText: 'ชื่อยา',
+                      label: RichText(
+                        text: const TextSpan(
+                          style: TextStyle(
+                            color: Color.fromARGB(255, 131, 134, 140),
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                      hintText: 'ชื่อเล่นยา',
                       filled: true,
                       fillColor: const Color.fromARGB(255, 255, 255, 255),
                       border: OutlineInputBorder(
@@ -205,7 +220,7 @@ class _CreateNameMedicinePageState extends State<CreateNameMedicinePage> {
                   ),
                   SizedBox(height: maxHeight * 0.03),
                   const Text(
-                    'รูปยา',
+                    'รูปยา (ถ้ามี)',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,

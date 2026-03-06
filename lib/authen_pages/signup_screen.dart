@@ -197,9 +197,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
   Future<void> _handleSignup() async {
     if (!_formKey.currentState!.validate()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('กรุณากรอกข้อมูลให้ถูกต้อง')),
-      );
+      debugPrint('กรุณากรอกข้อมูลให้ถูกต้อง');
       return;
     }
     final email = _email.text.trim();
@@ -336,7 +334,7 @@ class _SignupScreenState extends State<SignupScreen> {
             ElevatedButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF1F497D),
+                backgroundColor: const Color.fromARGB(255, 90, 129, 187),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12)),
@@ -391,9 +389,7 @@ class _SignupScreenState extends State<SignupScreen> {
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Google Login ไม่สำเร็จ: $e')),
-      );
+      debugPrint('Google Login ไม่สำเร็จ: $e');
     } finally {
       if (!mounted) return;
       setState(() => _isGoogleLoading = false);
