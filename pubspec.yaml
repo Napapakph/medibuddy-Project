@@ -164,7 +164,7 @@ flutter:
 flutter_launcher_icons:
   color: "#FFFFFF"
   android: true
-  image_path: "assets/splash_logo.png"
+  image_path: "assets/splash_logo_white.png"
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 

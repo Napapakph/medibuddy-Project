@@ -16,8 +16,10 @@ class OcrImageCropper {
       uiSettings: [
         AndroidUiSettings(
           toolbarTitle: 'ครอบรูปชื่อยา',
-          toolbarColor: const Color(0xFF5A81BB),
-          toolbarWidgetColor: Colors.white,
+          toolbarColor: const Color(
+              0xFFC1DEFF), // ใช้สีทึบแทนเนื่องจากปลั๊กอินไม่รองรับ Gradient
+          toolbarWidgetColor: const Color(
+              0xFF2B4C7E), // เปลี่ยนสีข้อความให้เข้มขึ้นเพื่อให้อ่านง่ายบนพื้นหลังออ่อน
           initAspectRatio: CropAspectRatioPreset.original,
           lockAspectRatio: false,
         ),
