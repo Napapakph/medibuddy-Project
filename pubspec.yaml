@@ -56,7 +56,7 @@ dependencies:
  
   
  
-  
+ 
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -120,7 +120,7 @@ flutter:
      - assets/cat_home.png
      - assets/cat_home_drawer.png
      - assets/512x512_แบบไม่มีตัวอักษร.png
-     - assets/1024x1024_แบบไม่มีตัวอักษร.png
+     - assets/splash_logo_white.png
      - assets/tutorial_1.jpg
      - assets/tutorial_2.jpg
      - assets/tutorial_3.jpg
@@ -129,6 +129,7 @@ flutter:
      - assets/before_meal.png
      - assets/between_meal.png
      - assets/after_meal.png
+     - assets/name_logo.png
 
   fonts:
      - family: Kodchasan
@@ -162,9 +163,10 @@ flutter:
         - asset: assets/fonts/Mali-SemiBoldItalic.ttf
 
 flutter_launcher_icons:
-  color: "#FFFFFF"
   android: true
   image_path: "assets/splash_logo_white.png"
+  
+ 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
 
