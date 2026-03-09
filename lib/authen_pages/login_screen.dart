@@ -608,6 +608,41 @@ class _LoginScreenState extends State<LoginScreen> {
 
   final _resetEmailCtrl = TextEditingController();
 
+  void _showInvalidMethodDialog(BuildContext outerContext) {
+    showDialog(
+      context: context,
+      builder: (BuildContext ctx) {
+        return AlertDialog(
+          title: const Text('ไม่สามารถรีเซ็ตรหัสผ่านได้'),
+          content: const Text(
+              'อีเมลนี้ไม่ได้ลงทะเบียนด้วยชื่อผู้ใช้และรหัสผ่าน\nต้องการไปหน้าสมัครสมาชิกหรือไม่'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+              },
+              child: const Text('ไม่ใช่'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                Navigator.pop(
+                    outerContext); // ปิด forgetPassword dialog ก่อนไปหน้า signup
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SignupScreen(),
+                  ),
+                );
+              },
+              child: const Text('ใช่'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   forgetPassword() {
     return showDialog(
       context: context,
@@ -717,11 +752,50 @@ class _LoginScreenState extends State<LoginScreen> {
                           );
                         } on AuthException catch (e) {
                           if (!context.mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(e.message)),
-                          );
                         } catch (e) {
                           if (!context.mounted) return;
+
+                          bool isInvalidMethod = false;
+                          try {
+                            final dynamic err = e;
+                            const targetError = 'INVALID_LOGIN_METHOD';
+                            const targetMsg =
+                                'This account does not use a password. Please log in with your social provider.';
+
+                            // 1. Safe access to response data (prevents NoSuchMethodError if not DioException)
+                            dynamic resData;
+                            try {
+                              resData = err.response?.data;
+                            } catch (_) {}
+
+                            // 2. Check conditions
+                            if (resData != null && resData is Map) {
+                              if (resData['error'] == targetError &&
+                                  resData['message'] == targetMsg) {
+                                isInvalidMethod = true;
+                              }
+                            } else if (err is Map) {
+                              if (err['error'] == targetError &&
+                                  err['message'] == targetMsg) {
+                                isInvalidMethod = true;
+                              }
+                            } else {
+                              final errStr = err.toString();
+                              if (errStr.contains(targetError) &&
+                                  errStr.contains(targetMsg)) {
+                                isInvalidMethod = true;
+                              } else if (errStr.contains(targetMsg)) {
+                                // Fallback: in case CustomAuthService only throws the message inside an Exception
+                                isInvalidMethod = true;
+                              }
+                            }
+                          } catch (_) {}
+
+                          if (isInvalidMethod) {
+                            _showInvalidMethodDialog(dialogContext);
+                            return;
+                          }
+
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                                 content: Text(
@@ -746,6 +820,8 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         );
       },
-    );
+    ).then((_) {
+      _resetEmailCtrl.clear();
+    });
   }
 }
