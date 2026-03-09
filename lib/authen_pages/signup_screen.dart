@@ -215,9 +215,8 @@ class _SignupScreenState extends State<SignupScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Check email failed: $e')),
-      );
+      debugPrint(
+          '-----------------Check email failed---------------- \nเพราะ $e');
       return;
     }
 
@@ -231,9 +230,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
       if (result.success) {
         // Normal register success → OTP verification
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('กรอกรหัสยืนยัน OTP')),
-        );
+        debugPrint('-----------------Normal register success----------------');
         Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => OTPScreen(email: email)),
@@ -262,9 +259,7 @@ class _SignupScreenState extends State<SignupScreen> {
         return;
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result.errorMessage ?? 'Registration failed')),
-      );
+      debugPrint(result.errorMessage ?? 'Registration failed');
     } else {
       // Fallback for non-CustomAuthService (e.g. Supabase)
       final error =
@@ -273,9 +268,7 @@ class _SignupScreenState extends State<SignupScreen> {
       setState(() => _isLoading = false);
 
       if (error == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('กรอกรหัสยืนยัน OTP')),
-        );
+        debugPrint('-----------------กรอกรหัสยืนยัน OTP-----------------');
         Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => OTPScreen(email: email)),
@@ -291,9 +284,7 @@ class _SignupScreenState extends State<SignupScreen> {
         return;
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(error)),
-      );
+      debugPrint(error);
     }
   }
 
@@ -369,9 +360,7 @@ class _SignupScreenState extends State<SignupScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('ส่ง OTP ไม่สำเร็จ: $e')),
-      );
+      debugPrint('--------------ส่ง OTP ไม่สำเร็จ---------------\nเพราะ $e');
     }
   }
 
