@@ -51,6 +51,7 @@ class _AddFollowerScreenState extends State<AddFollowerScreen> {
   final _searchController = TextEditingController();
   final _followApi = FollowApi();
   final Set<String> _sentInviteEmails = {};
+  final Set<String> _alreadyFollowerEmails = {};
 
   List<Map<String, dynamic>> _foundUsers = [];
   bool _isSearching = false;
@@ -116,10 +117,15 @@ class _AddFollowerScreenState extends State<AddFollowerScreen> {
       ),
     );
     if (!mounted) return;
-    if (invited == true) {
+    if (invited == 'invited' || invited == true) {
       final invitedEmail = (user['email'] ?? '').toString().toLowerCase();
       if (invitedEmail.isNotEmpty) {
         setState(() => _sentInviteEmails.add(invitedEmail));
+      }
+    } else if (invited == 'already_follower') {
+      final invitedEmail = (user['email'] ?? '').toString().toLowerCase();
+      if (invitedEmail.isNotEmpty) {
+        setState(() => _alreadyFollowerEmails.add(invitedEmail));
       }
     }
   }
@@ -216,9 +222,10 @@ class _AddFollowerScreenState extends State<AddFollowerScreen> {
     final normalizedEmail = email.toString().toLowerCase();
     final isInvited = (user['isInvited'] == true) ||
         _sentInviteEmails.contains(normalizedEmail);
+    final isAlreadyFollower = _alreadyFollowerEmails.contains(normalizedEmail);
 
     return InkWell(
-      onTap: () => _openPermissionScreen(user),
+      onTap: isAlreadyFollower ? null : () => _openPermissionScreen(user),
       borderRadius: BorderRadius.circular(22),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -246,22 +253,27 @@ class _AddFollowerScreenState extends State<AddFollowerScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    name,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 14,
-                    ),
-                  ),
                   if (email.isNotEmpty)
                     Text(
                       email,
                       style: const TextStyle(
-                        fontSize: 12,
+                        fontSize: 16,
                         color: Colors.black54,
                       ),
                     ),
-                  if (isInvited)
+                  if (isAlreadyFollower)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 4),
+                      child: Text(
+                        'อีเมลนี้เป็นผู้ติดตามอยู่แล้ว',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Color.fromARGB(255, 180, 44, 94),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    )
+                  else if (isInvited)
                     const Padding(
                       padding: EdgeInsets.only(top: 4),
                       child: Text(
@@ -279,8 +291,10 @@ class _AddFollowerScreenState extends State<AddFollowerScreen> {
             Container(
               width: 32,
               height: 32,
-              decoration: const BoxDecoration(
-                color: const Color(0xFF5A81BB),
+              decoration: BoxDecoration(
+                color: isAlreadyFollower
+                    ? const Color(0xFFB7C6DD) // Disabled color
+                    : const Color(0xFF5A81BB),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -418,6 +432,7 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
   List<Map<String, dynamic>> _myProfiles = [];
   final Set<int> _selectedProfileIds = {};
   bool _isLoading = true;
+  bool _isSubmitting = false;
   String? _loadError;
 
   @override
@@ -502,6 +517,8 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
   }
 
   Future<void> _confirmInvite() async {
+    if (_isSubmitting) return;
+
     // Validate Form First
     if (_formKey.currentState != null && !_formKey.currentState!.validate()) {
       return; // Stop if invalid
@@ -516,6 +533,10 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
       return;
     }
 
+    setState(() {
+      _isSubmitting = true;
+    });
+
     try {
       final accessToken = await TokenManager.getValidAccessToken();
       if (accessToken == null) {
@@ -528,12 +549,14 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
           throw Exception('Missing relationshipId');
         }
         final editedName = _nicknameController.text.trim();
-        await _followApi.updateFollowerProfiles(
-          accessToken: accessToken,
-          relationshipId: relationshipId,
-          profileIds: profileIds,
-          name: editedName.isNotEmpty ? editedName : null,
-        );
+        await _followApi
+            .updateFollowerProfiles(
+              accessToken: accessToken,
+              relationshipId: relationshipId,
+              profileIds: profileIds,
+              name: editedName.isNotEmpty ? editedName : null,
+            )
+            .timeout(const Duration(seconds: 15));
       } else {
         final email = widget.user['email']?.toString();
         final userId = _asProfileId(widget.user['id']);
@@ -541,14 +564,28 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
         // Use custom name if provided, otherwise use original name
         final customName = _nicknameController.text.trim();
 
-        await _followApi.sendInvite(
-          accessToken: accessToken,
-          email: email,
-          userId: userId > 0 ? userId : null,
-          profileIds: profileIds,
-          name: customName.isNotEmpty ? customName : null,
-          imageFile: _pickedImage,
+        await _followApi
+            .sendInvite(
+              accessToken: accessToken,
+              email: email,
+              userId: userId > 0 ? userId : null,
+              profileIds: profileIds,
+              name: customName.isNotEmpty ? customName : null,
+              imageFile: _pickedImage,
+            )
+            .timeout(const Duration(seconds: 15));
+      }
+
+      if (!mounted) return;
+
+      if (widget.isEdit) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('บันทึกสำเร็จ')),
         );
+        Navigator.pop(context, true);
+      } else {
+        _showToast('ส่งคำเชิญแล้ว');
+        Navigator.pop(context, 'invited');
       }
     } catch (e) {
       if (!mounted) return;
@@ -563,6 +600,16 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
         return;
       }
 
+      // กรณี 409 Relationship already exists
+      final isAlreadyExists =
+          raw.contains('409') && lower.contains('relationship already exists');
+
+      if (isAlreadyExists) {
+        _showToast('อีเมลนี้เป็นผู้ติดตามอยู่แล้ว');
+        Navigator.pop(context, 'already_follower');
+        return;
+      }
+
       String errorMessage = 'เกิดข้อผิดพลาด: $e';
 
       // ตัดคำว่า "Exception: " ออกเพื่อให้ข้อความสวยงามขึ้น
@@ -570,26 +617,54 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
         errorMessage = raw.replaceFirst('Exception: ', '').trim();
       }
 
-      // กรณี 409 Pending
-      final isPending = raw.contains('409') &&
-          (lower.contains('pending') || lower.contains('already exists'));
-
-      if (isPending) {
-        errorMessage = 'ส่งคำเชิญไปแล้ว กำลังรอการตอบรับ';
-      }
-
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(errorMessage)),
       );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
     }
+  }
 
+  void _showToast(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(widget.isEdit ? 'บันทึกสำเร็จ' : 'เพิ่มผู้ติดตามแล้ว'),
+    final overlay = Overlay.of(context);
+    late OverlayEntry overlayEntry;
+    bool isRemoved = false;
+
+    overlayEntry = OverlayEntry(
+      builder: (context) => Positioned(
+        bottom: 50.0,
+        left: MediaQuery.of(context).size.width * 0.1,
+        width: MediaQuery.of(context).size.width * 0.8,
+        child: Material(
+          color: Colors.transparent,
+          child: Container(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+            decoration: BoxDecoration(
+              color: const Color(0xFF333333).withOpacity(0.9),
+              borderRadius: BorderRadius.circular(24.0),
+            ),
+            child: Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.white, fontSize: 14.0),
+            ),
+          ),
+        ),
       ),
     );
-    Navigator.pop(context, true);
+    overlay.insert(overlayEntry);
+    Future.delayed(const Duration(seconds: 2), () {
+      if (!isRemoved) {
+        isRemoved = true;
+        overlayEntry.remove();
+      }
+    });
   }
 
   Widget _buildProfileRow(Map<String, dynamic> profile) {
@@ -887,7 +962,7 @@ class _SpeechBubble extends StatelessWidget {
             text,
             textAlign: TextAlign.center,
             style: const TextStyle(
-              fontSize: 12,
+              fontSize: 16,
               color: Color(0xFF2B4C7E),
             ),
           ),
