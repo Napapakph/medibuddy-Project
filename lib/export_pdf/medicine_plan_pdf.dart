@@ -404,9 +404,9 @@ class _MedicationPlanScreenState extends State<MedicationPlanScreen> {
                 style: pw.TextStyle(font: boldFont, fontSize: 14),
               ),
               pw.SizedBox(height: 4),
-              if (group.subName != null && group.subName!.isNotEmpty)
+              if (group.enName != null && group.enName!.isNotEmpty)
                 pw.Text(
-                  'ชื่อสามัญ: ${group.subName}',
+                  'ชื่อสามัญ: ${group.enName}',
                   style: pw.TextStyle(font: baseFont, fontSize: 12),
                 ),
               if (rangeText.isNotEmpty)
@@ -636,10 +636,10 @@ class _MedicationPlanScreenState extends State<MedicationPlanScreen> {
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    if (group.subName != null && group.subName!.isNotEmpty) ...[
+                    if (group.enName != null && group.enName!.isNotEmpty) ...[
                       const SizedBox(height: 2),
                       Text(
-                        group.subName!,
+                        group.enName!,
                         style: const TextStyle(
                           fontSize: 12,
                           color: Color(0xFF6B7C93),
