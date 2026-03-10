@@ -231,6 +231,7 @@ class _SignupScreenState extends State<SignupScreen> {
       if (result.success) {
         // Normal register success → OTP verification
         debugPrint('-----------------Normal register success----------------');
+
         Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => OTPScreen(email: email)),
@@ -244,7 +245,7 @@ class _SignupScreenState extends State<SignupScreen> {
           email: email,
           password: password,
           message:
-              'อีเมลนี้ เชื่อมโยงกับบัญชี Google \nคุณต้องการตั้งรหัสผ่านเพื่อเข้าสู่ระบบด้วยอีเมลด้วยหรือไม่ ?',
+              'อีเมลนี้ เชื่อมโยงกับบัญชี Google ที่เคยลงทะเบียนก่อนหน้า \n\nคุณต้องการตั้งรหัสผ่านเพื่อเข้าสู่ระบบด้วยอีเมลด้วยหรือไม่ ?',
         );
         return;
       }
@@ -300,37 +301,95 @@ class _SignupScreenState extends State<SignupScreen> {
     required String message,
   }) async {
     if (!mounted) return;
+
     final confirmed = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) {
         return AlertDialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           backgroundColor: Colors.white,
-          title: const Text(
-            'เชื่อมบัญชี Google',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+          insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+          titlePadding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
+          contentPadding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+          actionsPadding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          title: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: const [
+              CircleAvatar(
+                radius: 20,
+                backgroundColor: Color(0xFFEAF3FF),
+                child: Icon(
+                  Icons.link_rounded,
+                  color: Color(0xFF5A81BB),
+                  size: 22,
+                ),
+              ),
+              SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'เชื่อมบัญชี Google',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    color: Color(0xFF2C3E50),
+                  ),
+                ),
+              ),
+            ],
           ),
           content: Text(
             message,
-            style: const TextStyle(fontSize: 15, color: Colors.black87),
+            style: const TextStyle(
+              fontSize: 15,
+              color: Colors.black87,
+              height: 1.5,
+            ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(false),
-              child: const Text('ไม่',
-                  style: TextStyle(color: Colors.grey, fontSize: 16)),
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.grey[700],
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text(
+                'ไม่',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ),
             ElevatedButton(
               onPressed: () => Navigator.of(dialogContext).pop(true),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color.fromARGB(255, 90, 129, 187),
+                elevation: 0,
+                backgroundColor: const Color(0xFF5A81BB),
                 foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
-              child: const Text('ใช่', style: TextStyle(fontSize: 16)),
+              child: const Text(
+                'ใช่',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ],
         );
@@ -344,6 +403,7 @@ class _SignupScreenState extends State<SignupScreen> {
     try {
       final service = AuthManager.service as CustomAuthService;
       await service.requestOtp(email);
+
       if (!mounted) return;
       setState(() => _isLoading = false);
 

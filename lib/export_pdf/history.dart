@@ -243,8 +243,17 @@ class _HistoryPageState extends State<HistoryPage> {
     try {
       final api = LogApiService();
       final token = await AuthManager.service.getAccessToken(); // Fetch Token
-      final logs =
-          await api.getMedicationLogs(profileId: profileId, accessToken: token);
+
+      final startRequest = DateTime(
+          _startDate.year, _startDate.month, _startDate.day, 0, 0, 0, 0);
+      final endRequest = DateTime(
+          _endDate.year, _endDate.month, _endDate.day, 23, 59, 59, 999);
+
+      final logs = await api.getMedicationLogs(
+          profileId: profileId,
+          startDate: startRequest,
+          endDate: endRequest,
+          accessToken: token);
       final items = logs.map(_mapLogToItem).toList();
       items.sort((a, b) => b.takenAt.compareTo(a.takenAt));
 
@@ -376,7 +385,7 @@ class _HistoryPageState extends State<HistoryPage> {
       }
     });
 
-    _applyFilters();
+    _loadHistory();
   }
 
   String _formatThaiDate(DateTime d) {

@@ -43,6 +43,10 @@ class LogApiService {
 
   Future<List<Map<String, dynamic>>> getMedicationLogs({
     required int profileId,
+    DateTime? startDate,
+    DateTime? endDate,
+    int limit = 500,
+    int offset = 0,
     String? accessToken,
   }) async {
     if (profileId <= 0) {
@@ -50,11 +54,27 @@ class LogApiService {
     }
 
     accessToken ??= await _getAccessToken();
-    final url = Uri.parse(
-      '${_baseUrl()}/api/mobile/v1/medication-log/list?profileId=$profileId',
-    );
 
-    debugPrint('medication-log list profileId=$profileId');
+    final queryParams = <String, String>{
+      'profileId': profileId.toString(),
+      'limit': limit.toString(),
+      'offset': offset.toString(),
+    };
+
+    if (startDate != null) {
+      queryParams['startDate'] = startDate.toIso8601String();
+    }
+    if (endDate != null) {
+      queryParams['endDate'] = endDate.toIso8601String();
+    }
+
+    final baseUrlStr = _baseUrl();
+    final urlBase = Uri.parse('$baseUrlStr/api/mobile/v1/medication-log/list');
+    final url = urlBase.replace(queryParameters: queryParams);
+
+    debugPrint(
+        'medication-log list profileId=$profileId, startDate=$startDate, endDate=$endDate, limit=$limit, offset=$offset');
+    debugPrint('medication-log final url=$url');
 
     final res = await _client.get(
       url,
