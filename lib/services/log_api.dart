@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
@@ -61,43 +62,55 @@ class LogApiService {
       'offset': offset.toString(),
     };
 
+    String formatDateTimeForApi(DateTime date) {
+      return "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+    }
+
     if (startDate != null) {
-      queryParams['startDate'] = startDate.toIso8601String();
+      queryParams['startDate'] = formatDateTimeForApi(startDate);
     }
     if (endDate != null) {
-      queryParams['endDate'] = endDate.toIso8601String();
+      queryParams['endDate'] = formatDateTimeForApi(endDate);
     }
-
     final baseUrlStr = _baseUrl();
-    final urlBase = Uri.parse('$baseUrlStr/api/mobile/v1/medication-log/list');
-    final url = urlBase.replace(queryParameters: queryParams);
 
-    debugPrint(
-        'medication-log list profileId=$profileId, startDate=$startDate, endDate=$endDate, limit=$limit, offset=$offset');
-    debugPrint('medication-log final url=$url');
-
-    final res = await _client.get(
-      url,
+    final dio = Dio(BaseOptions(
+      baseUrl: baseUrlStr,
       headers: {
         'Accept': 'application/json',
         'Authorization': 'Bearer $accessToken',
       },
+      responseType: ResponseType.plain,
+      validateStatus: (_) => true,
+    ));
+
+    debugPrint(
+        'medication-log list profileId=$profileId, startDate=$startDate, endDate=$endDate, limit=$limit, offset=$offset');
+    debugPrint('medication-log list query parameters=$queryParams');
+
+    final res = await dio.get(
+      '/api/mobile/v1/medication-log/list',
+      queryParameters: queryParams,
     );
 
-    debugPrint('medication-log list status=${res.statusCode}');
-    debugPrint('medication-log list body length=${res.body.length}');
+    final statusCode = res.statusCode ?? 500;
+    final responseBody = res.data?.toString() ?? '';
 
-    if (res.statusCode < 200 || res.statusCode >= 300) {
-      final parsed = _readErrorMessage(res.body);
-      final friendly = _friendlyAuthError(res.statusCode);
+    debugPrint('medication-log final url=${res.realUri}');
+    debugPrint('medication-log list status=$statusCode');
+    debugPrint('medication-log list body length=${responseBody.length}');
+
+    if (statusCode < 200 || statusCode >= 300) {
+      final parsed = _readErrorMessage(responseBody);
+      final friendly = _friendlyAuthError(statusCode);
       final message = parsed ?? friendly;
       throw LogApiException(
-        message ?? 'Get medication logs failed (${res.statusCode}).',
-        statusCode: res.statusCode,
+        message ?? 'Get medication logs failed ($statusCode).',
+        statusCode: statusCode,
       );
     }
 
-    final logs = await compute(_decodeMedicationLogs, res.body);
+    final logs = await compute(_decodeMedicationLogs, responseBody);
     return logs;
   }
 
