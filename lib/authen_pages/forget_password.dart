@@ -48,7 +48,10 @@ class _ForgetPassword extends State<ForgetPassword> {
         }
         final authService = CustomAuthService();
         await authService.resetPassword(widget.token!, _password.text.trim());
-      } else {
+      }
+      // ระบบเก่า Supabase
+      /*else {
+        
         // ignore: dead_code
         final supabase = Supabase.instance.client;
 
@@ -68,7 +71,8 @@ class _ForgetPassword extends State<ForgetPassword> {
 
         // ✅ เพื่อความชัวร์: sign out แล้วให้ล็อกอินใหม่ด้วยรหัสใหม่
         await supabase.auth.signOut();
-      }
+       
+      } */
 
       if (!mounted) return;
       setState(() => _isLoading = false);
@@ -254,22 +258,6 @@ class _ForgetPassword extends State<ForgetPassword> {
                           ),
                           SizedBox(height: maxHeight * 0.02),
 
-                          /*
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              [
-                                '- ความยาวอย่างน้อย 6 ตัวอักษร',
-                                '- ตัวอักษรพิมพ์ใหญ่และพิมพ์เล็ก',
-                                '- ตัวเลขหรือสัญลักษณ์พิเศษ',
-                              ].join('\n'),
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                          ),
-                          */
                           SizedBox(height: maxHeight * 0.001),
 
                           // ยืนยันรหัสผ่าน
