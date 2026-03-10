@@ -62,7 +62,7 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   supabase_flutter: ^2.10.3
-  camera: ^0.11.3
+  camera: ^0.12.0
   path_provider: ^2.1.5
   path: ^1.9.1
   image_picker: ^1.2.1
@@ -71,13 +71,13 @@ dependencies:
   onnxruntime: ^1.4.1
   pdf: ^3.10.7
   printing: ^5.13.1
-  font_awesome_flutter: ^10.7.0
+  font_awesome_flutter: ^11.0.0
   flutter_boxicons: ^3.1.0
   firebase_auth: ^4.20.0
   google_sign_in: ^6.2.1
   table_calendar: ^3.0.9
   shared_preferences: ^2.2.2
-  fluttertoast: ^8.2.6
+  #fluttertoast: ^9.0.0
   
   
   
