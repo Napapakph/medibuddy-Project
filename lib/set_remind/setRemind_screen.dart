@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:medibuddy/Model/medicine_model.dart';
 
 import '../services/regimen_api.dart';
@@ -52,6 +52,7 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
   late TextEditingController _durationValueController;
 
   bool _saving = false;
+  bool _showWeekdayError = false;
 
   @override
   void initState() {
@@ -196,6 +197,19 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
   }
 
   void _nextStep() {
+    if (_stepIndex == 0) {
+      if (_frequencyPattern == FrequencyPattern.someDays &&
+          _selectedWeekdays.isEmpty) {
+        setState(() {
+          _showWeekdayError = true;
+        });
+        return;
+      } else {
+        setState(() {
+          _showWeekdayError = false;
+        });
+      }
+    }
     if (_stepIndex >= 2) return;
     setState(() => _stepIndex += 1);
     _pageController.animateToPage(
@@ -211,6 +225,11 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
       return;
     }
     setState(() => _stepIndex -= 1);
+    if (_stepIndex == 0) {
+      setState(() {
+        _showWeekdayError = false;
+      });
+    }
     _pageController.animateToPage(
       _stepIndex,
       duration: const Duration(milliseconds: 250),
@@ -469,14 +488,24 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
         timesPerDayController: _timesPerDayController,
         everyHoursController: _everyHoursController,
         frequencyPattern: _frequencyPattern,
-        onFrequencyPatternChanged: (value) =>
-            setState(() => _frequencyPattern = value),
+        onFrequencyPatternChanged: (value) {
+          setState(() {
+            _frequencyPattern = value;
+            if (value != FrequencyPattern.someDays) {
+              _showWeekdayError = false;
+            }
+          });
+        },
         selectedWeekdays: _selectedWeekdays,
         onWeekdaysChanged: (value) => setState(() {
           _selectedWeekdays
             ..clear()
             ..addAll(value);
+          if (_selectedWeekdays.isNotEmpty) {
+            _showWeekdayError = false;
+          }
         }),
+        showErrorWeekdays: _showWeekdayError,
         everyCountController: _everyCountController,
         everyUnit: _everyUnit,
         onEveryUnitChanged: (value) {

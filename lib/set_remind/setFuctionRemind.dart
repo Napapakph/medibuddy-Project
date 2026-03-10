@@ -1,4 +1,4 @@
-﻿import 'dart:io';
+import 'dart:io';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/material.dart';
 import 'package:medibuddy/Model/medicine_regimen_model.dart';
@@ -207,6 +207,7 @@ Widget type_frequency({
   required ValueChanged<FrequencyPattern> onFrequencyPatternChanged,
   required Set<String> selectedWeekdays,
   required ValueChanged<Set<String>> onWeekdaysChanged,
+  bool showErrorWeekdays = false,
   required TextEditingController everyCountController,
   required String everyUnit,
   required ValueChanged<String?> onEveryUnitChanged,
@@ -732,6 +733,19 @@ Widget type_frequency({
                               : const Color.fromARGB(210, 189, 189, 189)),
                     ),
                   ),
+                  if (frequencyPattern == FrequencyPattern.someDays &&
+                      selectedWeekdays.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.only(left: 8.0),
+                      child: Text(
+                        'กรุณาเลือกวันอย่างน้อย 1 วัน',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.red,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
@@ -780,7 +794,8 @@ Widget type_frequency({
                     backgroundColor: !isEnabled
                         ? const Color.fromARGB(
                             255, 227, 227, 227) // 🚫 disabled
-                        : const Color(0xFFEAF2FB), // ⬜ ยังไม่เลือก
+                        : const Color.fromARGB(
+                            255, 255, 255, 255), // ⬜ ยังไม่เลือก
 
                     side: BorderSide(
                       width: 1,
