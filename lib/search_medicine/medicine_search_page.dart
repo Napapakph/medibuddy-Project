@@ -53,9 +53,6 @@ class _MedicineSearchPageState extends State<MedicineSearchPage> {
     });
 
     try {
-      // ใช้ API list เดิมของเดียร์ (fetchMedicineCatalog)
-      // - search='' => list เริ่มต้น
-      // - search='tylenol' => query ด้วยชื่อ
       final items = await _api.fetchMedicineCatalog(search: search);
 
       if (!mounted) return;

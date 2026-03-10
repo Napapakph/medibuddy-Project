@@ -512,9 +512,9 @@ class _LinkMedicinePageState extends State<LinkMedicinePage> {
                           );
                         }
 
-                        final filtered = _filteredItems();
+                        final filtered = _items;
                         final hasAny = filtered.isNotEmpty;
-                        final exact = _hasExactMatch(filtered);
+                        final exact = filtered.isNotEmpty;
 
                         final onlyHelper = !hasAny;
                         final showRequestHint = !exact || !hasAny;
