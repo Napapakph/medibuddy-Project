@@ -31,6 +31,7 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
   String _errorMessage = '';
   List<Map<String, dynamic>> _logs = [];
   final Set<int> _submittingIds = <int>{};
+  final Map<int, String> _submittingActionByLogId = <int, String>{};
   final Map<int, String> _responses = <int, String>{};
   final Map<int, String> _notesByLogId = <int, String>{};
   // Comment panel is now a modal bottom sheet (no inline state needed)
@@ -462,11 +463,6 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
         accessToken: token, // Pass token
         note: note?.trim().isEmpty ?? true ? null : note?.trim(),
       );
-      // final api = RegimenApiService();
-      // await api.submitMedicationLogResponse(
-      //   logId: logId,
-      //   responseStatus: responseStatus,
-      // );
       if (!mounted) return;
       setState(() {
         _submittingIds.remove(logId);
@@ -667,10 +663,15 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
                 child: OutlinedButton(
                   onPressed: disabled
                       ? null
-                      : () => _submitResponse(
+                      : () {
+                          setState(() {
+                            _submittingActionByLogId[logId] = 'SKIP';
+                          });
+                          _submitResponse(
                             logId: logId,
                             responseStatus: 'SKIP',
-                          ),
+                          );
+                        },
                   style: OutlinedButton.styleFrom(
                     foregroundColor: const Color(0xFFE35D5D),
                     side: const BorderSide(color: Color(0xFFE35D5D)),
@@ -679,13 +680,14 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  child: isSubmitting
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text('ข้ามยา'),
+                  child:
+                      isSubmitting && _submittingActionByLogId[logId] == 'SKIP'
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Text('ข้ามยา'),
                 ),
               ),
               const SizedBox(width: 12),
@@ -693,10 +695,15 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
                 child: ElevatedButton(
                   onPressed: disabled
                       ? null
-                      : () => _submitResponse(
+                      : () {
+                          setState(() {
+                            _submittingActionByLogId[logId] = 'TAKE';
+                          });
+                          _submitResponse(
                             logId: logId,
                             responseStatus: 'TAKE',
-                          ),
+                          );
+                        },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF5A81BB),
                     foregroundColor: Colors.white,
@@ -705,16 +712,17 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  child: isSubmitting
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Text('กินยา'),
+                  child:
+                      isSubmitting && _submittingActionByLogId[logId] == 'TAKE'
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Text('กินยา'),
                 ),
               ),
               const SizedBox(width: 12),
@@ -722,10 +730,15 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
                 child: OutlinedButton(
                   onPressed: disabled
                       ? null
-                      : () => _submitResponse(
+                      : () {
+                          setState(() {
+                            _submittingActionByLogId[logId] = 'SNOOZE';
+                          });
+                          _submitResponse(
                             logId: logId,
                             responseStatus: 'SNOOZE',
-                          ),
+                          );
+                        },
                   style: OutlinedButton.styleFrom(
                     foregroundColor: const Color(0xFFF0A24F),
                     side: const BorderSide(color: Color(0xFFF0A24F)),
@@ -734,7 +747,14 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  child: const Text('เลื่อน'),
+                  child: isSubmitting &&
+                          _submittingActionByLogId[logId] == 'SNOOZE'
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('เลื่อน'),
                 ),
               ),
             ],

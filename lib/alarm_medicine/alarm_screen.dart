@@ -389,13 +389,13 @@ class _AlarmScreenState extends State<AlarmScreen> {
       for (final med in uniqueMeds) {
         widgets.add(
           Padding(
-            padding: const EdgeInsets.only(left: 24, top: 2),
+            padding: const EdgeInsets.only(left: 0, top: 0),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 const Icon(Icons.medication,
-                    size: 14, color: Color(0xFF5A81BB)),
-                const SizedBox(width: 4),
+                    size: 16, color: Color(0xFF5A81BB)),
+                const SizedBox(width: 10),
                 Flexible(
                   child: Text(
                     med,
@@ -444,6 +444,7 @@ class _AlarmScreenState extends State<AlarmScreen> {
           textAlign: TextAlign.center,
         ),
       ],
+      SizedBox(height: 10),
       // Show items summary (profiles + medicines)
       ..._buildItemsSummaryWidgets(),
       // Fallback: show body text if no items summary
