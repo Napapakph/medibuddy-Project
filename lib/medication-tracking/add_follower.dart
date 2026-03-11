@@ -30,7 +30,8 @@ String _resolveImageUrl(String? raw) {
 }
 
 String _readAvatarUrl(Map<String, dynamic> data) {
-  final raw = (data['profilePicture'] ??
+  final raw = (data['viewerPicture'] ??
+          data['profilePicture'] ??
           data['profilePictureUrl'] ??
           data['accountPicture'] ??
           data['avatar'] ??
@@ -311,6 +312,7 @@ class _AddFollowerScreenState extends State<AddFollowerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final scrollController = ScrollController();
     return Scaffold(
       backgroundColor: const Color(0xFFF0F6FF),
       appBar: AppBar(
@@ -362,7 +364,7 @@ class _AddFollowerScreenState extends State<AddFollowerScreen> {
                 'บัญชีที่พบ',
                 style: TextStyle(
                   fontWeight: FontWeight.w700,
-                  fontSize: 14,
+                  fontSize: 16,
                 ),
               ),
               const SizedBox(height: 10),
@@ -550,11 +552,12 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
         }
         final editedName = _nicknameController.text.trim();
         await _followApi
-            .updateFollowerProfiles(
+            .updateFollower(
               accessToken: accessToken,
               relationshipId: relationshipId,
               profileIds: profileIds,
-              name: editedName.isNotEmpty ? editedName : null,
+              name: editedName.isNotEmpty ? editedName : '',
+              imageFile: _pickedImage,
             )
             .timeout(const Duration(seconds: 15));
       } else {
@@ -563,6 +566,7 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
 
         // Use custom name if provided, otherwise use original name
         final customName = _nicknameController.text.trim();
+        // final customPicture =
 
         await _followApi
             .sendInvite(
@@ -637,7 +641,6 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
 
     overlayEntry = OverlayEntry(
       builder: (context) => Positioned(
-        
         bottom: 50.0,
         left: MediaQuery.of(context).size.width * 0.1,
         width: MediaQuery.of(context).size.width * 0.8,
@@ -652,15 +655,11 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
             ),
             child: Text(
               message,
-            
               textAlign: TextAlign.center,
               style: const TextStyle(color: Colors.white, fontSize: 14.0),
             ),
-            
           ),
-          
         ),
-        
       ),
     );
     overlay.insert(overlayEntry);
@@ -795,7 +794,7 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
                       child: Stack(
                         children: [
                           CircleAvatar(
-                            radius: 44,
+                            radius: 55,
                             backgroundColor: Colors.grey.shade300,
                             backgroundImage: _pickedImage != null
                                 ? FileImage(_pickedImage!)
@@ -813,13 +812,13 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
                             child: Container(
                               padding: const EdgeInsets.all(4),
                               decoration: const BoxDecoration(
-                                color: _primaryBlue,
+                                color: Color.fromARGB(255, 98, 131, 181),
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(
                                 Icons.camera_alt,
                                 color: Colors.white,
-                                size: 16,
+                                size: 25,
                               ),
                             ),
                           ),
@@ -832,7 +831,7 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
                       height: 45,
                       child: TextFormField(
                         controller: _nicknameController,
-                        textAlign: TextAlign.center,
+                        textAlign: TextAlign.left,
                         decoration: InputDecoration(
                           labelText: "ชื่อผู้ติดตาม",
                           hintStyle: TextStyle(color: Colors.grey.shade400),
@@ -849,7 +848,8 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
                             borderSide: BorderSide(color: Colors.grey.shade300),
                           ),
                           suffixIcon: const Icon(Icons.edit,
-                              size: 16, color: Colors.grey),
+                              size: 20,
+                              color: Color.fromARGB(255, 152, 168, 203)),
                           errorStyle: const TextStyle(
                               color: Colors.redAccent,
                               fontSize: 12,

@@ -186,7 +186,10 @@ class _FollowerScreenState extends State<FollowerScreen> {
                 'แก้ไขผู้ติดตาม',
                 style: TextStyle(color: Color(0xFF2B4C7E)),
               ),
-              content: SingleChildScrollView(
+              content: Scrollbar(
+                trackVisibility: true,
+                thickness: 6,
+                radius: const Radius.circular(8),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -362,7 +365,7 @@ class _FollowerScreenState extends State<FollowerScreen> {
       onDelete: () => _showDeleteConfirmDialog(id, name),
       onEdit: () => _openEditDialog(follower),
       onDetail_1: () => _openPermissionEdit(follower),
-      actionLabel_1: 'สิทธิ์การติดตาม',
+      actionLabel_1: 'สิทธิการติดตาม',
     );
   }
 
@@ -472,7 +475,7 @@ class _FollowerScreenState extends State<FollowerScreen> {
         _goHome();
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFFF0F6FF),
+        backgroundColor: const Color.fromARGB(255, 231, 241, 255),
         appBar: AppBar(
           elevation: 0,
           flexibleSpace: Container(
@@ -489,8 +492,8 @@ class _FollowerScreenState extends State<FollowerScreen> {
           ),
           iconTheme: const IconThemeData(color: Color(0xFF5A81BB)),
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_rounded,
-                color: Color(0xFF5A81BB)),
+            icon:
+                const Icon(Icons.arrow_back_rounded, color: Color(0xFF5A81BB)),
             onPressed: _goHome,
           ),
           title: const Text(
@@ -513,12 +516,19 @@ class _FollowerScreenState extends State<FollowerScreen> {
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                      colors: [Color(0xFF3B6FB5), Color(0xFF5A81BB)],
+                      colors: [
+                        const Color(0xFF5A81BB),
+                        Color.fromARGB(255, 171, 203, 255)
+                      ],
                     ),
                     borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color: const Color.fromARGB(255, 115, 154, 211),
+                      width: 1,
+                    ),
                     boxShadow: const [
                       BoxShadow(
-                        color: Color(0x337BAEE5),
+                        color: Color.fromARGB(125, 128, 184, 244),
                         blurRadius: 12,
                         offset: Offset(0, 4),
                       ),

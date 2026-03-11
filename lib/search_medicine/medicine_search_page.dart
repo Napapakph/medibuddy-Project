@@ -363,8 +363,7 @@ class _MedicineSearchPageState extends State<MedicineSearchPage> {
         ),
         iconTheme: const IconThemeData(color: Color(0xFF5A81BB)),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded,
-              color: Color(0xFF5A81BB)),
+          icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF5A81BB)),
           onPressed: () {
             Navigator.pushReplacementNamed(
               context,

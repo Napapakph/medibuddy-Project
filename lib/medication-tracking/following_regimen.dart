@@ -520,8 +520,8 @@ class _FollowingRegimenPageState extends State<FollowingRegimenPage> {
         ),
         iconTheme: const IconThemeData(color: Color(0xFF5A81BB)),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded,
-              color: Color(0xFF5A81BB)),
+          icon:
+              const Icon(Icons.arrow_back_rounded, color: Color(0xFF5A81BB)),
           onPressed: () => Navigator.pop(context),
         ),
         centerTitle: true,
@@ -592,13 +592,17 @@ class _FollowingRegimenPageState extends State<FollowingRegimenPage> {
                   child: Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        height: 40,
+                        padding: const EdgeInsets.symmetric(horizontal: 2),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: DropdownButtonHideUnderline(
                           child: DropdownButton<String>(
+                            isExpanded: false,
+                            isDense: true,
+                            alignment: Alignment.center,
                             value: _searchMode,
                             borderRadius: BorderRadius.circular(12),
                             items: const [
@@ -636,10 +640,13 @@ class _FollowingRegimenPageState extends State<FollowingRegimenPage> {
                             controller: _searchCtrl,
                             onChanged: (_) => _applyFilters(),
                             decoration: const InputDecoration(
+                              isDense: true,
                               hintText: 'ค้นหา...',
                               border: InputBorder.none,
-                              contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 10),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
                             ),
                           ),
                         ),

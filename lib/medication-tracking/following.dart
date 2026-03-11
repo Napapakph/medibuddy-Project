@@ -361,8 +361,8 @@ class _FollowingScreenState extends State<FollowingScreen>
                   children: [
                     Text(
                       isRegimen
-                          ? 'เลือกโปรไฟล์เพื่อดูแผนการทานยา'
-                          : 'เลือกโปรไฟล์เพื่อดูประวัติ',
+                          ? 'เลือกโปรไฟล์เพื่อดูแผนการกินยา'
+                          : 'เลือกโปรไฟล์เพื่อดูประวัติการกินยา',
                       style: const TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 18,
@@ -519,9 +519,7 @@ class _FollowingScreenState extends State<FollowingScreen>
                           ),
                         ),
                         child: Text(
-                          isRegimen
-                              ? 'ดูแผนการทานยา'
-                              : 'ดูประวัติการรับประทานยา',
+                          isRegimen ? 'ดูแผนการกินยา' : 'ดูประวัติการกินยา',
                           style: const TextStyle(
                               fontSize: 16, fontWeight: FontWeight.bold),
                           maxLines: 1,
@@ -944,78 +942,112 @@ class _FollowingScreenState extends State<FollowingScreen>
 
                                 return Card(
                                   margin: const EdgeInsets.symmetric(
-                                      horizontal: 5, vertical: 5),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(5),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        // ส่วนบน: Avatar + Email
-                                        Row(
-                                          children: [
-                                            CircleAvatar(
-                                              radius: 30,
-                                              backgroundImage:
-                                                  avatarUrl.isNotEmpty
-                                                      ? NetworkImage(avatarUrl)
-                                                      : null,
-                                              child: avatarUrl.isEmpty
-                                                  ? const Icon(Icons.person,
-                                                      size: 20)
-                                                  : null,
-                                            ),
-                                            const SizedBox(width: 12),
-                                            Expanded(
-                                              child: Text(
-                                                email.isNotEmpty ? email : name,
-                                                style: const TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 16,
-                                                  color: Colors.black,
-                                                ),
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-
-                                        // ส่วนล่าง: ปุ่ม (Reject ซ้าย, Accept ขวา) ชิดขวา
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.end,
-                                          children: [
-                                            OutlinedButton(
-                                              onPressed: () =>
-                                                  _handleInvitation(id, false),
-                                              style: OutlinedButton.styleFrom(
-                                                foregroundColor: Colors.red,
-                                                side: const BorderSide(
-                                                    color: Colors.red),
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                        horizontal: 16),
-                                              ),
-                                              child: const Text('ปฏิเสธ'),
-                                            ),
-                                            const SizedBox(width: 12),
-                                            ElevatedButton(
-                                              onPressed: () =>
-                                                  _handleInvitation(id, true),
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor:
-                                                    const Color(0xFF5A81BB),
-                                                foregroundColor: Colors.white,
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                        horizontal: 16),
-                                              ),
-                                              child: const Text('ยอมรับ'),
-                                            ),
-                                          ],
+                                      horizontal: 8, vertical: 4),
+                                  elevation: 0,
+                                  color:
+                                      const Color.fromARGB(255, 255, 255, 255),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      borderRadius:
+                                          BorderRadius.all(Radius.circular(20)),
+                                      gradient: LinearGradient(
+                                        begin: Alignment.topCenter,
+                                        end: Alignment.bottomCenter,
+                                        colors: [
+                                          Color.fromARGB(255, 255, 255, 255),
+                                          Color.fromARGB(255, 255, 255, 255),
+                                        ],
+                                      ),
+                                      border: Border.all(
+                                        color: const Color.fromARGB(
+                                            255, 115, 154, 211),
+                                        width: 1,
+                                      ),
+                                      boxShadow: const [
+                                        BoxShadow(
+                                          color: Color.fromARGB(
+                                              255, 197, 218, 244),
+                                          blurRadius: 5,
+                                          offset: Offset(0, 5),
                                         ),
                                       ],
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(5),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          // ส่วนบน: Avatar + Email
+                                          Row(
+                                            children: [
+                                              CircleAvatar(
+                                                radius: 30,
+                                                backgroundImage: avatarUrl
+                                                        .isNotEmpty
+                                                    ? NetworkImage(avatarUrl)
+                                                    : null,
+                                                child: avatarUrl.isEmpty
+                                                    ? const Icon(Icons.person,
+                                                        size: 20)
+                                                    : null,
+                                              ),
+                                              const SizedBox(width: 12),
+                                              Expanded(
+                                                child: Text(
+                                                  email.isNotEmpty
+                                                      ? email
+                                                      : name,
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 16,
+                                                    color: Colors.black,
+                                                  ),
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+
+                                          // ส่วนล่าง: ปุ่ม (Reject ซ้าย, Accept ขวา) ชิดขวา
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.end,
+                                            children: [
+                                              OutlinedButton(
+                                                onPressed: () =>
+                                                    _handleInvitation(
+                                                        id, false),
+                                                style: OutlinedButton.styleFrom(
+                                                  foregroundColor: Colors.red,
+                                                  side: const BorderSide(
+                                                      color: Colors.red),
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                      horizontal: 16),
+                                                ),
+                                                child: const Text('ปฏิเสธ'),
+                                              ),
+                                              const SizedBox(width: 12),
+                                              ElevatedButton(
+                                                onPressed: () =>
+                                                    _handleInvitation(id, true),
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor:
+                                                      const Color(0xFF5A81BB),
+                                                  foregroundColor: Colors.white,
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                      horizontal: 16),
+                                                ),
+                                                child: const Text('ยอมรับ'),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 );
