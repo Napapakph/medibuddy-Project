@@ -244,18 +244,12 @@ class _FollowingRegimenPageState extends State<FollowingRegimenPage> {
   }
 
   Future<void> _pickDate({required bool isStart}) async {
-    final now = DateTime.now();
-    final firstDate = DateTime(now.year, now.month, now.day);
-
     DateTime initial = isStart ? _startDate : _endDate;
-    if (initial.isBefore(firstDate)) {
-      initial = firstDate;
-    }
 
     final picked = await showDatePicker(
       context: context,
       initialDate: initial,
-      firstDate: firstDate,
+      firstDate: DateTime(2000),
       lastDate: DateTime(2100),
       locale: const Locale('th', 'TH'),
       builder: (context, child) {
@@ -341,6 +335,44 @@ class _FollowingRegimenPageState extends State<FollowingRegimenPage> {
     }
   }
 
+  String _mapUnitToThai(String unit) {
+    final normalized = unit.trim().toLowerCase();
+    switch (normalized) {
+      case 'tablet':
+        return 'เม็ด';
+      case 'ml':
+        return 'มิลลิลิตร';
+      case 'mg':
+        return 'มิลลิกรัม';
+      case 'drop':
+        return 'ยาหยอด';
+      case 'injection':
+        return 'เข็ม';
+      default:
+        return unit.trim().isEmpty ? 'เม็ด' : unit;
+    }
+  }
+
+  String _mapDaysToThai(dynamic days) {
+    if (days == null) return '';
+    final str = days.toString();
+    final parts = str.split(RegExp(r'[^0-9]+')).where((e) => e.isNotEmpty);
+    if (parts.isEmpty) return str;
+
+    final map = {
+      '1': 'จ',
+      '2': 'อ',
+      '3': 'พ',
+      '4': 'พฤ',
+      '5': 'ศ',
+      '6': 'ส',
+      '7': 'อา',
+    };
+
+    final mapped = parts.map((e) => map[e] ?? e).toList();
+    return mapped.join(', ');
+  }
+
   Widget _buildRegimenCard(Map<String, dynamic> itemData) {
     final Map<String, dynamic> reg = itemData['regimen'] ?? {};
     final Map<String, dynamic> time = itemData['timeData'] ?? {};
@@ -366,7 +398,8 @@ class _FollowingRegimenPageState extends State<FollowingRegimenPage> {
 
     final dose = _readInt(time['dose']) ?? 1;
     final unit = _readString(time['unit']);
-    final doseText = unit.isEmpty ? '$dose' : '$dose $unit';
+    final thaiUnit = _mapUnitToThai(unit);
+    final doseText = unit.isEmpty ? '$dose' : '$dose $thaiUnit';
 
     final mealText = _formatMealRelation(_readString(time['mealRelation']));
 
@@ -375,7 +408,7 @@ class _FollowingRegimenPageState extends State<FollowingRegimenPage> {
     if (scheduleType.toUpperCase() == 'DAILY') {
       freq = 'ทานทุกวัน';
     } else if (scheduleType.toUpperCase() == 'WEEKLY') {
-      freq = 'ทานทุกสัปดาห์ (วัน: ${reg['daysOfWeek']})';
+      freq = 'ทานทุกสัปดาห์ (วัน: ${_mapDaysToThai(reg['daysOfWeek'])})';
     } else if (scheduleType.toUpperCase() == 'INTERVAL') {
       freq = 'ทานทุก ${reg['intervalDays']} วัน';
     } else if (scheduleType.toUpperCase() == 'CYCLE') {
@@ -459,8 +492,8 @@ class _FollowingRegimenPageState extends State<FollowingRegimenPage> {
                         Text(
                           freq,
                           style: const TextStyle(
-                            fontSize: 13,
-                            color: Colors.black54,
+                            fontSize: 16,
+                            color: Color.fromARGB(255, 0, 0, 0),
                           ),
                         ),
                       ],
@@ -520,8 +553,7 @@ class _FollowingRegimenPageState extends State<FollowingRegimenPage> {
         ),
         iconTheme: const IconThemeData(color: Color(0xFF5A81BB)),
         leading: IconButton(
-          icon:
-              const Icon(Icons.arrow_back_rounded, color: Color(0xFF5A81BB)),
+          icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF5A81BB)),
           onPressed: () => Navigator.pop(context),
         ),
         centerTitle: true,
@@ -575,7 +607,7 @@ class _FollowingRegimenPageState extends State<FollowingRegimenPage> {
                               'โปรไฟล์: $_profileLabel',
                               style: const TextStyle(
                                 color: Color(0xFF5A81BB),
-                                fontSize: 13,
+                                fontSize: 16,
                               ),
                             ),
                           ],

@@ -744,7 +744,7 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
                             style: TextStyle(
                               color: Color(0xFF5A81BB),
                               fontWeight: FontWeight.w600,
-                              fontSize: 13,
+                              fontSize: 14,
                             ),
                           ),
                         ],
