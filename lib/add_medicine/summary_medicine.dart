@@ -8,6 +8,7 @@ import 'package:medibuddy/services/medicine_api.dart';
 import '../search_medicine/detail_medicine.dart';
 import '../add_medicine/medicine_list_screen.dart';
 import '../OCR/ocr_global.dart';
+import 'package:bot_toast/bot_toast.dart';
 
 class SummaryMedicinePage extends StatefulWidget {
   final MedicineDraft draft;
@@ -220,6 +221,27 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
       if (!mounted) return;
       globalOcrImage = null;
 
+      BotToast.showCustomText(
+        duration: const Duration(seconds: 2),
+        align: const Alignment(0, 0.5),
+        toastBuilder: (_) {
+          return Material(
+            color: Colors.transparent,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: const Color.fromARGB(255, 114, 178, 121),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Text(
+                'เพิ่มรายการยาสำเร็จ',
+                style: TextStyle(color: Colors.white, fontSize: 16),
+              ),
+            ),
+          );
+        },
+      );
+
       Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -301,28 +323,6 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
           style:
               TextStyle(color: Color(0xFF2B4C7E), fontWeight: FontWeight.w700),
         ),
-        actions: [
-          IconButton(
-            onPressed: () {
-              final mediId = catalog?.mediId ?? 0;
-
-              if (mediId <= 0) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                      content:
-                          Text('ยังไม่มีข้อมูลยาในฐานระบบให้แสดงรายละเอียด')),
-                );
-                return;
-              }
-
-              showMedicineDetailDialog(
-                context: context,
-                mediId: mediId,
-              );
-            },
-            icon: const Icon(Icons.info_outline, color: Color(0xFF5A81BB)),
-          ),
-        ],
       ),
       backgroundColor: const Color(0xFFF0F6FF),
       body: SafeArea(
@@ -336,7 +336,7 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
               const Text(
                 'ชื่อเล่นยา',
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -351,12 +351,73 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
                 child: Text(nickname),
               ),
               const SizedBox(height: 12),
-              const Text(
-                'ชื่อการค้า',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
+              Row(
+                children: [
+                  Text(
+                    'ชื่อการค้า',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  SizedBox(width: 5),
+                  IconButton(
+                    onPressed: () {
+                      final mediId = catalog?.mediId ?? 0;
+
+                      if (mediId <= 0) {
+                        BotToast.showCustomNotification(
+                          align: Alignment(0, -0.5),
+                          duration: const Duration(seconds: 2),
+                          toastBuilder: (_) {
+                            return SafeArea(
+                              child: Padding(
+                                padding: const EdgeInsets.only(top: 5),
+                                child: Container(
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 16, vertical: 15),
+                                      decoration: BoxDecoration(
+                                        color: const Color.fromARGB(
+                                            255, 195, 120, 134),
+                                        borderRadius: BorderRadius.circular(12),
+                                        boxShadow: const [
+                                          BoxShadow(
+                                            blurRadius: 8,
+                                            offset: Offset(0, 2),
+                                            color: Colors.black26,
+                                          ),
+                                        ],
+                                      ),
+                                      child: const Text(
+                                        'ยังไม่มีการผูกข้อมูลยา',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                        return;
+                      }
+
+                      showMedicineDetailDialog(
+                        context: context,
+                        mediId: mediId,
+                      );
+                    },
+                    icon: const Icon(Icons.info_outline,
+                        color: Color(0xFF5A81BB)),
+                  ),
+                ],
               ),
               const SizedBox(height: 6),
               Container(
@@ -387,7 +448,7 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
               const Text(
                 'รูปยา',
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
               ),

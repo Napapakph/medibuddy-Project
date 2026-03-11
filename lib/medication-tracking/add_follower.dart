@@ -637,6 +637,7 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
 
     overlayEntry = OverlayEntry(
       builder: (context) => Positioned(
+        
         bottom: 50.0,
         left: MediaQuery.of(context).size.width * 0.1,
         width: MediaQuery.of(context).size.width * 0.8,
@@ -651,11 +652,15 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
             ),
             child: Text(
               message,
+            
               textAlign: TextAlign.center,
               style: const TextStyle(color: Colors.white, fontSize: 14.0),
             ),
+            
           ),
+          
         ),
+        
       ),
     );
     overlay.insert(overlayEntry);

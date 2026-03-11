@@ -35,6 +35,7 @@ import 'medication-tracking/following.dart';
 import 'package:app_links/app_links.dart';
 import 'services/notification_launch_guard.dart';
 import 'services/app_route_observer.dart';
+import 'package:bot_toast/bot_toast.dart';
 
 const bool kDisableAuthGate =
     true; // เปลี่ยนเป็น false เมื่อต้องการเปิดใช้งาน AuthGate
@@ -614,6 +615,11 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     // TODO: implement build
     return MaterialApp(
+      builder: BotToastInit(),
+      navigatorObservers: [
+        appRouteObserver,
+        BotToastNavigatorObserver(),
+      ],
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         fontFamily: 'Mali',
@@ -667,7 +673,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       ),
       title: 'MediBuddy',
       navigatorKey: navigatorKey,
-      navigatorObservers: [appRouteObserver],
+
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
