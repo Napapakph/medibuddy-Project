@@ -1,4 +1,4 @@
-﻿import 'dart:io';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -29,6 +29,7 @@ class _CreateNameMedicinePageState extends State<CreateNameMedicinePage> {
 
   String _imagePath = '';
   bool _saving = false;
+  String? _nameError;
 
   @override
   void initState() {
@@ -65,10 +66,9 @@ class _CreateNameMedicinePageState extends State<CreateNameMedicinePage> {
   }
 
   Future<void> _goNext() async {
+    if (!_validate()) return;
+
     final name = _nameController.text.trim();
-    if (name.isEmpty) {
-      return;
-    }
 
     // ✅ สร้าง draft จากค่าที่ผู้ใช้แก้ตอนนี้
     final draft = MedicineDraft(
@@ -108,6 +108,17 @@ class _CreateNameMedicinePageState extends State<CreateNameMedicinePage> {
     final baseUri = Uri.parse(base);
     final path = p.startsWith('/') ? p : '/$p';
     return baseUri.resolve(path).toString();
+  }
+
+  bool _validate() {
+    final nameError =
+        _nameController.text.trim().isEmpty ? 'กรุณากรอกชื่อเล่นยา' : null;
+
+    setState(() {
+      _nameError = nameError;
+    });
+
+    return nameError == null;
   }
 
   @override
@@ -198,24 +209,21 @@ class _CreateNameMedicinePageState extends State<CreateNameMedicinePage> {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  TextFormField(
+                  TextField(
                     controller: _nameController,
                     decoration: InputDecoration(
-                      label: RichText(
-                        text: const TextSpan(
-                          style: TextStyle(
-                            color: Color.fromARGB(255, 131, 134, 140),
-                            fontSize: 16,
-                          ),
-                        ),
-                      ),
                       hintText: 'ชื่อเล่นยา',
+                      hintStyle: const TextStyle(
+                          color: Color(0xFF8A9BB5), fontSize: 16),
                       filled: true,
                       fillColor: const Color.fromARGB(255, 255, 255, 255),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(14),
                         borderSide: BorderSide.none,
                       ),
+                      errorText: _nameError,
+                      errorStyle:
+                          const TextStyle(color: Colors.red, fontSize: 14),
                     ),
                   ),
                   SizedBox(height: maxHeight * 0.03),
