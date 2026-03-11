@@ -206,9 +206,18 @@ class CustomAuthService implements AuthService {
   @override
   Future<void> logout() async {
     try {
-      await _dio.post('/api/auth/v2/logout');
-    } catch (_) {}
-    await TokenManager.clear();
+      final refreshToken = await TokenManager.getRefreshToken();
+
+      await _dio.post(
+        '/api/auth/v2/logout',
+        data: {
+          'refreshToken': refreshToken,
+        },
+      );
+    } catch (e) {
+    } finally {
+      await TokenManager.clear();
+    }
   }
 
   @override

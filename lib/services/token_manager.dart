@@ -83,6 +83,11 @@ class TokenManager {
     }
   }
 
+  static Future<String?> getRefreshToken() async {
+    // พึ่งทำตอนจะเอาให้ logout
+    return _refreshToken ??= await _storage.read(key: _refreshTokenKey);
+  }
+
   /// Clear all tokens (on logout or unrecoverable 401)
   static Future<void> clear() async {
     _accessToken = null;
