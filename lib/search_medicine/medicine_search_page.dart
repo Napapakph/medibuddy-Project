@@ -130,7 +130,7 @@ class _MedicineSearchPageState extends State<MedicineSearchPage> {
               hintStyle:
                   const TextStyle(color: Color(0xFF8A9BB5), fontSize: 14),
               filled: true,
-              fillColor: const Color.fromARGB(255, 249, 252, 255),
+              fillColor: const Color.fromARGB(255, 255, 255, 255),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(24),
                 borderSide: BorderSide.none,
