@@ -189,7 +189,9 @@ class _FindMedicinePageState extends State<FindMedicinePage> {
               TextField(
                 controller: _searchController,
                 decoration: InputDecoration(
-                  hintText: 'ชื่อสามัญภาษาไทย/อังกฤษ หรือชื่อการค้า',
+                  labelText: 'ชื่อสามัญภาษาไทย/อังกฤษ หรือชื่อการค้า',
+                  hintStyle:
+                      const TextStyle(color: Color(0xFF8A9BB5), fontSize: 14),
                   filled: true,
                   fillColor: const Color.fromARGB(255, 255, 255, 255),
                   border: OutlineInputBorder(
