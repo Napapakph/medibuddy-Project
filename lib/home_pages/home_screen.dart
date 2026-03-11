@@ -494,8 +494,8 @@ class _Home extends State<Home> {
         return 'ก่อนอาหาร';
       case 'WITH_MEAL':
       case 'BETWEEN_MEALS':
-      case 'NONE': // Old data was saved as 'NONE' for betweenMeals
         return 'พร้อมอาหาร';
+      case 'NONE':
       default:
         return '';
     }
@@ -514,13 +514,17 @@ class _Home extends State<Home> {
     final normalized = unit.trim().toLowerCase();
     switch (normalized) {
       case 'tablet':
-        return '\u0E40\u0E21\u0E47\u0E14';
-      case 'mg':
-        return '\u0E21\u0E01.';
+        return 'เม็ด';
       case 'ml':
-        return '\u0E21\u0E25.';
+        return 'มิลลิลิตร';
+      case 'mg':
+        return 'มิลลิกรัม';
+      case 'drop':
+        return 'ยาหยอด';
+      case 'injection':
+        return 'เข็ม';
       default:
-        return unit.trim();
+        return unit.trim().isEmpty ? 'เม็ด' : unit;
     }
   }
 
@@ -714,32 +718,29 @@ class _Home extends State<Home> {
                                 ],
                               ),
                             ),
-                            SizedBox(
-                              width: 64,
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 8, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: const Color.fromARGB(
-                                          255, 229, 239, 255),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Text(
-                                      reminder.pills,
-                                      style: const TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                        color: Color(0xFF1F497D),
-                                      ),
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    color: const Color.fromARGB(
+                                        255, 229, 239, 255),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    reminder.pills,
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF1F497D),
                                     ),
                                   ),
-                                ],
-                              ),
-                            ),
+                                ),
+                              ],
+                            )
                           ],
                         ),
                       );
