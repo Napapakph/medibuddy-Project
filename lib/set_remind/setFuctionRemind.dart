@@ -241,9 +241,12 @@ Widget type_frequency({
       Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: const Color.fromARGB(183, 240, 247, 255),
-          borderRadius: BorderRadius.circular(16),
-        ),
+            color: const Color.fromARGB(183, 240, 247, 255),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+                color: const Color.fromARGB(255, 165, 183, 222),
+                width: 1,
+                style: BorderStyle.solid)),
         child: Row(
           children: [
             Container(
@@ -306,6 +309,10 @@ Widget type_frequency({
         decoration: BoxDecoration(
           color: const Color.fromARGB(183, 240, 247, 255),
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+              color: const Color.fromARGB(255, 165, 183, 222),
+              width: 1,
+              style: BorderStyle.solid),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -372,6 +379,10 @@ Widget type_frequency({
         decoration: BoxDecoration(
           color: const Color.fromARGB(183, 240, 247, 255),
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+              color: const Color.fromARGB(255, 165, 183, 222),
+              width: 1,
+              style: BorderStyle.solid),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -471,6 +482,10 @@ Widget type_frequency({
         decoration: BoxDecoration(
           color: const Color.fromARGB(183, 240, 247, 255),
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+              color: const Color.fromARGB(255, 165, 183, 222),
+              width: 1,
+              style: BorderStyle.solid),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -584,8 +599,11 @@ Widget type_frequency({
                       color: frequencyMode == FrequencyMode.everyHours
                           ? Colors.white
                           : Colors.grey.shade200, // disabled color
-                      borderRadius: BorderRadius.circular(
-                          8), // Match roughly the original border
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                          color: const Color.fromARGB(255, 165, 183, 222),
+                          width: 1,
+                          style: BorderStyle.solid),
                     ),
                     child: DropdownButtonHideUnderline(
                       child: DropdownButton<String>(
@@ -640,6 +658,10 @@ Widget type_frequency({
         decoration: BoxDecoration(
           color: const Color.fromARGB(183, 240, 247, 255),
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+              color: const Color.fromARGB(255, 165, 183, 222),
+              width: 1,
+              style: BorderStyle.solid),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -923,6 +945,10 @@ Widget type_frequency({
         decoration: BoxDecoration(
           color: const Color.fromARGB(183, 240, 247, 255),
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+              color: const Color.fromARGB(255, 165, 183, 222),
+              width: 1,
+              style: BorderStyle.solid),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1077,7 +1103,7 @@ Widget detail_time({
       Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: const Color.fromARGB(236, 250, 251, 255),
+          color: const Color.fromARGB(235, 255, 255, 255),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(
@@ -1125,7 +1151,7 @@ Widget detail_time({
       Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: const Color.fromARGB(236, 250, 251, 255),
+          color: const Color.fromARGB(235, 255, 255, 255),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(
@@ -1175,7 +1201,10 @@ Widget detail_time({
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFD6E3F3)),
+              border: Border.all(
+                  color: const Color.fromARGB(255, 165, 183, 222),
+                  width: 1,
+                  style: BorderStyle.solid),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1294,7 +1323,7 @@ Widget summary_rejimen({
       Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: const Color.fromARGB(255, 250, 251, 255),
+          color: const Color.fromARGB(255, 255, 255, 255),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(
@@ -1345,7 +1374,10 @@ Widget summary_rejimen({
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFD6E3F3)),
+          border: Border.all(
+              color: const Color.fromARGB(255, 165, 183, 222),
+              width: 1,
+              style: BorderStyle.solid),
         ),
         child: Column(
           children: doses.map((dose) {

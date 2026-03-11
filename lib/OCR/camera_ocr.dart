@@ -567,8 +567,7 @@ class _CameraOcrPageState extends State<CameraOcrPage> {
           ),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded,
-              color: Color(0xFF5A81BB)),
+          icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF5A81BB)),
           onPressed: () {
             if (Navigator.of(context).canPop()) {
               Navigator.of(context).pop();
@@ -580,7 +579,7 @@ class _CameraOcrPageState extends State<CameraOcrPage> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'เพิ่มยา',
+              'แก้ไขยาที่เกี่ยวข้อง',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -588,9 +587,23 @@ class _CameraOcrPageState extends State<CameraOcrPage> {
               ),
             ),
             SizedBox(height: 2),
-            Text(
-              '> สแกนชื่อของยา',
-              style: TextStyle(fontSize: 16, color: Color(0xFF5A81BB)),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                Icon(
+                  Icons.arrow_right_rounded,
+                  size: 20,
+                  color: Color(0xFF5A81BB),
+                ),
+                Text(
+                  'แสกนฉลากยา',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Color(0xFF5A81BB),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

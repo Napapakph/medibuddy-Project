@@ -167,8 +167,7 @@ class _OcrResultPageState extends State<OcrResultPage> {
           ),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded,
-              color: Color(0xFF5A81BB)),
+          icon: const Icon(Icons.arrow_back_rounded, color: Color(0xFF5A81BB)),
           onPressed: () => Navigator.of(context).pop(),
         ),
         centerTitle: true,
@@ -184,12 +183,24 @@ class _OcrResultPageState extends State<OcrResultPage> {
               ),
             ),
             SizedBox(height: 4),
-            Text(
-              '> ค้นหายา',
-              style: TextStyle(
-                fontSize: 16,
-                color: Color(0xFF5A81BB),
-              ),
+            SizedBox(height: 2),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                Icon(
+                  Icons.arrow_right_rounded,
+                  size: 20,
+                  color: Color(0xFF5A81BB),
+                ),
+                Text(
+                  'ค้นหายา',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Color(0xFF5A81BB),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

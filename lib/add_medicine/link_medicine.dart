@@ -232,24 +232,129 @@ class _LinkMedicinePageState extends State<LinkMedicinePage> {
           debugPrint('🛑 Showing Duplicate Dialog');
           final action = await showDialog<int>(
             context: context,
-            builder: (ctx) => AlertDialog(
-              title: const Text('มีการเชื่อมกับรายการในระบบตัวนี้แล้ว'),
-              content: Text(
-                  'ยา "${selected.displayOfficialName}"\n มีการเชื่อมกับรายการในระบบตัวนี้แล้ว\n\nคุณต้องการตั้งเวลาการทายาใหม่มั้ย?'),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx, 0), // ยกเลิก
-                  child: const Text('ยกเลิก',
-                      style: TextStyle(color: Color(0xFF8A9BB5))),
+            builder: (ctx) => Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.06),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx, 1), // ตั้งเวลาใหม่
-                  child: const Text(
-                    'ตั้งเวลาใหม่',
-                    style: TextStyle(color: Color(0xFF2B4C7E)),
-                  ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      height: 70,
+                      padding:
+                          EdgeInsetsGeometry.only(right: 10, left: 10, top: 10),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF5A81BB),
+                        borderRadius: BorderRadius.vertical(
+                          top: Radius.circular(24),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          const SizedBox(width: 5),
+                          const Expanded(
+                            child: Text(
+                              ' มีการผูกรายการยาในระบบแล้ว ',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(
+                          top: 20, left: 20, right: 20, bottom: 24),
+                      child: Text(
+                        'ยา "${selected.displayOfficialName}"\nมีการเชื่อมกับรายการในระบบตัวนี้แล้ว\n\nคุณต้องการตั้งเวลาการทายาใหม่มั้ย?',
+                        style: const TextStyle(
+                          color: Color(0xFF1F2A37),
+                          fontSize: 15,
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx, 0),
+                            style: TextButton.styleFrom(
+                              backgroundColor: const Color(0xFFF7FAFC),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                side:
+                                    const BorderSide(color: Color(0xFFE3EDF5)),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 10),
+                            ),
+                            child: const Text('ยกเลิก',
+                                style: TextStyle(color: Color(0xFF6B7280))),
+                          ),
+                          const SizedBox(width: 12),
+                          Container(
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [
+                                  const Color(0xFF5A81BB),
+                                  Color.fromARGB(255, 188, 214, 255)
+                                ],
+                                begin: Alignment.centerLeft,
+                                end: Alignment.centerRight,
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.06),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: TextButton(
+                              onPressed: () => Navigator.pop(ctx, 1),
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 10),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(24),
+                                ),
+                              ),
+                              child: const Text(
+                                'ตั้งเวลาใหม่',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           );
 
@@ -592,24 +697,25 @@ class _LinkMedicinePageState extends State<LinkMedicinePage> {
                                       },
                                       child: Container(
                                         margin:
-                                            const EdgeInsets.only(bottom: 12),
-                                        padding: const EdgeInsets.all(12),
+                                            const EdgeInsets.only(bottom: 8),
+                                        padding: const EdgeInsets.symmetric(
+                                            vertical: 16, horizontal: 12),
                                         decoration: BoxDecoration(
                                           color: Colors.white,
                                           borderRadius:
-                                              BorderRadius.circular(16),
+                                              BorderRadius.circular(12),
                                           border: Border.all(
                                             color: isSelected
-                                                ? const Color(0xFF2B4C7E)
-                                                : const Color(0xFFE0E6EF),
-                                            width: isSelected ? 2 : 1,
+                                                ? const Color(0xFF6FA8DC)
+                                                : const Color(0xFFE3EDF5),
+                                            width: isSelected ? 1.5 : 1,
                                           ),
                                           boxShadow: [
                                             BoxShadow(
                                               color: Colors.black
-                                                  .withOpacity(0.05),
-                                              blurRadius: 6,
-                                              offset: const Offset(0, 3),
+                                                  .withOpacity(0.06),
+                                              blurRadius: 12,
+                                              offset: const Offset(0, 4),
                                             ),
                                           ],
                                         ),
@@ -621,14 +727,14 @@ class _LinkMedicinePageState extends State<LinkMedicinePage> {
                                               width: 56,
                                               height: 56,
                                               decoration: BoxDecoration(
-                                                color: const Color(0xFFE9EEF6),
+                                                color: const Color(0xFFF7FAFC),
                                                 borderRadius:
                                                     BorderRadius.circular(12),
                                               ),
                                               child: imagePath.isEmpty
                                                   ? const Icon(
                                                       Icons.medication,
-                                                      color: Color(0xFF2B4C7E),
+                                                      color: Color(0xFF6FA8DC),
                                                     )
                                                   : ClipRRect(
                                                       borderRadius:
@@ -662,7 +768,7 @@ class _LinkMedicinePageState extends State<LinkMedicinePage> {
                                                           return const Icon(
                                                             Icons.medication,
                                                             color: Color(
-                                                                0xFF2B4C7E),
+                                                                0xFF6FA8DC),
                                                           );
                                                         },
                                                       ),
@@ -676,10 +782,16 @@ class _LinkMedicinePageState extends State<LinkMedicinePage> {
                                                 children: [
                                                   Text(
                                                     'ชื่อสามัญ : ${(item.mediEnName ?? '').isNotEmpty ? item.mediEnName : '-'}',
-                                                    style: const TextStyle(
+                                                    style: TextStyle(
                                                       fontSize: 13,
-                                                      fontWeight:
-                                                          FontWeight.w600,
+                                                      fontWeight: isSelected
+                                                          ? FontWeight.w500
+                                                          : FontWeight.w500,
+                                                      color: isSelected
+                                                          ? const Color(
+                                                              0xFF1F2A37)
+                                                          : const Color(
+                                                              0xFF1F2A37),
                                                     ),
                                                   ),
                                                   const SizedBox(height: 4),
@@ -687,7 +799,7 @@ class _LinkMedicinePageState extends State<LinkMedicinePage> {
                                                     'ชื่อการค้า : ${(item.mediTradeName ?? '').isNotEmpty ? item.mediTradeName : '-'}',
                                                     style: const TextStyle(
                                                       fontSize: 12,
-                                                      color: Color(0xFF5E6C84),
+                                                      color: Color(0xFF6B7280),
                                                     ),
                                                   ),
                                                 ],
@@ -696,7 +808,7 @@ class _LinkMedicinePageState extends State<LinkMedicinePage> {
                                             if (isSelected)
                                               const Icon(
                                                 Icons.check_circle,
-                                                color: Color(0xFF2B4C7E),
+                                                color: Color(0xFF6FA8DC),
                                               ),
                                           ],
                                         ),

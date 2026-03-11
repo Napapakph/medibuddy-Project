@@ -329,8 +329,6 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
                   ? toWeekdayCodes(plan.weekdays)
                   : null,
               intervalDays: input.intervalDays,
-            
-             
               times: input.times,
             )
           : await api.createMedicineRegimen(
@@ -340,8 +338,6 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
               endDateUtc: input.endDateUtc,
               daysOfWeek: input.daysOfWeek,
               intervalDays: input.intervalDays,
-             
-             
               times: input.times,
             );
 
@@ -644,7 +640,7 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
             ],
           ),
         ),
-        backgroundColor: const Color.fromARGB(255, 211, 229, 255),
+        backgroundColor: const Color.fromARGB(255, 210, 233, 255),
         body: SafeArea(
           child: Column(
             children: [
@@ -740,7 +736,7 @@ class _CircleNavButton extends StatelessWidget {
         decoration: BoxDecoration(
           gradient: const LinearGradient(
             colors: [
-              Color.fromARGB(255, 177, 217, 255),
+              Color.fromARGB(255, 127, 180, 231),
               Color.fromARGB(255, 143, 190, 236),
             ],
             begin: Alignment.topLeft,
