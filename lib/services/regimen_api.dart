@@ -48,10 +48,9 @@ class RegimenApiService {
     required String scheduleType, // DAILY/WEEKLY/INTERVAL/CYCLE
     required DateTime startDateUtc,
     DateTime? endDateUtc, // only DAILY
-     List<String>? daysOfWeek,// only WEEKLY
+    List<String>? daysOfWeek, // only WEEKLY
     int? intervalDays, // only INTERVAL
-    int? cycleOnDays, // only CYCLE
-    int? cycleBreakDays, // only CYCLE
+
     required List<MedicineRegimenTime> times,
     String? accessToken,
   }) async {
@@ -66,8 +65,6 @@ class RegimenApiService {
       endDateUtc: endDateUtc,
       daysOfWeek: daysOfWeek,
       intervalDays: intervalDays,
-      cycleOnDays: cycleOnDays,
-      cycleBreakDays: cycleBreakDays,
       times: times,
     );
 
@@ -118,8 +115,6 @@ class RegimenApiService {
     DateTime? endDateUtc,
     List<String>? daysOfWeek, // "MON".."SUN"
     int? intervalDays,
-    int? cycleOnDays,
-    int? cycleBreakDays,
     List<MedicineRegimenTime>? times,
     String? accessToken,
   }) async {
@@ -134,8 +129,6 @@ class RegimenApiService {
       endDateUtc: endDateUtc,
       daysOfWeek: daysOfWeek,
       intervalDays: intervalDays,
-      cycleOnDays: cycleOnDays,
-      cycleBreakDays: cycleBreakDays,
       times: times,
     );
 

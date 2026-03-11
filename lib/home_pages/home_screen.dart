@@ -993,10 +993,10 @@ class _Home extends State<Home> {
                                         }
 
                                         // 2) โหลดเสร็จแล้ว (มีใน cache แล้ว) ค่อยตัดสินใจ empty state
-                                        // User request: รวม reminders.isEmpty กลับเข้ามา (ว่าง = แสดง Guide)
-                                        final bool showGuide =
-                                            !_hasAnyRegimen ||
-                                                reminders.isEmpty;
+                                        final bool showGuide = !_hasAnyRegimen;
+                                        final bool isNoMedsToday =
+                                            _hasAnyRegimen &&
+                                                groupedReminders.isEmpty;
 
                                         return Container(
                                           padding: const EdgeInsets.all(8),
@@ -1120,24 +1120,63 @@ class _Home extends State<Home> {
                                                     ),
                                                   ],
                                                 )
-                                              : ListView.separated(
-                                                  itemCount:
-                                                      groupedReminders.length,
-                                                  separatorBuilder: (_, __) =>
-                                                      const SizedBox(
-                                                          height: 12),
-                                                  itemBuilder:
-                                                      (context, index) {
-                                                    final group =
-                                                        groupedReminders[index];
-                                                    // Filtered out past due, so always false
-                                                    return _buildReminderGroupedCard(
-                                                      context,
-                                                      group,
-                                                      pastDue: false,
-                                                    );
-                                                  },
-                                                ),
+                                              : isNoMedsToday
+                                                  ? Container(
+                                                      padding:
+                                                          const EdgeInsets.all(
+                                                              8),
+                                                      child: Center(
+                                                        child: Column(
+                                                          mainAxisAlignment:
+                                                              MainAxisAlignment
+                                                                  .center,
+                                                          children: [
+                                                            Image.asset(
+                                                              'assets/cat_add_follower.png',
+                                                              width: 300,
+                                                            ),
+                                                            const SizedBox(
+                                                                height: 16),
+                                                            const Text(
+                                                              'ไม่มียาให้รับประทานแล้วในวันนี้',
+                                                              style: TextStyle(
+                                                                fontSize: 18,
+                                                                color: Color
+                                                                    .fromARGB(
+                                                                        255,
+                                                                        90,
+                                                                        129,
+                                                                        187),
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w600,
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    )
+                                                  : ListView.separated(
+                                                      itemCount:
+                                                          groupedReminders
+                                                              .length,
+                                                      separatorBuilder:
+                                                          (_, __) =>
+                                                              const SizedBox(
+                                                                  height: 12),
+                                                      itemBuilder:
+                                                          (context, index) {
+                                                        final group =
+                                                            groupedReminders[
+                                                                index];
+                                                        // Filtered out past due, so always false
+                                                        return _buildReminderGroupedCard(
+                                                          context,
+                                                          group,
+                                                          pastDue: false,
+                                                        );
+                                                      },
+                                                    ),
                                         );
                                       },
                                     ),

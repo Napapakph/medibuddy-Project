@@ -486,9 +486,7 @@ class _RemindListScreenState extends State<RemindListScreen> {
 
   Future<void> _addPlan() async {
     if (widget.medicines.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('ยังไม่มีรายการยา')),
-      );
+      debugPrint('ยังไม่มีรายการยา');
       return;
     }
 

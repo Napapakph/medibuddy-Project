@@ -329,8 +329,8 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
                   ? toWeekdayCodes(plan.weekdays)
                   : null,
               intervalDays: input.intervalDays,
-              cycleOnDays: input.cycleOnDays,
-              cycleBreakDays: input.cycleBreakDays,
+            
+             
               times: input.times,
             )
           : await api.createMedicineRegimen(
@@ -340,8 +340,8 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
               endDateUtc: input.endDateUtc,
               daysOfWeek: input.daysOfWeek,
               intervalDays: input.intervalDays,
-              cycleOnDays: input.cycleOnDays,
-              cycleBreakDays: input.cycleBreakDays,
+             
+             
               times: input.times,
             );
 

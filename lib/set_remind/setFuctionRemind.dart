@@ -1294,7 +1294,7 @@ Widget summary_rejimen({
       Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: const Color.fromARGB(236, 250, 251, 255),
+          color: const Color.fromARGB(255, 250, 251, 255),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(
@@ -1522,8 +1522,7 @@ class RegimenCreateInput {
   final DateTime? endDateUtc;
   final List<String>? daysOfWeek;
   final int? intervalDays;
-  final int? cycleOnDays;
-  final int? cycleBreakDays;
+
   final List<MedicineRegimenTime> times;
 
   const RegimenCreateInput({
@@ -1532,8 +1531,6 @@ class RegimenCreateInput {
     this.endDateUtc,
     this.daysOfWeek,
     this.intervalDays,
-    this.cycleOnDays,
-    this.cycleBreakDays,
     required this.times,
   });
 }
@@ -1822,15 +1819,13 @@ String mapRegimenUnit(String uiUnit) {
 RegimenCreateInput buildRegimenCreateInput(
   ReminderPlan plan, {
   DateTime? startDateUtc,
-  int defaultMealOffsetMin = 30,
 }) {
   final scheduleType = mapRegimenScheduleType(plan.frequencyPattern);
   final start = startDateUtc ??
       (plan.regimenStartDate != null
           ? regimenStartDateUtc(now: plan.regimenStartDate!)
           : regimenStartDateUtc());
-  final times =
-      buildRegimenTimes(plan, defaultMealOffsetMin: defaultMealOffsetMin);
+  final times = buildRegimenTimes(plan);
 
   final explicitEnd = plan.regimenEndDate != null
       ? regimenStartDateUtc(now: plan.regimenEndDate!)
@@ -1881,9 +1876,8 @@ RegimenCreateInput buildRegimenCreateInput(
 }
 
 List<MedicineRegimenTime> buildRegimenTimes(
-  ReminderPlan plan, {
-  int defaultMealOffsetMin = 30,
-}) {
+  ReminderPlan plan,
+) {
   final effectiveDoses = plan.frequencyMode == FrequencyMode.everyHours
       ? _generateHourlyDoses(plan)
       : plan.doses;
@@ -1899,7 +1893,6 @@ List<MedicineRegimenTime> buildRegimenTimes(
       dose: num.tryParse(dose.amount) ?? 1,
       unit: mapRegimenUnit(dose.unit),
       mealRelation: relation,
-      mealOffsetMin: relation == 'NONE' ? null : defaultMealOffsetMin,
     );
   }).toList();
 }

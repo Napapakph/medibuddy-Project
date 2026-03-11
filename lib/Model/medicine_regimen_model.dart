@@ -4,7 +4,6 @@ class MedicineRegimenTime {
   final num dose; // 1
   final String unit; // "tablet"
   final String mealRelation; // "BEFORE_MEAL" | "AFTER_MEAL" | "NONE"
-  final int? mealOffsetMin; // required when mealRelation != NONE
 
   MedicineRegimenTime({
     this.timeId,
@@ -12,7 +11,6 @@ class MedicineRegimenTime {
     required this.dose,
     required this.unit,
     required this.mealRelation,
-    this.mealOffsetMin,
   });
 
   factory MedicineRegimenTime.fromJson(Map<String, dynamic> json) {
@@ -22,7 +20,6 @@ class MedicineRegimenTime {
       dose: json['dose'] ?? 0,
       unit: json['unit'] ?? '',
       mealRelation: json['mealRelation'] ?? 'NONE',
-      mealOffsetMin: json['mealOffsetMin'],
     );
   }
 
@@ -34,12 +31,6 @@ class MedicineRegimenTime {
       'unit': unit,
       'mealRelation': relation,
     };
-
-    // rule: mealOffsetMin must exist when mealRelation != NONE,
-    // and must be omitted/null when NONE
-    if (relation != 'NONE') {
-      map['mealOffsetMin'] = mealOffsetMin ?? 30;
-    }
     return map;
   }
 }
