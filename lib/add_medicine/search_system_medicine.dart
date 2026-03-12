@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:medibuddy/Model/medicine_model.dart';
 import 'package:medibuddy/widgets/medicine_step_timeline.dart';
 import 'link_medicine.dart';
@@ -237,7 +237,7 @@ class _FindMedicinePageState extends State<FindMedicinePage> {
               SizedBox(
                 height: 400,
                 child: GestureDetector(
-                  onTap: () => TutorialDialog.show(context, forceShow: true),
+                  onTap: () => TutorialDialog.show(context),
                   child: Container(
                     width: double.infinity,
                     decoration: BoxDecoration(

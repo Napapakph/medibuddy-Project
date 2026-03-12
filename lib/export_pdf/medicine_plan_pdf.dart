@@ -1,4 +1,4 @@
-﻿import 'dart:typed_data';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -374,57 +374,72 @@ class _MedicationPlanScreenState extends State<MedicationPlanScreen> {
     pdf.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.all(24),
+        margin: const pw.EdgeInsets.symmetric(horizontal: 48, vertical: 48),
         build: (context) {
           final widgets = <pw.Widget>[
             pw.Text(
-              'แผนการรับประทานยา',
+              'Medication Schedule',
               style: pw.TextStyle(
                 font: boldFont,
-                fontSize: 20,
+                fontSize: 22,
               ),
+              textAlign: pw.TextAlign.left,
             ),
             pw.SizedBox(height: 8),
             pw.Text(
-              'ผู้ใช้: $displayProfile',
-              style: pw.TextStyle(font: baseFont, fontSize: 12),
+              displayProfile,
+              style: pw.TextStyle(font: baseFont, fontSize: 14),
             ),
+            pw.SizedBox(height: 4),
             pw.Text(
-              'ช่วงวันที่: $dateRangeText',
+              dateRangeText,
               style: pw.TextStyle(font: baseFont, fontSize: 12),
             ),
-            pw.SizedBox(height: 16),
+            pw.SizedBox(height: 24),
           ];
 
-          for (final group in groups) {
+          for (int i = 0; i < groups.length; i++) {
+            final group = groups[i];
             final rangeText = _rangeText(group.startDate, group.endDate);
+            
             widgets.addAll([
               pw.Text(
-                'ยา: ${group.displayName}',
-                style: pw.TextStyle(font: boldFont, fontSize: 14),
+                'Medication: ${group.displayName}',
+                style: pw.TextStyle(font: boldFont, fontSize: 15),
               ),
               pw.SizedBox(height: 4),
-              if (group.enName != null && group.enName!.isNotEmpty)
+              if (group.enName != null && group.enName!.isNotEmpty) ...[
                 pw.Text(
-                  'ชื่อสามัญ: ${group.enName}',
+                  'Generic name: ${group.enName}',
                   style: pw.TextStyle(font: baseFont, fontSize: 12),
                 ),
-              if (rangeText.isNotEmpty)
+                pw.SizedBox(height: 4),
+              ],
+              if (rangeText.isNotEmpty) ...[
                 pw.Text(
                   rangeText,
                   style: pw.TextStyle(font: baseFont, fontSize: 12),
                 ),
-              pw.SizedBox(height: 4),
+                pw.SizedBox(height: 8),
+              ],
               ...group.times.map(
-                (time) => pw.Text(
-                  'เวลา ${time.time} น. ปริมาณ ${time.dose} ${time.unit}',
-                  style: pw.TextStyle(font: baseFont, fontSize: 12),
+                (time) => pw.Padding(
+                  padding: const pw.EdgeInsets.only(left: 16, bottom: 6),
+                  child: pw.Text(
+                    'Time ${time.time} — Dose ${time.dose} ${time.unit}',
+                    style: pw.TextStyle(font: baseFont, fontSize: 11),
+                  ),
                 ),
               ),
-              pw.SizedBox(height: 8),
-              pw.Divider(),
-              pw.SizedBox(height: 8),
             ]);
+
+            if (i < groups.length - 1) {
+              widgets.addAll([
+                pw.SizedBox(height: 16),
+                pw.Divider(thickness: 0.5, color: PdfColors.black),
+                pw.SizedBox(height: 16),
+              ]);
+            }
           }
 
           return widgets;

@@ -3,7 +3,6 @@ import '../services/tutorial_service.dart';
 
 class TutorialDialog extends StatefulWidget {
   final bool forceShow;
-
   const TutorialDialog({Key? key, this.forceShow = false}) : super(key: key);
 
   static Future<void> show(BuildContext context,
@@ -89,7 +88,7 @@ class _TutorialDialogState extends State<TutorialDialog> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       backgroundColor: Colors.white,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 24.0),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24.0),
         child: Stack(
           children: [
             Column(
@@ -171,13 +170,13 @@ class _TutorialDialogState extends State<TutorialDialog> {
                             children: [
                               const Text('• ',
                                   style: TextStyle(
-                                      fontSize: 14,
+                                      fontSize: 16,
                                       fontWeight: FontWeight.bold)),
                               Expanded(
                                 child: Text(
                                   point,
                                   style: const TextStyle(
-                                      fontSize: 14, color: Colors.black87),
+                                      fontSize: 16, color: Colors.black87),
                                 ),
                               ),
                             ],
@@ -191,7 +190,7 @@ class _TutorialDialogState extends State<TutorialDialog> {
                   ElevatedButton(
                     onPressed: _onUnderstand,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF5A81BB),
+                      backgroundColor: const Color.fromARGB(255, 192, 103, 155),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20),
                       ),
@@ -210,7 +209,7 @@ class _TutorialDialogState extends State<TutorialDialog> {
                   ElevatedButton(
                     onPressed: _nextPage,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.grey.shade400,
+                      backgroundColor: const Color.fromARGB(255, 145, 169, 223),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20),
                       ),
@@ -221,7 +220,7 @@ class _TutorialDialogState extends State<TutorialDialog> {
                       'ต่อไป',
                       style: TextStyle(
                           fontSize: 16,
-                          color: Colors.white,
+                          color: Color.fromARGB(255, 255, 255, 255),
                           fontWeight: FontWeight.bold),
                     ),
                   ),
