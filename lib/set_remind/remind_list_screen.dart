@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:medibuddy/Model/medicine_model.dart';
 import 'package:medibuddy/Model/medicine_regimen_model.dart';
 import 'package:medibuddy/services/regimen_api.dart';
@@ -374,8 +374,10 @@ class _RemindListScreenState extends State<RemindListScreen> {
         return MealTiming.afterMeal;
       case 'WITH_MEAL':
         return MealTiming.betweenMeals;
+      case 'NONE':
+        return MealTiming.none;
       default:
-        return MealTiming.afterMeal;
+        return MealTiming.none;
     }
   }
 
@@ -858,8 +860,10 @@ class _RemindListScreenState extends State<RemindListScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    MealTimingIcon(timing: dose.mealTiming),
+                    if (dose.mealTiming != MealTiming.none) ...[
+                      const SizedBox(width: 8),
+                      MealTimingIcon(timing: dose.mealTiming),
+                    ],
                   ],
                 ),
               );

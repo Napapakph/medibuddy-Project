@@ -10,7 +10,7 @@ enum FrequencyPattern { everyDay, someDays, everyInterval }
 
 enum DurationMode { forever, custom }
 
-enum MealTiming { beforeMeal, betweenMeals, afterMeal }
+enum MealTiming { beforeMeal, betweenMeals, afterMeal, none }
 
 class ReminderDose {
   TimeOfDay time;
@@ -22,7 +22,7 @@ class ReminderDose {
     required this.time,
     this.amount = '1',
     this.unit = 'เม็ด',
-    this.mealTiming = MealTiming.afterMeal,
+    this.mealTiming = MealTiming.none,
   });
 
   ReminderDose copyWith({
@@ -1182,12 +1182,14 @@ Widget detail_time({
           child: Row(
             children: [
               const Text('เริ่มต้นเวลา'),
-              const SizedBox(width: 12),
+              const SizedBox(width: 25),
               OutlinedButton(
                 onPressed: pickStartTime,
                 child: Text(formatTime(startTime)),
               ),
-              const Spacer(),
+              const SizedBox(
+                width: 25,
+              ),
               Text('ทุก $everyHours ชั่วโมง'),
             ],
           ),
@@ -1415,8 +1417,10 @@ Widget summary_rejimen({
                       textAlign: TextAlign.end,
                     ),
                   ),
-                  const SizedBox(width: 25),
-                  MealTimingIcon(timing: dose.mealTiming),
+                  if (dose.mealTiming != MealTiming.none) ...[
+                    const SizedBox(width: 25),
+                    MealTimingIcon(timing: dose.mealTiming),
+                  ],
                 ],
               ),
             );
@@ -1445,21 +1449,27 @@ class _MealTimingRow extends StatelessWidget {
           label: 'ก่อนอาหาร',
           assetPath: 'assets/before_meal.png',
           selected: value == MealTiming.beforeMeal,
-          onTap: () => onChanged(MealTiming.beforeMeal),
+          onTap: () => onChanged(value == MealTiming.beforeMeal
+              ? MealTiming.none
+              : MealTiming.beforeMeal),
         ),
         _MealTimingOption(
           timing: MealTiming.betweenMeals,
           label: 'ระหว่างมื้อ',
           assetPath: 'assets/between_meal.png',
           selected: value == MealTiming.betweenMeals,
-          onTap: () => onChanged(MealTiming.betweenMeals),
+          onTap: () => onChanged(value == MealTiming.betweenMeals
+              ? MealTiming.none
+              : MealTiming.betweenMeals),
         ),
         _MealTimingOption(
           timing: MealTiming.afterMeal,
           label: 'หลังอาหาร',
           assetPath: 'assets/after_meal.png',
           selected: value == MealTiming.afterMeal,
-          onTap: () => onChanged(MealTiming.afterMeal),
+          onTap: () => onChanged(value == MealTiming.afterMeal
+              ? MealTiming.none
+              : MealTiming.afterMeal),
         ),
       ],
     );
@@ -1491,6 +1501,7 @@ class _MealTimingOption extends StatelessWidget {
 
     return Expanded(
       child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
         onTap: onTap,
         child: Column(
           children: [
@@ -1546,6 +1557,8 @@ class MealTimingIcon extends StatelessWidget {
       case MealTiming.afterMeal:
         assetPath = 'assets/after_meal.png';
         break;
+      case MealTiming.none:
+        return const SizedBox.shrink();
     }
 
     return Image.asset(
@@ -1749,8 +1762,12 @@ MealTiming _mealTimingFromRelation(String relation) {
       return MealTiming.afterMeal;
     case 'BETWEEN_MEAL':
       return MealTiming.betweenMeals;
+    case 'WITH_MEAL':
+      return MealTiming.betweenMeals;
+    case 'NONE':
+      return MealTiming.none;
     default:
-      return MealTiming.afterMeal;
+      return MealTiming.none;
   }
 }
 
@@ -1843,6 +1860,8 @@ String mapMealRelation(MealTiming timing) {
       return 'AFTER_MEAL';
     case MealTiming.betweenMeals:
       return 'WITH_MEAL';
+    case MealTiming.none:
+      return 'none';
   }
 }
 
