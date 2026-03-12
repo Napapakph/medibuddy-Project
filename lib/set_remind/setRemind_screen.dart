@@ -124,6 +124,11 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
               mealTiming: dose.mealTiming,
             ))
         .toList();
+
+    // everyHours mode: keep only the first dose as the template card
+    if (_frequencyMode == FrequencyMode.everyHours && _doses.length > 1) {
+      _doses = [_doses.first];
+    }
   }
 
   @override

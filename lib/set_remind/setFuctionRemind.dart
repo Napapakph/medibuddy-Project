@@ -1195,7 +1195,8 @@ Widget detail_time({
       ],
       const SizedBox(height: 8),
       Column(
-        children: List.generate(doses.length, (index) {
+        children: List.generate(
+            enabledTimes ? doses.length : 1.clamp(0, doses.length), (index) {
           final dose = doses[index];
           return Container(
             margin: const EdgeInsets.only(bottom: 12),

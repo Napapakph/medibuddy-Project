@@ -622,6 +622,8 @@ class RegimenApiService {
 
     if (intervalHour != null && intervalHour > 0) {
       body['intervalHour'] = intervalHour;
+    } else {
+      body['intervalHour'] = null;
     }
 
     return body;

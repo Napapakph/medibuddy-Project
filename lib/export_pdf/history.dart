@@ -615,14 +615,15 @@ class _HistoryPageState extends State<HistoryPage> {
                     0: const pw.FixedColumnWidth(60),
                     1: const pw.FlexColumnWidth(),
                     2: const pw.FixedColumnWidth(60),
-                    3: const pw.FixedColumnWidth(70),
+                    3: const pw.FixedColumnWidth(100),
                     4: const pw.FlexColumnWidth(),
                   },
                   headers: ['Time', 'Medicine', 'Dose', 'Status', 'Note'],
                   data: dayItems.map((item) {
                     final timeText = DateFormat('HH:mm').format(item.takenAt);
                     final doseText = item.dose != null
-                        ? '${item.dose} ${_mapUnitToThai(item.unit ?? '')}'.trim()
+                        ? '${item.dose} ${_mapUnitToThai(item.unit ?? '')}'
+                            .trim()
                         : '${item.amount} ${_mapUnitToThai('')}'.trim();
 
                     String statusText;
