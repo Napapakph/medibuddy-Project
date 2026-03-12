@@ -554,7 +554,7 @@ class _HistoryPageState extends State<HistoryPage> {
             final widgets = <pw.Widget>[
               pw.Center(
                 child: pw.Text(
-                  'Medication History',
+                  'ประวัติการรับประทานยา',
                   style: pw.TextStyle(
                     fontSize: 20,
                     fontWeight: pw.FontWeight.bold,
@@ -571,7 +571,7 @@ class _HistoryPageState extends State<HistoryPage> {
               pw.SizedBox(height: 16),
               pw.Center(
                 child: pw.Text(
-                  'Date range:',
+                  'ช่วงวันตั้งแต่',
                   style: const pw.TextStyle(fontSize: 12),
                 ),
               ),
@@ -612,13 +612,13 @@ class _HistoryPageState extends State<HistoryPage> {
                   cellStyle: const pw.TextStyle(fontSize: 10),
                   cellPadding: const pw.EdgeInsets.all(6),
                   columnWidths: {
-                    0: const pw.FixedColumnWidth(60),
-                    1: const pw.FlexColumnWidth(),
+                    0: const pw.FixedColumnWidth(40),
+                    1: const pw.FlexColumnWidth(100),
                     2: const pw.FixedColumnWidth(60),
                     3: const pw.FixedColumnWidth(100),
-                    4: const pw.FlexColumnWidth(),
+                    4: const pw.FlexColumnWidth(40),
                   },
-                  headers: ['Time', 'Medicine', 'Dose', 'Status', 'Note'],
+                  headers: ['เวลา', 'ชื่อยา', 'จำนวน', 'สถานะ', 'หมายเหตุ'],
                   data: dayItems.map((item) {
                     final timeText = DateFormat('HH:mm').format(item.takenAt);
                     final doseText = item.dose != null
@@ -642,8 +642,15 @@ class _HistoryPageState extends State<HistoryPage> {
                         break;
                     }
 
+                    final tradeNameStr = item.tradeName.isNotEmpty
+                        ? item.tradeName
+                        : (item.nickname.isNotEmpty ? item.nickname : '-');
+                    final medicineThStr =
+                        item.thName.isNotEmpty ? item.thName : '-';
+                    final medicineEnStr =
+                        item.enName.isNotEmpty ? item.enName : '-';
                     final medicineName =
-                        item.titleEn.isNotEmpty ? item.titleEn : item.titleTh;
+                        'ชื่อการค้ายา : $tradeNameStr\nชื่อสามัญทางยาภาษาไทย : $medicineThStr\nชื่อสามัญทางยาภาษาอังกฤษ : $medicineEnStr';
                     final noteText =
                         item.note?.isEmpty ?? true ? '-' : item.note;
 
