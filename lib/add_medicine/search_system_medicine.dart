@@ -344,7 +344,7 @@ class _FindMedicinePageState extends State<FindMedicinePage> {
                                   size: 16, color: Color(0xFF7A869A)),
                               SizedBox(width: 4),
                               Text(
-                                'แตะเพื่อดูรายละเอียด',
+                                'ปัดเพื่อดูรายละเอียด',
                                 style: TextStyle(
                                   color: Color(0xFF7A869A),
                                   fontSize: 14,
