@@ -370,79 +370,166 @@ class _MedicationPlanScreenState extends State<MedicationPlanScreen> {
     final displayProfile = profileName.isNotEmpty ? profileName : 'ผู้ใช้';
     final dateRangeText = _formatRangeText(_startDate, _endDate);
 
+    // Colors
+    const primaryColor = PdfColor.fromInt(0xFF2B4C7E);
+    const subtextColor = PdfColor.fromInt(0xFF5A6F8A);
+    const cardBg = PdfColor.fromInt(0xFFF4F8FD);
+    const cardBorder = PdfColor.fromInt(0xFFD0DEF0);
+    const dividerColor = PdfColor.fromInt(0xFFBFD3EB);
+
     final pdf = pw.Document();
     pdf.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.symmetric(horizontal: 48, vertical: 48),
+        margin: const pw.EdgeInsets.symmetric(horizontal: 40, vertical: 44),
         build: (context) {
-          final widgets = <pw.Widget>[
+          final contentWidgets = <pw.Widget>[
+            // --- Header ---
             pw.Text(
-              'Medication Schedule',
+              'แผนการรับประทานยา',
               style: pw.TextStyle(
                 font: boldFont,
-                fontSize: 22,
+                fontSize: 24,
+                color: primaryColor,
               ),
-              textAlign: pw.TextAlign.left,
             ),
-            pw.SizedBox(height: 8),
+            pw.SizedBox(height: 6),
+            pw.Divider(thickness: 1, color: dividerColor),
+            pw.SizedBox(height: 10),
             pw.Text(
               displayProfile,
-              style: pw.TextStyle(font: baseFont, fontSize: 14),
+              style: pw.TextStyle(
+                font: baseFont,
+                fontSize: 14,
+                color: subtextColor,
+              ),
             ),
             pw.SizedBox(height: 4),
             pw.Text(
               dateRangeText,
-              style: pw.TextStyle(font: baseFont, fontSize: 12),
+              style: pw.TextStyle(
+                font: baseFont,
+                fontSize: 12,
+                color: subtextColor,
+              ),
             ),
-            pw.SizedBox(height: 24),
+            pw.SizedBox(height: 28),
           ];
 
+          // --- Medication sections ---
           for (int i = 0; i < groups.length; i++) {
             final group = groups[i];
             final rangeText = _rangeText(group.startDate, group.endDate);
-            
-            widgets.addAll([
+
+            final cardChildren = <pw.Widget>[
+              // Medication name
               pw.Text(
-                'Medication: ${group.displayName}',
-                style: pw.TextStyle(font: boldFont, fontSize: 15),
+                'ชื่อเล่นยา: ${group.displayName}',
+                style: pw.TextStyle(
+                  font: boldFont,
+                  fontSize: 15,
+                  color: primaryColor,
+                ),
               ),
-              pw.SizedBox(height: 4),
-              if (group.enName != null && group.enName!.isNotEmpty) ...[
+              pw.SizedBox(height: 6),
+            ];
+
+            if (group.enName != null && group.enName!.isNotEmpty) {
+              cardChildren.addAll([
                 pw.Text(
-                  'Generic name: ${group.enName}',
-                  style: pw.TextStyle(font: baseFont, fontSize: 12),
-                ),
-                pw.SizedBox(height: 4),
-              ],
-              if (rangeText.isNotEmpty) ...[
-                pw.Text(
-                  rangeText,
-                  style: pw.TextStyle(font: baseFont, fontSize: 12),
-                ),
-                pw.SizedBox(height: 8),
-              ],
-              ...group.times.map(
-                (time) => pw.Padding(
-                  padding: const pw.EdgeInsets.only(left: 16, bottom: 6),
-                  child: pw.Text(
-                    'Time ${time.time} — Dose ${time.dose} ${time.unit}',
-                    style: pw.TextStyle(font: baseFont, fontSize: 11),
+                  'ชื่อสามัญทางยาอังกฤษ: ${group.enName}',
+                  style: pw.TextStyle(
+                    font: baseFont,
+                    fontSize: 12,
+                    color: subtextColor,
                   ),
                 ),
-              ),
-            ]);
-
-            if (i < groups.length - 1) {
-              widgets.addAll([
-                pw.SizedBox(height: 16),
-                pw.Divider(thickness: 0.5, color: PdfColors.black),
-                pw.SizedBox(height: 16),
+                pw.SizedBox(height: 4),
               ]);
+            }
+
+            if (rangeText.isNotEmpty) {
+              cardChildren.addAll([
+                pw.Text(
+                  rangeText,
+                  style: pw.TextStyle(
+                    font: baseFont,
+                    fontSize: 12,
+                    color: subtextColor,
+                  ),
+                ),
+                pw.SizedBox(height: 12),
+              ]);
+            }
+
+            // Schedule rows
+            cardChildren.add(
+              pw.Divider(thickness: 0.5, color: dividerColor),
+            );
+            cardChildren.add(pw.SizedBox(height: 8));
+
+            for (final time in group.times) {
+              cardChildren.add(
+                pw.Padding(
+                  padding: const pw.EdgeInsets.only(left: 8, bottom: 8),
+                  child: pw.Row(
+                    children: [
+                      pw.SizedBox(
+                        width: 160,
+                        child: pw.Text(
+                          'เวลา ${time.time} น.',
+                          style: pw.TextStyle(font: baseFont, fontSize: 12),
+                        ),
+                      ),
+                      pw.SizedBox(width: 24),
+                      pw.Expanded(
+                        child: pw.Text(
+                          'ปริมาณ ${time.dose} ${time.unit}',
+                          style: pw.TextStyle(font: baseFont, fontSize: 12),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }
+
+            // Card wrapper
+            contentWidgets.add(
+              pw.Container(
+                padding: const pw.EdgeInsets.all(16),
+                decoration: pw.BoxDecoration(
+                  color: cardBg,
+                  borderRadius:
+                      const pw.BorderRadius.all(pw.Radius.circular(8)),
+                  border: pw.Border.all(color: cardBorder, width: 0.8),
+                ),
+                child: pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: cardChildren,
+                ),
+              ),
+            );
+
+            // Spacing between cards
+            if (i < groups.length - 1) {
+              contentWidgets.add(pw.SizedBox(height: 20));
             }
           }
 
-          return widgets;
+          // Wrap everything in a centered container
+          return [
+            pw.Align(
+              alignment: pw.Alignment.topCenter,
+              child: pw.Container(
+                width: 500,
+                child: pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: contentWidgets,
+                ),
+              ),
+            ),
+          ];
         },
       ),
     );
