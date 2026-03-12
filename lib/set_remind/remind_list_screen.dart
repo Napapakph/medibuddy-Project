@@ -808,6 +808,7 @@ class _RemindListScreenState extends State<RemindListScreen> {
                       style: const TextStyle(
                         fontSize: 14,
                         color: Color(0xFF5A81BB),
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                     const SizedBox(height: 2),

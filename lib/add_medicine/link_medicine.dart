@@ -258,7 +258,14 @@ class _LinkMedicinePageState extends State<LinkMedicinePage> {
                       padding:
                           EdgeInsetsGeometry.only(right: 10, left: 10, top: 10),
                       decoration: const BoxDecoration(
-                        color: Color(0xFF5A81BB),
+                        gradient: const LinearGradient(
+                          colors: [
+                            const Color(0xFF5A81BB),
+                            Color.fromARGB(255, 159, 196, 255)
+                          ],
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                        ),
                         borderRadius: BorderRadius.vertical(
                           top: Radius.circular(24),
                         ),
@@ -317,7 +324,7 @@ class _LinkMedicinePageState extends State<LinkMedicinePage> {
                               gradient: const LinearGradient(
                                 colors: [
                                   const Color(0xFF5A81BB),
-                                  Color.fromARGB(255, 188, 214, 255)
+                                  Color.fromARGB(255, 159, 196, 255)
                                 ],
                                 begin: Alignment.centerLeft,
                                 end: Alignment.centerRight,
