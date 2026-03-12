@@ -338,14 +338,18 @@ class _RemindListScreenState extends State<RemindListScreen> {
     final resolved = _resolveMedicineByMediListId(item.mediListId) ??
         _buildMedicineItemFromListItem(item);
 
+    final int? intervalHour = item.intervalHour;
+
     return ReminderPlan(
       id: item.mediRegimenId.toString(),
       mediListId: item.mediListId,
       mediRegimenId: item.mediRegimenId,
       medicine: resolved,
-      frequencyMode: FrequencyMode.timesPerDay,
-      timesPerDay: effectiveDoses.length,
-      everyHours: 6,
+      frequencyMode: intervalHour != null
+          ? FrequencyMode.everyHours
+          : FrequencyMode.timesPerDay,
+      timesPerDay: intervalHour == null ? effectiveDoses.length : 0,
+      everyHours: intervalHour ?? 0,
       frequencyPattern: pattern,
       weekdays: weekdays,
       everyCount: everyCount,

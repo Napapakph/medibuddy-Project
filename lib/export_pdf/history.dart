@@ -622,22 +622,22 @@ class _HistoryPageState extends State<HistoryPage> {
                   data: dayItems.map((item) {
                     final timeText = DateFormat('HH:mm').format(item.takenAt);
                     final doseText = item.dose != null
-                        ? '${item.dose} ${item.unit ?? ''}'.trim()
-                        : '${item.amount} tablets';
+                        ? '${item.dose} ${_mapUnitToThai(item.unit ?? '')}'.trim()
+                        : '${item.amount} ${_mapUnitToThai('')}'.trim();
 
                     String statusText;
                     switch (item.status) {
                       case MedicineTakeStatus.take:
-                        statusText = 'Taken';
+                        statusText = 'กินยาแล้ว';
                         break;
                       case MedicineTakeStatus.skip:
-                        statusText = 'Skipped';
+                        statusText = 'ข้ามการกินยา';
                         break;
                       case MedicineTakeStatus.snooze:
-                        statusText = 'Snoozed';
+                        statusText = 'เลื่อนการแจ้งเตือน';
                         break;
                       case MedicineTakeStatus.none:
-                        statusText = 'Pending';
+                        statusText = 'ข้ามการกินยา';
                         break;
                     }
 

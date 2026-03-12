@@ -124,10 +124,10 @@ class ReminderPlan {
   final DateTime? regimenEndDate;
 
   String get frequencyLabel {
-    if (frequencyMode == FrequencyMode.timesPerDay) {
-      return '$timesPerDay ครั้งต่อวัน';
+    if (frequencyMode == FrequencyMode.everyHours && everyHours > 0) {
+      return 'ทุก $everyHours ชม.';
     }
-    return 'ทุก $everyHours ชั่วโมง';
+    return '$timesPerDay ครั้งต่อวัน';
   }
 
   String get durationLabel {
@@ -600,10 +600,6 @@ Widget type_frequency({
                           ? Colors.white
                           : Colors.grey.shade200, // disabled color
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                          color: const Color.fromARGB(255, 165, 183, 222),
-                          width: 1,
-                          style: BorderStyle.solid),
                     ),
                     child: DropdownButtonHideUnderline(
                       child: DropdownButton<String>(
@@ -1075,10 +1071,16 @@ Widget detail_time({
   final avatarImage = buildMedicineImage(selectedMedicine?.imagePath ?? '');
   final medicineName = selectedMedicine?.nickname_medi ?? 'ยังไม่เลือกยา';
   final enabledTimes = frequencyMode == FrequencyMode.timesPerDay;
-  final timeLabel = frequencyMode == FrequencyMode.timesPerDay
-      ? '$timesPerDay ครั้งต่อวัน'
-      : 'ทุก $everyHours ชั่วโมง';
+  final String timeLabel;
 
+  switch (frequencyMode) {
+    case FrequencyMode.timesPerDay:
+      timeLabel = '$timesPerDay ครั้งต่อวัน';
+      break;
+    case FrequencyMode.everyHours:
+      timeLabel = 'ทุก $everyHours ชั่วโมง';
+      break;
+  }
   Future<void> pickTime(int index) async {
     final selected = await showTimePicker(
       context: context,
@@ -1174,7 +1176,7 @@ Widget detail_time({
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: const Color(0xFFF2F4F8),
+            color: const Color.fromARGB(255, 255, 255, 255),
             borderRadius: BorderRadius.circular(16),
           ),
           child: Row(
@@ -1223,7 +1225,7 @@ Widget detail_time({
                               horizontal: 12, vertical: 10),
                           decoration: BoxDecoration(
                             color: enabledTimes
-                                ? const Color(0xFFE8F1FF)
+                                ? Color(0xFFE8F1FF)
                                 : const Color(0xFFF2F4F8),
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -1252,12 +1254,17 @@ Widget detail_time({
                           );
                         },
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           isDense: true,
                           filled: true,
-                          fillColor: Color(0xFFE8F1FF),
-                          border:
-                              OutlineInputBorder(borderSide: BorderSide.none),
+                          fillColor: const Color.fromARGB(255, 255, 255, 255),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: Color.fromRGBO(151, 167, 183, 1), // สีขอบ
+                              width: 1,
+                            ),
+                          ),
                         ),
                       ),
                     ),
@@ -1313,9 +1320,9 @@ Widget summary_rejimen({
 }) {
   final avatarImage = buildMedicineImage(selectedMedicine?.imagePath ?? '');
   final medicineName = selectedMedicine?.nickname_medi ?? 'ยังไม่เลือกยา';
-  final frequencyLabel = frequencyMode == FrequencyMode.timesPerDay
-      ? '$timesPerDay ครั้งต่อวัน'
-      : 'ทุก $everyHours ชั่วโมง';
+  final frequencyLabel = frequencyMode == FrequencyMode.everyHours
+      ? 'ทุก $everyHours ชั่วโมง'
+      : '$timesPerDay ครั้งต่อวัน';
 
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -1360,7 +1367,8 @@ Widget summary_rejimen({
                   const SizedBox(height: 4),
                   Text(
                     frequencyLabel,
-                    style: const TextStyle(color: Color(0xFF6B7C93)),
+                    style:
+                        const TextStyle(color: Color(0xFF6B7C93), fontSize: 14),
                   ),
                 ],
               ),
@@ -1393,16 +1401,16 @@ Widget summary_rejimen({
                           ? formatTime(startTime)
                           : formatTime(dose.time),
                       style: const TextStyle(
-                        color: Color(0xFF1F497D),
-                        fontWeight: FontWeight.w600,
-                      ),
+                          color: Color(0xFF1F497D),
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14),
                     ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
                       'ปริมาณ ${dose.amount} ${dose.unit}',
-                      style: const TextStyle(fontSize: 13),
+                      style: const TextStyle(fontSize: 14),
                       textAlign: TextAlign.end,
                     ),
                   ),
@@ -1554,6 +1562,7 @@ class RegimenCreateInput {
   final DateTime? endDateUtc;
   final List<String>? daysOfWeek;
   final int? intervalDays;
+  final int? intervalHour;
 
   final List<MedicineRegimenTime> times;
 
@@ -1563,6 +1572,7 @@ class RegimenCreateInput {
     this.endDateUtc,
     this.daysOfWeek,
     this.intervalDays,
+    this.intervalHour,
     required this.times,
   });
 }
@@ -1631,10 +1641,7 @@ ReminderPlan fromRegimenDetail({
     case 'INTERVAL':
       pattern = FrequencyPattern.everyInterval;
       break;
-    case 'CYCLE':
-      debugPrint('⚠️ CYCLE mapped to everyInterval for UI editing.');
-      pattern = FrequencyPattern.everyInterval;
-      break;
+
     default:
       pattern = FrequencyPattern.everyDay;
   }
@@ -1660,6 +1667,13 @@ ReminderPlan fromRegimenDetail({
 
   final timesPerDay = effectiveDoses.length;
   final startTime = effectiveDoses.first.time;
+
+  // Detect everyHours mode from intervalHour
+  final hasIntervalHour =
+      detail.intervalHour != null && detail.intervalHour! > 0;
+  final frequencyMode =
+      hasIntervalHour ? FrequencyMode.everyHours : FrequencyMode.timesPerDay;
+  final everyHours = hasIntervalHour ? detail.intervalHour! : 6;
 
   var everyCount = 1;
   const everyUnit = 'วัน';
@@ -1707,9 +1721,9 @@ ReminderPlan fromRegimenDetail({
     mediListId: detail.mediListId,
     mediRegimenId: detail.mediRegimenId,
     medicine: medicineItemResolvedFromList,
-    frequencyMode: FrequencyMode.timesPerDay,
+    frequencyMode: frequencyMode,
     timesPerDay: timesPerDay,
-    everyHours: 6,
+    everyHours: everyHours,
     frequencyPattern: pattern,
     weekdays: weekdays,
     everyCount: everyCount,
@@ -1732,7 +1746,7 @@ MealTiming _mealTimingFromRelation(String relation) {
       return MealTiming.beforeMeal;
     case 'AFTER_MEAL':
       return MealTiming.afterMeal;
-    case 'NONE':
+    case 'BETWEEN_MEAL':
       return MealTiming.betweenMeals;
     default:
       return MealTiming.afterMeal;
@@ -1876,6 +1890,9 @@ RegimenCreateInput buildRegimenCreateInput(
         scheduleType: scheduleType,
         startDateUtc: start,
         endDateUtc: endDateUtc,
+        intervalHour: plan.frequencyMode == FrequencyMode.everyHours
+            ? plan.everyHours
+            : null,
         times: times,
       );
     case 'WEEKLY':
@@ -1900,6 +1917,9 @@ RegimenCreateInput buildRegimenCreateInput(
         startDateUtc: start,
         endDateUtc: explicitEnd,
         intervalDays: interval,
+        intervalHour: plan.frequencyMode == FrequencyMode.everyHours
+            ? plan.everyHours
+            : null,
         times: times,
       );
     default:

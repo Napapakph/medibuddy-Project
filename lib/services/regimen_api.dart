@@ -1,4 +1,4 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -50,6 +50,7 @@ class RegimenApiService {
     DateTime? endDateUtc, // only DAILY
     List<String>? daysOfWeek, // only WEEKLY
     int? intervalDays, // only INTERVAL
+    int? intervalHour, // only everyHours mode
 
     required List<MedicineRegimenTime> times,
     String? accessToken,
@@ -65,6 +66,7 @@ class RegimenApiService {
       endDateUtc: endDateUtc,
       daysOfWeek: daysOfWeek,
       intervalDays: intervalDays,
+      intervalHour: intervalHour,
       times: times,
     );
 
@@ -115,6 +117,7 @@ class RegimenApiService {
     DateTime? endDateUtc,
     List<String>? daysOfWeek, // "MON".."SUN"
     int? intervalDays,
+    int? intervalHour,
     List<MedicineRegimenTime>? times,
     String? accessToken,
   }) async {
@@ -129,6 +132,7 @@ class RegimenApiService {
       endDateUtc: endDateUtc,
       daysOfWeek: daysOfWeek,
       intervalDays: intervalDays,
+      intervalHour: intervalHour,
       times: times,
     );
 
@@ -466,6 +470,7 @@ class RegimenApiService {
     DateTime? endDateUtc,
     List<String>? daysOfWeek,
     int? intervalDays,
+    int? intervalHour,
     int? cycleOnDays,
     int? cycleBreakDays,
     required List<MedicineRegimenTime> times,
@@ -524,6 +529,10 @@ class RegimenApiService {
         throw RegimenApiException('Unsupported scheduleType: $scheduleType');
     }
 
+    if (intervalHour != null && intervalHour > 0) {
+      body['intervalHour'] = intervalHour;
+    }
+
     return body;
   }
 
@@ -534,6 +543,7 @@ class RegimenApiService {
     DateTime? endDateUtc,
     List<String>? daysOfWeek,
     int? intervalDays,
+    int? intervalHour,
     int? cycleOnDays,
     int? cycleBreakDays,
     List<MedicineRegimenTime>? times,
@@ -608,6 +618,10 @@ class RegimenApiService {
         break;
       default:
         throw RegimenApiException('Unsupported scheduleType: $scheduleType');
+    }
+
+    if (intervalHour != null && intervalHour > 0) {
+      body['intervalHour'] = intervalHour;
     }
 
     return body;

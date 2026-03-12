@@ -45,6 +45,7 @@ class MedicineRegimenResponse {
   final int? intervalDays;
   final int? cycleOnDays;
   final int? cycleBreakDays;
+  final int? intervalHour;
   final String? nextOccurrenceAt;
   final List<MedicineRegimenTime> times;
 
@@ -58,6 +59,7 @@ class MedicineRegimenResponse {
     this.intervalDays,
     this.cycleOnDays,
     this.cycleBreakDays,
+    this.intervalHour,
     this.nextOccurrenceAt,
     required this.times,
   });
@@ -79,6 +81,7 @@ class MedicineRegimenResponse {
       intervalDays: json['intervalDays'],
       cycleOnDays: json['cycleOnDays'],
       cycleBreakDays: json['cycleBreakDays'],
+      intervalHour: json['intervalHour'],
       nextOccurrenceAt: json['nextOccurrenceAt'],
       times: ((json['times'] as List?) ?? [])
           .map((e) => MedicineRegimenTime.fromJson(e as Map<String, dynamic>))
@@ -97,6 +100,7 @@ class MedicineRegimenDetailResponse {
   final int? intervalDays;
   final int? cycleOnDays;
   final int? cycleBreakDays;
+  final int? intervalHour;
   final List<MedicineRegimenTime> times;
   final MedicineListDetail? medicineList;
 
@@ -110,6 +114,7 @@ class MedicineRegimenDetailResponse {
     this.intervalDays,
     this.cycleOnDays,
     this.cycleBreakDays,
+    this.intervalHour,
     required this.times,
     this.medicineList,
   });
@@ -155,6 +160,7 @@ class MedicineRegimenDetailResponse {
       intervalDays: _readNullableInt(json['intervalDays']),
       cycleOnDays: _readNullableInt(json['cycleOnDays']),
       cycleBreakDays: _readNullableInt(json['cycleBreakDays']),
+      intervalHour: _readNullableInt(json['intervalHour']),
       times: parsedTimes,
       medicineList: medicineList,
     );
@@ -293,6 +299,7 @@ class MedicineRegimenItem {
   final String? nextOccurrenceAt;
   final String? daysOfWeekRaw;
   final int? intervalDays;
+  final int? intervalHour;
   final int? cycleOnDays;
   final int? cycleBreakDays;
   final List<MedicineRegimenTime> times;
@@ -307,6 +314,7 @@ class MedicineRegimenItem {
     this.nextOccurrenceAt,
     this.daysOfWeekRaw,
     this.intervalDays,
+    this.intervalHour,
     this.cycleOnDays,
     this.cycleBreakDays,
     required this.times,
@@ -353,6 +361,7 @@ class MedicineRegimenItem {
       nextOccurrenceAt: _readNullableString(json['nextOccurrenceAt']),
       daysOfWeekRaw: daysRaw,
       intervalDays: _readNullableInt(json['intervalDays']),
+      intervalHour: _readNullableInt(json['intervalHour']),
       cycleOnDays: _readNullableInt(json['cycleOnDays']),
       cycleBreakDays: _readNullableInt(json['cycleBreakDays']),
       times: parsedTimes,
