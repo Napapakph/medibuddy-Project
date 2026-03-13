@@ -7,6 +7,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../OCR/ocr_global.dart';
 import '../services/auth_manager.dart';
 import 'package:bot_toast/bot_toast.dart';
+import '../widgets/image_cropper_helper.dart';
 
 class RequestMedicinePage extends StatefulWidget {
   final String medicineName;
@@ -76,7 +77,17 @@ class _RequestMedicinePageState extends State<RequestMedicinePage> {
     final image = await picker.pickImage(source: source);
     if (image == null) return;
 
-    final resizedFile = await _resizeImageIfNeeded(File(image.path));
+    File file = File(image.path);
+    if (source == ImageSource.gallery) {
+      final cropped = await cropImageFile(
+        file,
+        toolbarTitle: 'ครอบรูปยา',
+      );
+      if (cropped == null) return;
+      file = cropped;
+    }
+
+    final resizedFile = await _resizeImageIfNeeded(file);
     if (!mounted) return;
 
     setState(() {
@@ -240,6 +251,20 @@ class _RequestMedicinePageState extends State<RequestMedicinePage> {
                             Icons.photo,
                             size: 64,
                             color: Color(0xFF9AA7B8),
+                          ),
+                        ),
+                      if (_imagePath.isNotEmpty)
+                        Positioned(
+                          top: 12,
+                          right: 12,
+                          child: _ImageCircleButton(
+                            icon: Icons.close_rounded,
+                            onTap: () {
+                              setState(() {
+                                _imagePath = '';
+                                globalOcrImage = null;
+                              });
+                            },
                           ),
                         ),
                       Positioned(

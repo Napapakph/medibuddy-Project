@@ -124,6 +124,7 @@ class ProfileApi {
     String? profileName,
     File? imageFile,
     String? profilePictureUrl,
+    bool clearImage = false,
   }) async {
     accessToken ??= await AuthManager.service.getAccessToken();
     if (accessToken == null) throw Exception('No access token');
@@ -131,12 +132,19 @@ class ProfileApi {
     if (imageFile != null && (profilePictureUrl?.trim().isNotEmpty ?? false)) {
       throw Exception('Send either imageFile OR profilePictureUrl, not both.');
     }
+    if (clearImage &&
+        (imageFile != null ||
+            (profilePictureUrl?.trim().isNotEmpty ?? false))) {
+      throw Exception('clearImage conflicts with imageFile/profilePictureUrl.');
+    }
 
     final body = <String, dynamic>{
       'profileId': profileId,
       if (profileName?.trim().isNotEmpty ?? false)
         'profileName': profileName!.trim(),
-      if (profilePictureUrl?.trim().isNotEmpty ?? false)
+      if (clearImage)
+        'profilePicture': null
+      else if (profilePictureUrl?.trim().isNotEmpty ?? false)
         'profilePicture': profilePictureUrl!.trim(),
     };
 

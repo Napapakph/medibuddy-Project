@@ -10,6 +10,7 @@ import 'dart:math';
 import '../services/auth_manager.dart'; // Import AuthManager
 import '../services/app_state.dart';
 import 'package:medibuddy/widgets/toast_helper.dart';
+import 'package:medibuddy/widgets/image_cropper_helper.dart';
 
 class LibraryProfile extends StatefulWidget {
   const LibraryProfile({
@@ -441,20 +442,71 @@ class _LibraryProfileState extends State<LibraryProfile> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      ProfileWidget(
-                        size: avatarSize,
-                        image: currentImage,
-                        onCameraTap: () async {
-                          final picker = ImagePicker();
-                          final img = await picker.pickImage(
-                              source: ImageSource.gallery);
+                      SizedBox(
+                        width: avatarSize,
+                        height: avatarSize,
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Positioned.fill(
+                              child: ProfileWidget(
+                                size: avatarSize,
+                                image: currentImage,
+                                onCameraTap: () async {
+                                  final picker = ImagePicker();
+                                  final img = await picker.pickImage(
+                                      source: ImageSource.gallery);
 
-                          if (img != null) {
-                            setStateDialog(() {
-                              tempImagePath = img.path;
-                            });
-                          }
-                        },
+                                  if (img == null) return;
+                                  final cropped = await cropImageFile(
+                                    File(img.path),
+                                    toolbarTitle: 'ครอบรูปโปรไฟล์',
+                                  );
+                                  if (!dialogContext.mounted) return;
+                                  if (cropped == null) return;
+
+                                  setStateDialog(() {
+                                    tempImagePath = cropped.path;
+                                  });
+                                },
+                              ),
+                            ),
+                            if (tempImagePath != null &&
+                                tempImagePath!.isNotEmpty)
+                              Positioned(
+                                top: 4,
+                                right: 4,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    setStateDialog(() {
+                                      tempImagePath = null;
+                                    });
+                                  },
+                                  child: Container(
+                                    width: 28,
+                                    height: 28,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: const Color(0xFF2B4C7E)
+                                              .withOpacity(0.2),
+                                          blurRadius: 6,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    child: const Icon(
+                                      Icons.close_rounded,
+                                      color: Color(0xFF5A81BB),
+                                      size: 18,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
                       SizedBox(height: maxHeight * 0.03), // เพิ่มระยะห่าง
                       TextField(
@@ -518,6 +570,7 @@ class _LibraryProfileState extends State<LibraryProfile> {
                                 !p.startsWith('http');
                             if (isLocalFile) newImageFile = File(p);
                           }
+                          final clearImage = tempImagePath == null;
 
                           setStateDialog(() => saving = true);
 
@@ -531,6 +584,7 @@ class _LibraryProfileState extends State<LibraryProfile> {
                               profileId: profile.profileId,
                               profileName: newName,
                               imageFile: newImageFile,
+                              clearImage: clearImage,
                             );
 
                             if (!mounted) return;
@@ -859,20 +913,72 @@ class _LibraryProfileState extends State<LibraryProfile> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       // วงกลมโปรไฟล์ + ปุ่มกล้อง (ใช้ widget เดิมเลย)
-                      ProfileWidget(
-                        size: avatarSize,
-                        image: currentImage,
-                        onCameraTap: () async {
-                          final picker = ImagePicker();
-                          final img = await picker.pickImage(
-                              source: ImageSource.gallery);
-                          if (img == null) return;
+                      SizedBox(
+                        width: avatarSize,
+                        height: avatarSize,
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Positioned.fill(
+                              child: ProfileWidget(
+                                size: avatarSize,
+                                image: currentImage,
+                                onCameraTap: () async {
+                                  final picker = ImagePicker();
+                                  final img = await picker.pickImage(
+                                      source: ImageSource.gallery);
+                                  if (img == null) return;
 
-                          // อัปเดตรูปใน popup
-                          setStateDialog(() {
-                            tempImagePath = img.path;
-                          });
-                        },
+                                  final cropped = await cropImageFile(
+                                    File(img.path),
+                                    toolbarTitle: 'ครอบรูปโปรไฟล์',
+                                  );
+                                  if (!dialogContext.mounted) return;
+                                  if (cropped == null) return;
+
+                                  // อัปเดตรูปใน popup
+                                  setStateDialog(() {
+                                    tempImagePath = cropped.path;
+                                  });
+                                },
+                              ),
+                            ),
+                            if (tempImagePath != null &&
+                                tempImagePath!.isNotEmpty)
+                              Positioned(
+                                top: 4,
+                                right: 4,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    setStateDialog(() {
+                                      tempImagePath = null;
+                                    });
+                                  },
+                                  child: Container(
+                                    width: 28,
+                                    height: 28,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: const Color(0xFF2B4C7E)
+                                              .withOpacity(0.2),
+                                          blurRadius: 6,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    child: const Icon(
+                                      Icons.close_rounded,
+                                      color: Color(0xFF5A81BB),
+                                      size: 18,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
 
                       SizedBox(height: maxHeight * 0.03), // เพิ่มระยะห่าง
@@ -948,7 +1054,7 @@ class _LibraryProfileState extends State<LibraryProfile> {
                             if (!mounted) return;
                             setStateDialog(
                               () {
-                                errorMessage = 'เพิ่มโปรไฟล์ไม่สำเร็จ: $e';
+                                errorMessage = 'เพิ่มโปรไฟล์ไม่สำเร็จ \n$e';
                                 isLoading = false;
                               },
                             );
@@ -1021,6 +1127,7 @@ class _LibraryProfileState extends State<LibraryProfile> {
           !tempImagePath.startsWith('http');
       if (isLocal) imageFile = File(tempImagePath);
     }
+    final clearImage = tempImagePath == null;
 
     setState(() => _loading = true);
     try {
@@ -1031,6 +1138,7 @@ class _LibraryProfileState extends State<LibraryProfile> {
         profileId: profileId,
         profileName: profileName.trim(),
         imageFile: imageFile, // ถ้าเป็น /uploads หรือ http จะไม่ส่งไฟล์ซ้ำ
+        clearImage: clearImage,
       );
 
       if (!mounted) return;

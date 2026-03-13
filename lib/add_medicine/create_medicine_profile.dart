@@ -7,6 +7,7 @@ import 'package:medibuddy/Model/medicine_model.dart';
 import 'package:medibuddy/widgets/medicine_step_timeline.dart';
 
 import 'search_system_medicine.dart';
+import '../widgets/image_cropper_helper.dart';
 
 class CreateNameMedicinePage extends StatefulWidget {
   final int profileId;
@@ -60,8 +61,18 @@ class _CreateNameMedicinePageState extends State<CreateNameMedicinePage> {
     final image = await picker.pickImage(source: source);
     if (image == null) return;
 
+    File file = File(image.path);
+    if (source == ImageSource.gallery) {
+      final cropped = await cropImageFile(
+        file,
+        toolbarTitle: 'ครอบรูปยา',
+      );
+      if (cropped == null) return;
+      file = cropped;
+    }
+
     setState(() {
-      _imagePath = image.path;
+      _imagePath = file.path;
     });
   }
 
@@ -275,6 +286,15 @@ class _CreateNameMedicinePageState extends State<CreateNameMedicinePage> {
                                 Icons.photo,
                                 size: 64,
                                 color: Color(0xFF9AA7B8),
+                              ),
+                            ),
+                          if (_imagePath.isNotEmpty)
+                            Positioned(
+                              top: 12,
+                              right: 12,
+                              child: _ImageCircleButton(
+                                icon: Icons.close_rounded,
+                                onTap: () => setState(() => _imagePath = ''),
                               ),
                             ),
                           Positioned(

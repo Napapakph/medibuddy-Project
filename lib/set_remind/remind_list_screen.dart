@@ -1035,15 +1035,31 @@ class _RemindListScreenState extends State<RemindListScreen> {
                         ),
                         const SizedBox(height: 8),
                         Expanded(
-                          child: _displayPlans.isEmpty
-                              ? const Center(
-                                  child: Text('ยังไม่มีการแจ้งเตือน'),
-                                )
-                              : ListView.builder(
-                                  itemCount: _displayPlans.length,
-                                  itemBuilder: (context, index) =>
-                                      _buildReminderCard(_displayPlans[index]),
-                                ),
+                          child: RefreshIndicator(
+                            onRefresh: _fetchRegimens,
+                            child: _displayPlans.isEmpty
+                                ? CustomScrollView(
+                                    physics:
+                                        const AlwaysScrollableScrollPhysics(),
+                                    slivers: const [
+                                      SliverFillRemaining(
+                                        hasScrollBody: false,
+                                        child: Center(
+                                          child:
+                                              Text('ยังไม่มีการแจ้งเตือน'),
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                : ListView.builder(
+                                    physics:
+                                        const AlwaysScrollableScrollPhysics(),
+                                    itemCount: _displayPlans.length,
+                                    itemBuilder: (context, index) =>
+                                        _buildReminderCard(
+                                            _displayPlans[index]),
+                                  ),
+                          ),
                         ),
                         const SizedBox(height: 12),
                         SizedBox(

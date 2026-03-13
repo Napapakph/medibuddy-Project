@@ -6,6 +6,7 @@ import 'package:medibuddy/services/follow_api.dart';
 import 'package:medibuddy/services/auth_manager.dart'; // Import
 import 'package:medibuddy/widgets/follow_user_card.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:medibuddy/widgets/image_cropper_helper.dart';
 import 'following_history.dart';
 import 'following_regimen.dart';
 import 'package:lottie/lottie.dart';
@@ -627,7 +628,14 @@ class _FollowingScreenState extends State<FollowingScreen>
                                           if (file == null) return;
 
                                           // Check file size (5MB limit)
-                                          final len = await file.length();
+                                          final cropped = await cropImageFile(
+                                            File(file.path),
+                                            toolbarTitle: 'ครอบรูปผู้ติดตาม',
+                                          );
+                                          if (!mounted) return;
+                                          if (cropped == null) return;
+
+                                          final len = await cropped.length();
                                           if (len > 5 * 1024 * 1024) {
                                             if (!mounted) return;
                                             showDialog(
@@ -649,7 +657,9 @@ class _FollowingScreenState extends State<FollowingScreen>
                                             return;
                                           }
 
-                                          setState(() => picked = file);
+                                          setState(() {
+                                            picked = XFile(cropped.path);
+                                          });
                                         },
                                   child: Container(
                                     width: cameraSize,
@@ -970,15 +980,26 @@ class _FollowingScreenState extends State<FollowingScreen>
         body: Stack(
           children: [
             _errorMessage != null
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(_errorMessage!),
-                        const SizedBox(height: 16),
-                        ElevatedButton(
-                          onPressed: _loadData,
-                          child: const Text('ลองใหม่'),
+                ? RefreshIndicator(
+                    onRefresh: _loadData,
+                    child: CustomScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      slivers: [
+                        SliverFillRemaining(
+                          hasScrollBody: false,
+                          child: Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(_errorMessage!),
+                                const SizedBox(height: 16),
+                                ElevatedButton(
+                                  onPressed: _loadData,
+                                  child: const Text('ลองใหม่'),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -987,187 +1008,227 @@ class _FollowingScreenState extends State<FollowingScreen>
                     controller: _tabController,
                     children: [
                       // ======== TAB 1: กำลังติดตาม ========
-                      _following.isEmpty
-                          ? const Center(
-                              child: Text(
-                                'ยังไม่ติดตามใคร',
-                                style: TextStyle(
-                                  color: Color(0xFF8A9BB5),
-                                  fontSize: 16,
-                                ),
-                              ),
-                            )
-                          : ListView.builder(
-                              itemCount: _following.length,
-                              itemBuilder: (context, index) {
-                                final user = _following[index];
-                                final name = _readFollowingName(user);
-                                final avatarUrl = _readFollowingAvatar(user);
-                                final email = _readFollowingEmail(user);
-                                final avatarImage = avatarUrl.isNotEmpty
-                                    ? NetworkImage(avatarUrl) as ImageProvider
-                                    : null;
-
-                                return FollowUserCard(
-                                  name: name,
-                                  email: email,
-                                  avatarUrl: avatarUrl,
-                                  avatarImage: avatarImage,
-                                  onDelete: () => _confirmRemoveFollowing(user),
-                                  onEdit: () => _openEditDialog(user),
-                                  onDetail_1: () => _selectProfileAndOpenDetail(
-                                      user,
-                                      isRegimen: false),
-                                  onDetail_2: () => _selectProfileAndOpenDetail(
-                                      user,
-                                      isRegimen: true),
-                                );
-                              },
-                            ),
-
-                      // ======== TAB 2: คำเชิญ ========
-                      _invitations.isEmpty
-                          ? const Center(
-                              child: Text(
-                                'ไม่มีคำเชิญ',
-                                style: TextStyle(
-                                  color: Color(0xFF8A9BB5),
-                                  fontSize: 16,
-                                ),
-                              ),
-                            )
-                          : ListView.builder(
-                              itemCount: _invitations.length,
-                              itemBuilder: (context, index) {
-                                String _readEmail(Map<String, dynamic> data) {
-                                  final raw = data['email'] ??
-                                      data['ownerEmail'] ??
-                                      data['inviterEmail'] ??
-                                      data['senderEmail'] ??
-                                      '';
-                                  final val = raw.toString().trim();
-                                  return val.contains('@') ? val : '';
-                                }
-
-                                final inv = _invitations[index];
-                                final name = _readName(inv);
-                                final id = _readId(inv);
-                                final avatarUrl = _readAvatar(inv);
-                                final email = _readEmail(inv);
-
-                                return Card(
-                                  margin: const EdgeInsets.symmetric(
-                                      horizontal: 8, vertical: 4),
-                                  elevation: 0,
-                                  color:
-                                      const Color.fromARGB(255, 255, 255, 255),
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      borderRadius:
-                                          BorderRadius.all(Radius.circular(20)),
-                                      gradient: LinearGradient(
-                                        begin: Alignment.topCenter,
-                                        end: Alignment.bottomCenter,
-                                        colors: [
-                                          Color.fromARGB(255, 255, 255, 255),
-                                          Color.fromARGB(255, 255, 255, 255),
-                                        ],
-                                      ),
-                                      border: Border.all(
-                                        color: const Color.fromARGB(
-                                            255, 115, 154, 211),
-                                        width: 1,
-                                      ),
-                                      boxShadow: const [
-                                        BoxShadow(
-                                          color: Color.fromARGB(
-                                              255, 197, 218, 244),
-                                          blurRadius: 5,
-                                          offset: Offset(0, 5),
+                      RefreshIndicator(
+                        onRefresh: _loadData,
+                        child: _following.isEmpty
+                            ? CustomScrollView(
+                                physics:
+                                    const AlwaysScrollableScrollPhysics(),
+                                slivers: const [
+                                  SliverFillRemaining(
+                                    hasScrollBody: false,
+                                    child: Center(
+                                      child: Text(
+                                        'ยังไม่ติดตามใคร',
+                                        style: TextStyle(
+                                          color: Color(0xFF8A9BB5),
+                                          fontSize: 16,
                                         ),
-                                      ],
-                                    ),
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(5),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          // ส่วนบน: Avatar + Email
-                                          Row(
-                                            children: [
-                                              CircleAvatar(
-                                                radius: 30,
-                                                backgroundImage: avatarUrl
-                                                        .isNotEmpty
-                                                    ? NetworkImage(avatarUrl)
-                                                    : null,
-                                                child: avatarUrl.isEmpty
-                                                    ? const Icon(Icons.person,
-                                                        size: 20)
-                                                    : null,
-                                              ),
-                                              const SizedBox(width: 12),
-                                              Expanded(
-                                                child: Text(
-                                                  email.isNotEmpty
-                                                      ? email
-                                                      : name,
-                                                  style: const TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                    fontSize: 16,
-                                                    color: Colors.black,
-                                                  ),
-                                                  maxLines: 1,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-
-                                          // ส่วนล่าง: ปุ่ม (Reject ซ้าย, Accept ขวา) ชิดขวา
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.end,
-                                            children: [
-                                              OutlinedButton(
-                                                onPressed: () =>
-                                                    _handleInvitation(
-                                                        id, false),
-                                                style: OutlinedButton.styleFrom(
-                                                  foregroundColor: Colors.red,
-                                                  side: const BorderSide(
-                                                      color: Colors.red),
-                                                  padding: const EdgeInsets
-                                                      .symmetric(
-                                                      horizontal: 16),
-                                                ),
-                                                child: const Text('ปฏิเสธ'),
-                                              ),
-                                              const SizedBox(width: 12),
-                                              ElevatedButton(
-                                                onPressed: () =>
-                                                    _handleInvitation(id, true),
-                                                style: ElevatedButton.styleFrom(
-                                                  backgroundColor:
-                                                      const Color(0xFF5A81BB),
-                                                  foregroundColor: Colors.white,
-                                                  padding: const EdgeInsets
-                                                      .symmetric(
-                                                      horizontal: 16),
-                                                ),
-                                                child: const Text('ยอมรับ'),
-                                              ),
-                                            ],
-                                          ),
-                                        ],
                                       ),
                                     ),
                                   ),
-                                );
-                              },
-                            ),
+                                ],
+                              )
+                            : ListView.builder(
+                                physics:
+                                    const AlwaysScrollableScrollPhysics(),
+                                itemCount: _following.length,
+                                itemBuilder: (context, index) {
+                                  final user = _following[index];
+                                  final name = _readFollowingName(user);
+                                  final avatarUrl = _readFollowingAvatar(user);
+                                  final email = _readFollowingEmail(user);
+                                  final avatarImage = avatarUrl.isNotEmpty
+                                      ? NetworkImage(avatarUrl)
+                                          as ImageProvider
+                                      : null;
+
+                                  return FollowUserCard(
+                                    name: name,
+                                    email: email,
+                                    avatarUrl: avatarUrl,
+                                    avatarImage: avatarImage,
+                                    onDelete: () =>
+                                        _confirmRemoveFollowing(user),
+                                    onEdit: () => _openEditDialog(user),
+                                    onDetail_1: () =>
+                                        _selectProfileAndOpenDetail(
+                                            user,
+                                            isRegimen: false),
+                                    onDetail_2: () =>
+                                        _selectProfileAndOpenDetail(
+                                            user,
+                                            isRegimen: true),
+                                  );
+                                },
+                              ),
+                      ),
+
+                      // ======== TAB 2: คำเชิญ ========
+                      RefreshIndicator(
+                        onRefresh: _loadData,
+                        child: _invitations.isEmpty
+                            ? CustomScrollView(
+                                physics:
+                                    const AlwaysScrollableScrollPhysics(),
+                                slivers: const [
+                                  SliverFillRemaining(
+                                    hasScrollBody: false,
+                                    child: Center(
+                                      child: Text(
+                                        'ไม่มีคำเชิญ',
+                                        style: TextStyle(
+                                          color: Color(0xFF8A9BB5),
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : ListView.builder(
+                                physics:
+                                    const AlwaysScrollableScrollPhysics(),
+                                itemCount: _invitations.length,
+                                itemBuilder: (context, index) {
+                                  String _readEmail(
+                                      Map<String, dynamic> data) {
+                                    final raw = data['email'] ??
+                                        data['ownerEmail'] ??
+                                        data['inviterEmail'] ??
+                                        data['senderEmail'] ??
+                                        '';
+                                    final val = raw.toString().trim();
+                                    return val.contains('@') ? val : '';
+                                  }
+
+                                  final inv = _invitations[index];
+                                  final name = _readName(inv);
+                                  final id = _readId(inv);
+                                  final avatarUrl = _readAvatar(inv);
+                                  final email = _readEmail(inv);
+
+                                  return Card(
+                                    margin: const EdgeInsets.symmetric(
+                                        horizontal: 8, vertical: 4),
+                                    elevation: 0,
+                                    color: const Color.fromARGB(
+                                        255, 255, 255, 255),
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.all(
+                                            Radius.circular(20)),
+                                        gradient: LinearGradient(
+                                          begin: Alignment.topCenter,
+                                          end: Alignment.bottomCenter,
+                                          colors: [
+                                            Color.fromARGB(
+                                                255, 255, 255, 255),
+                                            Color.fromARGB(
+                                                255, 255, 255, 255),
+                                          ],
+                                        ),
+                                        border: Border.all(
+                                          color: const Color.fromARGB(
+                                              255, 115, 154, 211),
+                                          width: 1,
+                                        ),
+                                        boxShadow: const [
+                                          BoxShadow(
+                                            color: Color.fromARGB(
+                                                255, 197, 218, 244),
+                                            blurRadius: 5,
+                                            offset: Offset(0, 5),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(5),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            // ส่วนบน: Avatar + Email
+                                            Row(
+                                              children: [
+                                                CircleAvatar(
+                                                  radius: 30,
+                                                  backgroundImage: avatarUrl
+                                                          .isNotEmpty
+                                                      ? NetworkImage(avatarUrl)
+                                                      : null,
+                                                  child: avatarUrl.isEmpty
+                                                      ? const Icon(Icons.person,
+                                                          size: 20)
+                                                      : null,
+                                                ),
+                                                const SizedBox(width: 12),
+                                                Expanded(
+                                                  child: Text(
+                                                    email.isNotEmpty
+                                                        ? email
+                                                        : name,
+                                                    style: const TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      fontSize: 16,
+                                                      color: Colors.black,
+                                                    ),
+                                                    maxLines: 1,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+
+                                            // ส่วนล่าง: ปุ่ม (Reject ซ้าย, Accept ขวา) ชิดขวา
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.end,
+                                              children: [
+                                                OutlinedButton(
+                                                  onPressed: () =>
+                                                      _handleInvitation(
+                                                          id, false),
+                                                  style:
+                                                      OutlinedButton.styleFrom(
+                                                    foregroundColor: Colors.red,
+                                                    side: const BorderSide(
+                                                        color: Colors.red),
+                                                    padding: const EdgeInsets
+                                                        .symmetric(
+                                                            horizontal: 16),
+                                                  ),
+                                                  child: const Text('ปฏิเสธ'),
+                                                ),
+                                                const SizedBox(width: 12),
+                                                ElevatedButton(
+                                                  onPressed: () =>
+                                                      _handleInvitation(
+                                                          id, true),
+                                                  style:
+                                                      ElevatedButton.styleFrom(
+                                                    backgroundColor:
+                                                        const Color(0xFF5A81BB),
+                                                    foregroundColor:
+                                                        Colors.white,
+                                                    padding: const EdgeInsets
+                                                        .symmetric(
+                                                            horizontal: 16),
+                                                  ),
+                                                  child: const Text('ยอมรับ'),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                      ),
                     ],
                   ),
             if (_isLoading)

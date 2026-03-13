@@ -984,35 +984,67 @@ class _MedicationPlanScreenState extends State<MedicationPlanScreen> {
                               ),
                             ],
                           ),
-                          child: _loading
-                              ? const Center(
-                                  child: CircularProgressIndicator(),
-                                )
-                              : _error != null
-                                  ? Center(
-                                      child: Text(
-                                        _error!,
-                                        textAlign: TextAlign.center,
-                                        style: const TextStyle(
-                                          color: Color(0xFF8893A0),
+                          child: RefreshIndicator(
+                            onRefresh: _fetchPlans,
+                            child: _loading
+                                ? CustomScrollView(
+                                    physics:
+                                        const AlwaysScrollableScrollPhysics(),
+                                    slivers: const [
+                                      SliverFillRemaining(
+                                        hasScrollBody: false,
+                                        child: Center(
+                                          child: CircularProgressIndicator(),
                                         ),
                                       ),
-                                    )
-                                  : _displayGroups.isEmpty
-                                      ? const Center(
-                                          child: Text(
-                                            'ไม่พบแผนการรับประทานยา',
-                                            style: TextStyle(
-                                              color: Color(0xFF8893A0),
+                                    ],
+                                  )
+                                : _error != null
+                                    ? CustomScrollView(
+                                        physics:
+                                            const AlwaysScrollableScrollPhysics(),
+                                        slivers: [
+                                          SliverFillRemaining(
+                                            hasScrollBody: false,
+                                            child: Center(
+                                              child: Text(
+                                                _error!,
+                                                textAlign: TextAlign.center,
+                                                style: const TextStyle(
+                                                  color: Color(0xFF8893A0),
+                                                ),
+                                              ),
                                             ),
                                           ),
-                                        )
-                                      : ListView.builder(
-                                          itemCount: _displayGroups.length,
-                                          itemBuilder: (context, index) =>
-                                              _buildGroupCard(
-                                                  _displayGroups[index]),
-                                        ),
+                                        ],
+                                      )
+                                    : _displayGroups.isEmpty
+                                        ? CustomScrollView(
+                                            physics:
+                                                const AlwaysScrollableScrollPhysics(),
+                                            slivers: const [
+                                              SliverFillRemaining(
+                                                hasScrollBody: false,
+                                                child: Center(
+                                                  child: Text(
+                                                    'ไม่พบแผนการรับประทานยา',
+                                                    style: TextStyle(
+                                                      color: Color(0xFF8893A0),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          )
+                                        : ListView.builder(
+                                            physics:
+                                                const AlwaysScrollableScrollPhysics(),
+                                            itemCount: _displayGroups.length,
+                                            itemBuilder: (context, index) =>
+                                                _buildGroupCard(
+                                                    _displayGroups[index]),
+                                          ),
+                          ),
                         ),
                       ),
                       const SizedBox(height: 16),

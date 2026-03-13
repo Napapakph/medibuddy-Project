@@ -7,6 +7,7 @@ import '../services/profile_api.dart';
 import '../services/auth_manager.dart'; // Import
 import '../OCR/tutorial_dialog.dart';
 import 'package:medibuddy/widgets/toast_helper.dart';
+import '../widgets/image_cropper_helper.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -154,6 +155,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 children: [
                                   _buildProfileCircle(avatarSize),
                                   _buildCameraButton(avatarSize),
+                                  if (_profileImage != null)
+                                    _buildClearButton(avatarSize),
                                 ],
                               ),
                             )),
@@ -377,6 +380,43 @@ class _ProfileScreenState extends State<ProfileScreen> {
   //-- ฟังก์ชันตอนกดปุ่มกล้อง ----------------------------------------
 
 // ฟังก์ชันตอนกดปุ่มกล้อง --------------------------------------------
+  Widget _buildClearButton(double size) {
+    final double clearSize = size * 0.22;
+    return Positioned(
+      top: size * 0.02,
+      right: size * 0.02,
+      child: GestureDetector(
+        onTap: () {
+          setState(() {
+            _selectedImageFile = null;
+            _profileImage = null;
+            profileImageUrl = null;
+          });
+        },
+        child: Container(
+          width: clearSize,
+          height: clearSize,
+          decoration: BoxDecoration(
+            color: const Color.fromARGB(255, 255, 255, 255),
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: const Color.fromARGB(255, 42, 80, 135).withOpacity(0.25),
+                blurRadius: size * 0.03,
+                offset: Offset(0, size * 0.01),
+              ),
+            ],
+          ),
+          child: Icon(
+            Icons.close_rounded,
+            color: const Color(0xFF5A81BB),
+            size: clearSize * 0.6,
+          ),
+        ),
+      ),
+    );
+  }
+
   void _onCameraTap() async {
     final ImagePicker picker = ImagePicker(); // ตัวเลือกภาพ
 
@@ -391,7 +431,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
       return;
     }
 
-    final file = File(image.path);
+    File file = File(image.path);
+    final cropped = await cropImageFile(
+      file,
+      toolbarTitle: 'ครอบรูปโปรไฟล์',
+    );
+    if (cropped == null) {
+      return;
+    }
+    file = cropped;
 
     // เช็คชนิดรูปด้วย extension ก่อน (กัน heic)
 
@@ -402,9 +450,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
     // ถ้าเลือกภาพได้ → อัปเดต state
     setState(() {
-      _selectedImageFile = File(image.path); // ✅ เก็บไฟล์ไว้ส่ง API
+      _selectedImageFile = file; // ✅ เก็บไฟล์ไว้ส่ง API
       _profileImage = FileImage(_selectedImageFile!); // ใช้แสดง UI
-      profileImageUrl = image.path; // (optional) เก็บ path
+      profileImageUrl = file.path; // (optional) เก็บ path
     });
 
     showToast('เปลี่ยนรูปโปรไฟล์สำเร็จ');

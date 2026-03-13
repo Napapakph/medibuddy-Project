@@ -918,50 +918,45 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
                                     ),
                                     child: _isLoading
                                         ? const Center()
-                                        : _sortedItems.isNotEmpty
-                                            ? Scrollbar(
-                                                thickness: 6,
-                                                radius:
-                                                    const Radius.circular(8),
-                                                trackVisibility: true,
-                                                //thumbVisibility: true,
-                                                child: ListView.builder(
-                                                  itemCount:
-                                                      _sortedItems.length,
-                                                  itemBuilder:
-                                                      (context, index) {
-                                                    // Find the actual index in the original `_items` array
-                                                    final sortedItem =
-                                                        _sortedItems[index];
-                                                    final actualIndex = _items
-                                                        .indexOf(sortedItem);
-                                                    return _buildMedicineCard(
-                                                        context, actualIndex);
-                                                  },
-                                                ),
-                                              )
-                                            : _errorMessage.isNotEmpty
-                                                ? Center(
-                                                    child: Text(
-                                                      _friendlyErrorMessage(),
-                                                      textAlign:
-                                                          TextAlign.center,
-                                                      style: const TextStyle(
-                                                        color:
-                                                            Color(0xFF8893A0),
-                                                      ),
+                                        : RefreshIndicator(
+                                            onRefresh: _loadMedicines,
+                                            child: _sortedItems.isNotEmpty
+                                                ? Scrollbar(
+                                                    thickness: 6,
+                                                    radius: const Radius.circular(8),
+                                                    trackVisibility: true,
+                                                    child: ListView.builder(
+                                                      physics: const AlwaysScrollableScrollPhysics(),
+                                                      itemCount: _sortedItems.length,
+                                                      itemBuilder: (context, index) {
+                                                        // Find the actual index in the original `_items` array
+                                                        final sortedItem = _sortedItems[index];
+                                                        final actualIndex = _items.indexOf(sortedItem);
+                                                        return _buildMedicineCard(context, actualIndex);
+                                                      },
                                                     ),
                                                   )
-                                                : const Center(
-                                                    child: Text(
-                                                      'ไม่พบรายการยา',
-                                                      style: TextStyle(
-                                                        color:
-                                                            Color(0xFF8893A0),
-                                                        fontSize: 20,
+                                                : CustomScrollView(
+                                                    physics: const AlwaysScrollableScrollPhysics(),
+                                                    slivers: [
+                                                      SliverFillRemaining(
+                                                        hasScrollBody: false,
+                                                        child: Center(
+                                                          child: Text(
+                                                            _errorMessage.isNotEmpty
+                                                                ? _friendlyErrorMessage()
+                                                                : 'ไม่พบรายการยา',
+                                                            textAlign: TextAlign.center,
+                                                            style: const TextStyle(
+                                                              color: Color(0xFF8893A0),
+                                                              fontSize: 20,
+                                                            ),
+                                                          ),
+                                                        ),
                                                       ),
-                                                    ),
+                                                    ],
                                                   ),
+                                          ),
                                   ),
                                 ),
                                 SizedBox(height: maxWidth * 0.015),

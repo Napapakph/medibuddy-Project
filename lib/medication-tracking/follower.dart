@@ -9,6 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import 'add_follower.dart';
 import 'package:medibuddy/services/app_state.dart';
 import 'package:medibuddy/widgets/toast_helper.dart';
+import 'package:medibuddy/widgets/image_cropper_helper.dart';
 
 // ===== หน้าจอจัดการผู้ติดตาม =====
 class FollowerScreen extends StatefulWidget {
@@ -260,25 +261,38 @@ class _FollowerScreenState extends State<FollowerScreen> {
                                   bottom: -2,
                                   right: -2,
                                   child: GestureDetector(
-                                    onTap: saving
-                                        ? null
-                                        : () async {
-                                            try {
-                                              final file =
-                                                  await picker.pickImage(
-                                                source: ImageSource.gallery,
-                                                imageQuality: 85,
-                                                maxWidth: 1920,
-                                                maxHeight: 1920,
-                                              );
-                                              if (!context.mounted) return;
-                                              if (file == null) return;
-                                              setState(() => picked = file);
-                                            } catch (e) {
-                                              if (!context.mounted) return;
-                                              showToast('เลือกรูปไม่สำเร็จ');
-                                            }
-                                          },
+                                          onTap: saving
+                                              ? null
+                                              : () async {
+                                                  try {
+                                                    final file =
+                                                        await picker.pickImage(
+                                                      source: ImageSource.gallery,
+                                                      imageQuality: 85,
+                                                      maxWidth: 1920,
+                                                      maxHeight: 1920,
+                                                    );
+                                                    if (!context.mounted) return;
+                                                    if (file == null) return;
+                                                    final cropped =
+                                                        await cropImageFile(
+                                                      File(file.path),
+                                                      toolbarTitle:
+                                                          'ครอบรูปผู้ติดตาม',
+                                                    );
+                                                    if (!context.mounted) {
+                                                      return;
+                                                    }
+                                                    if (cropped == null) return;
+                                                    setState(() {
+                                                      picked =
+                                                          XFile(cropped.path);
+                                                    });
+                                                  } catch (e) {
+                                                    if (!context.mounted) return;
+                                                    showToast('เลือกรูปไม่สำเร็จ');
+                                                  }
+                                                },
                                     child: Container(
                                       width: cameraSize,
                                       height: cameraSize,
@@ -586,34 +600,58 @@ class _FollowerScreenState extends State<FollowerScreen> {
   @override
   Widget build(BuildContext context) {
     final showFollowers = _followers.isNotEmpty;
-
-    Widget content;
-    if (_isLoading) {
-      content = const Center(child: CircularProgressIndicator());
-    } else if (_errorMessage != null) {
-      content = Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(_errorMessage!),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _loadFollowers,
-              child: const Text('ลองใหม่'),
-            ),
-          ],
-        ),
-      );
-    } else if (!showFollowers) {
-      content = _buildEmptyState();
-    } else {
-      content = ListView.builder(
-        itemCount: _followers.length,
-        itemBuilder: (context, index) {
-          return _buildFollowerCard(_followers[index]);
-        },
-      );
-    }
+    final content = RefreshIndicator(
+      onRefresh: _loadFollowers,
+      child: _isLoading
+          ? CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: const [
+                SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+              ],
+            )
+          : _errorMessage != null
+              ? CustomScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  slivers: [
+                    SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(_errorMessage!),
+                            const SizedBox(height: 16),
+                            ElevatedButton(
+                              onPressed: _loadFollowers,
+                              child: const Text('ลองใหม่'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                )
+              : !showFollowers
+                  ? CustomScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      slivers: [
+                        SliverFillRemaining(
+                          hasScrollBody: false,
+                          child: _buildEmptyState(),
+                        ),
+                      ],
+                    )
+                  : ListView.builder(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      itemCount: _followers.length,
+                      itemBuilder: (context, index) {
+                        return _buildFollowerCard(_followers[index]);
+                      },
+                    ),
+    );
 
     return PopScope(
       canPop: false,

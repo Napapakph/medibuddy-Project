@@ -7,6 +7,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'services/device_token_service.dart';
 import 'services/auth_manager.dart';
 import 'authen_pages/login_screen.dart';
@@ -36,6 +37,7 @@ import 'package:app_links/app_links.dart';
 import 'services/notification_launch_guard.dart';
 import 'services/app_route_observer.dart';
 import 'package:bot_toast/bot_toast.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 const bool kDisableAuthGate =
     true; // เปลี่ยนเป็น false เมื่อต้องการเปิดใช้งาน AuthGate
@@ -43,6 +45,7 @@ const bool kDisableAuthGate =
 late final StreamSubscription<AuthState> _authSub;
 final FlutterLocalNotificationsPlugin flnp = FlutterLocalNotificationsPlugin();
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+const MethodChannel _backgroundChannel = MethodChannel('medibuddy/background');
 late final DeviceTokenService
     globalDeviceTokenService; // 🔹 EXPOSED GLOBALLY FOR CUSTOM AUTH
 
@@ -299,6 +302,34 @@ void openAlarmFromNoti({String? payload, Map<String, dynamic>? data}) {
   }
 }
 
+Future<void> _requestBackgroundPermissionIfNeeded() async {
+  if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return;
+
+  final prefs = await SharedPreferences.getInstance();
+  final prompted = prefs.getBool('bg_permission_prompted') ?? false;
+  if (prompted) return;
+
+  bool isIgnoring = false;
+  try {
+    final result = await _backgroundChannel
+        .invokeMethod<bool>('isIgnoringBatteryOptimizations');
+    isIgnoring = result ?? false;
+  } catch (e) {
+    debugPrint('❌ Background permission check failed: $e');
+  }
+
+  if (!isIgnoring) {
+    try {
+      await _backgroundChannel
+          .invokeMethod('requestIgnoreBatteryOptimizations');
+    } catch (e) {
+      debugPrint('❌ Background permission request failed: $e');
+    }
+  }
+
+  await prefs.setBool('bg_permission_prompted', true);
+}
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: ".env");
@@ -342,6 +373,7 @@ Future<void> main() async {
 
   // ✅ request permission
   await FirebaseMessaging.instance.requestPermission();
+  await _requestBackgroundPermissionIfNeeded();
 
   // ✅ บังคับให้ Push Notification แสดงแบนเนอร์ได้แม้แอปอยู่เบื้องหน้า (โดยเฉพาะ iOS และช่วยในบางกรณี)
   await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(

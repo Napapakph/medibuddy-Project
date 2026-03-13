@@ -8,6 +8,7 @@ import 'package:flutter_image_compress/flutter_image_compress.dart';
 import '../services/request_api.dart';
 import '../services/auth_manager.dart';
 import 'package:medibuddy/widgets/toast_helper.dart';
+import '../widgets/image_cropper_helper.dart';
 
 class UserRequestScreen extends StatefulWidget {
   const UserRequestScreen({super.key});
@@ -97,10 +98,19 @@ class _UserRequestScreenState extends State<UserRequestScreen> {
     final image = await picker.pickImage(source: source);
     if (image == null) return;
 
-    final file = File(image.path);
+    File file = File(image.path);
     final exists = file.existsSync();
     debugPrint('🖼️ picked file path=${file.path} exists=$exists');
     if (!exists) return;
+
+    if (source == ImageSource.gallery) {
+      final cropped = await cropImageFile(
+        file,
+        toolbarTitle: 'ครอบรูปภาพ',
+      );
+      if (cropped == null) return;
+      file = cropped;
+    }
 
     final resizedFile = await _resizeImageIfNeeded(file);
     if (!mounted) return;
@@ -354,6 +364,40 @@ class _UserRequestScreenState extends State<UserRequestScreen> {
                                   Icons.photo,
                                   size: 64,
                                   color: Color(0xFF9AA7B8),
+                                ),
+                              ),
+                            if (_pictureFile != null)
+                              Positioned(
+                                top: 12,
+                                right: 12,
+                                child: InkWell(
+                                  onTap: _submitting
+                                      ? null
+                                      : () => setState(
+                                          () => _pictureFile = null,
+                                        ),
+                                  borderRadius: BorderRadius.circular(20),
+                                  child: Container(
+                                    width: 36,
+                                    height: 36,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: const Color(0xFF2B4C7E)
+                                              .withOpacity(0.2),
+                                          blurRadius: 6,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    child: const Icon(
+                                      Icons.close_rounded,
+                                      color: Color(0xFF5A81BB),
+                                      size: 20,
+                                    ),
+                                  ),
                                 ),
                               ),
                             Positioned(
