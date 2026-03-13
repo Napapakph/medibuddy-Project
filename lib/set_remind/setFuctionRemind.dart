@@ -1982,17 +1982,27 @@ List<MedicineRegimenTime> buildRegimenTimes(
 }
 
 List<ReminderDose> _generateHourlyDoses(ReminderPlan plan) {
-  final step = plan.everyHours < 1 ? 1 : plan.everyHours;
-  final template = plan.doses.isNotEmpty ? plan.doses.first : null;
+  final stepHours = plan.everyHours < 1 ? 1 : plan.everyHours;
+  final intervalMinutes = stepHours * 60;
+  final totalMinutesPerDay = 24 * 60;
 
+  final template = plan.doses.isNotEmpty ? plan.doses.first : null;
   final start = plan.startTime;
   final startMinutes = start.hour * 60 + start.minute;
 
   final doses = <ReminderDose>[];
-  var m = startMinutes;
-  while (m < 24 * 60) {
-    final h = m ~/ 60;
-    final mm = m % 60;
+
+  // จำนวนรอบใน 1 วัน
+  // เช่น ทุก 6 ชม. = 24/6 = 4 ครั้ง
+  final count = totalMinutesPerDay ~/ intervalMinutes;
+
+  for (var i = 0; i < count; i++) {
+    final currentMinutes =
+        (startMinutes + (i * intervalMinutes)) % totalMinutesPerDay;
+
+    final h = currentMinutes ~/ 60;
+    final mm = currentMinutes % 60;
+
     doses.add(
       ReminderDose(
         time: TimeOfDay(hour: h, minute: mm),
@@ -2001,7 +2011,7 @@ List<ReminderDose> _generateHourlyDoses(ReminderPlan plan) {
         mealTiming: template?.mealTiming ?? MealTiming.afterMeal,
       ),
     );
-    m += step * 60;
   }
+
   return doses;
 }
