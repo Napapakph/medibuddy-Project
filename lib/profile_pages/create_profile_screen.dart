@@ -164,7 +164,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           child: TextFormField(
                             controller: _usernameController,
                             decoration: InputDecoration(
-                              labelText: 'ชื่อผู้ใช้',
+                              labelText: 'ชื่อโปรไฟล์',
                               filled: true,
                               fillColor:
                                   const Color.fromARGB(255, 255, 255, 255),
@@ -174,7 +174,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ),
                             ),
                             validator: (value) => value == null || value.isEmpty
-                                ? 'กรุณากรอกชื่อผู้ใช้'
+                                ? 'กรุณากรอกชื่อโปรไฟล์'
                                 : null,
                           ),
                         ),
@@ -266,7 +266,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             style: ElevatedButton.styleFrom(
                               padding: EdgeInsets.symmetric(
                                   vertical: maxHeight * 0.02,
-                                  horizontal: maxWidth * 0.03),
+                                  horizontal: maxWidth * 0.07),
                               backgroundColor:
                                   const Color.fromARGB(255, 90, 129, 187),
                               foregroundColor: Colors.white,
@@ -315,17 +315,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildProfileCircle(double size) {
     final double radius = size / 2;
 
-    return CircleAvatar(
-      radius: radius, // ครึ่งหนึ่งของ avatarSize
-      backgroundColor: const Color.fromARGB(255, 255, 255, 255),
-      backgroundImage: _profileImage,
-      child: _profileImage == null
-          ? Icon(
-              Icons.person,
-              size: radius * 0.7, // สัดส่วนตามขนาดวง
-              color: const Color.fromARGB(255, 182, 188, 213),
-            )
-          : null,
+    return Container(
+      padding: const EdgeInsets.all(3),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: const Color.fromARGB(255, 137, 164, 198),
+          width: 2,
+        ),
+        boxShadow: const [
+          BoxShadow(
+            color: Color.fromARGB(31, 200, 206, 218),
+            blurRadius: 6,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: CircleAvatar(
+        radius: radius,
+        backgroundColor: Colors.white,
+        backgroundImage: _profileImage,
+        child: _profileImage == null
+            ? Icon(
+                Icons.person,
+                size: radius * 0.7,
+                color: const Color.fromARGB(255, 182, 188, 213),
+              )
+            : null,
+      ),
     );
   }
 

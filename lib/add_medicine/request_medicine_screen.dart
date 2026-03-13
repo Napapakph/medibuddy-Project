@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../OCR/ocr_global.dart';
 import '../services/auth_manager.dart';
+import 'package:bot_toast/bot_toast.dart';
 
 class RequestMedicinePage extends StatefulWidget {
   final String medicineName;
@@ -62,14 +63,48 @@ class _RequestMedicinePageState extends State<RequestMedicinePage> {
 
       if (!mounted) return;
       globalOcrImage = null;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('ส่งคำร้องเรียบร้อยแล้ว')),
+      BotToast.showCustomText(
+        duration: const Duration(seconds: 2),
+        align: const Alignment(0, 0.5),
+        toastBuilder: (_) {
+          return Material(
+            color: Colors.transparent,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: const Color.fromARGB(255, 114, 178, 121),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Text(
+                'ส่งคำร้องเรียบร้อยแล้ว',
+                style: TextStyle(color: Colors.white, fontSize: 16),
+              ),
+            ),
+          );
+        },
       );
       Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('ส่งไม่สำเร็จ: $e')),
+      BotToast.showCustomText(
+        duration: const Duration(seconds: 2),
+        align: const Alignment(0, 0.5),
+        toastBuilder: (_) {
+          return Material(
+            color: Colors.transparent,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: const Color.fromARGB(255, 114, 178, 121),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Text(
+                'ส่งคำร้องไม่สำเร็จ',
+                style: TextStyle(color: Colors.white, fontSize: 16),
+              ),
+            ),
+          );
+        },
       );
     }
   }

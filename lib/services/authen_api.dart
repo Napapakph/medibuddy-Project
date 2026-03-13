@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
 import 'auth_service.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../main.dart'; // ✅ Import globalDeviceTokenService
@@ -45,6 +46,23 @@ class CustomAuthService implements AuthService {
 
     // Register Interceptor
     _dio.interceptors.add(AuthInterceptor());
+  }
+
+  Future<String> _getLocalTimezone() async {
+    try {
+      final tzInfo = await FlutterTimezone.getLocalTimezone();
+      final identifier = tzInfo.identifier;
+      if (identifier.trim().isNotEmpty) return identifier;
+    } catch (_) {}
+
+    final tzName = DateTime.now().timeZoneName;
+    if (tzName.isNotEmpty) return tzName;
+
+    final offset = DateTime.now().timeZoneOffset;
+    final sign = offset.isNegative ? '-' : '+';
+    final hours = offset.inHours.abs().toString().padLeft(2, '0');
+    final minutes = (offset.inMinutes.abs() % 60).toString().padLeft(2, '0');
+    return 'UTC$sign$hours:$minutes';
   }
 
   @override
@@ -140,9 +158,11 @@ class CustomAuthService implements AuthService {
   Future<AuthResponse> login(
       {required String email, required String password}) async {
     try {
+      final timezone = await _getLocalTimezone();
       final res = await _dio.post('/api/auth/v2/login', data: {
         'email': email,
         'password': password,
+        'timezone': timezone,
       });
 
       final data = res.data;
@@ -270,10 +290,12 @@ class CustomAuthService implements AuthService {
       }
 
       // ส่ง idToken ไปยัง Backend API
+      final timezone = await _getLocalTimezone();
       final res = await _dio.post(
         '/api/auth/v2/google-login',
         data: {
           'idToken': idToken,
+          'timezone': timezone,
         },
       );
 

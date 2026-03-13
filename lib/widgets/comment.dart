@@ -128,7 +128,7 @@ class _CommentPopupState extends State<CommentPopup> {
                 children: [
                   const Expanded(
                     child: Text(
-                      'บันทึกช่วยจำ',
+                      'หมายเหตุ',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 18,
@@ -261,12 +261,13 @@ class CommentViewer extends StatelessWidget {
                 children: [
                   const Expanded(
                     child: Text(
-                      'คอมเม้น',
+                      'หมายเหตุ',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
                         color: Color(0xFF2B4C7E),
                       ),
+                      textAlign: TextAlign.center,
                     ),
                   ),
                   GestureDetector(
@@ -287,9 +288,9 @@ class CommentViewer extends StatelessWidget {
               const SizedBox(height: 8),
               // Medicine name
               Text(
-                medicineNickname,
+                "รายการยา : " + medicineNickname,
                 style: const TextStyle(
-                  fontSize: 14,
+                  fontSize: 16,
                   color: Color.fromARGB(255, 74, 128, 196),
                   fontWeight: FontWeight.w600,
                 ),

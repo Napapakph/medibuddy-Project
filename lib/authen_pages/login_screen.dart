@@ -31,13 +31,17 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _obscurePassword = true; //ดู password
   bool _isLoading =
       true; // ✅ Start loading to prevent "flash" of login form before check
+  String? _loginError;
   final supabase = Supabase.instance.client;
   bool _navigated = false;
 //---------------- Login with Username/Password----------------------------------
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _loginError = null;
+    });
 
     try {
       final response = await AuthManager.service.login(
@@ -55,11 +59,10 @@ class _LoginScreenState extends State<LoginScreen> {
       await _checkAndNavigate(token: accessToken);
     } catch (e) {
       if (!mounted) return;
-      setState(() => _isLoading = false);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('อีเมลหรือรหัสผ่านไม่ถูกต้อง')),
-      );
+      setState(() {
+        _isLoading = false;
+        _loginError = 'อีเมลหรือรหัสผ่านไม่ถูกต้อง';
+      });
     }
 
     debugPrint(
@@ -335,6 +338,11 @@ class _LoginScreenState extends State<LoginScreen> {
                             TextFormField(
                               controller: _passwordCtrl,
                               obscureText: _obscurePassword,
+                              onChanged: (_) {
+                                if (_loginError != null) {
+                                  setState(() => _loginError = null);
+                                }
+                              },
                               decoration: InputDecoration(
                                 labelText: 'รหัสผ่าน',
                                 hintStyle: const TextStyle(
@@ -365,6 +373,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                   horizontal: 20,
                                   vertical: 18,
                                 ),
+                                errorText: _loginError,
                                 suffixIcon: IconButton(
                                   icon: Icon(
                                     _obscurePassword
@@ -696,6 +705,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       ],
                     ),
                     const SizedBox(height: 16),
+                    Text(
+                      'กรุณากรอกอีเมลที่ลงทะเบียน\nเพื่อขอรีเซ็ตรหัสผ่าน',
+                      style: TextStyle(fontSize: 16),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
                     TextField(
                       controller: _resetEmailCtrl,
                       keyboardType: TextInputType.emailAddress,
@@ -803,7 +818,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           );
                         }
                       },
-                      child: const Text('ส่งอีเมลรีเซ็ต'),
+                      child: Text(
+                        'ส่งอีเมล',
+                        style: TextStyle(fontSize: 16),
+                      ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor:
                             const Color.fromARGB(255, 90, 129, 187),

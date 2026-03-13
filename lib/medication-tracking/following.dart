@@ -568,8 +568,28 @@ class _FollowingScreenState extends State<FollowingScreen>
               }
             }
 
+            const dialogGradient = LinearGradient(
+              colors: [
+                Color(0xFFFFFFFF),
+                Color(0xFFEAF3FF),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            );
+            const ringGradient = LinearGradient(
+              colors: [
+                Color(0xFFFFFFFF),
+                Color(0xFFD7E6FF),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            );
+            const double avatarSize = 84;
+            final double innerRadius = avatarSize / 2 - 3;
+            final double cameraSize = avatarSize * 0.32;
+
             return AlertDialog(
-              backgroundColor: const Color(0xFFF0F6FF),
+              backgroundColor: const Color(0xFFF7FBFF),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(24),
               ),
@@ -577,73 +597,152 @@ class _FollowingScreenState extends State<FollowingScreen>
                 'แก้ไขคนที่กำลังติดตาม',
                 style: TextStyle(color: Color(0xFF2B4C7E)),
               ),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    CircleAvatar(
-                      radius: 36,
-                      backgroundImage: imageProvider,
-                      child: imageProvider == null
-                          ? const Icon(Icons.person, size: 36)
-                          : null,
-                    ),
-                    const SizedBox(height: 8),
-                    TextButton.icon(
-                      onPressed: saving
-                          ? null
-                          : () async {
-                              final file = await picker.pickImage(
-                                source: ImageSource.gallery,
-                              );
-                              if (file == null) return;
+              contentPadding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              content: Container(
+                decoration: BoxDecoration(
+                  gradient: dialogGradient,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          width: avatarSize,
+                          height: avatarSize,
+                          child: Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(3),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  gradient: ringGradient,
+                                  boxShadow: const [
+                                    BoxShadow(
+                                      color: Color(0x3390A7C9),
+                                      blurRadius: 10,
+                                      offset: Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: CircleAvatar(
+                                  radius: innerRadius,
+                                  backgroundColor: Colors.white,
+                                  backgroundImage: imageProvider,
+                                  child: imageProvider == null
+                                      ? const Icon(
+                                          Icons.person,
+                                          size: 36,
+                                          color: Color(0xFFB6C4DB),
+                                        )
+                                      : null,
+                                ),
+                              ),
+                              Positioned(
+                                bottom: -2,
+                                right: -2,
+                                child: GestureDetector(
+                                  onTap: saving
+                                      ? null
+                                      : () async {
+                                          final file =
+                                              await picker.pickImage(
+                                            source: ImageSource.gallery,
+                                          );
+                                          if (file == null) return;
 
-                              // Check file size (5MB limit)
-                              final len = await file.length();
-                              if (len > 5 * 1024 * 1024) {
-                                if (!mounted) return;
-                                showDialog(
-                                  context: context,
-                                  builder: (ctx) => AlertDialog(
-                                    title: const Text('แจ้งเตือน'),
-                                    content:
-                                        const Text('ขนาดรูปภาพต้องไม่เกิน 5MB'),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () => Navigator.pop(ctx),
-                                        child: const Text('ตกลง'),
-                                      ),
-                                    ],
+                                          // Check file size (5MB limit)
+                                          final len = await file.length();
+                                          if (len > 5 * 1024 * 1024) {
+                                            if (!mounted) return;
+                                            showDialog(
+                                              context: context,
+                                              builder: (ctx) => AlertDialog(
+                                                title: const Text('แจ้งเตือน'),
+                                                content: const Text(
+                                                  'ขนาดรูปภาพต้องไม่เกิน 5MB',
+                                                ),
+                                                actions: [
+                                                  TextButton(
+                                                    onPressed: () =>
+                                                        Navigator.pop(ctx),
+                                                    child: const Text('ตกลง'),
+                                                  ),
+                                                ],
+                                              ),
+                                            );
+                                            return;
+                                          }
+
+                                          setState(() => picked = file);
+                                        },
+                                  child: Container(
+                                    width: cameraSize,
+                                    height: cameraSize,
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFF5A81BB),
+                                      shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Color(0x332B4C7E),
+                                          blurRadius: 6,
+                                          offset: Offset(0, 3),
+                                        ),
+                                      ],
+                                    ),
+                                    child: const Icon(
+                                      Icons.camera_alt,
+                                      color: Colors.white,
+                                      size: 16,
+                                    ),
                                   ),
-                                );
-                                return;
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: controller,
+                          onChanged: (val) {
+                            setState(() {
+                              if (val.length > 100) {
+                                nameError = 'ชื่อเล่นห้ามเกิน 100 ตัวอักษร';
+                              } else {
+                                nameError = null;
                               }
-
-                              setState(() => picked = file);
-                            },
-                      icon: const Icon(Icons.photo_library),
-                      label: const Text('เลือกรูป'),
+                            });
+                          },
+                          decoration: InputDecoration(
+                            labelText: 'ชื่อเล่น (Nickname)',
+                            filled: true,
+                            fillColor: Colors.white,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: BorderSide.none,
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: const BorderSide(
+                                color: Color(0xFFD3E3F9),
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: const BorderSide(
+                                color: Color(0xFF5A81BB),
+                              ),
+                            ),
+                            errorText: nameError,
+                            errorStyle: const TextStyle(color: Colors.red),
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: controller,
-                      onChanged: (val) {
-                        setState(() {
-                          if (val.length > 100) {
-                            nameError = 'ชื่อเล่นห้ามเกิน 100 ตัวอักษร';
-                          } else {
-                            nameError = null;
-                          }
-                        });
-                      },
-                      decoration: InputDecoration(
-                        labelText: 'ชื่อเล่น (Nickname)',
-                        border: const OutlineInputBorder(),
-                        errorText: nameError,
-                        errorStyle: const TextStyle(color: Colors.red),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
               actions: [

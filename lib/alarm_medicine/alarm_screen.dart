@@ -1,6 +1,5 @@
 import 'dart:collection';
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:medibuddy/alarm_medicine/confirm_action.dart';
 import 'package:medibuddy/services/log_api.dart';
@@ -9,6 +8,7 @@ import 'package:medibuddy/services/notification_launch_guard.dart';
 import 'package:medibuddy/services/app_route_observer.dart';
 import 'package:medibuddy/main.dart' show navigatorKey;
 import 'package:medibuddy/services/app_state.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
 class AlarmScreen extends StatefulWidget {
   final Map<String, dynamic>? payload;
@@ -347,26 +347,26 @@ class _AlarmScreenState extends State<AlarmScreen> {
         'profileMapCount=${profileMap.length} '
         'cachedProfilesCount=${AppState.instance.cachedProfiles.length}');
 
-    final widgets = <Widget>[];
+    final rows = <Widget>[];
 
     if (isMulti) {
       // ── MULTI mode: show only profile names (from payload, never blank) ──
       debugPrint('🔔 [AlarmSummary] resolvedNames=$profileMap');
 
       for (final entry in profileMap.entries) {
-        widgets.add(
+        rows.add(
           Padding(
             padding: const EdgeInsets.only(top: 6),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.person, size: 16, color: Color(0xFF2B4C7E)),
-                const SizedBox(width: 4),
+                const Icon(Icons.person, size: 18, color: Color(0xFF2B4C7E)),
+                const SizedBox(width: 6),
                 Flexible(
                   child: Text(
                     entry.value,
                     style:
-                        const TextStyle(fontSize: 13, color: Color(0xFF5A81BB)),
+                        const TextStyle(fontSize: 16, color: Color(0xFF2B4C7E)),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -387,20 +387,20 @@ class _AlarmScreenState extends State<AlarmScreen> {
         uniqueMeds.add(cleaned);
       }
       for (final med in uniqueMeds) {
-        widgets.add(
+        rows.add(
           Padding(
-            padding: const EdgeInsets.only(left: 0, top: 0),
+            padding: const EdgeInsets.only(top: 6),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 const Icon(Icons.medication,
-                    size: 16, color: Color(0xFF5A81BB)),
-                const SizedBox(width: 10),
+                    size: 18, color: Color(0xFF5A81BB)),
+                const SizedBox(width: 8),
                 Flexible(
                   child: Text(
                     med,
                     style:
-                        const TextStyle(fontSize: 13, color: Color(0xFF5A81BB)),
+                        const TextStyle(fontSize: 16, color: Color(0xFF2B4C7E)),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -411,7 +411,36 @@ class _AlarmScreenState extends State<AlarmScreen> {
       }
     }
 
-    return widgets;
+    // Wrap in a white card
+    return [
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 8),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: const Color(0xFFD0DEF0),
+              width: 1,
+            ),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x1A7BAEE5),
+                blurRadius: 10,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: rows,
+          ),
+        ),
+      ),
+    ];
   }
 
   List<Widget> _headerWidgets(String title, String body) {
@@ -829,7 +858,7 @@ class _PillSlideActionState extends State<PillSlideAction>
                       color: const Color(0xFFD98A8A),
                       active: isSkip,
                       size: iconSize,
-                      label: 'Skip',
+                      label: 'ข้ามยา',
                     ),
                   ),
                   Positioned(
@@ -839,7 +868,7 @@ class _PillSlideActionState extends State<PillSlideAction>
                       color: const Color(0xFF8A9BB5),
                       active: isSnooze,
                       size: iconSize,
-                      label: 'Snooze',
+                      label: 'เลื่อนแจ้งเตือน',
                     ),
                   ),
                   Positioned(
@@ -849,7 +878,7 @@ class _PillSlideActionState extends State<PillSlideAction>
                       color: const Color(0xFF6EB89C),
                       active: isTake,
                       size: iconSize,
-                      label: 'Take',
+                      label: 'กินยา',
                     ),
                   ),
                   GestureDetector(
@@ -891,18 +920,41 @@ class _TargetIcon extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final opacity = active ? 1.0 : 0.5;
-    final scale = active ? 1.1 : 1.0;
+    final scaleVal = active ? 1.15 : 1.0;
+    final circleSize = size + 20;
 
     return AnimatedOpacity(
       duration: const Duration(milliseconds: 120),
       opacity: opacity,
       child: AnimatedScale(
         duration: const Duration(milliseconds: 120),
-        scale: scale,
+        scale: scaleVal,
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: color, size: size),
-            const SizedBox(height: 4),
+            Container(
+              width: circleSize,
+              height: circleSize,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: active ? color : color.withOpacity(0.4),
+                  width: 2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: color.withOpacity(active ? 0.3 : 0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Center(
+                child: Icon(icon, color: color, size: size * 0.75),
+              ),
+            ),
+            const SizedBox(height: 6),
             Text(
               label,
               style: TextStyle(
@@ -930,19 +982,26 @@ class _PillThumb extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: width,
-      height: height,
+      width: 70,
+      height: 70,
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(height / 2),
-        border: Border.all(color: const Color(0xFFB7DAFF), width: 1.5),
+        shape: BoxShape.circle,
+        border: Border.all(color: const Color(0xFFB7DAFF), width: 2),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x1A7BAEE5),
-            blurRadius: 8,
-            offset: Offset(0, 2),
+            color: Color(0x307BAEE5),
+            blurRadius: 12,
+            offset: Offset(0, 4),
           ),
         ],
+      ),
+      child: Center(
+        child: Icon(
+          MdiIcons.pill,
+          size: 36,
+          color: Color(0xFF5A81BB),
+        ),
       ),
     );
   }

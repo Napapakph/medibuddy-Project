@@ -177,9 +177,7 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
 
     if (nickname.trim().isEmpty && officialName.trim().isEmpty) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('กรุณาระบุชื่อยาหรือชื่อเล่นยา')),
-      );
+     
       setState(() => _saving = false);
       return;
     }
@@ -249,8 +247,42 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
                   ListMedicinePage(profileId: widget.profileId)));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('บันทึกไม่สำเร็จ: $e')),
+      BotToast.showCustomNotification(
+        align: const Alignment(0, -0.5),
+        duration: const Duration(seconds: 2),
+        toastBuilder: (_) {
+          return SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 5),
+              child: Material(
+                color: Colors.transparent,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+                  decoration: BoxDecoration(
+                    color: const Color.fromARGB(255, 195, 120, 134),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: const [
+                      BoxShadow(
+                        blurRadius: 8,
+                        offset: Offset(0, 2),
+                        color: Colors.black26,
+                      ),
+                    ],
+                  ),
+                  child: const Text(
+                    'รายการบันทึกไม่สำเร็จ',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
       );
     } finally {
       if (!mounted) return;

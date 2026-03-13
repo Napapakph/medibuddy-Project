@@ -800,6 +800,9 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
           PopupMenuButton<_SortOption>(
             icon: const Icon(Icons.sort_rounded, color: Color(0xFF5A81BB)),
             color: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
             tooltip: 'เรียงลำดับ',
             onSelected: (option) {
               setState(() {
@@ -809,6 +812,7 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
             itemBuilder: (context) => [
               PopupMenuItem(
                 value: _SortOption.defaultOrder,
+                
                 child: Row(
                   children: [
                     Icon(
@@ -834,6 +838,7 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
               ),
               PopupMenuItem(
                 value: _SortOption.byName,
+                
                 child: Row(
                   children: [
                     Icon(
@@ -955,6 +960,7 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
                                                       style: TextStyle(
                                                         color:
                                                             Color(0xFF8893A0),
+                                                        fontSize: 20,
                                                       ),
                                                     ),
                                                   ),
