@@ -4,6 +4,7 @@ import 'package:flutter_otp_text_field/flutter_otp_text_field.dart';
 import 'login_screen.dart';
 import '../services/auth_manager.dart';
 import '../services/authen_api.dart';
+import 'package:bot_toast/bot_toast.dart';
 
 class OTPScreen extends StatefulWidget {
   const OTPScreen({
@@ -151,8 +152,25 @@ class _OTPScreenState extends State<OTPScreen> {
       if (!mounted) return;
       setState(() => _isLoading = false);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('เชื่อมบัญชีสำเร็จ! กรุณาเข้าสู่ระบบ')),
+      BotToast.showCustomText(
+        duration: const Duration(seconds: 2),
+        align: const Alignment(0, 0.5),
+        toastBuilder: (_) {
+          return Material(
+            color: Colors.transparent,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: const Color.fromARGB(255, 114, 178, 121),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Text(
+                'เชื่อมบัญชีสำเร็จ! กรุณาเข้าสู่ระบบ',
+                style: TextStyle(color: Colors.white, fontSize: 16),
+              ),
+            ),
+          );
+        },
       );
       Navigator.pushReplacement(
         context,

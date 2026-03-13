@@ -617,8 +617,9 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
                     const Text(
                       'ก่อนอาหาร',
                       style: TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF6E7C8B),
+                        fontSize: 16,
+                        color: Color.fromARGB(255, 190, 98, 143),
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     // TODO: backend will provide meal relation later.
@@ -626,8 +627,9 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
                     Text(
                       'ปริมาณ: ${_doseLabel(log)}',
                       style: const TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF6E7C8B),
+                        fontSize: 16,
+                        color: Color.fromARGB(255, 190, 98, 143),
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
@@ -845,8 +847,8 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
                               Column(
                                 children: [
                                   Container(
-                                    width: 80,
-                                    height: 80,
+                                    width: 100,
+                                    height: 100,
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
                                       color: const Color(0xFFD6E3F3),
@@ -873,12 +875,14 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
                                       color: Color(0xFF2B4C7E),
                                     ),
                                   ),
+                                  const SizedBox(height: 8),
                                   if (timeText.isNotEmpty)
                                     Text(
                                       'เวลา $timeText น.',
                                       style: const TextStyle(
                                           fontSize: 16,
-                                          color: Color(0xFF8A9BB5)),
+                                          color: Color(0xFF8A9BB5),
+                                          fontWeight: FontWeight.w600),
                                     ),
                                   if (hasMultipleProfiles) ...[
                                     const SizedBox(height: 12),

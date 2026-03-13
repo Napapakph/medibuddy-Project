@@ -56,11 +56,13 @@ bool _pendingAlarmScheduled = false;
 // Global instance of the route observer
 final appRouteObserver = AppRouteObserver();
 
-const AndroidNotificationChannel channel = AndroidNotificationChannel(
+final AndroidNotificationChannel channel = AndroidNotificationChannel(
   'medibuddy_alarm', // เปลี่ยนเป็นชื่อใหม่ เพื่อทำลายบั๊กแบนเนอร์ที่ไม่เด้งบนเครื่องที่เผลอจำค่าเก่า
   'MediBuddy Notifications',
   description: 'Foreground notifications',
   importance: Importance.high,
+  playSound: true,
+  sound: const RawResourceAndroidNotificationSound('cat_noti'),
 );
 
 @pragma('vm:entry-point')
@@ -403,6 +405,8 @@ Future<void> main() async {
           channelDescription: channel.description,
           importance: Importance.max,
           priority: Priority.high,
+          playSound: true,
+          sound: const RawResourceAndroidNotificationSound('cat_noti'),
           icon: '@mipmap/ic_launcher',
           styleInformation: BigTextStyleInformation(bodyText),
         ),

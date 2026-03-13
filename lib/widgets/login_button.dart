@@ -1,5 +1,21 @@
 import 'package:flutter/material.dart';
 
+String? validateEmail(String? value) {
+  final email = (value ?? '').trim();
+  if (email.isEmpty) {
+    return 'กรุณากรอกอีเมล';
+  }
+
+  final emailRegex = RegExp(
+    r"^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+$",
+  );
+  if (!emailRegex.hasMatch(email)) {
+    return 'รูปแบบอีเมลไม่ถูกต้อง';
+  }
+
+  return null;
+}
+
 class LoginButton extends StatelessWidget {
   final String text;
   final VoidCallback onPressed;

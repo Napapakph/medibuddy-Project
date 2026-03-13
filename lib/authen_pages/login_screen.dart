@@ -13,6 +13,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/app_state.dart';
 import 'dart:async';
+import '../widgets/login_button.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key, this.skipAutoNavigateOnce = false});
@@ -235,384 +236,397 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       resizeToAvoidBottomInset: false,
       backgroundColor: Colors.white,
-      body: SafeArea(child: LayoutBuilder(
-        builder: (context, constraints) {
-          final maxWidth = constraints.maxWidth;
-          final maxHeight = constraints.maxHeight;
+      body: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: SafeArea(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final maxWidth = constraints.maxWidth;
+              final maxHeight = constraints.maxHeight;
 
-          //ถ้าจอกว้างแบบแท็บเล็ต
-          final bool isTablet = maxWidth > 600;
+              //ถ้าจอกว้างแบบแท็บเล็ต
+              final bool isTablet = maxWidth > 600;
 
-          //จำกัดความกว้างสูงสุดของหน้าจอ
-          final double containerWidth = isTablet ? 500 : maxWidth;
-          return Center(
-            child: SizedBox(
-              width: containerWidth,
-              child: Stack(
-                children: [
-                  //รูปแมว ---------------------------------------------------------------------
-                  Align(
-                    alignment: Alignment.topRight,
-                    child: SizedBox(
-                      height: maxHeight * 0.33,
-                      child: Image.asset(
-                        'assets/cat_login.png',
+              //จำกัดความกว้างสูงสุดของหน้าจอ
+              final double containerWidth = isTablet ? 500 : maxWidth;
+              return Center(
+                child: SizedBox(
+                  width: containerWidth,
+                  child: Stack(
+                    children: [
+                      //รูปแมว ---------------------------------------------------------------------
+                      Align(
+                        alignment: Alignment.topRight,
+                        child: SizedBox(
+                          height: maxHeight * 0.33,
+                          child: Image.asset(
+                            'assets/cat_login.png',
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                  SizedBox(height: maxHeight * 0.02),
-                  //รูปแมว ---------------------------------------------------------------------
-                  // ฟอร์มล็อกอิน
-                  Align(
-                    alignment: const Alignment(0, 0.3),
-                    child: Padding(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: maxWidth * 0.08),
-                      child: Form(
-                        key: _formKey,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'เข้าสู่ระบบ',
-                              style: TextStyle(
-                                fontSize: 30,
-                                fontWeight: FontWeight.w800,
-                                color: Color(0xFF1F2E45),
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            const Text(
-                              'ยินดีต้อนรับกลับมา',
-                              style: TextStyle(
-                                fontSize: 15,
-                                color: Color(0xFF8A9BB5),
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            SizedBox(height: maxHeight * 0.025),
-                            // ช่องอีเมล
+                      SizedBox(height: maxHeight * 0.02),
+                      //รูปแมว ---------------------------------------------------------------------
+                      // ฟอร์มล็อกอิน
+                      Align(
+                        alignment: const Alignment(0, 0.3),
+                        child: Padding(
+                          padding:
+                              EdgeInsets.symmetric(horizontal: maxWidth * 0.08),
+                          child: Form(
+                            key: _formKey,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'เข้าสู่ระบบ',
+                                  style: TextStyle(
+                                    fontSize: 30,
+                                    fontWeight: FontWeight.w800,
+                                    color: Color(0xFF1F2E45),
+                                  ),
+                                ),
+                                const SizedBox(height: 6),
+                                const Text(
+                                  'ยินดีต้อนรับกลับมา',
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    color: Color(0xFF8A9BB5),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                SizedBox(height: maxHeight * 0.025),
+                                // ช่องอีเมล
                             TextFormField(
                               controller: _emailCtrl,
-                              decoration: InputDecoration(
-                                labelText: 'อีเมล',
-                                hintStyle: const TextStyle(
-                                  color: Color(0xFFA0B0C4),
-                                  fontSize: 15,
-                                ),
-                                filled: true,
-                                fillColor: const Color(0xFFF2F5F9),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                  borderSide: BorderSide.none,
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                  borderSide: const BorderSide(
-                                    color: Color(0xFFE4EAF0),
-                                    width: 1,
-                                  ),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                  borderSide: const BorderSide(
-                                    color: Color(0xFF7BAEE5),
-                                    width: 1.5,
-                                  ),
-                                ),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                  vertical: 18,
-                                ),
-                              ),
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'กรุณากรอกอีเมล';
-                                }
-                                return null;
-                              },
-                            ),
-                            const SizedBox(height: 14),
-
-                            // ช่องรหัสผ่าน
-                            TextFormField(
-                              controller: _passwordCtrl,
-                              obscureText: _obscurePassword,
+                              autovalidateMode:
+                                  AutovalidateMode.onUserInteraction,
                               onChanged: (_) {
                                 if (_loginError != null) {
                                   setState(() => _loginError = null);
                                 }
                               },
                               decoration: InputDecoration(
-                                labelText: 'รหัสผ่าน',
+                                labelText: 'อีเมล',
                                 hintStyle: const TextStyle(
                                   color: Color(0xFFA0B0C4),
                                   fontSize: 15,
+                                    ),
+                                    filled: true,
+                                    fillColor: const Color(0xFFF2F5F9),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(20),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(20),
+                                      borderSide: const BorderSide(
+                                        color: Color(0xFFE4EAF0),
+                                        width: 1,
+                                      ),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(20),
+                                      borderSide: const BorderSide(
+                                        color: Color(0xFF7BAEE5),
+                                        width: 1.5,
+                                      ),
+                                    ),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 20,
+                                      vertical: 18,
+                                    ),
                                 ),
-                                filled: true,
-                                fillColor: const Color(0xFFF2F5F9),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                  borderSide: BorderSide.none,
-                                ),
-                                enabledBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                  borderSide: const BorderSide(
-                                    color: Color(0xFFE4EAF0),
-                                    width: 1,
+                                validator: (value) {
+                                  return validateEmail(value);
+                                },
+                              ),
+                                const SizedBox(height: 14),
+
+                                // ช่องรหัสผ่าน
+                                TextFormField(
+                                  controller: _passwordCtrl,
+                                  obscureText: _obscurePassword,
+                                  onChanged: (_) {
+                                    if (_loginError != null) {
+                                      setState(() => _loginError = null);
+                                    }
+                                  },
+                                  decoration: InputDecoration(
+                                    labelText: 'รหัสผ่าน',
+                                    hintStyle: const TextStyle(
+                                      color: Color(0xFFA0B0C4),
+                                      fontSize: 15,
+                                    ),
+                                    filled: true,
+                                    fillColor: const Color(0xFFF2F5F9),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(20),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(20),
+                                      borderSide: const BorderSide(
+                                        color: Color(0xFFE4EAF0),
+                                        width: 1,
+                                      ),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(20),
+                                      borderSide: const BorderSide(
+                                        color: Color(0xFF7BAEE5),
+                                        width: 1.5,
+                                      ),
+                                    ),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 20,
+                                      vertical: 18,
+                                    ),
+                                    errorText: _loginError,
+                                    suffixIcon: IconButton(
+                                      icon: Icon(
+                                        _obscurePassword
+                                            ? Icons.visibility_off_rounded
+                                            : Icons.visibility_rounded,
+                                        color: const Color(0xFFA0B0C4),
+                                        size: 22,
+                                      ),
+                                      onPressed: () {
+                                        setState(() {
+                                          _obscurePassword = !_obscurePassword;
+                                        });
+                                      },
+                                    ),
                                   ),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                  borderSide: const BorderSide(
-                                    color: Color(0xFF7BAEE5),
-                                    width: 1.5,
-                                  ),
-                                ),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                  vertical: 18,
-                                ),
-                                errorText: _loginError,
-                                suffixIcon: IconButton(
-                                  icon: Icon(
-                                    _obscurePassword
-                                        ? Icons.visibility_off_rounded
-                                        : Icons.visibility_rounded,
-                                    color: const Color(0xFFA0B0C4),
-                                    size: 22,
-                                  ),
-                                  onPressed: () {
-                                    setState(() {
-                                      _obscurePassword = !_obscurePassword;
-                                    });
+                                  validator: (value) {
+                                    if (value == null || value.trim().isEmpty) {
+                                      return 'กรุณากรอกรหัสผ่าน';
+                                    }
+                                    return null;
                                   },
                                 ),
-                              ),
-                              validator: (value) {
-                                if (value == null || value.trim().isEmpty) {
-                                  return 'กรุณากรอกรหัสผ่าน';
-                                }
-                                return null;
-                              },
-                            ),
-                            SizedBox(height: maxHeight * 0.025),
-                            // ปุ่ม "เข้าสู่ระบบ"
-                            SizedBox(
-                              width: double.infinity,
-                              height: 56,
-                              child: ElevatedButton(
-                                onPressed: _isLoading
-                                    ? null
-                                    : () {
-                                        _restorePreviousEmail();
-                                        _handleLogin();
-                                      },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor:
-                                      const Color.fromRGBO(90, 129, 187, 1),
-                                  disabledBackgroundColor:
-                                      const Color.fromARGB(255, 55, 90, 143)
-                                          .withOpacity(0.6),
-                                  foregroundColor: Colors.white,
-                                  elevation: 4,
-                                  shadowColor:
-                                      const Color.fromARGB(255, 42, 80, 135)
-                                          .withOpacity(0.4),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(28),
-                                  ),
-                                ),
-                                child: const Text(
-                                  'เข้าสู่ระบบ',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 0.5,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-
-                            // ปุ่ม "สร้างบัญชี"
-                            SizedBox(
-                              width: double.infinity,
-                              height: 56,
-                              child: OutlinedButton(
-                                onPressed: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          const SignupScreen(),
+                                SizedBox(height: maxHeight * 0.025),
+                                // ปุ่ม "เข้าสู่ระบบ"
+                                SizedBox(
+                                  width: double.infinity,
+                                  height: 56,
+                                  child: ElevatedButton(
+                                    onPressed: _isLoading
+                                        ? null
+                                        : () {
+                                            _restorePreviousEmail();
+                                            _handleLogin();
+                                          },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor:
+                                          const Color.fromRGBO(90, 129, 187, 1),
+                                      disabledBackgroundColor:
+                                          const Color.fromARGB(255, 55, 90, 143)
+                                              .withOpacity(0.6),
+                                      foregroundColor: Colors.white,
+                                      elevation: 4,
+                                      shadowColor:
+                                          const Color.fromARGB(255, 42, 80, 135)
+                                              .withOpacity(0.4),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(28),
+                                      ),
                                     ),
-                                  );
-                                },
-                                style: OutlinedButton.styleFrom(
-                                  side: const BorderSide(
-                                    color: Color(0xFF7BAEE5),
-                                    width: 1.5,
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(28),
-                                  ),
-                                ),
-                                child: const Text(
-                                  'สร้างบัญชี',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: Color(0xFF3B7CC9),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            SizedBox(height: maxHeight * 0.02),
-
-                            // เส้นคั่น "หรือ"
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: Container(
-                                    height: 1,
-                                    color: const Color(0xFFDDE4ED),
-                                  ),
-                                ),
-                                const Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 16),
-                                  child: Text(
-                                    'หรือ',
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: Color(0xFFA0B0C4),
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Container(
-                                    height: 1,
-                                    color: const Color(0xFFDDE4ED),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: maxHeight * 0.02),
-
-                            // ปุ่ม "เข้าสู่ระบบด้วย Google"
-                            SizedBox(
-                              width: double.infinity,
-                              height: 54,
-                              child: OutlinedButton(
-                                onPressed: () {
-                                  _handleGoogleLogin();
-                                },
-                                style: OutlinedButton.styleFrom(
-                                  side: const BorderSide(
-                                    color: Color(0xFFDDE4ED),
-                                    width: 1,
-                                  ),
-                                  backgroundColor: Colors.white,
-                                  elevation: 1,
-                                  shadowColor: Colors.black.withOpacity(0.06),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(28),
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Image.asset(
-                                      'assets/google_icon.png',
-                                      width: 22,
-                                      height: 22,
-                                      errorBuilder: (_, __, ___) => const Icon(
-                                          Icons.g_mobiledata,
-                                          size: 28,
-                                          color: Color(0xFF4285F4)),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    const Text(
-                                      'เข้าสู่ระบบด้วย Google',
+                                    child: const Text(
+                                      'เข้าสู่ระบบ',
                                       style: TextStyle(
-                                        fontSize: 15,
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+
+                                // ปุ่ม "สร้างบัญชี"
+                                SizedBox(
+                                  width: double.infinity,
+                                  height: 56,
+                                  child: OutlinedButton(
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              const SignupScreen(),
+                                        ),
+                                      );
+                                    },
+                                    style: OutlinedButton.styleFrom(
+                                      side: const BorderSide(
+                                        color: Color(0xFF7BAEE5),
+                                        width: 1.5,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(28),
+                                      ),
+                                    ),
+                                    child: const Text(
+                                      'สร้างบัญชี',
+                                      style: TextStyle(
+                                        fontSize: 16,
                                         fontWeight: FontWeight.w600,
-                                        color: Color(0xFF3C4A5E),
+                                        color: Color(0xFF3B7CC9),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                SizedBox(height: maxHeight * 0.02),
+
+                                // เส้นคั่น "หรือ"
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Container(
+                                        height: 1,
+                                        color: const Color(0xFFDDE4ED),
+                                      ),
+                                    ),
+                                    const Padding(
+                                      padding:
+                                          EdgeInsets.symmetric(horizontal: 16),
+                                      child: Text(
+                                        'หรือ',
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: Color(0xFFA0B0C4),
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: Container(
+                                        height: 1,
+                                        color: const Color(0xFFDDE4ED),
                                       ),
                                     ),
                                   ],
                                 ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
+                                SizedBox(height: maxHeight * 0.02),
 
-                  // ลืมรหัสผ่าน ?
-                  Align(
-                    alignment: const Alignment(0, 0.95),
-                    child: TextButton(
-                      onPressed: () {
-                        forgetPassword();
-                      },
-                      style: TextButton.styleFrom(
-                        padding: EdgeInsets.zero,
-                        minimumSize: Size.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        splashFactory: NoSplash.splashFactory,
-                      ),
-                      child: const Text(
-                        'ลืมรหัสผ่าน ?',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Color(0xFF6B8DB0),
-                          decoration: TextDecoration.underline,
-                          decorationColor: Color(0xFF6B8DB0),
+                                // ปุ่ม "เข้าสู่ระบบด้วย Google"
+                                SizedBox(
+                                  width: double.infinity,
+                                  height: 54,
+                                  child: OutlinedButton(
+                                    onPressed: () {
+                                      _handleGoogleLogin();
+                                    },
+                                    style: OutlinedButton.styleFrom(
+                                      side: const BorderSide(
+                                        color: Color(0xFFDDE4ED),
+                                        width: 1,
+                                      ),
+                                      backgroundColor: Colors.white,
+                                      elevation: 1,
+                                      shadowColor:
+                                          Colors.black.withOpacity(0.06),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(28),
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Image.asset(
+                                          'assets/google_icon.png',
+                                          width: 22,
+                                          height: 22,
+                                          errorBuilder: (_, __, ___) =>
+                                              const Icon(Icons.g_mobiledata,
+                                                  size: 28,
+                                                  color: Color(0xFF4285F4)),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        const Text(
+                                          'เข้าสู่ระบบด้วย Google',
+                                          style: TextStyle(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w600,
+                                            color: Color(0xFF3C4A5E),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                  if (_isLoading || _isGoogleLoading)
-                    Positioned.fill(
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          const ModalBarrier(
-                            dismissible: false,
-                            color: Colors.black26,
+
+                      // ลืมรหัสผ่าน ?
+                      Align(
+                        alignment: const Alignment(0, 0.95),
+                        child: TextButton(
+                          onPressed: () {
+                            forgetPassword();
+                          },
+                          style: TextButton.styleFrom(
+                            padding: EdgeInsets.zero,
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            splashFactory: NoSplash.splashFactory,
                           ),
-                          Column(
-                            mainAxisSize: MainAxisSize.min,
+                          child: const Text(
+                            'ลืมรหัสผ่าน ?',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Color(0xFF6B8DB0),
+                              decoration: TextDecoration.underline,
+                              decorationColor: Color(0xFF6B8DB0),
+                            ),
+                          ),
+                        ),
+                      ),
+                      if (_isLoading || _isGoogleLoading)
+                        Positioned.fill(
+                          child: Stack(
+                            alignment: Alignment.center,
                             children: [
-                              Lottie.asset(
-                                'assets/lottie/loader_cat.json',
-                                width: 180,
-                                height: 180,
-                                repeat: true,
+                              const ModalBarrier(
+                                dismissible: false,
+                                color: Colors.black26,
                               ),
-                              const SizedBox(height: 2),
-                              const Text(
-                                'กำลังโหลด…',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                ),
+                              Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Lottie.asset(
+                                    'assets/lottie/loader_cat.json',
+                                    width: 180,
+                                    height: 180,
+                                    repeat: true,
+                                  ),
+                                  const SizedBox(height: 2),
+                                  const Text(
+                                    'กำลังโหลด…',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
-                        ],
-                      ),
-                    ),
-                ],
-              ),
-            ),
-          );
-        },
-      )),
+                        ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
     );
   }
 
