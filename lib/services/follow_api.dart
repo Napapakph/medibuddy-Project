@@ -375,14 +375,14 @@ class FollowApi {
 
   Future<void> removeFollower({
     String? accessToken,
-    required int followerId,
+    required int relationshipId,
   }) async {
     accessToken ??= await AuthManager.service.getAccessToken();
     if (accessToken == null) throw Exception('No access token');
 
     final res = await _dio.delete(
       _followersRemovePath,
-      queryParameters: {'followerId': followerId},
+      queryParameters: {'relationshipId': relationshipId},
       options: _authOptions(accessToken),
     );
     _ensureSuccess(res, 'Remove follower failed');

@@ -262,8 +262,7 @@ class _FollowerScreenState extends State<FollowerScreen> {
                                     onTap: saving
                                         ? null
                                         : () async {
-                                            final file =
-                                                await picker.pickImage(
+                                            final file = await picker.pickImage(
                                               source: ImageSource.gallery,
                                             );
                                             if (file == null) return;
@@ -462,18 +461,18 @@ class _FollowerScreenState extends State<FollowerScreen> {
     );
   }
 
-  Future<void> _deleteFollower(int followerId) async {
+  Future<void> _deleteFollower(int relationshipId) async {
     try {
       final accessToken = await AuthManager.service.getAccessToken();
       if (accessToken == null) throw Exception('No access token');
 
       await _followApi.removeFollower(
         accessToken: accessToken,
-        followerId: followerId,
+        relationshipId: relationshipId,
       );
 
       setState(() {
-        _followers.removeWhere((f) => _readFollowerId(f) == followerId);
+        _followers.removeWhere((f) => _readFollowerId(f) == relationshipId);
       });
 
       if (mounted) {

@@ -542,6 +542,20 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
     final subtitle =
         tradeName.isNotEmpty && tradeName != title ? tradeName : '';
 
+    String _mealLabel(Map<String, dynamic> log) {
+      final mealType = _readString(log['mealType']);
+      switch (mealType) {
+        case 'BEFORE_MEAL':
+          return 'ก่อนอาหาร';
+        case 'AFTER_MEAL':
+          return 'หลังอาหาร';
+        case 'DURING_MEAL':
+          return 'ระหว่างอาหาร';
+        default:
+          return 'ไม่ระบุ';
+      }
+    }
+
     final pictureOption = _readString(medicineList['pictureOption']);
     final mediPicture = _readString(medicine['mediPicture']);
     final imagePath = pictureOption.isNotEmpty ? pictureOption : mediPicture;
@@ -613,9 +627,9 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
                       ),
                     ],
                     const SizedBox(height: 6),
-                    const Text(
-                      'ก่อนอาหาร',
-                      style: TextStyle(
+                    Text(
+                      'มื้อ: ${_mealLabel(log)}',
+                      style: const TextStyle(
                         fontSize: 16,
                         color: Color.fromARGB(255, 190, 98, 143),
                         fontWeight: FontWeight.w600,

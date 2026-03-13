@@ -613,7 +613,7 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
           ),
           iconTheme: const IconThemeData(color: Color(0xFF5A81BB)),
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_rounded),
+            icon: const Icon(Icons.arrow_back_rounded),
             onPressed: () async {
               final confirm = await _confirmExit();
               if (confirm && mounted) {

@@ -934,8 +934,11 @@ class _RemindListScreenState extends State<RemindListScreen> {
         ),
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_rounded,
-              color: Color(0xFF5A81BB)),
+          icon: const Icon(
+            Icons.arrow_back_rounded,
+            size: 20,
+            color: Color(0xFF5A81BB),
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         title: const Text(
