@@ -390,8 +390,8 @@ Future<void> main() async {
     }
 
     // ✅ ONLY display flnp.show() when the app is in the FOREGROUND where OS does not show banners automatically.
-    final titleText = formattedPayload['title'] ?? 'MediBuddy Reminder';
-    final bodyText = formattedPayload['body'] ?? 'Time to take your medication';
+    final titleText = formattedPayload['title'];
+    final bodyText = formattedPayload['body'];
     final jsonString = jsonEncode(formattedPayload);
 
     await flnp.show(
