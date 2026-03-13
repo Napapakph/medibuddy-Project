@@ -50,30 +50,6 @@ class _ForgetPassword extends State<ForgetPassword> {
         final authService = CustomAuthService();
         await authService.resetPassword(widget.token!, _password.text.trim());
       }
-      // ระบบเก่า Supabase
-      /*else {
-        
-        // ignore: dead_code
-        final supabase = Supabase.instance.client;
-
-        // ✅ กันเคสเข้าหน้านี้แบบไม่ได้มาจากลิงก์รีเซ็ต
-        final session = supabase.auth.currentSession;
-        if (session == null) {
-          throw const AuthException(
-              'ลิงก์รีเซ็ตรหัสผ่านไม่ถูกต้องหรือหมดอายุ กรุณากด "ลืมรหัสผ่าน" ใหม่');
-        }
-        // ✅ Sync with AuthManager
-        AuthManager.accessToken = session.accessToken;
-
-        // ✅ ตั้งรหัสผ่านใหม่
-        await supabase.auth.updateUser(
-          UserAttributes(password: _password.text.trim()),
-        );
-
-        // ✅ เพื่อความชัวร์: sign out แล้วให้ล็อกอินใหม่ด้วยรหัสใหม่
-        await supabase.auth.signOut();
-       
-      } */
 
       if (!mounted) return;
       setState(() => _isLoading = false);
@@ -98,7 +74,7 @@ class _ForgetPassword extends State<ForgetPassword> {
         toastBuilder: (_) {
           return SafeArea(
             child: Padding(
-              padding: const EdgeInsets.only(top: 5),
+              padding: const EdgeInsets.only(top: 5, left: 5, right: 5),
               child: Material(
                 color: Colors.transparent,
                 child: Container(
