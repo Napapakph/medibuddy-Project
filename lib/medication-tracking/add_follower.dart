@@ -214,6 +214,20 @@ class _AddFollowerScreenState extends State<AddFollowerScreen> {
 
   Widget _buildFoundAccount(Map<String, dynamic> user) {
     final email = (user['email'] ?? user['mail'] ?? '').toString();
+    final statusRaw = (user['status'] ??
+            user['followStatus'] ??
+            user['relationshipStatus'] ??
+            '')
+        .toString()
+        .trim();
+    final status = statusRaw.toUpperCase();
+    final isStatusApproved = status == 'APPROVED';
+    final isStatusPending = status == 'PENDING';
+    final statusMessage = isStatusApproved
+        ? 'บัญชีนี้เป็นผู้ติดตามแล้ว'
+        : isStatusPending
+            ? 'ส่งคำขอแล้ว รอการตอบรับคำเชิญ'
+            : null;
     final rawName =
         (user['profileName'] ?? user['name'] ?? user['displayName'] ?? '')
             .toString();
@@ -222,9 +236,11 @@ class _AddFollowerScreenState extends State<AddFollowerScreen> {
         : (email.isNotEmpty ? email : 'ไม่ระบุชื่อ');
     final avatarUrl = _readAvatarUrl(user);
     final normalizedEmail = email.toString().toLowerCase();
-    final isInvited = (user['isInvited'] == true) ||
+    final isInvited = isStatusPending ||
+        (user['isInvited'] == true) ||
         _sentInviteEmails.contains(normalizedEmail);
-    final isAlreadyFollower = _alreadyFollowerEmails.contains(normalizedEmail);
+    final isAlreadyFollower =
+        isStatusApproved || _alreadyFollowerEmails.contains(normalizedEmail);
 
     return InkWell(
       onTap: isAlreadyFollower ? null : () => _openPermissionScreen(user),
@@ -263,7 +279,19 @@ class _AddFollowerScreenState extends State<AddFollowerScreen> {
                         color: Colors.black54,
                       ),
                     ),
-                  if (isAlreadyFollower)
+                  if (statusMessage != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        statusMessage,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Color.fromARGB(255, 180, 44, 94),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  if (statusMessage == null && isAlreadyFollower)
                     const Padding(
                       padding: EdgeInsets.only(top: 4),
                       child: Text(
@@ -275,7 +303,7 @@ class _AddFollowerScreenState extends State<AddFollowerScreen> {
                         ),
                       ),
                     )
-                  else if (isInvited)
+                  else if (statusMessage == null && isInvited)
                     const Padding(
                       padding: EdgeInsets.only(top: 4),
                       child: Text(

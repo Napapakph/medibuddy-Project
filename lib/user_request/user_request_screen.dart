@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 //import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/request_api.dart';
 import '../services/auth_manager.dart';
@@ -34,6 +35,45 @@ class _UserRequestScreenState extends State<UserRequestScreen> {
 
   File? _pictureFile;
   bool _submitting = false;
+  static const int _maxImageBytes = 5 * 1024 * 1024;
+
+  String _formatBytes(int bytes) {
+    final mb = bytes / (1024 * 1024);
+    return '${mb.toStringAsFixed(2)} MB';
+  }
+
+  Future<File> _resizeImageIfNeeded(File file) async {
+    final originalBytes = await file.length();
+    debugPrint(
+      '🖼️ image size before resize: ${_formatBytes(originalBytes)} ($originalBytes bytes)',
+    );
+
+    if (originalBytes <= _maxImageBytes) {
+      return file;
+    }
+
+    var targetPath =
+        file.path.replaceFirst(RegExp(r'\.[a-zA-Z0-9]+$'), '_resized.jpg');
+    if (targetPath == file.path) {
+      targetPath = '${file.path}_resized.jpg';
+    }
+
+    final XFile? result = await FlutterImageCompress.compressAndGetFile(
+      file.absolute.path,
+      targetPath,
+      quality: 85,
+      minWidth: 1920,
+      minHeight: 1920,
+      format: CompressFormat.jpeg,
+    );
+
+    final outputFile = result != null ? File(result.path) : file;
+    final outputBytes = await outputFile.length();
+    debugPrint(
+      '🖼️ image size after resize: ${_formatBytes(outputBytes)} ($outputBytes bytes)',
+    );
+    return outputFile;
+  }
 
   @override
   void dispose() {
@@ -60,13 +100,13 @@ class _UserRequestScreenState extends State<UserRequestScreen> {
     final file = File(image.path);
     final exists = file.existsSync();
     debugPrint('🖼️ picked file path=${file.path} exists=$exists');
-    if (exists) {
-      final size = file.lengthSync();
-      debugPrint('🖼️ picked file size=$size');
-    }
+    if (!exists) return;
+
+    final resizedFile = await _resizeImageIfNeeded(file);
+    if (!mounted) return;
 
     setState(() {
-      _pictureFile = file;
+      _pictureFile = resizedFile;
     });
   }
 

@@ -147,7 +147,24 @@ class FollowApi {
         final mapped = users
             .map((item) {
               if (item is Map) {
-                return Map<String, dynamic>.from(item);
+                final normalized = Map<String, dynamic>.from(item);
+                final email = (normalized['email'] ??
+                        normalized['mail'] ??
+                        normalized['userEmail'])
+                    ?.toString()
+                    .trim();
+                if (email != null && email.isNotEmpty) {
+                  normalized['email'] = email;
+                }
+                final statusRaw = normalized['status'] ??
+                    normalized['followStatus'] ??
+                    normalized['relationshipStatus'];
+                if (statusRaw != null &&
+                    statusRaw.toString().trim().isNotEmpty) {
+                  normalized['status'] =
+                      statusRaw.toString().trim().toUpperCase();
+                }
+                return normalized;
               }
               if (item is String && item.trim().isNotEmpty) {
                 return {'email': item.trim()};
