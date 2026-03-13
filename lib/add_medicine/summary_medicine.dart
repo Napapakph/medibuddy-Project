@@ -7,6 +7,7 @@ import 'package:medibuddy/widgets/medicine_step_timeline.dart';
 import 'package:medibuddy/services/medicine_api.dart';
 import '../search_medicine/detail_medicine.dart';
 import '../add_medicine/medicine_list_screen.dart';
+import '../set_remind/setRemind_screen.dart';
 import '../OCR/ocr_global.dart';
 import 'package:bot_toast/bot_toast.dart';
 
@@ -240,11 +241,17 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
         },
       );
 
-      Navigator.pushReplacement(
+      if (isEditMode) {
+        Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-              builder: (context) =>
-                  ListMedicinePage(profileId: widget.profileId)));
+            builder: (context) => ListMedicinePage(profileId: widget.profileId),
+          ),
+        );
+        return;
+      }
+
+      await _goToSetReminder(savedItem);
     } catch (e) {
       if (!mounted) return;
       BotToast.showCustomNotification(
@@ -288,6 +295,64 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
       if (!mounted) return;
       setState(() => _saving = false);
     }
+  }
+
+  Future<void> _goToSetReminder(MedicineItem savedItem) async {
+    List<MedicineItem> medicines = [];
+    try {
+      medicines = await MedicineApi().fetchProfileMedicineList(
+        profileId: widget.profileId,
+      );
+    } catch (_) {
+      medicines = [];
+    }
+
+    MedicineItem initialMedicine = savedItem;
+    if (medicines.isNotEmpty) {
+      final matched = medicines.where((item) {
+        if (savedItem.mediListId > 0) {
+          return item.mediListId == savedItem.mediListId;
+        }
+        if (savedItem.id.isNotEmpty) {
+          return item.id == savedItem.id;
+        }
+        return false;
+      }).toList();
+      if (matched.isNotEmpty) {
+        initialMedicine = matched.first;
+      }
+    }
+
+    final list = medicines.isNotEmpty ? medicines : [savedItem];
+    final hasInitial = list.any((item) {
+      if (initialMedicine.mediListId > 0) {
+        return item.mediListId == initialMedicine.mediListId;
+      }
+      if (initialMedicine.id.isNotEmpty) {
+        return item.id == initialMedicine.id;
+      }
+      return false;
+    });
+    if (!hasInitial) {
+      list.add(initialMedicine);
+    }
+
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => SetRemindScreen(
+          medicines: list,
+          initialMedicine: initialMedicine,
+        ),
+      ),
+    );
+    if (!mounted) return;
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ListMedicinePage(profileId: widget.profileId),
+      ),
+    );
   }
 
   String toFullImageUrl(String raw) {

@@ -290,7 +290,7 @@ class _AlarmScreenState extends State<AlarmScreen> {
     s = s.replaceAll('ได้เวลาทานยา ', '').trim();
     // English prefix
     if (s.startsWith("It's time to take ")) {
-      s = s.substring("It's time to take ".length).trim();
+      s = s.substring("ได้เวลาทานยา ".length).trim();
     }
     // English trailing " for <profileName>."
     final trailingMatch = RegExp(r'\s+for\s+.+\.$').firstMatch(s);

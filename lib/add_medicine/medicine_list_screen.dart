@@ -272,7 +272,7 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
         return AlertDialog(
           title: const Text('ยืนยันที่จะลบรายการยาใช่มั้ย'),
           content: const Text(
-              'ข้อมูลประวัติการรับประทานยาทั้งหมดที่เกี่ยวข้องจะหายไป ต้องการลบจริงๆใช่มั้ย'),
+              'การลบครั้งนี้จะทำให้ข้อมูลประวัติการรับประทานยาทั้งหมดหายไปอย่างถาวร\n\nยืนยันการลบหรือไม่?'),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, true),
@@ -812,7 +812,6 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
             itemBuilder: (context) => [
               PopupMenuItem(
                 value: _SortOption.defaultOrder,
-                
                 child: Row(
                   children: [
                     Icon(
@@ -838,7 +837,6 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
               ),
               PopupMenuItem(
                 value: _SortOption.byName,
-                
                 child: Row(
                   children: [
                     Icon(

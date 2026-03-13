@@ -293,6 +293,15 @@ class _Home extends State<Home> {
 
     try {
       final token = await AuthManager.service.getAccessToken();
+      if (token == null || token.isEmpty) {
+        if (!mounted) return;
+        setState(() {
+          if (pageIndex == _currentPageIndex) {
+            _error = 'Please login again (missing access token).';
+          }
+        });
+        return;
+      }
       final response = await _regimenApi.getRegimensByProfileId(
         profileId: profileId,
         accessToken: token,

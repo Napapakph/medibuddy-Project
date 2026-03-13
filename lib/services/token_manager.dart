@@ -16,6 +16,7 @@ class TokenManager {
   static String? _accessToken;
   static String? _refreshToken;
   static DateTime? _expiresAt;
+  static bool _sessionExpiredNotified = false;
 
   // Single-flight refresh mutex
   static Future<void>? _refreshFuture;
@@ -67,6 +68,7 @@ class TokenManager {
   }) async {
     _accessToken = accessToken;
     AuthManager.accessToken = accessToken; // Sync with legacy global
+    _sessionExpiredNotified = false;
 
     _expiresAt = expiresAt ?? _getExpirationFromJwt(accessToken);
 
@@ -121,6 +123,9 @@ class TokenManager {
 
   /// Refreshes token if not already refreshing (Single-Flight Pattern)
   static Future<void> refreshIfNeeded({bool force = false}) async {
+    if (_sessionExpiredNotified) {
+      return;
+    }
     if (_refreshFuture != null) {
       debugPrint('⏳ TokenManager: Waiting for existing refresh to complete...');
       await _refreshFuture;
@@ -145,6 +150,7 @@ class TokenManager {
       debugPrint(
           '❌ TokenManager: No refresh token available. Clearing session.');
       await clear();
+      _notifySessionExpiredOnce();
       return;
     }
 
@@ -185,8 +191,14 @@ class TokenManager {
     } catch (e) {
       debugPrint('❌ TokenManager: Refresh failed: $e');
       await clear(); // Clear tokens to force re-login
-      _notifySessionExpired();
+      _notifySessionExpiredOnce();
     }
+  }
+
+  static void _notifySessionExpiredOnce() {
+    if (_sessionExpiredNotified) return;
+    _sessionExpiredNotified = true;
+    _notifySessionExpired();
   }
 
   /// Safely invoke the session-expired callback on the next frame
