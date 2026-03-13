@@ -130,6 +130,7 @@ class OcrResultPage extends StatefulWidget {
 
 class _OcrResultPageState extends State<OcrResultPage> {
   late final TextEditingController _controller;
+  final ScrollController _textScrollController = ScrollController();
 
   // สร้าง controller พร้อมเอาข้อความจาก OCR มาใส่เริ่มต้น
   @override
@@ -144,6 +145,7 @@ class _OcrResultPageState extends State<OcrResultPage> {
   void dispose() {
     globalOcrImage = null;
     _controller.dispose();
+    _textScrollController.dispose();
     super.dispose();
   }
 
@@ -239,24 +241,47 @@ class _OcrResultPageState extends State<OcrResultPage> {
                 child: Text(
                   'ชื่อยา',
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 16,
                     color: Colors.black54,
                   ),
                 ),
               ),
               const SizedBox(height: 8),
-              TextField(
-                controller: _controller,
-                maxLines: 3,
-                decoration: InputDecoration(
-                  filled: true,
-                  fillColor: const Color.fromARGB(255, 255, 255, 255),
-                  hintText: 'ผลลัพธ์ที่สแกนได้จะแสดงที่นี่',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final textStyle = DefaultTextStyle.of(context).style;
+                  final painter = TextPainter(
+                    text: TextSpan(
+                      text: _controller.text,
+                      style: textStyle,
+                    ),
+                    maxLines: 3,
+                    textDirection: Directionality.of(context),
+                  )..layout(maxWidth: constraints.maxWidth);
+                  final showScrollbar = painter.didExceedMaxLines;
+
+                  return Scrollbar(
+                    controller: _textScrollController,
+                    thumbVisibility: showScrollbar,
+                    radius: const Radius.circular(12),
+                    thickness: 6,
+                    child: TextField(
+                      controller: _controller,
+                      scrollController: _textScrollController,
+                      maxLines: 5,
+                      onChanged: (_) => setState(() {}),
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: const Color.fromARGB(255, 255, 255, 255),
+                        hintText: 'ผลลัพธ์ที่สแกนได้จะแสดงที่นี่',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
               const SizedBox(height: 16),
               SizedBox(
