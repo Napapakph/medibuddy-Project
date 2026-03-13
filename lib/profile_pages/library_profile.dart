@@ -9,6 +9,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:math';
 import '../services/auth_manager.dart'; // Import AuthManager
 import '../services/app_state.dart';
+import 'package:medibuddy/widgets/toast_helper.dart';
 
 class LibraryProfile extends StatefulWidget {
   const LibraryProfile({
@@ -69,9 +70,7 @@ class _LibraryProfileState extends State<LibraryProfile> {
       final token = await _getToken();
       if (token == null) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Session หมดอายุ กรุณาเข้าสู่ระบบใหม่')),
-        );
+        showToast('Session หมดอายุ กรุณาเข้าสู่ระบบใหม่');
         return;
       }
 
@@ -106,9 +105,7 @@ class _LibraryProfileState extends State<LibraryProfile> {
       AppState.instance.setCachedProfiles(loaded);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('โหลดโปรไฟล์ไม่สำเร็จ: $e')),
-      );
+      showToast('โหลดโปรไฟล์ไม่สำเร็จ: $e');
     } finally {
       if (!mounted) return;
       setState(() => _loading = false);
@@ -812,9 +809,7 @@ class _LibraryProfileState extends State<LibraryProfile> {
       });
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('ลบไม่สำเร็จ: $e')),
-      );
+      showToast('ลบไม่สำเร็จ: $e');
     } finally {
       if (!mounted) return;
       setState(() => _loading = false);

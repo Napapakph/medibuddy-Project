@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 //import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/request_api.dart';
 import '../services/auth_manager.dart';
+import 'package:medibuddy/widgets/toast_helper.dart';
 
 class UserRequestScreen extends StatefulWidget {
   const UserRequestScreen({super.key});
@@ -48,9 +49,7 @@ class _UserRequestScreenState extends State<UserRequestScreen> {
   Future<void> _pickImage(ImageSource source) async {
     if (kIsWeb) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('ไม่รองรับการอัปโหลดรูปบนเว็บ')),
-      );
+      showToast('ไม่รองรับการอัปโหลดรูปบนเว็บ');
       return;
     }
 
@@ -97,9 +96,7 @@ class _UserRequestScreenState extends State<UserRequestScreen> {
     final token = _getToken();
     if (token == null || token.isEmpty) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('กรุณาเข้าสู่ระบบใหม่')),
-      );
+      showToast('กรุณาเข้าสู่ระบบใหม่');
       return;
     }
 
@@ -123,15 +120,11 @@ class _UserRequestScreenState extends State<UserRequestScreen> {
       );
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('ส่งคำขอสำเร็จ')),
-      );
+      showToast('ส่งคำขอสำเร็จ');
       Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('ส่งไม่สำเร็จ: $e')),
-      );
+      showToast('ส่งไม่สำเร็จ: $e');
     } finally {
       if (mounted) setState(() => _submitting = false);
     }

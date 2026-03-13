@@ -11,6 +11,7 @@ import 'ocr_result_page.dart';
 import 'ocr_text_service.dart';
 import 'tutorial_dialog.dart';
 import '../Model/medicine_model.dart';
+import 'package:medibuddy/widgets/toast_helper.dart';
 
 class CameraOcrPage extends StatefulWidget {
   final MedicineDraft draft;
@@ -53,7 +54,7 @@ class _CameraOcrPageState extends State<CameraOcrPage> {
 
   void _snack(String msg) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    showToast(msg);
   }
 
   // ---------- lifecycle ----------

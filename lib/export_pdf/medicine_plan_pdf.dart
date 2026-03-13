@@ -9,6 +9,7 @@ import 'package:medibuddy/services/regimen_api.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import 'package:medibuddy/widgets/toast_helper.dart';
 
 class MedicationPlanScreen extends StatefulWidget {
   final int profileId;
@@ -337,9 +338,7 @@ class _MedicationPlanScreenState extends State<MedicationPlanScreen> {
   Future<void> _exportPdf() async {
     if (_exporting) return;
     if (_displayGroups.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('ไม่มีข้อมูลสำหรับส่งออก')),
-      );
+      showToast('ไม่มีข้อมูลสำหรับส่งออก');
       return;
     }
 
@@ -352,9 +351,7 @@ class _MedicationPlanScreenState extends State<MedicationPlanScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('ส่งออกไม่สำเร็จ: $e')),
-      );
+      showToast('ส่งออกไม่สำเร็จ: $e');
     } finally {
       if (mounted) setState(() => _exporting = false);
     }

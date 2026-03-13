@@ -5,6 +5,7 @@ import 'package:medibuddy/services/regimen_api.dart';
 import 'setFuctionRemind.dart';
 import 'setRemind_screen.dart';
 import 'package:lottie/lottie.dart';
+import 'package:medibuddy/widgets/toast_helper.dart';
 
 class _ReminderPlanStore {
   static final Map<String, List<ReminderPlan>> _plansByMedicine = {};
@@ -568,9 +569,7 @@ class _RemindListScreenState extends State<RemindListScreen> {
     } catch (e) {
       if (mounted) Navigator.of(context, rootNavigator: true).pop();
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('❌ โหลดข้อมูลไม่สำเร็จ: $e')),
-      );
+      showToast('❌ โหลดข้อมูลไม่สำเร็จ: $e');
       return;
     }
 
@@ -677,9 +676,7 @@ class _RemindListScreenState extends State<RemindListScreen> {
         _deletingPlanIds.remove(plan.id);
         _loadPlans();
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('ลบเฉพาะในเครื่อง (ยังไม่ sync)')),
-      );
+      showToast('ลบเฉพาะในเครื่อง (ยังไม่ sync)');
       return;
     }
 
@@ -696,15 +693,11 @@ class _RemindListScreenState extends State<RemindListScreen> {
         }
         _loadPlans();
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('✅ ลบแจ้งเตือนสำเร็จ')),
-      );
+      showToast('✅ ลบแจ้งเตือนสำเร็จ');
     } catch (e) {
       if (!mounted) return;
       setState(() => _deletingPlanIds.remove(plan.id));
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('❌ ลบไม่สำเร็จ: $e')),
-      );
+      showToast('❌ ลบไม่สำเร็จ: $e');
     }
   }
 

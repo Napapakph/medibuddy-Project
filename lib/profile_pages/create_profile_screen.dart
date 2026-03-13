@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import '../services/profile_api.dart';
 import '../services/auth_manager.dart'; // Import
 import '../OCR/tutorial_dialog.dart';
+import 'package:medibuddy/widgets/toast_helper.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -207,12 +208,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           .getAccessToken(); // ✅ Use AuthManager
                                       if (token == null) {
                                         if (!mounted) return;
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          const SnackBar(
-                                            content: Text(
-                                                'Session หมดอายุ กรุณาเข้าสู่ระบบใหม่'),
-                                          ),
+                                        showToast(
+                                          'Session หมดอายุ กรุณาเข้าสู่ระบบใหม่',
                                         );
                                         return;
                                       }
@@ -248,12 +245,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       if (!mounted) return;
                                     } catch (e) {
                                       if (!mounted) return;
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                              'บันทึกลง DB ไม่สำเร็จ แต่จะไปต่อ: $e'),
-                                        ),
+                                      showToast(
+                                        'บันทึกลง DB ไม่สำเร็จ แต่จะไปต่อ: $e',
                                       );
                                     } finally {
                                       if (!mounted) return;
@@ -404,12 +397,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     if (!_isSupportedImage(file)) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content:
-              Text('ไฟล์รูปนี้ยังไม่รองรับ กรุณาเลือกรูปเป็น JPG/PNG/WebP'),
-        ),
-      );
+      showToast('ไฟล์รูปนี้ยังไม่รองรับ กรุณาเลือกรูปเป็น JPG/PNG/WebP');
       return;
     }
     // ถ้าเลือกภาพได้ → อัปเดต state
@@ -419,8 +407,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       profileImageUrl = image.path; // (optional) เก็บ path
     });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('เปลี่ยนรูปโปรไฟล์สำเร็จ')),
-    );
+    showToast('เปลี่ยนรูปโปรไฟล์สำเร็จ');
   }
 }

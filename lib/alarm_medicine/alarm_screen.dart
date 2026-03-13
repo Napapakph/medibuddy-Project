@@ -9,6 +9,7 @@ import 'package:medibuddy/services/app_route_observer.dart';
 import 'package:medibuddy/main.dart' show navigatorKey;
 import 'package:medibuddy/services/app_state.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:medibuddy/widgets/toast_helper.dart';
 
 class AlarmScreen extends StatefulWidget {
   final Map<String, dynamic>? payload;
@@ -516,9 +517,7 @@ class _AlarmScreenState extends State<AlarmScreen> {
 
     final logIds = _extractLogIds();
     if (logIds.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Missing logId in notification payload')),
-      );
+      showToast('Missing logId in notification payload');
       return;
     }
 
@@ -599,9 +598,7 @@ class _AlarmScreenState extends State<AlarmScreen> {
       setState(() {
         _submitting = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to $responseStatus: $e')),
-      );
+      showToast('Failed to $responseStatus: $e');
     }
   }
 

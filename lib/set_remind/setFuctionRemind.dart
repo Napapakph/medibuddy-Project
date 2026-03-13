@@ -221,6 +221,7 @@ Widget type_frequency({
   required ValueChanged<DateTime> onRegimenStartDateChanged,
   DateTime? regimenEndDate,
   ValueChanged<DateTime?>? onRegimenEndDateChanged,
+  String? endDateError,
 }) {
   final hasMedicines = medicines.isNotEmpty;
   final image = buildMedicineImage(selectedMedicine?.imagePath ?? '');
@@ -473,6 +474,17 @@ Widget type_frequency({
           ],
         ),
       ),
+      if (endDateError != null) ...[
+        const SizedBox(height: 6),
+        Text(
+          endDateError,
+          style: const TextStyle(
+            color: Colors.red,
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
 
       const SizedBox(height: 8),
 

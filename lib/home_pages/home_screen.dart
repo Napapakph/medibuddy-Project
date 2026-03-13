@@ -14,6 +14,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../add_medicine/create_medicine_profile.dart';
 import '../services/auth_manager.dart'; // Import
 import '../services/profile_api.dart';
+import 'package:medibuddy/widgets/toast_helper.dart';
 
 class Home extends StatefulWidget {
   final ProfileModel? selectedProfile;
@@ -272,9 +273,7 @@ class _Home extends State<Home> {
           _loading = false;
           _isLoading = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text(message)),
-        );
+        showToast(message);
       } else {
         _error = message;
       }
@@ -323,9 +322,7 @@ class _Home extends State<Home> {
           _error = message;
         }
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      showToast(message);
     } finally {
       if (mounted && pageIndex == _currentPageIndex) {
         setState(() {

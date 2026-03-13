@@ -5,6 +5,7 @@ import 'package:medibuddy/services/auth_manager.dart'; // Import AuthManager
 import 'package:medibuddy/services/authen_api.dart'; // Import CustomAuthService
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:bot_toast/bot_toast.dart';
+import 'package:medibuddy/widgets/toast_helper.dart';
 
 class ForgetPassword extends StatefulWidget {
   final String? token; // ✅ Token จาก Deep Link
@@ -30,9 +31,7 @@ class _ForgetPassword extends State<ForgetPassword> {
 
   Future<void> _handleResetPassword() async {
     if (!_formKey.currentState!.validate()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('กรุณากรอกข้อมูลให้ครบถ้วน')),
-      );
+      showToast('กรุณากรอกข้อมูลให้ครบถ้วน');
       return;
     }
 
@@ -62,9 +61,7 @@ class _ForgetPassword extends State<ForgetPassword> {
     } on AuthException catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message)),
-      );
+      showToast(e.message);
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);

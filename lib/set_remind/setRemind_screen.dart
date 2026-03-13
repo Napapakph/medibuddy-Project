@@ -3,6 +3,7 @@ import 'package:medibuddy/Model/medicine_model.dart';
 
 import '../services/regimen_api.dart';
 import 'setFuctionRemind.dart';
+import 'package:medibuddy/widgets/toast_helper.dart';
 
 class SetRemindScreen extends StatefulWidget {
   final List<MedicineItem> medicines;
@@ -53,6 +54,7 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
 
   bool _saving = false;
   bool _showWeekdayError = false;
+  String? _endDateError;
 
   @override
   void initState() {
@@ -68,6 +70,7 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
 
     if (widget.initialPlan != null) {
       _applyInitialPlan(widget.initialPlan!);
+      _syncEndDateError();
     } else {
       _syncDoseCount(_timesPerDay);
     }
@@ -189,6 +192,18 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
     setState(() => _durationValue = parsed < 1 ? 1 : parsed);
   }
 
+  bool _isEndDateInvalid(DateTime startDate, DateTime? endDate) {
+    if (endDate == null) return false;
+    final start = DateTime(startDate.year, startDate.month, startDate.day);
+    final end = DateTime(endDate.year, endDate.month, endDate.day);
+    return end.isBefore(start);
+  }
+
+  void _syncEndDateError() {
+    final invalid = _isEndDateInvalid(_regimenStartDate, _regimenEndDate);
+    _endDateError = invalid ? 'วันสิ้นสุดต้องไม่น้อยกว่าวันเริ่มต้น' : null;
+  }
+
   void _setFrequencyMode(FrequencyMode mode) {
     setState(() {
       _frequencyMode = mode;
@@ -202,6 +217,15 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
   }
 
   void _nextStep() {
+    if (_isEndDateInvalid(_regimenStartDate, _regimenEndDate)) {
+      setState(() {
+        _endDateError = 'วันสิ้นสุดต้องไม่น้อยกว่าวันเริ่มต้น';
+      });
+      return;
+    } else if (_endDateError != null) {
+      setState(() => _endDateError = null);
+    }
+
     if (_stepIndex == 0) {
       if (_frequencyPattern == FrequencyPattern.someDays &&
           _selectedWeekdays.isEmpty) {
@@ -247,40 +271,30 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
 
     final selected = _selectedMedicine;
     if (selected == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('กรุณาเลือกรายการยา')),
-      );
+      showToast('กรุณาเลือกรายการยา');
       return;
     }
 
     if (selected.mediListId <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('ไม่พบ mediListId ของรายการยานี้')),
-      );
+      showToast('ไม่พบ mediListId ของรายการยานี้');
       return;
     }
 
     if (_doses.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('กรุณากำหนดเวลาอย่างน้อย 1 เวลา')),
-      );
+      showToast('กรุณากำหนดเวลาอย่างน้อย 1 เวลา');
       return;
     }
 
     if (_frequencyPattern == FrequencyPattern.someDays &&
         _selectedWeekdays.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('กรุณาเลือกวันอย่างน้อย 1 วัน')),
-      );
+      showToast('กรุณาเลือกวันอย่างน้อย 1 วัน');
       return;
     }
 
     if (_frequencyPattern == FrequencyPattern.everyInterval) {
       final interval = intervalDaysFrom(_everyCount, _everyUnit);
       if (interval < 1) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('ช่วงวันต้องมากกว่า 0')),
-        );
+        showToast('ช่วงวันต้องมากกว่า 0');
         return;
       }
     }
@@ -350,20 +364,14 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            hasRegimenId ? '✅ อัปเดตข้อมูลสำเร็จ' : '✅ บันทึกข้อมูลสำเร็จ',
-          ),
-        ),
+      showToast(
+        hasRegimenId ? '✅ อัปเดตข้อมูลสำเร็จ' : '✅ บันทึกข้อมูลสำเร็จ',
       );
 
       Navigator.pop(context, true);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('❌ บันทึกไม่สำเร็จ: $e')),
-      );
+      showToast('❌ บันทึกไม่สำเร็จ: $e');
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -524,17 +532,20 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
           setState(() => _durationUnit = value);
         },
         onAddMedicine: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('ฟีเจอร์เพิ่มยากำลังพัฒนา')),
-          );
+          showToast('ฟีเจอร์เพิ่มยากำลังพัฒนา');
         },
         regimenStartDate: _regimenStartDate,
-        onRegimenStartDateChanged: (date) =>
-            setState(() => _regimenStartDate = date),
+        onRegimenStartDateChanged: (date) {
+          setState(() {
+            _regimenStartDate = date;
+            _syncEndDateError();
+          });
+        },
         regimenEndDate: _regimenEndDate,
         onRegimenEndDateChanged: (date) {
           setState(() {
             _regimenEndDate = date;
+            _syncEndDateError();
             if (date != null) {
               _durationMode = DurationMode.custom;
               // Calculate duration in days, update UI
@@ -548,6 +559,7 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
             }
           });
         },
+        endDateError: _endDateError,
       ),
       detail_time(
         context: context,

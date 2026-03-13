@@ -6,6 +6,7 @@ import 'package:medibuddy/services/auth_manager.dart'; // import 'package:medibu
 import 'package:medibuddy/services/token_manager.dart';
 import 'package:medibuddy/services/follow_api.dart';
 import 'package:medibuddy/services/profile_api.dart';
+import 'package:medibuddy/widgets/toast_helper.dart';
 
 const Color _primaryBlue = Color(0xFF2B4C7E);
 const Color _softSurface = Color(0xFFF0F6FF);
@@ -529,9 +530,7 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
     final profileIds =
         _selectedProfileIds.where((id) => id > 0).toList(growable: false);
     if (profileIds.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('กรุณาเลือกอย่างน้อย 1 โปรไฟล์')),
-      );
+      showToast('กรุณาเลือกอย่างน้อย 1 โปรไฟล์');
       return;
     }
 
@@ -583,9 +582,7 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
       if (!mounted) return;
 
       if (widget.isEdit) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('บันทึกสำเร็จ')),
-        );
+        showToast('บันทึกสำเร็จ');
         Navigator.pop(context, true);
       } else {
         _showToast('ส่งคำเชิญแล้ว');
@@ -621,9 +618,7 @@ class _FollowerPermissionScreenState extends State<FollowerPermissionScreen> {
         errorMessage = raw.replaceFirst('Exception: ', '').trim();
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errorMessage)),
-      );
+      showToast(errorMessage);
     } finally {
       if (mounted) {
         setState(() {

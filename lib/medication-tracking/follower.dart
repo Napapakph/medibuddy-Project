@@ -8,6 +8,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:image_picker/image_picker.dart';
 import 'add_follower.dart';
 import 'package:medibuddy/services/app_state.dart';
+import 'package:medibuddy/widgets/toast_helper.dart';
 
 // ===== หน้าจอจัดการผู้ติดตาม =====
 class FollowerScreen extends StatefulWidget {
@@ -335,18 +336,13 @@ class _FollowerScreenState extends State<FollowerScreen> {
                       : () async {
                           final nickname = controller.text.trim();
                           if (nickname.isEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('กรุณากรอกชื่อ')),
-                            );
+                            showToast('กรุณากรอกชื่อ');
                             return;
                           }
                           final accessToken =
                               await AuthManager.service.getAccessToken();
                           if (accessToken == null) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text('ไม่พบข้อมูลเข้าสู่ระบบ')),
-                            );
+                            showToast('ไม่พบข้อมูลเข้าสู่ระบบ');
                             return;
                           }
                           setState(() => saving = true);
@@ -380,9 +376,7 @@ class _FollowerScreenState extends State<FollowerScreen> {
                             _loadFollowers();
                           } catch (e) {
                             if (!mounted) return;
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('บันทึกไม่สำเร็จ: $e')),
-                            );
+                            showToast('บันทึกไม่สำเร็จ: $e');
                           } finally {
                             if (mounted) {
                               setState(() => saving = false);
@@ -483,15 +477,11 @@ class _FollowerScreenState extends State<FollowerScreen> {
       });
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('ลบผู้ติดตามสำเร็จ')),
-        );
+        showToast('ลบผู้ติดตามสำเร็จ');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('ลบไม่สำเร็จ: $e')),
-        );
+        showToast('ลบไม่สำเร็จ: $e');
       }
     }
   }

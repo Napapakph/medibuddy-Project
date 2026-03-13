@@ -9,6 +9,7 @@ import 'package:medibuddy/services/auth_manager.dart'; // Import AuthManager
 import 'package:medibuddy/services/notification_launch_guard.dart';
 import 'package:medibuddy/services/app_route_observer.dart';
 import 'package:medibuddy/main.dart' show navigatorKey;
+import 'package:medibuddy/widgets/toast_helper.dart';
 
 class ConfirmActionScreen extends StatefulWidget {
   final List<int> logIds;
@@ -516,9 +517,7 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
       setState(() {
         _submittingIds.remove(logId);
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('ส่งผลไม่สำเร็จ: $e')),
-      );
+      showToast('ส่งผลไม่สำเร็จ: $e');
     }
   }
 

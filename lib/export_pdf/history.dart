@@ -13,6 +13,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:community_material_icon/community_material_icon.dart';
+import 'package:medibuddy/widgets/toast_helper.dart';
 
 /// ===============================
 /// Models
@@ -318,9 +319,7 @@ class _HistoryPageState extends State<HistoryPage> {
             await _loadHistory();
           } catch (e) {
             if (mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('ไม่สามารถบันทึกคอมเมนต์ได้: $e')),
-              );
+              showToast('ไม่สามารถบันทึกคอมเมนต์ได้: $e');
               setState(() => _loading = false);
             }
           }
@@ -524,9 +523,7 @@ class _HistoryPageState extends State<HistoryPage> {
     if (!mounted) return;
     final items = List<MedicineHistoryItem>.from(_filteredItems);
     if (items.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('ไม่มีข้อมูลให้ส่งออก')),
-      );
+      showToast('ไม่มีข้อมูลให้ส่งออก');
       return;
     }
 
@@ -683,9 +680,7 @@ class _HistoryPageState extends State<HistoryPage> {
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('ส่งออกไม่สำเร็จ: $e')),
-      );
+      showToast('ส่งออกไม่สำเร็จ: $e');
     }
   }
 

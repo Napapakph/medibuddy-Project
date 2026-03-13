@@ -12,6 +12,7 @@ import 'package:lottie/lottie.dart';
 
 import 'package:medibuddy/widgets/app_drawer.dart';
 import 'package:medibuddy/widgets/bottomBar.dart';
+import 'package:medibuddy/widgets/toast_helper.dart';
 
 class FollowingScreen extends StatefulWidget {
   const FollowingScreen({super.key});
@@ -261,17 +262,11 @@ class _FollowingScreenState extends State<FollowingScreen>
       await _loadData();
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(accept ? 'ยอมรับเสร็จสิ้น' : 'ปฏิเสธเสร็จสิ้น'),
-          ),
-        );
+        showToast(accept ? 'ยอมรับเสร็จสิ้น' : 'ปฏิเสธเสร็จสิ้น');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('ขณะนี้ไม่สามารถทำได้: $e')),
-        );
+        showToast('ขณะนี้ไม่สามารถทำได้: $e');
       }
     }
   }
@@ -283,9 +278,7 @@ class _FollowingScreenState extends State<FollowingScreen>
     final accessToken = await AuthManager.service.getAccessToken();
     if (accessToken == null) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('กรุณาเข้าสู่ระบบอีกครั้ง')),
-        );
+        showToast('กรุณาเข้าสู่ระบบอีกครั้ง');
       }
       return;
     }
@@ -293,9 +286,7 @@ class _FollowingScreenState extends State<FollowingScreen>
     final relationshipId = _readId(user);
     if (relationshipId == 0) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('ไม่พบรหัสความสัมพันธ์')),
-        );
+        showToast('ไม่พบรหัสความสัมพันธ์');
       }
       return;
     }
@@ -333,9 +324,7 @@ class _FollowingScreenState extends State<FollowingScreen>
 
     if (profiles.isEmpty) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('ไม่พบโปรไฟล์ที่ได้รับอนุญาต')),
-        );
+        showToast('ไม่พบโปรไฟล์ที่ได้รับอนุญาต');
       }
       return;
     }
@@ -758,10 +747,7 @@ class _FollowingScreenState extends State<FollowingScreen>
                           final accessToken =
                               await AuthManager.service.getAccessToken();
                           if (accessToken == null) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                  content: Text('ไม่พบข้อมูลเข้าสู่ระบบ')),
-                            );
+                            showToast('ไม่พบข้อมูลเข้าสู่ระบบ');
                             return;
                           }
 
@@ -790,9 +776,7 @@ class _FollowingScreenState extends State<FollowingScreen>
                             _loadData();
                           } catch (e) {
                             if (!mounted) return;
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('บันทึกไม่สำเร็จ: $e')),
-                            );
+                            showToast('บันทึกไม่สำเร็จ: $e');
                           } finally {
                             if (mounted) {
                               setState(() => saving = false);
@@ -822,9 +806,7 @@ class _FollowingScreenState extends State<FollowingScreen>
     final name = _readName(user);
     final relationshipId = _readId(user);
     if (relationshipId == 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('ไม่พบรหัสความสัมพันธ์')),
-      );
+      showToast('ไม่พบรหัสความสัมพันธ์');
       return;
     }
 
@@ -881,15 +863,11 @@ class _FollowingScreenState extends State<FollowingScreen>
       });
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('ลบการติดตามสำเร็จ')),
-        );
+        showToast('ลบการติดตามสำเร็จ');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('ลบไม่สำเร็จ: $e')),
-        );
+        showToast('ลบไม่สำเร็จ: $e');
       }
     }
   }

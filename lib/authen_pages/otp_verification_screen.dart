@@ -5,6 +5,7 @@ import 'login_screen.dart';
 import '../services/auth_manager.dart';
 import '../services/authen_api.dart';
 import 'package:bot_toast/bot_toast.dart';
+import 'package:medibuddy/widgets/toast_helper.dart';
 
 class OTPScreen extends StatefulWidget {
   const OTPScreen({
@@ -126,9 +127,7 @@ class _OTPScreenState extends State<OTPScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('เกิดข้อผิดพลาด: $e')),
-      );
+      showToast('เกิดข้อผิดพลาด: $e');
     }
   }
 
@@ -136,9 +135,7 @@ class _OTPScreenState extends State<OTPScreen> {
     final service = AuthManager.service;
     if (service is! CustomAuthService) {
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Merge not supported')),
-      );
+      showToast('Merge not supported');
       return;
     }
 
@@ -192,16 +189,12 @@ class _OTPScreenState extends State<OTPScreen> {
           _showTooManyAttemptsDialog();
           break;
         default:
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(e.message)),
-          );
+          showToast(e.message);
       }
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('เกิดข้อผิดพลาด: $e')),
-      );
+      showToast('เกิดข้อผิดพลาด: $e');
     }
   }
 

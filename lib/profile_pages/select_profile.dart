@@ -8,6 +8,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../services/app_state.dart';
 import '../services/auth_manager.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:medibuddy/widgets/toast_helper.dart';
 
 // ถ้าคุณมีหน้า login จริง ๆ ให้ import แล้วเปลี่ยน route ได้
 // import 'login.dart';
@@ -56,9 +57,7 @@ class _SelectProfileState extends State<SelectProfile> {
 
       if (token == null) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('ไม่พบการเข้าสู่ระบบ กรุณา Login ใหม่')),
-        );
+        showToast('ไม่พบการเข้าสู่ระบบ กรุณา Login ใหม่');
 
         Navigator.of(context).pop();
 
@@ -90,9 +89,7 @@ class _SelectProfileState extends State<SelectProfile> {
       AppState.instance.setCachedProfiles(mapped);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('โหลดโปรไฟล์ไม่สำเร็จ: $e')),
-      );
+      showToast('โหลดโปรไฟล์ไม่สำเร็จ: $e');
     } finally {
       if (mounted) {
         setState(() => _loading = false);

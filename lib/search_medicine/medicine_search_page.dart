@@ -4,6 +4,7 @@ import 'package:medibuddy/Model/medicine_model.dart';
 import 'package:medibuddy/services/medicine_api.dart';
 import '../services/app_state.dart';
 import 'package:lottie/lottie.dart';
+import 'package:medibuddy/widgets/toast_helper.dart';
 
 /// หน้า "ค้นหาข้อมูลยา"
 /// ✅ เปิดหน้ามา: โหลด list ก่อนทันที
@@ -112,9 +113,7 @@ class _MedicineSearchPageState extends State<MedicineSearchPage> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('❌ โหลดรายละเอียดไม่สำเร็จ: $e')),
-      );
+      showToast('❌ โหลดรายละเอียดไม่สำเร็จ: $e');
     }
   }
 
