@@ -573,8 +573,8 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: 64,
-                height: 64,
+                width: 80,
+                height: 80,
                 decoration: BoxDecoration(
                   color: const Color(0xFFEFF3FA),
                   borderRadius: BorderRadius.circular(12),
@@ -877,7 +877,7 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
                                     Text(
                                       'เวลา $timeText น.',
                                       style: const TextStyle(
-                                          fontSize: 14,
+                                          fontSize: 16,
                                           color: Color(0xFF8A9BB5)),
                                     ),
                                   if (hasMultipleProfiles) ...[

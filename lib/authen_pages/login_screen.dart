@@ -1,6 +1,7 @@
 import '../services/auth_manager.dart'; // import 'package:flutter/material.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
+import 'package:bot_toast/bot_toast.dart';
 import 'signup_screen.dart';
 
 import '../services/authen_api.dart'; // ✅ import for API password reset
@@ -617,6 +618,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
   final _resetEmailCtrl = TextEditingController();
 
+  bool _isValidEmailFormat(String email) {
+    final regex = RegExp(
+      r"^[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+$",
+    );
+    return regex.hasMatch(email);
+  }
+
   void _showInvalidMethodDialog(BuildContext outerContext) {
     showDialog(
       context: context,
@@ -653,11 +661,14 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   forgetPassword() {
+    String? emailError;
     return showDialog(
       context: context,
       builder: (dialogContext) {
-        return Dialog(
-          child: Container(
+        return StatefulBuilder(
+          builder: (dialogContext, setStateDialog) {
+            return Dialog(
+              child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
@@ -714,10 +725,16 @@ class _LoginScreenState extends State<LoginScreen> {
                     TextField(
                       controller: _resetEmailCtrl,
                       keyboardType: TextInputType.emailAddress,
+                      onChanged: (_) {
+                        if (emailError != null) {
+                          setStateDialog(() => emailError = null);
+                        }
+                      },
                       decoration: InputDecoration(
                         filled: true,
                         fillColor: const Color.fromARGB(255, 255, 255, 255),
                         labelText: 'Email',
+                        errorText: emailError,
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(
@@ -733,8 +750,17 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: () async {
+                        setStateDialog(() => emailError = null);
                         final email = _resetEmailCtrl.text.trim();
-                        if (email.isEmpty) return;
+                        if (email.isEmpty) {
+                          setStateDialog(() => emailError = 'กรุณากรอกอีเมล');
+                          return;
+                        }
+                        if (!_isValidEmailFormat(email)) {
+                          setStateDialog(
+                              () => emailError = 'รูปแบบอีเมลไม่ถูกต้อง');
+                          return;
+                        }
 
                         // ✅ สลับการทำงาน: true = ใช้ Custom Backend API, false = ใช้ Supabase เดิม
                         bool useBackendApi = true;
@@ -760,19 +786,45 @@ class _LoginScreenState extends State<LoginScreen> {
                           if (!context.mounted) return;
                           Navigator.pop(dialogContext);
 
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text(
-                                    'ส่งอีเมลสำหรับรีเซ็ตรหัสผ่านแล้ว กรุณาตรวจสอบอีเมล')),
+                          BotToast.showCustomText(
+                            duration: const Duration(seconds: 2),
+                            align: const Alignment(0, 0.5),
+                            toastBuilder: (_) {
+                              return Material(
+                                color: Colors.transparent,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 12,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color.fromARGB(
+                                        255, 114, 178, 121),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: const Text(
+                                    'ยืนยันอีเมลถูกต้อง กรุณาตรวจสอบอีเมลของคุณเพื่อขอตั้งรหัสผ่านใหม่',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
                           );
                         } on AuthException catch (e) {
                           if (!context.mounted) return;
                         } catch (e) {
                           if (!context.mounted) return;
 
+                          bool isUndeliverableEmail = false;
                           bool isInvalidMethod = false;
                           try {
                             final dynamic err = e;
+                            const undeliverableError = 'VALIDATION_ERROR';
+                            const undeliverableMsg =
+                                'Email address is undeliverable. Please check for typos and try again.';
                             const targetError = 'INVALID_LOGIN_METHOD';
                             const targetMsg =
                                 'This account does not use a password. Please log in with your social provider.';
@@ -785,17 +837,31 @@ class _LoginScreenState extends State<LoginScreen> {
 
                             // 2. Check conditions
                             if (resData != null && resData is Map) {
+                              if (resData['error'] == undeliverableError &&
+                                  resData['message'] == undeliverableMsg) {
+                                isUndeliverableEmail = true;
+                              }
                               if (resData['error'] == targetError &&
                                   resData['message'] == targetMsg) {
                                 isInvalidMethod = true;
                               }
                             } else if (err is Map) {
+                              if (err['error'] == undeliverableError &&
+                                  err['message'] == undeliverableMsg) {
+                                isUndeliverableEmail = true;
+                              }
                               if (err['error'] == targetError &&
                                   err['message'] == targetMsg) {
                                 isInvalidMethod = true;
                               }
                             } else {
                               final errStr = err.toString();
+                              if (errStr.contains(undeliverableError) &&
+                                  errStr.contains(undeliverableMsg)) {
+                                isUndeliverableEmail = true;
+                              } else if (errStr.contains('undeliverable')) {
+                                isUndeliverableEmail = true;
+                              }
                               if (errStr.contains(targetError) &&
                                   errStr.contains(targetMsg)) {
                                 isInvalidMethod = true;
@@ -805,6 +871,12 @@ class _LoginScreenState extends State<LoginScreen> {
                               }
                             }
                           } catch (_) {}
+
+                          if (isUndeliverableEmail) {
+                            setStateDialog(() =>
+                                emailError = 'อีเมลนี้ไม่มีอยู่จริง');
+                            return;
+                          }
 
                           if (isInvalidMethod) {
                             _showInvalidMethodDialog(dialogContext);
@@ -836,6 +908,8 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
           ),
+            );
+          },
         );
       },
     ).then((_) {

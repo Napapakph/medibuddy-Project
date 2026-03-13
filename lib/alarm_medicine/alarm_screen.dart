@@ -394,7 +394,7 @@ class _AlarmScreenState extends State<AlarmScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 const Icon(Icons.medication,
-                    size: 18, color: Color(0xFF5A81BB)),
+                    size: 20, color: Color(0xFF5A81BB)),
                 const SizedBox(width: 8),
                 Flexible(
                   child: Text(

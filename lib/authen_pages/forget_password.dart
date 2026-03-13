@@ -4,6 +4,7 @@ import 'login_screen.dart';
 import 'package:medibuddy/services/auth_manager.dart'; // Import AuthManager
 import 'package:medibuddy/services/authen_api.dart'; // Import CustomAuthService
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:bot_toast/bot_toast.dart';
 
 class ForgetPassword extends StatefulWidget {
   final String? token; // ✅ Token จาก Deep Link
@@ -77,11 +78,6 @@ class _ForgetPassword extends State<ForgetPassword> {
       if (!mounted) return;
       setState(() => _isLoading = false);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('รีเซ็ตรหัสผ่านสำเร็จ กรุณาเข้าสู่ระบบใหม่')),
-      );
-
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (_) => const LoginScreen()),
@@ -96,8 +92,42 @@ class _ForgetPassword extends State<ForgetPassword> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง $e')),
+      BotToast.showCustomNotification(
+        align: const Alignment(0, -0.5),
+        duration: const Duration(seconds: 2),
+        toastBuilder: (_) {
+          return SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 5),
+              child: Material(
+                color: Colors.transparent,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
+                  decoration: BoxDecoration(
+                    color: const Color.fromARGB(255, 195, 120, 134),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: const [
+                      BoxShadow(
+                        blurRadius: 8,
+                        offset: Offset(0, 2),
+                        color: Colors.black26,
+                      ),
+                    ],
+                  ),
+                  child: const Text(
+                    'เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง ',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        },
       );
     }
   }
