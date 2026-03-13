@@ -194,18 +194,19 @@ class _FollowerScreenState extends State<FollowerScreen> {
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             );
-            const double avatarSize = 84;
+            const double avatarSize = 100;
             final double innerRadius = avatarSize / 2 - 3;
             final double cameraSize = avatarSize * 0.32;
 
             return AlertDialog(
-              backgroundColor: const Color(0xFFF7FBFF),
+              backgroundColor: const Color.fromARGB(255, 255, 255, 255),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(24),
               ),
               title: const Text(
                 'แก้ไขผู้ติดตาม',
                 style: TextStyle(color: Color(0xFF2B4C7E)),
+                textAlign: TextAlign.center,
               ),
               contentPadding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
               content: Container(
@@ -262,11 +263,21 @@ class _FollowerScreenState extends State<FollowerScreen> {
                                     onTap: saving
                                         ? null
                                         : () async {
-                                            final file = await picker.pickImage(
-                                              source: ImageSource.gallery,
-                                            );
-                                            if (file == null) return;
-                                            setState(() => picked = file);
+                                            try {
+                                              final file =
+                                                  await picker.pickImage(
+                                                source: ImageSource.gallery,
+                                                imageQuality: 85,
+                                                maxWidth: 1920,
+                                                maxHeight: 1920,
+                                              );
+                                              if (!context.mounted) return;
+                                              if (file == null) return;
+                                              setState(() => picked = file);
+                                            } catch (e) {
+                                              if (!context.mounted) return;
+                                              showToast('เลือกรูปไม่สำเร็จ');
+                                            }
                                           },
                                     child: Container(
                                       width: cameraSize,
@@ -330,6 +341,15 @@ class _FollowerScreenState extends State<FollowerScreen> {
                   child: const Text('ยกเลิก'),
                 ),
                 ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF5A81BB),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                  ),
                   onPressed: saving
                       ? null
                       : () async {
@@ -375,7 +395,7 @@ class _FollowerScreenState extends State<FollowerScreen> {
                             _loadFollowers();
                           } catch (e) {
                             if (!mounted) return;
-                            showToast('บันทึกไม่สำเร็จ: $e');
+                            showToast('บันทึกไม่สำเร็จ');
                           } finally {
                             if (mounted) {
                               setState(() => saving = false);
@@ -480,7 +500,7 @@ class _FollowerScreenState extends State<FollowerScreen> {
       }
     } catch (e) {
       if (mounted) {
-        showToast('ลบไม่สำเร็จ: $e');
+        showToast('ลบไม่สำเร็จ');
       }
     }
   }
@@ -489,35 +509,74 @@ class _FollowerScreenState extends State<FollowerScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFFF0F6FF),
+        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24),
         ),
         title: const Text(
           'ยืนยันการลบ',
-          style: TextStyle(color: Color(0xFF2B4C7E)),
+          style: TextStyle(
+              color: Color(0xFF2B4C7E),
+              fontSize: 20,
+              fontWeight: FontWeight.w600),
+          textAlign: TextAlign.center,
         ),
-        content: Text(
-          'ลบ $followerName ออกจากผู้ติดตาม?',
+        content: Text.rich(
+          TextSpan(
+            children: [
+              const TextSpan(text: 'ลบ ', style: TextStyle(fontSize: 16)),
+              TextSpan(
+                text: followerName,
+                style: const TextStyle(
+                  color: Color.fromARGB(255, 200, 93, 139),
+                  fontWeight: FontWeight.w700,
+                  fontSize: 16,
+                ),
+              ),
+              const TextSpan(
+                  text: ' ออกจากผู้ติดตาม?', style: TextStyle(fontSize: 16)),
+            ],
+          ),
           style: const TextStyle(color: Color(0xFF5A81BB)),
         ),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text(
-              'ยกเลิก',
-              style: TextStyle(color: Color(0xFF5A81BB)),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              _deleteFollower(followerId);
-            },
-            child: const Text(
-              'ลบ',
-              style: TextStyle(color: Color(0xFFC66E6E)),
-            ),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFF5A81BB),
+                    side: const BorderSide(color: Color(0xFFB7D2F5)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                  ),
+                  child: const Text('ยกเลิก'),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    _deleteFollower(followerId);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF5A81BB),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                  ),
+                  child: const Text('ลบ'),
+                ),
+              ),
+            ],
           ),
         ],
       ),

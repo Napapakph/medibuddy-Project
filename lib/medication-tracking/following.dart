@@ -69,23 +69,11 @@ class _FollowingScreenState extends State<FollowingScreen>
   }
 
   String _readName(Map<String, dynamic> data) {
-    return (data['profileName'] ??
-            data['name'] ??
-            data['displayName'] ??
-            data['fullName'] ??
-            data['email'] ??
-            'ไม่มีชื่อ')
-        .toString();
+    return (data['ownerNickname'] ?? 'ไม่มีชื่อ').toString();
   }
 
   String _readAvatar(Map<String, dynamic> data) {
-    final raw = (data['profilePicture'] ??
-            data['profilePictureUrl'] ??
-            data['accountPicture'] ??
-            data['avatar'] ??
-            data['picture'] ??
-            '')
-        .toString();
+    final raw = (data['ownerPicture'] ?? '').toString();
     return _resolveImageUrl(raw);
   }
 
@@ -99,12 +87,7 @@ class _FollowingScreenState extends State<FollowingScreen>
   }
 
   String _readFollowingAvatar(Map<String, dynamic> data) {
-    final raw = (data['ownerPicture'] ??
-            data['accountPicture'] ??
-            data['avatar'] ??
-            data['picture'] ??
-            '')
-        .toString();
+    final raw = (data['ownerPicture'] ?? '').toString();
     return _resolveImageUrl(raw);
   }
 
@@ -573,18 +556,19 @@ class _FollowingScreenState extends State<FollowingScreen>
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             );
-            const double avatarSize = 84;
+            const double avatarSize = 100;
             final double innerRadius = avatarSize / 2 - 3;
             final double cameraSize = avatarSize * 0.32;
 
             return AlertDialog(
-              backgroundColor: const Color(0xFFF7FBFF),
+              backgroundColor: const Color.fromARGB(255, 255, 255, 255),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(24),
               ),
               title: const Text(
                 'แก้ไขคนที่กำลังติดตาม',
                 style: TextStyle(color: Color(0xFF2B4C7E)),
+                textAlign: TextAlign.center,
               ),
               contentPadding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
               content: Container(
@@ -637,8 +621,7 @@ class _FollowingScreenState extends State<FollowingScreen>
                                   onTap: saving
                                       ? null
                                       : () async {
-                                          final file =
-                                              await picker.pickImage(
+                                          final file = await picker.pickImage(
                                             source: ImageSource.gallery,
                                           );
                                           if (file == null) return;
@@ -740,6 +723,15 @@ class _FollowingScreenState extends State<FollowingScreen>
                   child: const Text('ยกเลิก'),
                 ),
                 ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF5A81BB),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                  ),
                   onPressed: (saving || nameError != null)
                       ? null
                       : () async {
@@ -776,7 +768,7 @@ class _FollowingScreenState extends State<FollowingScreen>
                             _loadData();
                           } catch (e) {
                             if (!mounted) return;
-                            showToast('บันทึกไม่สำเร็จ: $e');
+                            showToast('บันทึกไม่สำเร็จ $e');
                           } finally {
                             if (mounted) {
                               setState(() => saving = false);
@@ -813,35 +805,81 @@ class _FollowingScreenState extends State<FollowingScreen>
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFFF0F6FF),
+        backgroundColor: const Color.fromARGB(255, 255, 255, 255),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24),
         ),
         title: const Text(
           'ยืนยันการลบ',
-          style: TextStyle(color: Color(0xFF2B4C7E)),
+          style: TextStyle(
+              color: Color(0xFF2B4C7E),
+              fontSize: 20,
+              fontWeight: FontWeight.w700),
+          textAlign: TextAlign.center,
         ),
-        content: Text(
-          'เลิกติดตาม $name ?',
+        content: Text.rich(
+          TextSpan(
+            children: [
+              const TextSpan(
+                  text: 'เลิกติดตาม ',
+                  style: TextStyle(color: Color(0xFF2B4C7E), fontSize: 16)),
+              TextSpan(
+                text: name,
+                style: const TextStyle(
+                  color: Color.fromARGB(255, 200, 93, 139),
+                  fontWeight: FontWeight.w700,
+                  fontSize: 16,
+                ),
+              ),
+              const TextSpan(text: ' ?', style: TextStyle(fontSize: 16)),
+            ],
+          ),
           style: const TextStyle(color: Color(0xFF5A81BB)),
         ),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text(
-              'ยกเลิก',
-              style: TextStyle(color: Color(0xFF5A81BB)),
-            ),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(ctx);
-              await _removeFollowing(relationshipId);
-            },
-            child: const Text(
-              'ลบ',
-              style: TextStyle(color: Color(0xFFC66E6E)),
-            ),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFF5A81BB),
+                    side: const BorderSide(color: Color(0xFFB7D2F5)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                  ),
+                  child: const Text(
+                    'ยกเลิก',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () async {
+                    Navigator.pop(ctx);
+                    await _removeFollowing(relationshipId);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF5A81BB),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18),
+                    ),
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                  ),
+                  child: const Text(
+                    'ลบ',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
