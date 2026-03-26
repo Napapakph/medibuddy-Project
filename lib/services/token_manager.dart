@@ -96,9 +96,19 @@ class TokenManager {
     _refreshToken = null;
     _expiresAt = null;
     AuthManager.accessToken = null;
+   
 
     await _storage.delete(key: _refreshTokenKey);
     await _storage.delete(key: _expiresAtKey);
+  }
+
+  /// Clear session and notify UI to redirect to login.
+  static Future<void> expireSession({String? reason}) async {
+    if (reason != null && reason.trim().isNotEmpty) {
+      debugPrint('TokenManager: Expiring session ($reason)');
+    }
+    await clear();
+    _notifySessionExpiredOnce();
   }
 
   /// Get valid access token. Will trigger proactive refresh if expiring soon.

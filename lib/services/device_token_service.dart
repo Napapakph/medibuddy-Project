@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
@@ -8,6 +7,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'auth_manager.dart'; // ✅ Import AuthManager
+import 'token_manager.dart';
 
 class DeviceTokenService {
   DeviceTokenService({
@@ -268,5 +268,49 @@ class DeviceTokenService {
       '✅ DeviceTokenService: SENT to backend. confirm=$confirmed ($confirmReason) '
       '👤 user=${_lastUserId ?? "unknown"} 📱 deviceId=$deviceId 🔑 tokenHash=${fcmToken.hashCode}',
     );
+  }
+
+  // สร้างเพิ่มใน DeviceTokenService
+  Future<void> clearDeviceToken() async {
+    // เคลียร์ค่าตัวแปรในแอปเพื่อบังคับให้ส่งใหม่เมื่อล็อกอินครั้งหน้า
+    _lastToken = null;
+    _lastDeviceId = null;
+    _lastUserId = null;
+    String? accessToken;
+
+    final baseUrl = (dotenv.env['API_BASE_URL'] ?? '').trim();
+    final uri = Uri.parse('$baseUrl/api/mobile/v1/auth/device-token');
+    String? fcmToken;
+    try {
+      // ✅ getToken ทุกครั้งตาม requirement
+      fcmToken = await _messaging.getToken();
+    } catch (e) {
+      debugPrint('--------------DeviceTokenService: getToken failed: $e');
+      return;
+    }
+
+    final body = jsonEncode({
+      'token': fcmToken,
+      'platform': 'android',
+      'deviceId': null,
+    });
+    final token = await AuthManager.service.getAccessToken();
+    final res = await _http.post(
+      uri,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+        'accept': 'application/json',
+      },
+      body: body,
+    );
+
+    // (Optional) ลบ Token ออกจาก Firebase
+    try {
+      await _messaging.deleteToken();
+      debugPrint('DeviceTokenService: deleteToken success');
+    } catch (e) {
+      debugPrint('DeviceTokenService: deleteToken failed: $e');
+    }
   }
 }

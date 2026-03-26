@@ -237,6 +237,9 @@ class CustomAuthService implements AuthService {
     } catch (e) {
     } finally {
       await TokenManager.clear();
+      await globalDeviceTokenService
+          .clearDeviceToken(); // เคลียร์ Device Token ทิ้งด้วย
+          
     }
   }
 

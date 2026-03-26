@@ -1,54 +1,93 @@
+﻿import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 import 'auth_manager.dart';
+import 'token_manager.dart';
 
 class CustomHttpClient extends http.BaseClient {
+  static const String _invalidTokenError =
+      'Unauthorized - Invalid or missing token';
   final http.Client _inner;
 
   CustomHttpClient({http.Client? client}) : _inner = client ?? http.Client();
 
+  bool _isInvalidTokenBody(String body) {
+    if (body.trim().isEmpty) return false;
+    try {
+      final decoded = jsonDecode(body);
+      if (decoded is Map) {
+        final error = decoded['error']?.toString();
+        final message = decoded['message']?.toString();
+        if (error == _invalidTokenError || message == _invalidTokenError) {
+          return true;
+        }
+      }
+    } catch (_) {}
+    return body.contains(_invalidTokenError);
+  }
+
+  http.StreamedResponse _rebuildResponse(
+    http.StreamedResponse response,
+    List<int> bodyBytes,
+  ) {
+    return http.StreamedResponse(
+      Stream.fromIterable([bodyBytes]),
+      response.statusCode,
+      contentLength: bodyBytes.length,
+      headers: response.headers,
+      request: response.request,
+      isRedirect: response.isRedirect,
+      persistentConnection: response.persistentConnection,
+      reasonPhrase: response.reasonPhrase,
+    );
+  }
+
   @override
   Future<http.StreamedResponse> send(http.BaseRequest request) async {
-    // 1. ส่ง Request ครั้งแรก
     var response = await _inner.send(request);
 
-    // 2. ถ้าเจอ 401 (Unauthorized) ให้ทำการ Refresh Token แบบลับๆ
     if (response.statusCode == 401) {
+      final bodyBytes = await response.stream.toBytes();
+      final bodyText = utf8.decode(bodyBytes, allowMalformed: true);
+
+      if (_isInvalidTokenBody(bodyText)) {
+        debugPrint('CustomHttpClient: 401 invalid/missing token. Expiring session.');
+        await TokenManager.expireSession(
+            reason: '401 invalid/missing access token');
+        return _rebuildResponse(response, bodyBytes);
+      }
+
       debugPrint(
-          '⚠️ CustomHttpClient: 401 Unauthorized encountered. Attempting to refresh token...');
+          'CustomHttpClient: 401 Unauthorized encountered. Attempting to refresh token...');
 
       try {
         final newToken = await AuthManager.service.refreshToken();
 
         if (newToken != null && newToken.isNotEmpty) {
           debugPrint(
-              '✅ CustomHttpClient: Token refreshed successfully. Retrying request...');
+              'CustomHttpClient: Token refreshed successfully. Retrying request...');
 
-          // ต้องทิ้ง Stream response อันเก่าก่อน
-          await response.stream.drain();
-
-          // HTTP package ไม่อนุญาตให้ใช้ Request เดิมยิงซ้ำ ต้องสำเนา (Clone)
           final retryRequest = _copyRequest(request);
 
-          // เอา Token ใหม่ใส่ใน Header
           retryRequest.headers['Authorization'] = 'Bearer $newToken';
 
-          // 3. ทำการยิง Request ใหม่ที่เหมือนเดิมทุกประการอีกรอบด้วย Token ใหม่
           response = await _inner.send(retryRequest);
+          return response;
         } else {
-          debugPrint('❌ CustomHttpClient: Refresh token failed or is null.');
+          debugPrint('CustomHttpClient: Refresh token failed or is null.');
           // TokenManager.onSessionExpired will handle redirect to login
         }
       } catch (e) {
-        debugPrint('❌ CustomHttpClient: Refresh process exception: $e');
+        debugPrint('CustomHttpClient: Refresh process exception: $e');
         // TokenManager.onSessionExpired will handle redirect to login
       }
+
+      return _rebuildResponse(response, bodyBytes);
     }
 
     return response;
   }
 
-  /// Helper สำหรับทำสำเนา HTTP Request
   http.BaseRequest _copyRequest(http.BaseRequest request) {
     if (request is http.Request) {
       final req = http.Request(request.method, request.url)
@@ -82,3 +121,4 @@ class CustomHttpClient extends http.BaseClient {
     super.close();
   }
 }
+
