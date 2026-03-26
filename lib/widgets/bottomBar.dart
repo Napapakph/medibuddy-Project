@@ -15,7 +15,7 @@ class BottomBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final pid = AppState.instance.currentProfileId;
 
-    final bool isHome = currentRoute == '/home'; // รอแก้กลับเป็น home
+    final bool isHome = currentRoute == '/home'; 
     final bool isFollowing = currentRoute == '/following';
     final bool isMedicine = currentRoute == '/list_medicine';
 
