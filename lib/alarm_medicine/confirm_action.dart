@@ -59,7 +59,7 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
   Future<void> _initTts() async {
     try {
       await _flutterTts.setLanguage("th-TH");
-      await _flutterTts.setSpeechRate(0.5);
+      await _flutterTts.setSpeechRate(0.35);
       await _flutterTts.setVolume(1.0);
       await _flutterTts.setPitch(1.0);
 
@@ -120,8 +120,9 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
 
     final buffer = StringBuffer();
     if (title.isNotEmpty) {
-      buffer.write('$title');
+      buffer.write(' $title ');
     }
+    buffer.write('จำนวน $doseLine ');
     if (timeText.isNotEmpty) {
       final hourMin = timeText.split(':');
       if (hourMin.length == 2) {
@@ -134,7 +135,6 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
         }
       }
     }
-    buffer.write('รับประทาน $doseLine ');
 
     if (note != null && note.trim().isNotEmpty) {
       buffer.write('หมายเหตุ ${note.trim()}');
@@ -677,7 +677,7 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
         case 'DURING_MEAL':
           return 'ระหว่างอาหาร';
         default:
-          return 'ไม่ระบุ';
+          return '-';
       }
     }
 
@@ -737,7 +737,7 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
-                        color: Color.fromARGB(255, 190, 98, 143),
+                        color: Color.fromARGB(255, 98, 126, 190),
                       ),
                     ),
                     if (subtitle.isNotEmpty) ...[
@@ -751,12 +751,12 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
                         ),
                       ),
                     ],
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 15),
                     Text(
                       'มื้อ: ${_mealLabel(log)}',
                       style: const TextStyle(
                         fontSize: 16,
-                        color: Color.fromARGB(255, 190, 98, 143),
+                        color: Color.fromARGB(255, 98, 126, 190),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -766,7 +766,7 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
                       'ปริมาณ: ${_doseLabel(log)}',
                       style: const TextStyle(
                         fontSize: 16,
-                        color: Color.fromARGB(255, 190, 98, 143),
+                        color: Color.fromARGB(255, 98, 126, 190),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -1005,7 +1005,7 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
                     children: [
                       Container(
                         color: const Color.fromARGB(0, 255, 255, 255),
-                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                        padding: const EdgeInsets.fromLTRB(10, 10, 10, 10),
                         child: Column(
                           children: [
                             // Profile Image & Name (Centered always)
