@@ -108,7 +108,7 @@ Map<String, dynamic> _payloadFromRemoteMessage(RemoteMessage message) {
   payload['body'] = data['body']?.toString() ?? (notification?.body ?? '');
   payload['time'] = data['time']?.toString();
   payload['menuIndex'] = menuIndex;
-
+  payload['mealRelation'] = data['mealRelation']?.toString();
   payload['type'] = data['type']?.toString();
   payload['logId'] = data['logId']?.toString();
   payload['profileId'] = data['profileId']?.toString();

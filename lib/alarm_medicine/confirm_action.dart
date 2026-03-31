@@ -102,11 +102,24 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
     final logId = _readInt(log['logId']) ?? 0;
     final medicineList = _readMap(log['medicineList']);
     final medicine = _readMap(medicineList['medicine']);
-
+    final mealRelation = _readString(log['mealRelation']);
     final nickname = _readString(medicineList['mediNickname']);
     final tradeName = _readString(medicine['mediTradeName']);
     final thName = _readString(medicine['mediThName']);
     final enName = _readString(medicine['mediEnName']);
+    String _mealRelation(Map<String, dynamic> log) {
+      final mealType = _readString(log['mealRelation']);
+      switch (mealType) {
+        case 'BEFORE_MEAL':
+          return 'ก่อนอาหาร';
+        case 'AFTER_MEAL':
+          return 'หลังอาหาร';
+        case 'WITH_MEAL':
+          return 'พร้อมอาหาร';
+        default:
+          return '-';
+      }
+    }
 
     final title = nickname.isNotEmpty
         ? nickname
@@ -123,6 +136,10 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
       buffer.write(' $title ');
     }
     buffer.write('จำนวน $doseLine ');
+    if (mealRelation.isNotEmpty) {
+      buffer.write('กิน${_mealRelation(log)}');
+    }
+
     if (timeText.isNotEmpty) {
       final hourMin = timeText.split(':');
       if (hourMin.length == 2) {
@@ -460,45 +477,6 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
     );
   }
 
-  /*
-  Future<void> _openCommentDialog({
-    required int logId,
-    required String medicineNickname,
-  }) async {
-    setState(() {
-      _activeCommentLogId = logId;
-    });
-
-    final initial = _notesByLogId[logId] ?? '';
-    await showDialog<void>(
-      context: context,
-      builder: (_) => CommentPopup(
-        title: 'คอมเมนต์',
-        medicineNickname: medicineNickname.isEmpty ? '-' : medicineNickname,
-        initialText: initial,
-        onCancel: () {},
-        onSubmit: (text) {
-          final trimmed = text.trim();
-          setState(() {
-            if (trimmed.isEmpty) {
-              _notesByLogId.remove(logId);
-            } else {
-              _notesByLogId[logId] = trimmed;
-            }
-          });
-        },
-      ),
-    );
-
-    if (!mounted) return;
-    setState(() {
-      _activeCommentLogId = null;
-    });
-  }
-  */
-
-  /// Resolve a reliable profileId for /home navigation.
-  /// Priority: _selectedProfileId → _logs → widget.payload → guard → AppState
   int? _resolveProfileIdForHome() {
     // (1) Currently selected profile in the dropdown
     if (_selectedProfileId != null && _selectedProfileId! > 0) {
@@ -650,7 +628,7 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
     final logId = _readInt(log['logId']) ?? 0;
     final medicineList = _readMap(log['medicineList']);
     final medicine = _readMap(medicineList['medicine']);
-
+    final mealRelation = _readString(log['mealRelation']);
     final nickname = _readString(medicineList['mediNickname']);
     final tradeName = _readString(medicine['mediTradeName']);
     final thName = _readString(medicine['mediThName']);
@@ -667,15 +645,15 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
     final subtitle =
         tradeName.isNotEmpty && tradeName != title ? tradeName : '';
 
-    String _mealLabel(Map<String, dynamic> log) {
-      final mealType = _readString(log['mealType']);
+    String _mealRelation(Map<String, dynamic> log) {
+      final mealType = _readString(log['mealRelation']);
       switch (mealType) {
         case 'BEFORE_MEAL':
           return 'ก่อนอาหาร';
         case 'AFTER_MEAL':
           return 'หลังอาหาร';
-        case 'DURING_MEAL':
-          return 'ระหว่างอาหาร';
+        case 'WITH_MEAL':
+          return 'พร้อมอาหาร';
         default:
           return '-';
       }
@@ -753,7 +731,7 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
                     ],
                     const SizedBox(height: 15),
                     Text(
-                      'มื้อ: ${_mealLabel(log)}',
+                      'มื้อ: ${_mealRelation(log)}',
                       style: const TextStyle(
                         fontSize: 16,
                         color: Color.fromARGB(255, 98, 126, 190),
