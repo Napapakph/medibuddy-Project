@@ -74,7 +74,6 @@ Medibuddy เป็นแอปพลิเคชันมือถือสำ�
 ### IDE
 
 - Android Studio
-- IntelliJ IDEA
 - Visual Studio Code (พร้อม Flutter extension)
 
 ### อุปกรณ์
