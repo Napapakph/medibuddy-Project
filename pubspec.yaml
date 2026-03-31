@@ -79,6 +79,7 @@ dependencies:
   table_calendar: ^3.0.9
   shared_preferences: ^2.2.2
   bot_toast: ^4.1.0 
+  flutter_tts: ^4.0.2
   
   
   

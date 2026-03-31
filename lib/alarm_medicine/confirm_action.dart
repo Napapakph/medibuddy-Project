@@ -1,4 +1,4 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:medibuddy/services/log_api.dart';
@@ -8,6 +8,7 @@ import 'package:medibuddy/services/app_state.dart';
 import 'package:medibuddy/services/auth_manager.dart'; // Import AuthManager
 import 'package:medibuddy/services/notification_launch_guard.dart';
 import 'package:medibuddy/services/app_route_observer.dart';
+import 'package:flutter_tts/flutter_tts.dart'; // TTS: import
 import 'package:medibuddy/main.dart' show navigatorKey;
 import 'package:medibuddy/widgets/toast_helper.dart';
 
@@ -41,11 +42,135 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
   List<Map<String, dynamic>> _profiles =
       []; // To store profile info for dropdown separate from logs if needed
 
+  // TTS: initialization variables
+  final FlutterTts _flutterTts = FlutterTts();
+  int? _speakingLogId;
+  bool _isTtsInitialized = false;
+
   @override
   void initState() {
     super.initState();
     debugPrint('✅ ConfirmActionScreen initialized');
+    _initTts(); // TTS: init call
     _loadLogs();
+  }
+
+  // TTS: logic
+  Future<void> _initTts() async {
+    try {
+      await _flutterTts.setLanguage("th-TH");
+      await _flutterTts.setSpeechRate(0.5);
+      await _flutterTts.setVolume(1.0);
+      await _flutterTts.setPitch(1.0);
+
+      _flutterTts.setCompletionHandler(() {
+        if (!mounted) return;
+        setState(() {
+          _speakingLogId = null;
+        });
+      });
+
+      _flutterTts.setCancelHandler(() {
+        if (!mounted) return;
+        setState(() {
+          _speakingLogId = null;
+        });
+      });
+
+      _flutterTts.setErrorHandler((msg) {
+        if (!mounted) return;
+        setState(() {
+          _speakingLogId = null;
+        });
+      });
+
+      _isTtsInitialized = true;
+    } catch (e) {
+      debugPrint('TTS Initialization error: $e');
+    }
+  }
+
+  @override
+  void dispose() {
+    // TTS: stop in dispose
+    _flutterTts.stop();
+    super.dispose();
+  }
+
+  // TTS: build spoken text
+  String _buildSpokenText(Map<String, dynamic> log) {
+    final logId = _readInt(log['logId']) ?? 0;
+    final medicineList = _readMap(log['medicineList']);
+    final medicine = _readMap(medicineList['medicine']);
+
+    final nickname = _readString(medicineList['mediNickname']);
+    final tradeName = _readString(medicine['mediTradeName']);
+    final thName = _readString(medicine['mediThName']);
+    final enName = _readString(medicine['mediEnName']);
+
+    final title = nickname.isNotEmpty
+        ? nickname
+        : (tradeName.isNotEmpty
+            ? tradeName
+            : (thName.isNotEmpty ? thName : (enName.isNotEmpty ? enName : '')));
+
+    final timeText = _formatTime(log['scheduleTime']);
+    final doseLine = _doseLabel(log);
+    final note = _notesByLogId[logId];
+
+    final buffer = StringBuffer();
+    if (title.isNotEmpty) {
+      buffer.write('$title');
+    }
+    if (timeText.isNotEmpty) {
+      final hourMin = timeText.split(':');
+      if (hourMin.length == 2) {
+        final h = int.tryParse(hourMin[0])?.toString() ?? hourMin[0];
+        final m = int.tryParse(hourMin[1]) ?? 0;
+        if (m > 0) {
+          buffer.write('เวลา $h นาฬิกา $m นาที ');
+        } else {
+          buffer.write('เวลา $h นาฬิกา ');
+        }
+      }
+    }
+    buffer.write('รับประทาน $doseLine ');
+
+    if (note != null && note.trim().isNotEmpty) {
+      buffer.write('หมายเหตุ ${note.trim()}');
+    }
+
+    return buffer.toString().trim();
+  }
+
+  // TTS: handle speaker tap
+  Future<void> _handleSpeakerTap(Map<String, dynamic> log) async {
+    if (!_isTtsInitialized) return;
+
+    final logId = _readInt(log['logId']) ?? 0;
+
+    if (_speakingLogId == logId) {
+      // Currently speaking this card, so stop
+      await _flutterTts.stop();
+      if (mounted) {
+        setState(() {
+          _speakingLogId = null;
+        });
+      }
+      return;
+    }
+
+    // Stop currently speaking
+    await _flutterTts.stop();
+
+    if (mounted) {
+      setState(() {
+        _speakingLogId = logId;
+      });
+    }
+
+    final text = _buildSpokenText(log);
+    await _flutterTts.speak(text);
   }
 
   Future<void> _loadLogs() async {
@@ -612,7 +737,7 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFF2B4C7E),
+                        color: Color.fromARGB(255, 190, 98, 143),
                       ),
                     ),
                     if (subtitle.isNotEmpty) ...[
@@ -632,7 +757,7 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
                       style: const TextStyle(
                         fontSize: 16,
                         color: Color.fromARGB(255, 190, 98, 143),
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                     // TODO: backend will provide meal relation later.
@@ -642,10 +767,38 @@ class _ConfirmActionScreenState extends State<ConfirmActionScreen> {
                       style: const TextStyle(
                         fontSize: 16,
                         color: Color.fromARGB(255, 190, 98, 143),
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              // TTS: speaker icon button
+              InkWell(
+                onTap: () => _handleSpeakerTap(log),
+                borderRadius: BorderRadius.circular(10),
+                child: Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: _speakingLogId == logId
+                          ? const Color(0xFFF0A24F)
+                          : const Color(0xFFB7DAFF),
+                    ),
+                    color: _speakingLogId == logId
+                        ? const Color(0xFFFFF4EB)
+                        : Colors.white,
+                  ),
+                  child: Icon(
+                    _speakingLogId == logId ? Icons.stop : Icons.volume_up,
+                    color: _speakingLogId == logId
+                        ? const Color(0xFFF0A24F)
+                        : const Color(0xFF2B4C7E),
+                    size: 18,
+                  ),
                 ),
               ),
               const SizedBox(width: 8),
