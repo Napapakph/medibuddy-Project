@@ -193,6 +193,7 @@ class _MedicationPlanScreenState extends State<MedicationPlanScreen> {
             time: _normalizeTime(time.time),
             dose: _formatDose(time.dose),
             unit: _mapUnitToThai(time.unit),
+            mealTimingLabel: _mapMealToThai(time.mealRelation),
           ),
         );
       }
@@ -485,6 +486,17 @@ class _MedicationPlanScreenState extends State<MedicationPlanScreen> {
                           style: pw.TextStyle(font: baseFont, fontSize: 12),
                         ),
                       ),
+                      if (time.mealTimingLabel.isNotEmpty) ...[
+                        pw.SizedBox(width: 8),
+                        pw.Text(
+                          time.mealTimingLabel,
+                          style: pw.TextStyle(
+                            font: baseFont,
+                            fontSize: 12,
+                            color: subtextColor,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
@@ -585,6 +597,14 @@ class _MedicationPlanScreenState extends State<MedicationPlanScreen> {
       default:
         return unit.trim().isEmpty ? 'เม็ด' : unit;
     }
+  }
+
+  String _mapMealToThai(String? mealRelation) {
+    if (mealRelation == null) return '';
+    if (mealRelation == 'BEFORE_MEAL') return 'ก่อนอาหาร';
+    if (mealRelation == 'AFTER_MEAL') return 'หลังอาหาร';
+    if (mealRelation == 'WITH_MEAL') return 'พร้อมอาหาร';
+    return '';
   }
 
   int _timeToMinutes(String value) {
@@ -788,6 +808,14 @@ class _MedicationPlanScreenState extends State<MedicationPlanScreen> {
                         child: Text(
                           'ปริมาณ ${time.dose} ${time.unit}',
                           textAlign: TextAlign.end,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        time.mealTimingLabel,
+                        style: const TextStyle(
+                          color: Color(0xFF6B7C93),
+                          fontSize: 12,
                         ),
                       ),
                     ],
@@ -1161,10 +1189,12 @@ class _PlanTime {
   final String time;
   final String dose;
   final String unit;
+  final String mealTimingLabel;
 
   const _PlanTime({
     required this.time,
     required this.dose,
     required this.unit,
-  });
+    String? mealTimingLabel,
+  }) : mealTimingLabel = mealTimingLabel ?? '';
 }
