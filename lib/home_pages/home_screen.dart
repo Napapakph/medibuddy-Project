@@ -15,6 +15,9 @@ import '../add_medicine/create_medicine_profile.dart';
 import '../services/auth_manager.dart'; // Import
 import '../services/profile_api.dart';
 import 'package:medibuddy/widgets/toast_helper.dart';
+import '../services/medicine_api.dart';
+import '../Model/medicine_model.dart';
+import '../set_remind/setRemind_screen.dart';
 
 class Home extends StatefulWidget {
   final ProfileModel? selectedProfile;
@@ -46,6 +49,7 @@ class _Home extends State<Home> {
   int? _loadingPageIndex;
   final Map<int, List<_MedicineReminder>> _remindersByIndex = {};
   bool _hasAnyRegimen = false;
+  List<MedicineItem> medicineList = [];
   bool _isRegimenLoaded = false;
 
   @override
@@ -302,10 +306,17 @@ class _Home extends State<Home> {
         });
         return;
       }
-      final response = await _regimenApi.getRegimensByProfileId(
-        profileId: profileId,
-        accessToken: token,
-      );
+      final responses = await Future.wait([
+        _regimenApi.getRegimensByProfileId(
+          profileId: profileId,
+          accessToken: token,
+        ),
+        MedicineApi().fetchProfileMedicineList(profileId: profileId),
+      ]);
+      // MedicineRegimenListResponse is what getRegimensByProfileId returns
+      final response = responses[0] as MedicineRegimenListResponse;
+      final fetchedMedicines = responses[1] as List<MedicineItem>;
+
       final items = response.items;
       debugPrint('\u{1F3E0} fetched items=${items.length}');
       final reminders = _mapHomeRemindersFromProfile(
@@ -314,6 +325,7 @@ class _Home extends State<Home> {
       );
       if (!mounted) return;
       setState(() {
+        medicineList = fetchedMedicines;
         _hasAnyRegimen = items.isNotEmpty;
         _isRegimenLoaded = true;
         _remindersByIndex[pageIndex] = reminders;
@@ -603,6 +615,90 @@ class _Home extends State<Home> {
       _homeReminders[index].isTaken = !_homeReminders[index].isTaken;
       _remindersByIndex[_currentPageIndex] = _homeReminders;
     });
+  }
+
+  Future<void> _showAddReminderSelectMedicine(BuildContext context) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+    try {
+      final medicines = await MedicineApi()
+          .fetchProfileMedicineList(profileId: _resolveProfileId());
+      if (!context.mounted) return;
+      Navigator.pop(context); // ปิด loading
+
+      if (medicines.isEmpty) {
+        showToast('ไม่มียาในระบบ โปรดเพิ่มยาก่อนตั้งเตือน');
+        return;
+      }
+
+      showModalBottomSheet(
+        context: context,
+        backgroundColor: Colors.white,
+        shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+        builder: (bottomSheetContext) {
+          return SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Text(
+                    'เลือกยาที่ต้องการตั้งการแจ้งเตือน',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF2B4C7E),
+                    ),
+                  ),
+                ),
+                Flexible(
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: medicines.length,
+                    itemBuilder: (context, index) {
+                      final item = medicines[index];
+                      return ListTile(
+                        leading: const Icon(Icons.medication,
+                            color: Color(0xFF5A81BB)),
+                        title: Text(item.nickname_medi.isNotEmpty
+                            ? item.nickname_medi
+                            : item.officialName_medi),
+                        onTap: () {
+                          Navigator.pop(bottomSheetContext); // ปิด bottom sheet
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => SetRemindScreen(
+                                medicines: medicines,
+                                initialMedicine: item,
+                              ),
+                            ),
+                          ).then((_) {
+                            _fetchHomeReminders(
+                              date: _dateForIndex(_currentPageIndex),
+                              pageIndex: _currentPageIndex,
+                            );
+                          });
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      Navigator.pop(context); // ปิด loading
+      showToast('ดึงข้อมูลยาไม่สำเร็จ');
+      debugPrint('Error fetching medicines: $e');
+    }
   }
 
   Widget _buildReminderGroupedCard(
@@ -1000,7 +1096,13 @@ class _Home extends State<Home> {
                                         }
 
                                         // 2) โหลดเสร็จแล้ว (มีใน cache แล้ว) ค่อยตัดสินใจ empty state
-                                        final bool showGuide = !_hasAnyRegimen;
+                                        final bool showGuide =
+                                            !_hasAnyRegimen &&
+                                                medicineList.isEmpty;
+                                        final bool showGuideRegimen =
+                                            !_hasAnyRegimen &&
+                                                groupedReminders.isEmpty &&
+                                                medicineList.isNotEmpty;
                                         final bool isNoMedsToday =
                                             _hasAnyRegimen &&
                                                 groupedReminders.isEmpty;
@@ -1022,7 +1124,8 @@ class _Home extends State<Home> {
                                             },
                                             child: showGuide
                                                 ? CustomScrollView(
-                                                    physics: const AlwaysScrollableScrollPhysics(),
+                                                    physics:
+                                                        const AlwaysScrollableScrollPhysics(),
                                                     slivers: [
                                                       SliverFillRemaining(
                                                         hasScrollBody: false,
@@ -1030,59 +1133,119 @@ class _Home extends State<Home> {
                                                           children: [
                                                             // Background Overlay
                                                             Container(
-                                                              decoration: BoxDecoration(
-                                                                color: const Color.fromARGB(255, 239, 247, 255),
-                                                                borderRadius: BorderRadius.circular(20),
+                                                              decoration:
+                                                                  BoxDecoration(
+                                                                color: const Color
+                                                                    .fromARGB(
+                                                                    255,
+                                                                    239,
+                                                                    247,
+                                                                    255),
+                                                                borderRadius:
+                                                                    BorderRadius
+                                                                        .circular(
+                                                                            20),
                                                               ),
                                                             ),
                                                             // Centered Content
                                                             Center(
                                                               child: Column(
-                                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                                mainAxisAlignment:
+                                                                    MainAxisAlignment
+                                                                        .center,
                                                                 children: [
                                                                   Icon(
-                                                                    Icons.medication_liquid_rounded,
+                                                                    Icons
+                                                                        .medication_liquid_rounded,
                                                                     size: 80,
-                                                                    color: const Color.fromARGB(255, 107, 152, 207).withOpacity(0.5),
+                                                                    color: const Color
+                                                                            .fromARGB(
+                                                                            255,
+                                                                            107,
+                                                                            152,
+                                                                            207)
+                                                                        .withOpacity(
+                                                                            0.5),
                                                                   ),
-                                                                  const SizedBox(height: 16),
+                                                                  const SizedBox(
+                                                                      height:
+                                                                          16),
                                                                   const Text(
                                                                     'เพิ่มรายการยาที่ต้องกินก่อน',
-                                                                    style: TextStyle(
-                                                                      fontSize: 18,
-                                                                      color: Color.fromARGB(255, 90, 129, 187),
-                                                                      fontWeight: FontWeight.w600,
+                                                                    style:
+                                                                        TextStyle(
+                                                                      fontSize:
+                                                                          18,
+                                                                      color: Color.fromARGB(
+                                                                          255,
+                                                                          90,
+                                                                          129,
+                                                                          187),
+                                                                      fontWeight:
+                                                                          FontWeight
+                                                                              .w600,
                                                                     ),
                                                                   ),
-                                                                  const SizedBox(height: 24),
-                                                                  ElevatedButton.icon(
-                                                                    onPressed: () {
-                                                                      Navigator.push(
+                                                                  const SizedBox(
+                                                                      height:
+                                                                          24),
+                                                                  ElevatedButton
+                                                                      .icon(
+                                                                    onPressed:
+                                                                        () {
+                                                                      Navigator
+                                                                          .push(
                                                                         context,
                                                                         MaterialPageRoute(
-                                                                          builder: (_) => CreateNameMedicinePage(
-                                                                            profileId: _resolveProfileId(),
+                                                                          builder: (_) =>
+                                                                              CreateNameMedicinePage(
+                                                                            profileId:
+                                                                                _resolveProfileId(),
                                                                           ),
                                                                         ),
-                                                                      ).then((_) {
+                                                                      ).then(
+                                                                          (_) {
                                                                         _fetchHomeReminders(
-                                                                          date: pageDate,
-                                                                          pageIndex: pageIndex,
+                                                                          date:
+                                                                              pageDate,
+                                                                          pageIndex:
+                                                                              pageIndex,
                                                                         );
                                                                       });
                                                                     },
-                                                                    icon: const Icon(IcoFontIcons.uiAdd),
-                                                                    label: const Text('เพิ่มยา'),
-                                                                    style: ElevatedButton.styleFrom(
-                                                                      backgroundColor: const Color.fromARGB(255, 90, 129, 187),
-                                                                      foregroundColor: Colors.white,
-                                                                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                                                                      textStyle: const TextStyle(
-                                                                        fontSize: 16,
-                                                                        fontWeight: FontWeight.bold,
+                                                                    icon: const Icon(
+                                                                        IcoFontIcons
+                                                                            .uiAdd),
+                                                                    label: const Text(
+                                                                        'เพิ่มยา'),
+                                                                    style: ElevatedButton
+                                                                        .styleFrom(
+                                                                      backgroundColor: const Color
+                                                                          .fromARGB(
+                                                                          255,
+                                                                          90,
+                                                                          129,
+                                                                          187),
+                                                                      foregroundColor:
+                                                                          Colors
+                                                                              .white,
+                                                                      padding: const EdgeInsets
+                                                                          .symmetric(
+                                                                          horizontal:
+                                                                              32,
+                                                                          vertical:
+                                                                              12),
+                                                                      textStyle:
+                                                                          const TextStyle(
+                                                                        fontSize:
+                                                                            16,
+                                                                        fontWeight:
+                                                                            FontWeight.bold,
                                                                       ),
-                                                                      shape: RoundedRectangleBorder(
-                                                                        borderRadius: BorderRadius.circular(30),
+                                                                      shape:
+                                                                          RoundedRectangleBorder(
+                                                                        borderRadius:
+                                                                            BorderRadius.circular(30),
                                                                       ),
                                                                     ),
                                                                   ),
@@ -1094,44 +1257,135 @@ class _Home extends State<Home> {
                                                       ),
                                                     ],
                                                   )
-                                                : isNoMedsToday
+                                                : (isNoMedsToday ||
+                                                        showGuideRegimen)
                                                     ? CustomScrollView(
-                                                        physics: const AlwaysScrollableScrollPhysics(),
+                                                        physics:
+                                                            const AlwaysScrollableScrollPhysics(),
                                                         slivers: [
                                                           SliverFillRemaining(
-                                                            hasScrollBody: false,
+                                                            hasScrollBody:
+                                                                false,
                                                             child: Container(
-                                                              padding: const EdgeInsets.all(8),
+                                                              padding:
+                                                                  const EdgeInsets
+                                                                      .all(8),
                                                               child: Center(
                                                                 child: Column(
-                                                                  mainAxisAlignment: MainAxisAlignment.center,
+                                                                  mainAxisAlignment:
+                                                                      MainAxisAlignment
+                                                                          .center,
                                                                   children: [
-                                                                    Image.asset(
-                                                                      'assets/cat_add_follower.png',
-                                                                      width: 300,
+                                                                    if (showGuideRegimen)
+                                                                      Container(
+                                                                        decoration:
+                                                                            const BoxDecoration(
+                                                                          color:
+                                                                              Color(0xFFE8F2FF),
+                                                                          shape:
+                                                                              BoxShape.circle,
+                                                                        ),
+                                                                        padding: const EdgeInsets
+                                                                            .all(
+                                                                            24),
+                                                                        child: Image
+                                                                            .asset(
+                                                                          'assets/main_mascot.png',
+                                                                          width:
+                                                                              180,
+                                                                        ),
+                                                                      )
+                                                                    else
+                                                                      Image
+                                                                          .asset(
+                                                                        'assets/cat_add_follower.png',
+                                                                        width:
+                                                                            300,
+                                                                      ),
+                                                                    const SizedBox(
+                                                                        height:
+                                                                            16),
+                                                                    Text(
+                                                                      showGuideRegimen
+                                                                          ? 'กรุณาเพิ่มการแจ้งเตือนก่อน'
+                                                                          : 'ไม่มียาให้รับประทานแล้วในวันนี้',
+                                                                      style:
+                                                                          const TextStyle(
+                                                                        fontSize:
+                                                                            18,
+                                                                        color: Color.fromARGB(
+                                                                            255,
+                                                                            90,
+                                                                            129,
+                                                                            187),
+                                                                        fontWeight:
+                                                                            FontWeight.w600,
+                                                                      ),
                                                                     ),
-                                                                    const SizedBox(height: 16),
-                                                                    const Text(
-                                                                      'ไม่มียาให้รับประทานแล้วในวันนี้',
-                                                                      style: TextStyle(
-                                                                        fontSize: 18,
-                                                                        color: Color.fromARGB(255, 90, 129, 187),
-                                                                        fontWeight: FontWeight.w600,
+                                                                    const SizedBox(
+                                                                        height:
+                                                                            24),
+                                                                    ElevatedButton
+                                                                        .icon(
+                                                                      onPressed:
+                                                                          () =>
+                                                                              _showAddReminderSelectMedicine(context),
+                                                                      icon:
+                                                                          const Icon(
+                                                                        Icons
+                                                                            .add_alert_rounded,
+                                                                        size:
+                                                                            24,
+                                                                      ),
+                                                                      label: const Text(
+                                                                          'เพิ่มการแจ้งเตือน',
+                                                                          style:
+                                                                              TextStyle(fontSize: 16)),
+                                                                      style: ElevatedButton
+                                                                          .styleFrom(
+                                                                        backgroundColor: const Color
+                                                                            .fromARGB(
+                                                                            255,
+                                                                            90,
+                                                                            129,
+                                                                            187),
+                                                                        foregroundColor:
+                                                                            Colors.white,
+                                                                        padding: const EdgeInsets
+                                                                            .symmetric(
+                                                                            horizontal:
+                                                                                24,
+                                                                            vertical:
+                                                                                12),
+                                                                        shape:
+                                                                            RoundedRectangleBorder(
+                                                                          borderRadius:
+                                                                              BorderRadius.circular(30),
+                                                                        ),
                                                                       ),
                                                                     ),
                                                                   ],
                                                                 ),
                                                               ),
                                                             ),
-                                                          ),
+                                                          )
                                                         ],
                                                       )
                                                     : ListView.separated(
-                                                        physics: const AlwaysScrollableScrollPhysics(),
-                                                        itemCount: groupedReminders.length,
-                                                        separatorBuilder: (_, __) => const SizedBox(height: 12),
-                                                        itemBuilder: (context, index) {
-                                                          final group = groupedReminders[index];
+                                                        physics:
+                                                            const AlwaysScrollableScrollPhysics(),
+                                                        itemCount:
+                                                            groupedReminders
+                                                                .length,
+                                                        separatorBuilder: (_,
+                                                                __) =>
+                                                            const SizedBox(
+                                                                height: 12),
+                                                        itemBuilder:
+                                                            (context, index) {
+                                                          final group =
+                                                              groupedReminders[
+                                                                  index];
                                                           // Filtered out past due, so always false
                                                           return _buildReminderGroupedCard(
                                                             context,
