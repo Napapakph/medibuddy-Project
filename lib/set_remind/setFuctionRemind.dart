@@ -1244,8 +1244,8 @@ Widget detail_time({
                               horizontal: 12, vertical: 10),
                           decoration: BoxDecoration(
                             color: enabledTimes
-                                ? Color(0xFFE8F1FF)
-                                : const Color(0xFFF2F4F8),
+                                ? Color.fromARGB(255, 231, 241, 255)
+                                : const Color.fromARGB(255, 255, 255, 255),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
@@ -1280,7 +1280,7 @@ Widget detail_time({
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                             borderSide: const BorderSide(
-                              color: Color.fromRGBO(151, 167, 183, 1), // สีขอบ
+                              color: Color.fromRGBO(155, 189, 223, 1), // สีขอบ
                               width: 1,
                             ),
                           ),
@@ -1633,6 +1633,7 @@ Set<String> parseDaysOfWeekRaw(String? raw) {
   final result = <String>{};
   const validDays = {'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'};
   const numMapping = {
+    '0': 'SUN',
     '1': 'MON',
     '2': 'TUE',
     '3': 'WED',
