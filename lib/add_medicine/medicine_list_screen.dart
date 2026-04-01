@@ -37,7 +37,7 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
   final List<MedicineItem> _items = [];
   bool _isLoading = true;
   String _errorMessage = '';
-  _SortOption _currentSort = _SortOption.defaultOrder;
+  _SortOption _currentSort = _SortOption.byName;
 
   List<MedicineItem> get _sortedItems {
     if (_currentSort == _SortOption.defaultOrder) {
@@ -811,31 +811,6 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
             },
             itemBuilder: (context) => [
               PopupMenuItem(
-                value: _SortOption.defaultOrder,
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.access_time_rounded,
-                      color: _currentSort == _SortOption.defaultOrder
-                          ? const Color(0xFF5A81BB)
-                          : Colors.grey,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'เพิ่มล่าสุด (เริ่มต้น)',
-                      style: TextStyle(
-                        color: _currentSort == _SortOption.defaultOrder
-                            ? const Color(0xFF5A81BB)
-                            : Colors.black87,
-                        fontWeight: _currentSort == _SortOption.defaultOrder
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              PopupMenuItem(
                 value: _SortOption.byName,
                 child: Row(
                   children: [
@@ -853,6 +828,31 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
                             ? const Color(0xFF5A81BB)
                             : Colors.black87,
                         fontWeight: _currentSort == _SortOption.byName
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              PopupMenuItem(
+                value: _SortOption.defaultOrder,
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.access_time_rounded,
+                      color: _currentSort == _SortOption.defaultOrder
+                          ? const Color(0xFF5A81BB)
+                          : Colors.grey,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'เพิ่มล่าสุด (เริ่มต้น)',
+                      style: TextStyle(
+                        color: _currentSort == _SortOption.defaultOrder
+                            ? const Color(0xFF5A81BB)
+                            : Colors.black87,
+                        fontWeight: _currentSort == _SortOption.defaultOrder
                             ? FontWeight.bold
                             : FontWeight.normal,
                       ),

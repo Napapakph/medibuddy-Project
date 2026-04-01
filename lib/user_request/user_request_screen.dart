@@ -174,7 +174,8 @@ class _UserRequestScreenState extends State<UserRequestScreen> {
       Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
-      showToast('ส่งไม่สำเร็จ: $e');
+      showToast('ส่งไม่สำเร็จ');
+      debugPrint('❌ ส่งไม่สำเร็จ: $e');
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -374,8 +375,8 @@ class _UserRequestScreenState extends State<UserRequestScreen> {
                                   onTap: _submitting
                                       ? null
                                       : () => setState(
-                                          () => _pictureFile = null,
-                                        ),
+                                            () => _pictureFile = null,
+                                          ),
                                   borderRadius: BorderRadius.circular(20),
                                   child: Container(
                                     width: 36,

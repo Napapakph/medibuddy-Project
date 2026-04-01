@@ -375,7 +375,7 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
       Navigator.pop(context, true);
     } catch (e) {
       if (!mounted) return;
-      showToast('❌ บันทึกไม่สำเร็จ: $e');
+      debugPrint('❌ บันทึกไม่สำเร็จ: $e');
     } finally {
       if (mounted) setState(() => _saving = false);
     }

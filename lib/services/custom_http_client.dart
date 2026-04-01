@@ -51,7 +51,8 @@ class CustomHttpClient extends http.BaseClient {
       final bodyText = utf8.decode(bodyBytes, allowMalformed: true);
 
       if (_isInvalidTokenBody(bodyText)) {
-        debugPrint('CustomHttpClient: 401 invalid/missing token. Expiring session.');
+        debugPrint(
+            'CustomHttpClient: 401 invalid/missing token. Expiring session.');
         await TokenManager.expireSession(
             reason: '401 invalid/missing access token');
         return _rebuildResponse(response, bodyBytes);
@@ -121,4 +122,3 @@ class CustomHttpClient extends http.BaseClient {
     super.close();
   }
 }
-

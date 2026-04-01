@@ -346,6 +346,7 @@ class MedicineApi {
     int? mediId,
     String? mediNickname,
     File? pictureFile,
+    bool clearPicture = false,
   }) async {
     if (_baseUrl.isEmpty) {
       throw Exception('API_BASE_URL is empty. Check your .env');
@@ -360,6 +361,7 @@ class MedicineApi {
       'mediId':
           mediId, // ✅ ส่ง mediId เสมอ (ถ้า null คือ unlink, ถ้ามีค่าคือ link ใหม่)
       if (mediNickname != null) 'mediNickname': mediNickname.trim(),
+      // ส่งค่าว่างไปให้ Backend เพื่อลบรูป
     };
 
     if (pictureFile != null) {
@@ -374,6 +376,9 @@ class MedicineApi {
         filename: p.basename(pictureFile.path),
         contentType: MediaType.parse(mimeType),
       );
+    }
+    if (clearPicture) {
+      formMap['picture'] = ''; // ลองส่ง String ว่างๆ (Empty String) ไปแทน
     }
 
     final formData = dio.FormData.fromMap(formMap);

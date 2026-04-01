@@ -778,7 +778,8 @@ class _FollowingScreenState extends State<FollowingScreen>
                             _loadData();
                           } catch (e) {
                             if (!mounted) return;
-                            showToast('บันทึกไม่สำเร็จ $e');
+                            showToast('บันทึกไม่สำเร็จ');
+                            debugPrint(e.toString());
                           } finally {
                             if (mounted) {
                               setState(() => saving = false);
@@ -1012,8 +1013,7 @@ class _FollowingScreenState extends State<FollowingScreen>
                         onRefresh: _loadData,
                         child: _following.isEmpty
                             ? CustomScrollView(
-                                physics:
-                                    const AlwaysScrollableScrollPhysics(),
+                                physics: const AlwaysScrollableScrollPhysics(),
                                 slivers: const [
                                   SliverFillRemaining(
                                     hasScrollBody: false,
@@ -1030,8 +1030,7 @@ class _FollowingScreenState extends State<FollowingScreen>
                                 ],
                               )
                             : ListView.builder(
-                                physics:
-                                    const AlwaysScrollableScrollPhysics(),
+                                physics: const AlwaysScrollableScrollPhysics(),
                                 itemCount: _following.length,
                                 itemBuilder: (context, index) {
                                   final user = _following[index];
@@ -1039,8 +1038,7 @@ class _FollowingScreenState extends State<FollowingScreen>
                                   final avatarUrl = _readFollowingAvatar(user);
                                   final email = _readFollowingEmail(user);
                                   final avatarImage = avatarUrl.isNotEmpty
-                                      ? NetworkImage(avatarUrl)
-                                          as ImageProvider
+                                      ? NetworkImage(avatarUrl) as ImageProvider
                                       : null;
 
                                   return FollowUserCard(
@@ -1052,12 +1050,10 @@ class _FollowingScreenState extends State<FollowingScreen>
                                         _confirmRemoveFollowing(user),
                                     onEdit: () => _openEditDialog(user),
                                     onDetail_1: () =>
-                                        _selectProfileAndOpenDetail(
-                                            user,
+                                        _selectProfileAndOpenDetail(user,
                                             isRegimen: false),
                                     onDetail_2: () =>
-                                        _selectProfileAndOpenDetail(
-                                            user,
+                                        _selectProfileAndOpenDetail(user,
                                             isRegimen: true),
                                   );
                                 },
@@ -1069,8 +1065,7 @@ class _FollowingScreenState extends State<FollowingScreen>
                         onRefresh: _loadData,
                         child: _invitations.isEmpty
                             ? CustomScrollView(
-                                physics:
-                                    const AlwaysScrollableScrollPhysics(),
+                                physics: const AlwaysScrollableScrollPhysics(),
                                 slivers: const [
                                   SliverFillRemaining(
                                     hasScrollBody: false,
@@ -1087,12 +1082,10 @@ class _FollowingScreenState extends State<FollowingScreen>
                                 ],
                               )
                             : ListView.builder(
-                                physics:
-                                    const AlwaysScrollableScrollPhysics(),
+                                physics: const AlwaysScrollableScrollPhysics(),
                                 itemCount: _invitations.length,
                                 itemBuilder: (context, index) {
-                                  String _readEmail(
-                                      Map<String, dynamic> data) {
+                                  String _readEmail(Map<String, dynamic> data) {
                                     final raw = data['email'] ??
                                         data['ownerEmail'] ??
                                         data['inviterEmail'] ??
@@ -1122,10 +1115,8 @@ class _FollowingScreenState extends State<FollowingScreen>
                                           begin: Alignment.topCenter,
                                           end: Alignment.bottomCenter,
                                           colors: [
-                                            Color.fromARGB(
-                                                255, 255, 255, 255),
-                                            Color.fromARGB(
-                                                255, 255, 255, 255),
+                                            Color.fromARGB(255, 255, 255, 255),
+                                            Color.fromARGB(255, 255, 255, 255),
                                           ],
                                         ),
                                         border: Border.all(
@@ -1198,7 +1189,7 @@ class _FollowingScreenState extends State<FollowingScreen>
                                                         color: Colors.red),
                                                     padding: const EdgeInsets
                                                         .symmetric(
-                                                            horizontal: 16),
+                                                        horizontal: 16),
                                                   ),
                                                   child: const Text('ปฏิเสธ'),
                                                 ),
@@ -1215,7 +1206,7 @@ class _FollowingScreenState extends State<FollowingScreen>
                                                         Colors.white,
                                                     padding: const EdgeInsets
                                                         .symmetric(
-                                                            horizontal: 16),
+                                                        horizontal: 16),
                                                   ),
                                                   child: const Text('ยอมรับ'),
                                                 ),

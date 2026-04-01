@@ -33,6 +33,7 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
   bool _saving = false;
   MedicineCatalogItem? _fetchedCatalogItem;
   bool _fetchingInfo = false;
+  String _imagePath = '';
 
   @override
   void initState() {
@@ -40,6 +41,8 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
     debugPrint('🏁 SummaryMedicinePage: initState called');
     debugPrint('   - Draft OfficialName: ${widget.draft.officialName_medi}');
     debugPrint('   - Catalog ID: ${widget.draft.catalogItem?.mediId}');
+
+    _imagePath = widget.draft.imagePath;
 
     // ✅ Check if we need to fetch medicine details (if we have ID but missing name)
     _checkAndFetchMedicineInfo();
@@ -155,17 +158,15 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
 
     final officialName = _resolveOfficialName(catalog);
     final nickname = _resolveNickname(officialName);
-    final localImagePath = widget.draft.imagePath;
+    final originalLocalPath = widget.draft.imagePath;
 
-    // ✅ FIX: Only create File if it is a local path.
-    // If it's a remote path (existing image), we send null to API (meaning no change/use existing).
     File? localImage;
-    if (localImagePath.isNotEmpty && !_isRemotePath(localImagePath)) {
-      localImage = File(localImagePath);
+    if (_imagePath.isNotEmpty && !_isRemotePath(_imagePath)) {
+      localImage = File(_imagePath);
     }
 
-    final displayImage = localImagePath.isNotEmpty
-        ? localImagePath
+    final displayImage = _imagePath.isNotEmpty
+        ? _imagePath
         : (catalog?.mediPicture ?? '').trim();
 
     final localItem = MedicineItem(
@@ -191,8 +192,9 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
           ? await api.updateMedicineListItem(
               mediListId: widget.initialItem!.mediListId,
               mediNickname: nickname,
-              pictureFile: localImage, // Pass null if path is remote
+              pictureFile: localImage,
               mediId: hasCatalog ? catalog!.mediId : null,
+              clearPicture: _imagePath.isEmpty,
             )
           : await api.addMedicineToProfile(
               profileId: widget.profileId,
@@ -218,6 +220,18 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
             serverMediListId > 0 ? serverMediListId : localItem.mediListId,
         id: serverMediListId > 0 ? serverMediListId.toString() : localItem.id,
       );
+
+      // เอารูปภาพออกจากเครื่องด้วยถ้า get api มาแล้วพบว่า path เป็นค่าว่าง
+      if ((serverPath == null || serverPath.isEmpty) &&
+          originalLocalPath.isNotEmpty &&
+          !_isRemotePath(originalLocalPath)) {
+        try {
+          final file = File(originalLocalPath);
+          if (await file.exists()) {
+            await file.delete();
+          }
+        } catch (_) {}
+      }
 
       if (!mounted) return;
       globalOcrImage = null;
@@ -385,7 +399,6 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
 
     final officialName = _resolveOfficialName(catalog);
     final nickname = _resolveNickname(officialName);
-    final localImagePath = widget.draft.imagePath;
 
     // Use fetched picture if local/manual one is empty
     String catalogImage = '';
@@ -399,7 +412,7 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
     }
 
     // Determine if localImagePath is actually remote
-    final isLocalImageRemote = _isRemotePath(localImagePath);
+    final isLocalImageRemote = _isRemotePath(_imagePath);
 
     return Scaffold(
       appBar: AppBar(
@@ -559,62 +572,75 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
                   color: const Color.fromARGB(255, 255, 255, 255),
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: localImagePath.isNotEmpty
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: isLocalImageRemote
-                            ? Image.network(
-                                toFullImageUrl(localImagePath),
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return const Center(
-                                    child: Icon(
-                                      Icons.photo,
-                                      size: 64,
-                                      color: Color(0xFF9AA7B8),
-                                    ),
-                                  );
-                                },
-                              )
-                            : Image.file(
-                                File(localImagePath),
-                                fit: BoxFit.cover,
-                                errorBuilder: (context, error, stackTrace) {
-                                  return const Center(
-                                    child: Icon(
-                                      Icons
-                                          .broken_image, // Show different icon for local file error
-                                      size: 64,
-                                      color: Color.fromARGB(255, 255, 255, 255),
-                                    ),
-                                  );
-                                },
-                              ),
-                      )
-                    : catalogImage.isNotEmpty
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    _imagePath.isNotEmpty
                         ? ClipRRect(
                             borderRadius: BorderRadius.circular(16),
-                            child: Image.network(
-                              catalogImage,
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) {
-                                return const Center(
-                                  child: Icon(
-                                    Icons.photo,
-                                    size: 64,
-                                    color: Color.fromARGB(255, 255, 255, 255),
+                            child: isLocalImageRemote
+                                ? Image.network(
+                                    toFullImageUrl(_imagePath),
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return const Center(
+                                        child: Icon(
+                                          Icons.photo,
+                                          size: 64,
+                                          color: Color(0xFF9AA7B8),
+                                        ),
+                                      );
+                                    },
+                                  )
+                                : Image.file(
+                                    File(_imagePath),
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return const Center(
+                                        child: Icon(
+                                          Icons.broken_image,
+                                          size: 64,
+                                          color: Color(0xFF9AA7B8),
+                                        ),
+                                      );
+                                    },
                                   ),
-                                );
-                              },
-                            ),
                           )
-                        : const Center(
-                            child: Icon(
-                              Icons.photo,
-                              size: 64,
-                              color: Color(0xFF9AA7B8),
-                            ),
-                          ),
+                        : catalogImage.isNotEmpty
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(16),
+                                child: Image.network(
+                                  catalogImage,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return const Center(
+                                      child: Icon(
+                                        Icons.photo,
+                                        size: 64,
+                                        color: Color(0xFF9AA7B8),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              )
+                            : const Center(
+                                child: Icon(
+                                  Icons.photo,
+                                  size: 64,
+                                  color: Color(0xFF9AA7B8),
+                                ),
+                              ),
+                    if (_imagePath.isNotEmpty)
+                      Positioned(
+                        top: 12,
+                        right: 12,
+                        child: _ImageCircleButton(
+                          icon: Icons.close_rounded,
+                          onTap: () => setState(() => _imagePath = ''),
+                        ),
+                      ),
+                  ],
+                ),
               ),
               const Spacer(),
               SizedBox(
@@ -646,6 +672,35 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _ImageCircleButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _ImageCircleButton({required this.icon, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(6),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Icon(icon, color: Colors.black87, size: 20),
       ),
     );
   }

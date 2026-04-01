@@ -566,7 +566,8 @@ class _RemindListScreenState extends State<RemindListScreen> {
     } catch (e) {
       if (mounted) Navigator.of(context, rootNavigator: true).pop();
       if (!mounted) return;
-      showToast('❌ โหลดข้อมูลไม่สำเร็จ: $e');
+      showToast('❌ โหลดข้อมูลไม่สำเร็จ');
+      debugPrint('❌ โหลดข้อมูลไม่สำเร็จ: $e');
       return;
     }
 
@@ -697,7 +698,8 @@ class _RemindListScreenState extends State<RemindListScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _deletingPlanIds.remove(plan.id));
-      showToast('❌ ลบไม่สำเร็จ: $e');
+      showToast('❌ ลบไม่สำเร็จ');
+      debugPrint('❌ ลบไม่สำเร็จ: $e');
     }
   }
 
