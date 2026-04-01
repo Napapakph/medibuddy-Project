@@ -470,9 +470,10 @@ class _LibraryProfileState extends State<LibraryProfile> {
                                   });
                                 },
                               ),
-                            ),
+                            ), /*
                             if (tempImagePath != null &&
                                 tempImagePath!.isNotEmpty)
+                               
                               Positioned(
                                 top: 4,
                                 right: 4,
@@ -497,17 +498,21 @@ class _LibraryProfileState extends State<LibraryProfile> {
                                         ),
                                       ],
                                     ),
+                                    
                                     child: const Icon(
                                       Icons.close_rounded,
                                       color: Color(0xFF5A81BB),
                                       size: 18,
                                     ),
+                                    
                                   ),
                                 ),
                               ),
+                              */
                           ],
                         ),
                       ),
+
                       SizedBox(height: maxHeight * 0.03), // เพิ่มระยะห่าง
                       TextField(
                         controller: editNameCtrl,

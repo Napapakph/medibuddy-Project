@@ -288,6 +288,7 @@ class _CreateNameMedicinePageState extends State<CreateNameMedicinePage> {
                                 color: Color(0xFF9AA7B8),
                               ),
                             ),
+                          /*
                           if (_imagePath.isNotEmpty)
                             Positioned(
                               top: 12,
@@ -297,6 +298,7 @@ class _CreateNameMedicinePageState extends State<CreateNameMedicinePage> {
                                 onTap: () => setState(() => _imagePath = ''),
                               ),
                             ),
+                            */
                           Positioned(
                             right: 12,
                             bottom: 12,

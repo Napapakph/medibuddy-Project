@@ -367,6 +367,7 @@ class _UserRequestScreenState extends State<UserRequestScreen> {
                                   color: Color(0xFF9AA7B8),
                                 ),
                               ),
+                            /*
                             if (_pictureFile != null)
                               Positioned(
                                 top: 12,
@@ -401,6 +402,7 @@ class _UserRequestScreenState extends State<UserRequestScreen> {
                                   ),
                                 ),
                               ),
+                              */
                             Positioned(
                               right: 64,
                               bottom: 12,
