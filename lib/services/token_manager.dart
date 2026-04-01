@@ -20,6 +20,7 @@ class TokenManager {
 
   // Single-flight refresh mutex
   static Future<void>? _refreshFuture;
+  static Timer? _refreshTimer;
 
   /// Global callback when session is expired (refresh token invalid).
   /// Set this in main.dart to navigate to login screen.
@@ -83,6 +84,18 @@ class TokenManager {
         value: _expiresAt!.toIso8601String(),
       );
     }
+
+    _startRefreshTimer();
+  }
+
+  static void _startRefreshTimer() {
+    _refreshTimer?.cancel();
+    _refreshTimer = Timer.periodic(const Duration(minutes: 14), (timer) async {
+      debugPrint('⏳ TokenManager: 14 minutes passed, automatic global token refresh...');
+      if (_refreshToken != null && _refreshToken!.isNotEmpty) {
+        await refreshIfNeeded(force: true);
+      }
+    });
   }
 
   static Future<String?> getRefreshToken() async {
@@ -92,6 +105,9 @@ class TokenManager {
 
   /// Clear all tokens (on logout or unrecoverable 401)
   static Future<void> clear() async {
+    _refreshTimer?.cancel();
+    _refreshTimer = null;
+
     _accessToken = null;
     _refreshToken = null;
     _expiresAt = null;
