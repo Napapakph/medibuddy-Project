@@ -923,32 +923,47 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
                                             child: _sortedItems.isNotEmpty
                                                 ? Scrollbar(
                                                     thickness: 6,
-                                                    radius: const Radius.circular(8),
+                                                    radius:
+                                                        const Radius.circular(
+                                                            8),
                                                     trackVisibility: true,
                                                     child: ListView.builder(
-                                                      physics: const AlwaysScrollableScrollPhysics(),
-                                                      itemCount: _sortedItems.length,
-                                                      itemBuilder: (context, index) {
+                                                      physics:
+                                                          const AlwaysScrollableScrollPhysics(),
+                                                      itemCount:
+                                                          _sortedItems.length,
+                                                      itemBuilder:
+                                                          (context, index) {
                                                         // Find the actual index in the original `_items` array
-                                                        final sortedItem = _sortedItems[index];
-                                                        final actualIndex = _items.indexOf(sortedItem);
-                                                        return _buildMedicineCard(context, actualIndex);
+                                                        final sortedItem =
+                                                            _sortedItems[index];
+                                                        final actualIndex =
+                                                            _items.indexOf(
+                                                                sortedItem);
+                                                        return _buildMedicineCard(
+                                                            context,
+                                                            actualIndex);
                                                       },
                                                     ),
                                                   )
                                                 : CustomScrollView(
-                                                    physics: const AlwaysScrollableScrollPhysics(),
+                                                    physics:
+                                                        const AlwaysScrollableScrollPhysics(),
                                                     slivers: [
                                                       SliverFillRemaining(
                                                         hasScrollBody: false,
                                                         child: Center(
                                                           child: Text(
-                                                            _errorMessage.isNotEmpty
+                                                            _errorMessage
+                                                                    .isNotEmpty
                                                                 ? _friendlyErrorMessage()
                                                                 : 'ไม่พบรายการยา',
-                                                            textAlign: TextAlign.center,
-                                                            style: const TextStyle(
-                                                              color: Color(0xFF8893A0),
+                                                            textAlign: TextAlign
+                                                                .center,
+                                                            style:
+                                                                const TextStyle(
+                                                              color: Color(
+                                                                  0xFF8893A0),
                                                               fontSize: 20,
                                                             ),
                                                           ),

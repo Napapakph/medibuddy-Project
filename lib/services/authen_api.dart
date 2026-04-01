@@ -239,7 +239,6 @@ class CustomAuthService implements AuthService {
       await TokenManager.clear();
       await globalDeviceTokenService
           .clearDeviceToken(); // เคลียร์ Device Token ทิ้งด้วย
-          
     }
   }
 

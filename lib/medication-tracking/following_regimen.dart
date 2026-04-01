@@ -558,7 +558,7 @@ class _FollowingRegimenPageState extends State<FollowingRegimenPage> {
         ),
         centerTitle: true,
         title: const Text(
-          'แผนการทานยา',
+          'แผนการรับประทานยา',
           style: TextStyle(
             color: Color(0xFF2B4C7E),
             fontWeight: FontWeight.w700,

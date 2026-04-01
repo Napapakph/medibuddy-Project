@@ -1772,8 +1772,7 @@ MealTiming _mealTimingFromRelation(String relation) {
       return MealTiming.beforeMeal;
     case 'AFTER_MEAL':
       return MealTiming.afterMeal;
-    case 'BETWEEN_MEAL':
-      return MealTiming.betweenMeals;
+
     case 'WITH_MEAL':
       return MealTiming.betweenMeals;
     case 'NONE':
