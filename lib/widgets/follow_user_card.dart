@@ -111,7 +111,7 @@ class FollowUserCard extends StatelessWidget {
                       color: Colors.white,
                       shape: BoxShape.circle,
                       border: Border.all(
-                          color: const Color.fromARGB(255, 255, 255, 255)),
+                          color: const Color.fromARGB(255, 164, 184, 220)),
                     ),
                     child: ClipOval(
                       child: avatarImage != null

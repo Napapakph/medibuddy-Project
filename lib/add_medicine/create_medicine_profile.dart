@@ -65,7 +65,8 @@ class _CreateNameMedicinePageState extends State<CreateNameMedicinePage> {
     if (source == ImageSource.gallery) {
       final cropped = await cropImageFile(
         file,
-        toolbarTitle: 'ครอบรูปยา',
+        toolbarTitle: 'ครอบรูปยา'
+        
       );
       if (cropped == null) return;
       file = cropped;

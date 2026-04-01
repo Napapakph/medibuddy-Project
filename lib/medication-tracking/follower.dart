@@ -1,7 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:medibuddy/services/auth_manager.dart'; // Import
 import 'package:medibuddy/services/follow_api.dart';
-import 'package:medibuddy/widgets/bottomBar.dart';
+import 'package:medibuddy/widgets/app_drawer.dart';
 import 'package:medibuddy/widgets/follow_user_card.dart';
 import 'dart:io';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -252,7 +252,8 @@ class _FollowerScreenState extends State<FollowerScreen> {
                                         ? const Icon(
                                             Icons.person,
                                             size: 36,
-                                            color: Color(0xFFB6C4DB),
+                                            color: Color.fromARGB(
+                                                255, 137, 165, 210),
                                           )
                                         : null,
                                   ),
@@ -261,38 +262,37 @@ class _FollowerScreenState extends State<FollowerScreen> {
                                   bottom: -2,
                                   right: -2,
                                   child: GestureDetector(
-                                          onTap: saving
-                                              ? null
-                                              : () async {
-                                                  try {
-                                                    final file =
-                                                        await picker.pickImage(
-                                                      source: ImageSource.gallery,
-                                                      imageQuality: 85,
-                                                      maxWidth: 1920,
-                                                      maxHeight: 1920,
-                                                    );
-                                                    if (!context.mounted) return;
-                                                    if (file == null) return;
-                                                    final cropped =
-                                                        await cropImageFile(
-                                                      File(file.path),
-                                                      toolbarTitle:
-                                                          'ครอบรูปผู้ติดตาม',
-                                                    );
-                                                    if (!context.mounted) {
-                                                      return;
-                                                    }
-                                                    if (cropped == null) return;
-                                                    setState(() {
-                                                      picked =
-                                                          XFile(cropped.path);
-                                                    });
-                                                  } catch (e) {
-                                                    if (!context.mounted) return;
-                                                    showToast('เลือกรูปไม่สำเร็จ');
-                                                  }
-                                                },
+                                    onTap: saving
+                                        ? null
+                                        : () async {
+                                            try {
+                                              final file =
+                                                  await picker.pickImage(
+                                                source: ImageSource.gallery,
+                                                imageQuality: 85,
+                                                maxWidth: 1920,
+                                                maxHeight: 1920,
+                                              );
+                                              if (!context.mounted) return;
+                                              if (file == null) return;
+                                              final cropped =
+                                                  await cropImageFile(
+                                                File(file.path),
+                                                toolbarTitle:
+                                                    'ครอบรูปผู้ติดตาม',
+                                              );
+                                              if (!context.mounted) {
+                                                return;
+                                              }
+                                              if (cropped == null) return;
+                                              setState(() {
+                                                picked = XFile(cropped.path);
+                                              });
+                                            } catch (e) {
+                                              if (!context.mounted) return;
+                                              showToast('เลือกรูปไม่สำเร็จ');
+                                            }
+                                          },
                                     child: Container(
                                       width: cameraSize,
                                       height: cameraSize,
@@ -660,6 +660,7 @@ class _FollowerScreenState extends State<FollowerScreen> {
         _goHome();
       },
       child: Scaffold(
+        //drawer: const AppDrawer(),
         backgroundColor: const Color.fromARGB(255, 231, 241, 255),
         appBar: AppBar(
           elevation: 0,

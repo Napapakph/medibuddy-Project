@@ -11,7 +11,7 @@ class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
 
   static const _navy = Color(0xFF1F497D);
-  static const _iconColor = Color.fromARGB(255, 69, 68, 87);
+  static const _iconColor = Color.fromARGB(255, 94, 129, 182);
 
   void _go(
     BuildContext context,

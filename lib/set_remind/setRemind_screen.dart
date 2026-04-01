@@ -29,7 +29,7 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
 
   late MedicineItem? _selectedMedicine;
   FrequencyMode _frequencyMode = FrequencyMode.timesPerDay;
-  FrequencyPattern _frequencyPattern = FrequencyPattern.everyDay;
+  FrequencyPattern _frequencyPattern = FrequencyPattern.someDays;
   DurationMode _durationMode = DurationMode.forever;
 
   final Set<String> _selectedWeekdays = {};

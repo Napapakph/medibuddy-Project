@@ -812,7 +812,7 @@ Widget type_frequency({
                       style: TextStyle(
                         color: !isEnabled
                             ? const Color.fromARGB(
-                                255, 108, 108, 108) // 🚫 disabled
+                                255, 75, 95, 139) // 🚫 disabled
                             : isSelected
                                 ? Colors.white // ✅ selected
                                 : const Color.fromARGB(
@@ -822,7 +822,7 @@ Widget type_frequency({
                     ),
 
                     selected: isSelected,
-                    disabledColor: const Color.fromARGB(138, 227, 232, 240),
+                    disabledColor: const Color.fromARGB(137, 255, 255, 255),
                     selectedColor: const Color.fromARGB(255, 124, 166, 218),
 
                     backgroundColor: !isEnabled
@@ -1678,9 +1678,14 @@ ReminderPlan fromRegimenDetail({
       pattern = FrequencyPattern.everyDay;
   }
 
-  final weekdays = pattern == FrequencyPattern.someDays
-      ? parseDaysOfWeekRaw(detail.daysOfWeekRaw)
-      : <String>{};
+  Set<String> weekdays;
+  if (scheduleType == 'DAILY') {
+    weekdays = {'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'};
+  } else if (scheduleType == 'WEEKLY') {
+    weekdays = parseDaysOfWeekRaw(detail.daysOfWeekRaw);
+  } else {
+    weekdays = <String>{};
+  }
 
   final doses = detail.times.map((time) {
     return ReminderDose(
@@ -1903,7 +1908,13 @@ RegimenCreateInput buildRegimenCreateInput(
   ReminderPlan plan, {
   DateTime? startDateUtc,
 }) {
-  final scheduleType = mapRegimenScheduleType(plan.frequencyPattern);
+  var scheduleType = mapRegimenScheduleType(plan.frequencyPattern);
+
+  // เปลี่ยนเป็น DAILY ถ้าผู้ใช้เลือกรูปแบบ WEEKLY แต่ว่าเลือกครบ 7 วันพอดี
+  if (scheduleType == 'WEEKLY' && plan.weekdays.length == 7) {
+    scheduleType = 'DAILY';
+  }
+
   final start = startDateUtc ??
       (plan.regimenStartDate != null
           ? regimenStartDateUtc(now: plan.regimenStartDate!)

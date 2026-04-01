@@ -879,7 +879,7 @@ class _Home extends State<Home> {
           'MediBuddy',
           style: TextStyle(
             fontWeight: FontWeight.w800,
-            color: Color(0xFF2B4C7E),
+            color: Color.fromARGB(255, 62, 107, 173),
             fontSize: 28,
             letterSpacing: 0.5,
           ),
