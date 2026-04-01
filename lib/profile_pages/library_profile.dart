@@ -628,20 +628,42 @@ class _LibraryProfileState extends State<LibraryProfile> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('ลบโปรไฟล์'),
+          titlePadding: EdgeInsets.zero,
+          title: Container(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            decoration: const BoxDecoration(
+              color: Color(0xFFD6E9FC),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(20),
+                topRight: Radius.circular(20),
+              ),
+            ),
+            child: const Center(
+              child: Text(
+                'ลบโปรไฟล์',
+                style: TextStyle(
+                  color: Color(0xFF2B4C7E),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
+              ),
+            ),
+          ),
           content: Text(
-              'ต้องการลบโปรไฟล์ "${profile.username}" หรือไม่?\n\nถ้าลบ รายการยาที่สร้าง รวมถึงประวัติการรับประทานยาทั้งหมดที่ผ่านมาจะหายทั้งหมด ยืนยันการลบหรือไม่'),
+            'ต้องการลบโปรไฟล์ "${profile.username}" หรือไม่?\n\nถ้าลบ รายการยาที่สร้าง รวมถึงประวัติการรับประทานยาทั้งหมดที่ผ่านมาจะหายทั้งหมด\n\nยืนยันการลบหรือไม่',
+            style: TextStyle(fontSize: 16),
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(true),
               child: const Text(
                 'ใช่',
-                style: TextStyle(color: Colors.redAccent),
+                style: TextStyle(color: Colors.redAccent, fontSize: 16),
               ),
             ),
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('ยกเลิก'),
+              child: const Text('ยกเลิก', style: TextStyle(fontSize: 16)),
             ),
           ],
           backgroundColor: Colors.white,

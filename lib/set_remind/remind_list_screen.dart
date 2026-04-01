@@ -622,11 +622,7 @@ class _RemindListScreenState extends State<RemindListScreen> {
           title: Container(
             padding: const EdgeInsets.symmetric(vertical: 16),
             decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFFD6E9FC), Color(0xFFEAF3FD)],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
+              color: Color(0xFFD6E9FC),
               borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(20),
                 topRight: Radius.circular(20),
@@ -643,20 +639,27 @@ class _RemindListScreenState extends State<RemindListScreen> {
               ),
             ),
           ),
-          content: const Text('ต้องการลบการแจ้งเตือนนี้หรือไม่'),
+          content: const Text(
+            'ต้องการลบการแจ้งเตือนนี้หรือไม่',
+            style: TextStyle(fontSize: 16),
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context, false),
-              child: const Text('ยกเลิก'),
+              child: const Text(
+                'ยกเลิก',
+                style: TextStyle(fontSize: 16),
+              ),
             ),
             TextButton(
               onPressed: () => Navigator.pop(context, true),
               child: const Text(
                 'ลบ',
-                style: TextStyle(color: Colors.redAccent),
+                style: TextStyle(color: Colors.redAccent, fontSize: 16),
               ),
             ),
           ],
+          backgroundColor: Color.fromARGB(255, 255, 255, 255),
         );
       },
     );
