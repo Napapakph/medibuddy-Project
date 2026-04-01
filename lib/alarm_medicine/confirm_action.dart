@@ -1176,12 +1176,13 @@ class _CommentSheetContentState extends State<_CommentSheetContent> {
                 children: [
                   const Expanded(
                     child: Text(
-                      '\u0e04\u0e2d\u0e21\u0e40\u0e21\u0e49\u0e19',
+                      'หมายเหตุ',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
                         color: Color(0xFF2B4C7E),
                       ),
+                      textAlign: TextAlign.center,
                     ),
                   ),
                   GestureDetector(
@@ -1202,9 +1203,9 @@ class _CommentSheetContentState extends State<_CommentSheetContent> {
               const SizedBox(height: 8),
               // Medicine name
               Text(
-                widget.medicineNickname,
+                'รายการยา : ' + widget.medicineNickname,
                 style: const TextStyle(
-                  fontSize: 14,
+                  fontSize: 16,
                   color: Color.fromARGB(255, 102, 100, 145),
                   fontWeight: FontWeight.w600,
                 ),
@@ -1243,6 +1244,7 @@ class _CommentSheetContentState extends State<_CommentSheetContent> {
                   onPressed: widget.onSubmit,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF5A81BB),
+                    disabledBackgroundColor: const Color(0xFFB7DAFF),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
@@ -1251,7 +1253,7 @@ class _CommentSheetContentState extends State<_CommentSheetContent> {
                     elevation: 0,
                   ),
                   child: const Text(
-                    '\u0e1a\u0e31\u0e19\u0e17\u0e36\u0e01\u0e04\u0e2d\u0e21\u0e40\u0e21\u0e49\u0e19',
+                    'บันทึกหมายเหตุ',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                   ),
                 ),

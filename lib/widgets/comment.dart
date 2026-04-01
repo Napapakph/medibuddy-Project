@@ -15,7 +15,7 @@ Future<String?> showCommentBottomSheet({
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     builder: (ctx) => CommentPopup(
-      title: 'คอมเม้น',
+      title: 'หมายเหตุ',
       medicineNickname: medicineNickname,
       initialText: initialText,
       onCancel: onCancel,
@@ -202,7 +202,7 @@ class _CommentPopupState extends State<CommentPopup> {
                     elevation: 0,
                   ),
                   child: const Text(
-                    'บันทึกคอมเม้น',
+                    'บันทึกหมายเหตุ',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                   ),
                 ),
@@ -387,7 +387,7 @@ class _CommentInlineState extends State<CommentInline> {
             children: [
               const Expanded(
                 child: Text(
-                  'คอมเม้น',
+                  'หมายเหตุ',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
@@ -456,16 +456,17 @@ class _CommentInlineState extends State<CommentInline> {
               onPressed: _handleSubmit,
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF5A81BB),
+                disabledBackgroundColor: const Color(0xFFB7DAFF),
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 12),
+                padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius: BorderRadius.circular(30),
                 ),
                 elevation: 0,
               ),
               child: const Text(
-                'บันทึกคอมเม้น',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+                'บันทึกหมายเหตุ',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
               ),
             ),
           ),
