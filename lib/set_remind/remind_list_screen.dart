@@ -8,17 +8,17 @@ import 'package:lottie/lottie.dart';
 import 'package:medibuddy/widgets/toast_helper.dart';
 
 class _ReminderPlanStore {
-  static final Map<String, List<ReminderPlan>> _plansByMedicine = {};
+  static final Map<int, List<ReminderPlan>> _plansByMedicine = {};
 
   static List<ReminderPlan> allPlans() {
     return _plansByMedicine.values.expand((plans) => plans).toList();
   }
 
-  static void upsertPlan(ReminderPlan plan, {String? previousMedicineId}) {
-    final targetId = plan.medicine.id;
+  static void upsertPlan(ReminderPlan plan, {int? previousMedicineListId}) {
+    final targetId = plan.mediListId;
 
-    if (previousMedicineId != null && previousMedicineId != targetId) {
-      _removePlanById(previousMedicineId, plan.id);
+    if (previousMedicineListId != null && previousMedicineListId != targetId) {
+      _removePlanById(previousMedicineListId, plan.id);
     }
 
     final list = _plansByMedicine.putIfAbsent(targetId, () => []);
@@ -31,15 +31,15 @@ class _ReminderPlanStore {
   }
 
   static void removePlan(ReminderPlan plan) {
-    _removePlanById(plan.medicine.id, plan.id);
+    _removePlanById(plan.mediListId, plan.id);
   }
 
-  static void _removePlanById(String medicineId, String planId) {
-    final list = _plansByMedicine[medicineId];
+  static void _removePlanById(int medicineListId, String planId) {
+    final list = _plansByMedicine[medicineListId];
     if (list == null) return;
     list.removeWhere((item) => item.id == planId);
     if (list.isEmpty) {
-      _plansByMedicine.remove(medicineId);
+      _plansByMedicine.remove(medicineListId);
     }
   }
 }
@@ -88,14 +88,9 @@ class _RemindListScreenState extends State<RemindListScreen> {
 
   MedicineItem? _resolveMedicine(MedicineItem? medicine) {
     if (medicine == null) return null;
-    return _resolveMedicineById(medicine.id) ?? medicine;
-  }
 
-  MedicineItem? _resolveMedicineById(String id) {
-    for (final item in widget.medicines) {
-      if (item.id == id) return item;
-    }
-    return null;
+    final byListId = _resolveMedicineByMediListId(medicine.mediListId);
+    return byListId ?? medicine;
   }
 
   MedicineItem? _resolveMedicineByMediListId(int mediListId) {
@@ -455,7 +450,7 @@ class _RemindListScreenState extends State<RemindListScreen> {
   }
 
   ReminderPlan _syncPlanMedicine(ReminderPlan plan) {
-    final updated = _resolveMedicineById(plan.medicine.id);
+    final updated = _resolveMedicineByMediListId(plan.mediListId);
     if (updated == null) return plan;
     if (_sameMedicine(updated, plan.medicine)) return plan;
     return plan.copyWith(medicine: updated);
@@ -480,7 +475,9 @@ class _RemindListScreenState extends State<RemindListScreen> {
     final selected = _selectedMedicine;
     if (selected == null) return _plans;
 
-    return _plans.where((plan) => plan.medicine.id == selected.id).toList();
+    return _plans
+        .where((plan) => plan.mediListId == selected.mediListId)
+        .toList();
   }
 
   List<ReminderPlan> get _displayPlans {
@@ -540,7 +537,7 @@ class _RemindListScreenState extends State<RemindListScreen> {
       if (result is ReminderPlan) {
         _ReminderPlanStore.upsertPlan(
           result,
-          previousMedicineId: plan.medicine.id,
+          previousMedicineListId: plan.mediListId,
         );
         setState(() {
           _selectedMedicine =
@@ -601,7 +598,7 @@ class _RemindListScreenState extends State<RemindListScreen> {
     if (result is ReminderPlan) {
       _ReminderPlanStore.upsertPlan(
         result,
-        previousMedicineId: plan.medicine.id,
+        previousMedicineListId: plan.mediListId,
       );
       setState(() {
         _selectedMedicine =
@@ -1045,8 +1042,7 @@ class _RemindListScreenState extends State<RemindListScreen> {
                                       SliverFillRemaining(
                                         hasScrollBody: false,
                                         child: Center(
-                                          child:
-                                              Text('ยังไม่มีการแจ้งเตือน'),
+                                          child: Text('ยังไม่มีการแจ้งเตือน'),
                                         ),
                                       ),
                                     ],

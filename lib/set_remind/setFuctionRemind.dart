@@ -242,7 +242,7 @@ Widget type_frequency({
       Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-            color: const Color.fromARGB(183, 240, 247, 255),
+            color: const Color.fromARGB(137, 255, 255, 255),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
                 color: const Color.fromARGB(255, 165, 183, 222),
@@ -254,8 +254,12 @@ Widget type_frequency({
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: const Color(0xFFE3EAF6),
+                color: const Color.fromARGB(255, 255, 255, 255),
                 borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                    color: const Color.fromARGB(255, 165, 183, 222),
+                    width: 1,
+                    style: BorderStyle.solid),
                 image: image != null
                     ? DecorationImage(image: image, fit: BoxFit.cover)
                     : null,
@@ -308,7 +312,7 @@ Widget type_frequency({
       Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: const Color.fromARGB(183, 240, 247, 255),
+          color: const Color.fromARGB(137, 255, 255, 255),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
               color: const Color.fromARGB(255, 165, 183, 222),
@@ -378,7 +382,7 @@ Widget type_frequency({
       Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: const Color.fromARGB(183, 240, 247, 255),
+          color: const Color.fromARGB(137, 255, 255, 255),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
               color: const Color.fromARGB(255, 165, 183, 222),
@@ -492,7 +496,7 @@ Widget type_frequency({
       Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: const Color.fromARGB(183, 240, 247, 255),
+          color: const Color.fromARGB(137, 255, 255, 255),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
               color: const Color.fromARGB(255, 165, 183, 222),
@@ -664,7 +668,7 @@ Widget type_frequency({
       Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: const Color.fromARGB(183, 240, 247, 255),
+          color: const Color.fromARGB(137, 255, 255, 255),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
               color: const Color.fromARGB(255, 165, 183, 222),
@@ -951,7 +955,7 @@ Widget type_frequency({
       Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: const Color.fromARGB(183, 240, 247, 255),
+          color: const Color.fromARGB(137, 255, 255, 255),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
               color: const Color.fromARGB(255, 165, 183, 222),
@@ -1126,10 +1130,10 @@ Widget detail_time({
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: const Color(0xFFE3EAF6),
+                color: const Color.fromARGB(255, 255, 255, 255),
                 borderRadius: BorderRadius.circular(12),
                 border:
-                    Border.all(color: const Color.fromARGB(255, 161, 196, 236)),
+                    Border.all(color: const Color.fromARGB(255, 165, 183, 222)),
                 boxShadow: [
                   BoxShadow(
                     color: const Color.fromARGB(255, 129, 163, 221)
@@ -1143,7 +1147,7 @@ Widget detail_time({
                     : null,
               ),
               child: avatarImage == null
-                  ? const Icon(Icons.medication, color: Color(0xFF1F497D))
+                  ? const Icon(Icons.medication, color: Color(0xFF5A81BB))
                   : null,
             ),
             const SizedBox(width: 12),
@@ -1351,18 +1355,19 @@ Widget summary_rejimen({
         child: Row(
           children: [
             Container(
-              width: 72,
-              height: 72,
+              width: 78,
+              height: 78,
               decoration: BoxDecoration(
-                color: const Color(0xFFE3EAF6),
+                color: const Color.fromARGB(255, 255, 255, 255),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFD6E3F3)),
+                border:
+                    Border.all(color: const Color.fromARGB(255, 165, 183, 222)),
                 image: avatarImage != null
                     ? DecorationImage(image: avatarImage, fit: BoxFit.cover)
                     : null,
               ),
               child: avatarImage == null
-                  ? const Icon(Icons.medication, color: Color(0xFF1F497D))
+                  ? const Icon(Icons.medication, color: Color(0xFF5A81BB))
                   : null,
             ),
             const SizedBox(width: 12),
@@ -1391,7 +1396,7 @@ Widget summary_rejimen({
           ],
         ),
       ),
-      const SizedBox(height: 16),
+      const SizedBox(height: 8),
       Container(
         padding: const EdgeInsets.all(15),
         decoration: BoxDecoration(

@@ -87,10 +87,14 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
 
   MedicineItem? _resolveMedicine(MedicineItem? medicine) {
     if (medicine == null) return null;
+    return _resolveMedicineByMediListId(medicine.mediListId) ?? medicine;
+  }
+
+  MedicineItem? _resolveMedicineByMediListId(int mediListId) {
     for (final item in widget.medicines) {
-      if (item.id == medicine.id) return item;
+      if (item.mediListId == mediListId) return item;
     }
-    return medicine;
+    return null;
   }
 
   void _applyInitialPlan(ReminderPlan plan) {
@@ -622,9 +626,10 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
             },
           ),
           centerTitle: true,
+          titleSpacing: 20,
           title: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisSize: MainAxisSize.max,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 pageTitle,
@@ -638,8 +643,8 @@ class _SetRemindScreenState extends State<SetRemindScreen> {
               ),
               const SizedBox(height: 4),
               Row(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.max,
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
                   const Icon(
                     Icons.arrow_right_rounded,

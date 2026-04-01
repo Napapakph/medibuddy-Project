@@ -170,7 +170,8 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
 
     final localItem = MedicineItem(
       mediListId: isEditMode ? widget.initialItem!.mediListId : 0,
-      id: catalog?.mediId.toString() ?? '',
+      id: catalog?.mediId?.toString() ??
+          (isEditMode ? widget.initialItem!.mediListId.toString() : ''),
       nickname_medi: nickname,
       officialName_medi: officialName,
       imagePath: displayImage,
@@ -178,7 +179,7 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
 
     if (nickname.trim().isEmpty && officialName.trim().isEmpty) {
       if (!mounted) return;
-     
+
       setState(() => _saving = false);
       return;
     }
@@ -215,6 +216,7 @@ class _SummaryMedicinePageState extends State<SummaryMedicinePage> {
             : localItem.imagePath,
         mediListId:
             serverMediListId > 0 ? serverMediListId : localItem.mediListId,
+        id: serverMediListId > 0 ? serverMediListId.toString() : localItem.id,
       );
 
       if (!mounted) return;
