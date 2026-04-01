@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:medibuddy/set_remind/remind_list_screen.dart';
 import 'package:medibuddy/Model/medicine_model.dart';
@@ -41,7 +41,9 @@ class _ListMedicinePageState extends State<ListMedicinePage> {
 
   List<MedicineItem> get _sortedItems {
     if (_currentSort == _SortOption.defaultOrder) {
-      return _items;
+      final sorted = List<MedicineItem>.from(_items);
+      sorted.sort((a, b) => b.mediListId.compareTo(a.mediListId));
+      return sorted;
     }
     final sorted = List<MedicineItem>.from(_items);
     sorted.sort((a, b) {
